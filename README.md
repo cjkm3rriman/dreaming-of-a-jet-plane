@@ -5,3 +5,5 @@ Use your Yoto to Learn about the jet planes in the sky around you right now and 
 - Python
 - UV Python Package Manager
 - Fast API
+- Railway
+- Claude Code
