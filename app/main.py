@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 app = FastAPI()
 
 @app.get("/")
-async def read_root():
-    return {"message": "Hello World from Railway!"}
+async def read_root(request: Request):
+    client_ip = request.client.host
+    return {"client_ip": client_ip}
 
 if __name__ == "__main__":
     import uvicorn
