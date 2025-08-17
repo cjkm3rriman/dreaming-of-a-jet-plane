@@ -116,30 +116,36 @@ async def get_flight_details(icao24: str) -> Optional[Dict[str, Any]]:
             logger.info(f"FlightLabs API Response Headers: {dict(response.headers)}")
             
             if response.status_code == 200:
-                data = response.json()
-                logger.info(f"FlightLabs API Response Body: {data}")
+                response_data = response.json()
+                logger.info(f"FlightLabs API Response Body: {response_data}")
                 
-                if data and isinstance(data, list) and len(data) > 0:
-                    flight = data[0]  # Take first matching flight
-                    aircraft_icao = flight.get("aircraft_icao", "")
-                    logger.info(f"FlightLabs API Success: Found flight data for {icao24}")
-                    
-                    return {
-                        "airline_iata": flight.get("airline_iata"),
-                        "airline_icao": flight.get("airline_icao"), 
-                        "flight_number": flight.get("flight_number"),
-                        "aircraft_registration": flight.get("reg_number"),
-                        "aircraft_icao": aircraft_icao,
-                        "aircraft": get_aircraft_name(aircraft_icao),
-                        "origin_airport": flight.get("dep_iata"),
-                        "destination_airport": flight.get("arr_iata"),
-                        "origin_country": flight.get("dep_country"),
-                        "destination_country": flight.get("arr_country"),
-                        "status": flight.get("flight_status")
-                    }
+                # FlightLabs returns data wrapped in {'success': True, 'data': [...]}
+                if response_data and response_data.get('success') and 'data' in response_data:
+                    data = response_data['data']
+                    if data and isinstance(data, list) and len(data) > 0:
+                        flight = data[0]  # Take first matching flight
+                        aircraft_icao = flight.get("aircraft_icao", "")
+                        logger.info(f"FlightLabs API Success: Found flight data for {icao24}")
+                        
+                        return {
+                            "airline_iata": flight.get("airline_iata"),
+                            "airline_icao": flight.get("airline_icao"), 
+                            "flight_number": flight.get("flight_number"),
+                            "aircraft_registration": flight.get("reg_number"),
+                            "aircraft_icao": aircraft_icao,
+                            "aircraft": get_aircraft_name(aircraft_icao),
+                            "origin_airport": flight.get("dep_iata"),
+                            "destination_airport": flight.get("arr_iata"),
+                            "origin_country": flight.get("dep_country"),
+                            "destination_country": flight.get("arr_country"),
+                            "status": flight.get("status")
+                        }
+                    else:
+                        logger.warning(f"FlightLabs API: Empty data array for {icao24}")
+                        return {"error": "No flight data in response"}
                 else:
-                    logger.warning(f"FlightLabs API: No flight data found for {icao24}")
-                    return {"error": "No flight data found"}
+                    logger.warning(f"FlightLabs API: Invalid response structure for {icao24}")
+                    return {"error": "Invalid response structure"}
             else:
                 # Log error response body for debugging
                 try:
