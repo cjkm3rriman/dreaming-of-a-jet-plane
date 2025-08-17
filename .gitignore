@@ -11,3 +11,6 @@ wheels/
 
 # Assets folder
 assets/
+
+# macOS system files
+.DS_Store
