@@ -271,7 +271,7 @@ async def get_location_from_ip(ip: str) -> tuple[float, float]:
     return 0.0, 0.0
 
 @app.get("/")
-async def read_root(request: Request):
+async def read_root(request: Request, lat: float = None, lng: float = None):
     # Check for real IP in common proxy headers
     client_ip = (
         request.headers.get("x-forwarded-for", "").split(",")[0].strip() or
@@ -280,26 +280,35 @@ async def read_root(request: Request):
         request.client.host
     )
     
-    # Get latitude and longitude from IP
-    lat, lng = await get_location_from_ip(client_ip)
+    # Get latitude and longitude - use parameters if provided, otherwise IP lookup
+    if lat is not None and lng is not None:
+        # Use provided coordinates
+        logger.info(f"Using provided coordinates: lat={lat}, lng={lng}")
+        user_lat, user_lng = lat, lng
+    else:
+        # Get latitude and longitude from IP
+        user_lat, user_lng = await get_location_from_ip(client_ip)
+        logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng} for IP {client_ip}")
     
     # Get nearby aircraft
-    aircraft = await get_nearby_aircraft(lat, lng)
+    aircraft = await get_nearby_aircraft(user_lat, user_lng)
     
     # If we found commercial aircraft, return detailed info about the closest one
     if aircraft and len(aircraft) > 0:
         closest_aircraft = aircraft[0]
         return {
             "ip_address": client_ip,
-            "latitude": lat,
-            "longitude": lng,
+            "latitude": user_lat,
+            "longitude": user_lng,
+            "location_source": "query_params" if lat is not None and lng is not None else "ip_address",
             "closest_commercial_aircraft": closest_aircraft
         }
     else:
         return {
             "ip_address": client_ip,
-            "latitude": lat,
-            "longitude": lng,
+            "latitude": user_lat,
+            "longitude": user_lng,
+            "location_source": "query_params" if lat is not None and lng is not None else "ip_address",
             "closest_commercial_aircraft": None,
             "message": "No commercial aircraft found nearby"
         }
