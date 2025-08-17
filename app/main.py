@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 import httpx
 import math
 import os
+import re
 from typing import List, Dict, Any, Optional
 from .aircraft_database import get_aircraft_name
 from .intro import stream_intro, intro_options
@@ -62,7 +63,6 @@ def is_likely_commercial(callsign: str, category: int = None) -> bool:
         r'FLIGHT\d+',
     ]
     
-    import re
     for pattern in non_commercial_patterns:
         if re.match(pattern, callsign):
             return False
@@ -157,10 +157,17 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         
                         icao24 = state[0] if state[0] else None
                         callsign = state[1].strip() if state[1] else "Unknown"
-                        category = state[17] if len(state) > 17 else None  # Category from extended data
+                        # Category from extended data (safer access)
+                        category = None
+                        if len(state) > 17 and state[17] is not None:
+                            category = state[17]
                         
                         # Filter for likely commercial aircraft only
-                        if not is_likely_commercial(callsign, category):
+                        try:
+                            if not is_likely_commercial(callsign, category):
+                                continue
+                        except Exception:
+                            # If filtering fails, skip this aircraft
                             continue
                         
                         aircraft_info = {
