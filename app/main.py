@@ -4,7 +4,12 @@ import httpx
 import math
 import os
 import re
+import logging
 from typing import List, Dict, Any, Optional
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 from .aircraft_database import get_aircraft_name
 from .intro import stream_intro, intro_options
 
@@ -91,24 +96,33 @@ def is_likely_commercial(callsign: str, category: int = None) -> bool:
 async def get_flight_details(icao24: str) -> Optional[Dict[str, Any]]:
     """Get detailed flight information from FlightLabs API using ICAO24 address"""
     if not FLIGHTLABS_API_KEY:
+        logger.warning("FlightLabs API key not configured")
         return None
     
     try:
+        url = f"{FLIGHTLABS_BASE_URL}/flights"
+        params = {
+            "access_key": FLIGHTLABS_API_KEY,
+            "hex": icao24.strip()
+        }
+        
+        logger.info(f"FlightLabs API Request: URL={url}")
+        logger.info(f"FlightLabs API Params: hex={icao24.strip()}, access_key=***{FLIGHTLABS_API_KEY[-4:]}")
+        
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{FLIGHTLABS_BASE_URL}/flights",
-                params={
-                    "access_key": FLIGHTLABS_API_KEY,
-                    "hex": icao24.strip()
-                },
-                timeout=5.0
-            )
+            response = await client.get(url, params=params, timeout=5.0)
+            
+            logger.info(f"FlightLabs API Response: Status={response.status_code}")
+            logger.info(f"FlightLabs API Response Headers: {dict(response.headers)}")
             
             if response.status_code == 200:
                 data = response.json()
+                logger.info(f"FlightLabs API Response Body: {data}")
+                
                 if data and isinstance(data, list) and len(data) > 0:
                     flight = data[0]  # Take first matching flight
                     aircraft_icao = flight.get("aircraft_icao", "")
+                    logger.info(f"FlightLabs API Success: Found flight data for {icao24}")
                     
                     return {
                         "airline_iata": flight.get("airline_iata"),
@@ -123,18 +137,29 @@ async def get_flight_details(icao24: str) -> Optional[Dict[str, Any]]:
                         "destination_country": flight.get("arr_country"),
                         "status": flight.get("flight_status")
                     }
+                else:
+                    logger.warning(f"FlightLabs API: No flight data found for {icao24}")
+                    return {"error": "No flight data found"}
             else:
-                # Return error info for non-200 responses
+                # Log error response body for debugging
+                try:
+                    error_body = response.text
+                    logger.error(f"FlightLabs API Error: Status={response.status_code}, Body={error_body}")
+                except:
+                    logger.error(f"FlightLabs API Error: Status={response.status_code}, Body=<unable to read>")
                 return {"error": f"FlightLabs API returned status {response.status_code}"}
                 
     except httpx.TimeoutException:
         # Specific timeout error
+        logger.error(f"FlightLabs API Timeout: Request timed out after 5 seconds for {icao24}")
         return {"error": "FlightLabs API timeout (5 seconds exceeded)"}
     except httpx.RequestError as e:
         # Network/connection errors
+        logger.error(f"FlightLabs API Connection Error: {str(e)} for {icao24}")
         return {"error": f"FlightLabs API connection error: {str(e)}"}
     except Exception as e:
         # Other unexpected errors
+        logger.error(f"FlightLabs API Unexpected Error: {str(e)} for {icao24}")
         return {"error": f"FlightLabs API unexpected error: {str(e)}"}
     
     return None
