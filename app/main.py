@@ -30,18 +30,76 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return R * c
 
-async def get_flight_details(callsign: str) -> Optional[Dict[str, Any]]:
-    """Get detailed flight information from FlightLabs API using callsign"""
+def is_likely_commercial(callsign: str, category: int = None) -> bool:
+    """Determine if an aircraft is likely a commercial flight"""
+    if not callsign or callsign == "Unknown":
+        return False
+    
+    callsign = callsign.strip().upper()
+    
+    # Filter out obviously non-commercial callsigns
+    non_commercial_patterns = [
+        # Private aircraft (typically start with N in US, G- in UK, etc.)
+        r'^N\d+[A-Z]*$',  # US private aircraft (N123AB, N456CD)
+        r'^G-[A-Z]+$',    # UK private aircraft  
+        r'^D-[A-Z]+$',    # German private aircraft
+        r'^F-[A-Z]+$',    # French private aircraft
+        
+        # Special purpose flights
+        r'LIFEGUARD',     # Medical flights
+        r'RESCUE',        # Search and rescue
+        r'POLICE',        # Police flights
+        r'MEDEVAC',       # Medical evacuation
+        r'FIRE',          # Fire fighting
+        
+        # Military patterns (common ones)
+        r'^RCH\d+$',      # US Military
+        r'^CNV\d+$',      # US Military convoy
+        r'^REACH\d+$',    # US Military
+        
+        # Test flights
+        r'TEST\d+',
+        r'FLIGHT\d+',
+    ]
+    
+    import re
+    for pattern in non_commercial_patterns:
+        if re.match(pattern, callsign):
+            return False
+    
+    # Commercial airline callsigns typically follow patterns:
+    # 3-letter airline code + flight number (UAL123, DAL456, SWA789)
+    commercial_patterns = [
+        r'^[A-Z]{3}\d+[A-Z]?$',     # Standard airline format (UAL123, SWA456A)
+        r'^[A-Z]{2}\d+[A-Z]?$',     # Some airlines use 2-letter codes
+    ]
+    
+    for pattern in commercial_patterns:
+        if re.match(pattern, callsign):
+            # Additional check: must be reasonable flight number (not too high)
+            flight_num = ''.join(filter(str.isdigit, callsign))
+            if flight_num and 1 <= int(flight_num) <= 9999:
+                return True
+    
+    # Category-based filtering (if available)
+    # Categories 2-6 are typically commercial aircraft categories
+    if category is not None and 2 <= category <= 6:
+        return True
+    
+    return False
+
+async def get_flight_details(icao24: str) -> Optional[Dict[str, Any]]:
+    """Get detailed flight information from FlightLabs API using ICAO24 address"""
     if not FLIGHTLABS_API_KEY:
         return None
     
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{FLIGHTLABS_BASE_URL}/flights-with-callSign",
+                f"{FLIGHTLABS_BASE_URL}/flights",
                 params={
                     "access_key": FLIGHTLABS_API_KEY,
-                    "callsign": callsign.strip()
+                    "icao24": icao24.strip()
                 },
                 timeout=5.0
             )
@@ -82,7 +140,7 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
         lomin = lng - lon_delta
         lomax = lng + lon_delta
         
-        url = f"https://opensky-network.org/api/states/all?lamin={lamin}&lomin={lomin}&lamax={lamax}&lomax={lomax}"
+        url = f"https://opensky-network.org/api/states/all?extended=1&lamin={lamin}&lomin={lomin}&lamax={lamax}&lomax={lomax}"
         
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=10.0)
@@ -97,9 +155,16 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         aircraft_lon = state[5]
                         distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
                         
+                        icao24 = state[0] if state[0] else None
                         callsign = state[1].strip() if state[1] else "Unknown"
+                        category = state[17] if len(state) > 17 else None  # Category from extended data
+                        
+                        # Filter for likely commercial aircraft only
+                        if not is_likely_commercial(callsign, category):
+                            continue
                         
                         aircraft_info = {
+                            "icao24": icao24,
                             "callsign": callsign,
                             "country": state[2] if state[2] else "Unknown",
                             "latitude": aircraft_lat,
@@ -107,18 +172,22 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                             "altitude": state[7] if state[7] else 0,
                             "velocity": state[9] if state[9] else 0,
                             "heading": state[10] if state[10] else 0,
-                            "distance_km": round(distance, 2)
+                            "distance_km": round(distance, 2),
+                            "category": category,
+                            "is_commercial": True
                         }
                         
-                        # Try to get detailed flight information
-                        if callsign != "Unknown" and FLIGHTLABS_API_KEY:
-                            flight_details = await get_flight_details(callsign)
+                        # Try to get detailed flight information using ICAO24
+                        if icao24 and FLIGHTLABS_API_KEY:
+                            flight_details = await get_flight_details(icao24)
                             if flight_details:
                                 aircraft_info["flight_details"] = flight_details
                             else:
                                 aircraft_info["flight_details_error"] = "Unable to retrieve flight details from FlightLabs API"
-                        elif callsign != "Unknown" and not FLIGHTLABS_API_KEY:
+                        elif icao24 and not FLIGHTLABS_API_KEY:
                             aircraft_info["flight_details_error"] = "FlightLabs API key not configured"
+                        elif not icao24:
+                            aircraft_info["flight_details_error"] = "No ICAO24 address available for this aircraft"
                         
                         aircraft_list.append(aircraft_info)
                 
@@ -159,22 +228,22 @@ async def read_root(request: Request):
     # Get nearby aircraft
     aircraft = await get_nearby_aircraft(lat, lng)
     
-    # If we found aircraft, return detailed info about the closest one
+    # If we found commercial aircraft, return detailed info about the closest one
     if aircraft and len(aircraft) > 0:
         closest_aircraft = aircraft[0]
         return {
             "ip_address": client_ip,
             "latitude": lat,
             "longitude": lng,
-            "closest_aircraft": closest_aircraft
+            "closest_commercial_aircraft": closest_aircraft
         }
     else:
         return {
             "ip_address": client_ip,
             "latitude": lat,
             "longitude": lng,
-            "closest_aircraft": None,
-            "message": "No aircraft found nearby"
+            "closest_commercial_aircraft": None,
+            "message": "No commercial aircraft found nearby"
         }
 
 @app.get("/intro.mp3")
