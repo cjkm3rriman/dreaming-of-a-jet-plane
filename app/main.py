@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse
 import httpx
 import math
 from typing import List, Dict, Any
@@ -103,6 +104,37 @@ async def read_root(request: Request):
         "nearby_aircraft": aircraft,
         "aircraft_count": len(aircraft)
     }
+
+@app.get("/intro")
+async def stream_intro():
+    """Stream MP3 file from CDN"""
+    # MP3 file hosted on S3
+    mp3_url = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/intro.mp3"
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            async with client.stream("GET", mp3_url) as response:
+                if response.status_code == 200:
+                    content_length = response.headers.get("content-length")
+                    content_type = response.headers.get("content-type", "audio/mpeg")
+                    
+                    async def stream_content():
+                        async for chunk in response.aiter_bytes(chunk_size=8192):
+                            yield chunk
+                    
+                    headers = {"Content-Type": content_type}
+                    if content_length:
+                        headers["Content-Length"] = content_length
+                    
+                    return StreamingResponse(
+                        stream_content(),
+                        media_type="audio/mpeg",
+                        headers=headers
+                    )
+                else:
+                    return {"error": "MP3 file not found or not accessible"}
+    except Exception as e:
+        return {"error": f"Failed to stream MP3: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
