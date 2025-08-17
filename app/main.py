@@ -115,6 +115,10 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                             flight_details = await get_flight_details(callsign)
                             if flight_details:
                                 aircraft_info["flight_details"] = flight_details
+                            else:
+                                aircraft_info["flight_details_error"] = "Unable to retrieve flight details from FlightLabs API"
+                        elif callsign != "Unknown" and not FLIGHTLABS_API_KEY:
+                            aircraft_info["flight_details_error"] = "FlightLabs API key not configured"
                         
                         aircraft_list.append(aircraft_info)
                 
