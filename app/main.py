@@ -11,7 +11,7 @@ app = FastAPI()
 
 # FlightLabs API configuration
 FLIGHTLABS_API_KEY = os.getenv("FLIGHTLABS_API_KEY")
-FLIGHTLABS_BASE_URL = "https://app.goflightlabs.com"
+FLIGHTLABS_BASE_URL = "https://www.goflightlabs.com"
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance between two points using Haversine formula (in km)"""
