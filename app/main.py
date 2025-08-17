@@ -99,7 +99,7 @@ async def get_flight_details(icao24: str) -> Optional[Dict[str, Any]]:
                 f"{FLIGHTLABS_BASE_URL}/flights",
                 params={
                     "access_key": FLIGHTLABS_API_KEY,
-                    "icao24": icao24.strip()
+                    "hex": icao24.strip()
                 },
                 timeout=5.0
             )
