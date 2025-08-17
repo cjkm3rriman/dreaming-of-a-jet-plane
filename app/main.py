@@ -123,8 +123,19 @@ async def get_flight_details(icao24: str) -> Optional[Dict[str, Any]]:
                         "destination_country": flight.get("arr_country"),
                         "status": flight.get("flight_status")
                     }
-    except Exception:
-        pass
+            else:
+                # Return error info for non-200 responses
+                return {"error": f"FlightLabs API returned status {response.status_code}"}
+                
+    except httpx.TimeoutException:
+        # Specific timeout error
+        return {"error": "FlightLabs API timeout (5 seconds exceeded)"}
+    except httpx.RequestError as e:
+        # Network/connection errors
+        return {"error": f"FlightLabs API connection error: {str(e)}"}
+    except Exception as e:
+        # Other unexpected errors
+        return {"error": f"FlightLabs API unexpected error: {str(e)}"}
     
     return None
 
@@ -188,9 +199,14 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         if icao24 and FLIGHTLABS_API_KEY:
                             flight_details = await get_flight_details(icao24)
                             if flight_details:
-                                aircraft_info["flight_details"] = flight_details
+                                if "error" in flight_details:
+                                    # FlightLabs API returned an error
+                                    aircraft_info["flight_details_error"] = flight_details["error"]
+                                else:
+                                    # Successful flight details
+                                    aircraft_info["flight_details"] = flight_details
                             else:
-                                aircraft_info["flight_details_error"] = "Unable to retrieve flight details from FlightLabs API"
+                                aircraft_info["flight_details_error"] = "No flight data returned from FlightLabs API"
                         elif icao24 and not FLIGHTLABS_API_KEY:
                             aircraft_info["flight_details_error"] = "FlightLabs API key not configured"
                         elif not icao24:
