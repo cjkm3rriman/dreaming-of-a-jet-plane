@@ -106,35 +106,77 @@ async def read_root(request: Request):
     }
 
 @app.get("/intro")
-async def stream_intro():
-    """Stream MP3 file from CDN"""
+async def stream_intro(request: Request):
+    """Stream MP3 file from S3 with proper headers for audio playback"""
     # MP3 file hosted on S3
     mp3_url = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/intro.mp3"
     
     try:
+        # Prepare headers for the S3 request
+        headers = {}
+        
+        # Handle Range requests for seeking/partial content
+        range_header = request.headers.get("range")
+        if range_header:
+            headers["Range"] = range_header
+        
         async with httpx.AsyncClient() as client:
-            async with client.stream("GET", mp3_url) as response:
-                if response.status_code == 200:
+            async with client.stream("GET", mp3_url, headers=headers) as response:
+                if response.status_code in [200, 206]:  # 206 for partial content
                     content_length = response.headers.get("content-length")
                     content_type = response.headers.get("content-type", "audio/mpeg")
+                    accept_ranges = response.headers.get("accept-ranges")
                     
                     async def stream_content():
                         async for chunk in response.aiter_bytes(chunk_size=8192):
                             yield chunk
                     
-                    headers = {"Content-Type": content_type}
+                    # Set proper headers for audio streaming
+                    response_headers = {
+                        "Content-Type": "audio/mpeg",
+                        "Accept-Ranges": "bytes",
+                        "Cache-Control": "public, max-age=3600",
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+                        "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length"
+                    }
+                    
                     if content_length:
-                        headers["Content-Length"] = content_length
+                        response_headers["Content-Length"] = content_length
+                    
+                    if accept_ranges:
+                        response_headers["Accept-Ranges"] = accept_ranges
+                    
+                    # Handle partial content response
+                    status_code = response.status_code
+                    if range_header and response.status_code == 206:
+                        content_range = response.headers.get("content-range")
+                        if content_range:
+                            response_headers["Content-Range"] = content_range
                     
                     return StreamingResponse(
                         stream_content(),
+                        status_code=status_code,
                         media_type="audio/mpeg",
-                        headers=headers
+                        headers=response_headers
                     )
                 else:
-                    return {"error": "MP3 file not found or not accessible"}
+                    return {"error": f"MP3 file not accessible. Status: {response.status_code}"}
     except Exception as e:
         return {"error": f"Failed to stream MP3: {str(e)}"}
+
+@app.options("/intro")
+async def intro_options():
+    """Handle CORS preflight requests for /intro endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
 
 if __name__ == "__main__":
     import uvicorn
