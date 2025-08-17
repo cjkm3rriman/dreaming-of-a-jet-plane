@@ -195,27 +195,31 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                             "is_commercial": True
                         }
                         
-                        # Try to get detailed flight information using ICAO24
-                        if icao24 and FLIGHTLABS_API_KEY:
-                            flight_details = await get_flight_details(icao24)
-                            if flight_details:
-                                if "error" in flight_details:
-                                    # FlightLabs API returned an error
-                                    aircraft_info["flight_details_error"] = flight_details["error"]
-                                else:
-                                    # Successful flight details
-                                    aircraft_info["flight_details"] = flight_details
-                            else:
-                                aircraft_info["flight_details_error"] = "No flight data returned from FlightLabs API"
-                        elif icao24 and not FLIGHTLABS_API_KEY:
-                            aircraft_info["flight_details_error"] = "FlightLabs API key not configured"
-                        elif not icao24:
-                            aircraft_info["flight_details_error"] = "No ICAO24 address available for this aircraft"
-                        
                         aircraft_list.append(aircraft_info)
                 
-                # Sort by distance and return only the closest aircraft
+                # Sort by distance and get only the closest aircraft
                 aircraft_list.sort(key=lambda x: x["distance_km"])
+                
+                # Only call FlightLabs for the closest aircraft
+                if aircraft_list and len(aircraft_list) > 0:
+                    closest_aircraft = aircraft_list[0]
+                    icao24 = closest_aircraft.get("icao24")
+                    
+                    # Try to get detailed flight information using ICAO24
+                    if icao24 and FLIGHTLABS_API_KEY:
+                        flight_details = await get_flight_details(icao24)
+                        if flight_details:
+                            if "error" in flight_details:
+                                closest_aircraft["flight_details_error"] = flight_details["error"]
+                            else:
+                                closest_aircraft["flight_details"] = flight_details
+                        else:
+                            closest_aircraft["flight_details_error"] = "No flight data returned from FlightLabs API"
+                    elif icao24 and not FLIGHTLABS_API_KEY:
+                        closest_aircraft["flight_details_error"] = "FlightLabs API key not configured"
+                    elif not icao24:
+                        closest_aircraft["flight_details_error"] = "No ICAO24 address available for this aircraft"
+                
                 return aircraft_list[:1]
     
     except Exception:
