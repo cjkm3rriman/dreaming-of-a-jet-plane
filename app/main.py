@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 from .aircraft_database import get_aircraft_name
 from .intro import stream_intro, intro_options
 from .scanning import stream_scanning, scanning_options
+from .voice_test import stream_voice_test, voice_test_options
 
 app = FastAPI()
 
@@ -333,6 +334,16 @@ async def scanning_endpoint(request: Request):
 async def scanning_options_endpoint():
     """Handle CORS preflight requests for /scanning.mp3 endpoint"""
     return await scanning_options()
+
+@app.get("/voice-test")
+async def voice_test_endpoint(request: Request):
+    """Convert text to speech using ElevenLabs API and stream audio"""
+    return await stream_voice_test(request)
+
+@app.options("/voice-test") 
+async def voice_test_options_endpoint():
+    """Handle CORS preflight requests for /voice-test endpoint"""
+    return await voice_test_options()
 
 if __name__ == "__main__":
     import uvicorn

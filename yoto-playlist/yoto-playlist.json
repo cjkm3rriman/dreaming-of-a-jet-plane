@@ -1,0 +1,66 @@
+{
+  "cardId": "gnY5r",
+  "updatedAt": "2025-08-20T23:20:54.804Z",
+  "createdAt": "2025-08-17T10:44:16.016Z",
+  "title": "Dreaming Of A Jet Plane",
+  "metadata": {
+    "accent": "British",
+    "addToFamilyLibrary": true,
+    "author": "Jet Plane Scanner Robot",
+    "category": "stories",
+    "copyright": "© 2025 Raccoon Research Labs",
+    "cover": {
+      "imageL": "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-cover-basic.png"
+    },
+    "description": "Learn about the jet planes in the sky around you right now and what wonderful destinations they are headed to..",
+    "genre": ["Education"],
+    "languages": ["en"],
+    "maxAge": 12,
+    "media": {
+      "hasStreams": true,
+      "duration": 3
+    },
+    "minAge": 3,
+    "note": "For ages 3 & abovr",
+    "order": "featured",
+    "audioPreviewUrl": "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/intro.mp3",
+    "readBy": "Ai",
+    "share": true,
+    "status": {
+      "name": "new",
+      "updatedAt": "2025-08-17T06:00:00Z"
+    },
+    "tags": ["audio", "story", "kids"],
+    "playbackDirection": "asc"
+  },
+  "content": {
+    "activity": "yoto_Player",
+    "chapters": [
+      {
+        "key": "chapter1",
+        "tracks": [
+          {
+            "key": "track1",
+            "title": "Scanning The Skies",
+            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/scanning.mp3",
+            "type": "audio",
+            "format": "mp3",
+            "duration": 3,
+            "display": {
+              "icon16x16": "yoto:#VH4rf7ab6852014Dicc-X268W34q98piqnTaHpnpX0w"
+            }
+          }
+        ]
+      }
+    ],
+    "config": {
+      "autoadvance": "true",
+      "resumeTimeout": 300,
+      "trackNumberOverlayTimeout": 5
+    },
+    "playbackType": "linear",
+    "version": "1.0.0"
+  },
+  "tags": ["education", "fun"],
+  "slug": "dreaming-of-a-jet-plane"
+}
