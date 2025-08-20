@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 from .aircraft_database import get_aircraft_name
 from .intro import stream_intro, intro_options
+from .scanning import stream_scanning, scanning_options
 
 app = FastAPI()
 
@@ -322,6 +323,16 @@ async def intro_endpoint(request: Request):
 async def intro_options_endpoint():
     """Handle CORS preflight requests for /intro.mp3 endpoint"""
     return await intro_options()
+
+@app.get("/scanning.mp3")
+async def scanning_endpoint(request: Request):
+    """Stream scanning MP3 file from S3"""
+    return await stream_scanning(request)
+
+@app.options("/scanning.mp3") 
+async def scanning_options_endpoint():
+    """Handle CORS preflight requests for /scanning.mp3 endpoint"""
+    return await scanning_options()
 
 if __name__ == "__main__":
     import uvicorn
