@@ -15,7 +15,7 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_TEXT_TO_VOICE_API_KEY")
 ELEVENLABS_BASE_URL = "https://api.elevenlabs.io/v1"
 
 # Default voice ID (you can change this to any ElevenLabs voice ID)
-DEFAULT_VOICE_ID = "VR6AewLTigWG4xSOukaG"  # Edward voice - British, Dark, Seductive, Low
+DEFAULT_VOICE_ID = "goT3UYdM9bhm0n2lmKQx"  # Edward voice - British, Dark, Seductive, Low
 
 
 async def stream_voice_test(request: Request):
