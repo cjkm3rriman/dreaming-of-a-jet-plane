@@ -71,7 +71,7 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
         }
         
         params = {
-            "bounds": f"{bounds['south']},{bounds['north']},{bounds['west']},{bounds['east']}",
+            "bounds": f"{bounds['north']:.3f},{bounds['south']:.3f},{bounds['west']:.3f},{bounds['east']:.3f}",
             "limit": 1,  # Limit to 1 result for testing
             "categories": "P"  # Filter to passenger aircraft only
         }
