@@ -66,7 +66,8 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
         url = f"{FR24_BASE_URL}/api/live/flight-positions/full"
         headers = {
             "Authorization": f"Bearer {FR24_API_KEY}",
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Accept-Version": "v1"
         }
         
         params = {
