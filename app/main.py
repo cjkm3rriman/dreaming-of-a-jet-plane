@@ -10,6 +10,8 @@ from typing import List, Dict, Any, Optional
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 from .aircraft_database import get_aircraft_name
+from .airport_database import get_city_country
+from .airline_database import get_airline_name
 from .intro import stream_intro, intro_options
 from .scanning import stream_scanning, scanning_options
 from .voice_test import stream_voice_test, voice_test_options
@@ -114,19 +116,32 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         
                         callsign = flight.get('callsign', '').strip() or "Unknown"
                         
+                        # Get origin and destination airport information
+                        origin_iata = flight.get('orig_iata')
+                        dest_iata = flight.get('dest_iata')
+                        
+                        origin_city, origin_country = get_city_country(origin_iata) if origin_iata else (None, None)
+                        dest_city, dest_country = get_city_country(dest_iata) if dest_iata else (None, None)
+                        
+                        # Get airline information from operating_as field (ICAO code)
+                        airline_icao = flight.get('operating_as')
+                        airline_name = get_airline_name(airline_icao) if airline_icao else None
+                        
                         aircraft_info = {
                             "icao24": flight.get('hex'),
                             "callsign": callsign,
                             "flight_number": flight.get('flight'),
-                            "airline_iata": flight.get('operating_as'),
-                            "airline_icao": flight.get('operating_as'),
+                            "airline_icao": airline_icao,
+                            "airline_name": airline_name,
                             "aircraft_registration": flight.get('reg'),
                             "aircraft_icao": flight.get('type'),
                             "aircraft": get_aircraft_name(flight.get('type', '')),
-                            "origin_airport": flight.get('orig_iata'),
-                            "destination_airport": flight.get('dest_iata'),
-                            "origin_country": None,  # Not available in this API response
-                            "destination_country": None,  # Not available in this API response
+                            "origin_airport": origin_iata,
+                            "origin_city": origin_city,
+                            "origin_country": origin_country,
+                            "destination_airport": dest_iata,
+                            "destination_city": dest_city,
+                            "destination_country": dest_country,
                             "country": None,  # Not available in this API response
                             "latitude": aircraft_lat,
                             "longitude": aircraft_lon,
