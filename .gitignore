@@ -9,6 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
+# Environment variables (NEVER commit secrets!)
+.env
+.env.*
+!.env.example
+
 # Assets folder
 assets/
 

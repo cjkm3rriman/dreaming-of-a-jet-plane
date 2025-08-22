@@ -40,6 +40,8 @@ uv run fastapi run app/main.py --host 0.0.0.0 --port 8000    # Run with custom h
 railway up    # Deploy to Railway (if Railway CLI is installed)
 ```
 
+**IMPORTANT**: When the user asks to "deploy", this means commit all changes to GitHub which automatically triggers Railway deployment. Use git add, commit, and push to deploy the application.
+
 ## Project Structure
 
 ```
