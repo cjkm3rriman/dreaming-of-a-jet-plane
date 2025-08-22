@@ -87,6 +87,7 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
             if response.status_code == 200:
                 data = response.json()
                 logger.info(f"Flightradar24 API Response: Found {len(data.get('data', []))} flights")
+                logger.info(f"Raw flight data: {data.get('data', [])}")
                 
                 flights = data.get('data', [])
                 aircraft_list = []
@@ -97,13 +98,18 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         aircraft_lat = flight.get('lat')
                         aircraft_lon = flight.get('lon')
                         
+                        logger.info(f"Processing flight: {flight.get('callsign')} at lat={aircraft_lat}, lon={aircraft_lon}")
+                        
                         if aircraft_lat is None or aircraft_lon is None:
+                            logger.info(f"Skipping flight {flight.get('callsign')}: missing coordinates")
                             continue
                             
                         distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
+                        logger.info(f"Flight {flight.get('callsign')} distance: {distance:.2f}km (limit: {radius_km}km)")
                         
                         # Skip if outside radius (API bounds are approximate)
                         if distance > radius_km:
+                            logger.info(f"Skipping flight {flight.get('callsign')}: outside radius")
                             continue
                         
                         callsign = flight.get('callsign', '').strip() or "Unknown"
@@ -134,6 +140,7 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         }
                         
                         aircraft_list.append(aircraft_info)
+                        logger.info(f"Added flight {callsign} to aircraft list")
                         
                     except Exception as e:
                         logger.warning(f"Error processing flight data: {e}")
