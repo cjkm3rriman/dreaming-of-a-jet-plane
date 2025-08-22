@@ -11,6 +11,9 @@ This is a FastAPI application called "dreaming-of-a-jet-plane" that uses Yoto to
 - **Python 3.13+**: Core language
 - **UV**: Python package manager for dependency management
 - **FastAPI**: Web framework with standard extras
+- **Flightradar24 API**: Live flight tracking and aircraft data
+- **HTTPX**: Async HTTP client for API requests
+- **ElevenLabs API**: Text-to-speech voice synthesis
 - **Railway**: Deployment platform
 
 ## Development Commands

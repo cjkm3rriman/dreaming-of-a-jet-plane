@@ -3,7 +3,6 @@ from fastapi.responses import StreamingResponse
 import httpx
 import math
 import os
-import re
 import logging
 from typing import List, Dict, Any, Optional
 
@@ -17,9 +16,9 @@ from .voice_test import stream_voice_test, voice_test_options
 
 app = FastAPI()
 
-# FlightLabs API configuration
-FLIGHTLABS_API_KEY = os.getenv("FLIGHTLABS_API_KEY")
-FLIGHTLABS_BASE_URL = "https://www.goflightlabs.com"
+# Flightradar24 API configuration
+FR24_API_KEY = os.getenv("FR24_API_KEY")
+FR24_BASE_URL = "https://fr24api.flightradar24.com"
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance between two points using Haversine formula (in km)"""
@@ -38,227 +37,128 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return R * c
 
-def is_likely_commercial(callsign: str, category: int = None) -> bool:
-    """Determine if an aircraft is likely a commercial flight"""
-    if not callsign or callsign == "Unknown":
-        return False
-    
-    callsign = callsign.strip().upper()
-    
-    # Filter out obviously non-commercial callsigns
-    non_commercial_patterns = [
-        # Private aircraft (typically start with N in US, G- in UK, etc.)
-        r'^N\d+[A-Z]*$',  # US private aircraft (N123AB, N456CD)
-        r'^G-[A-Z]+$',    # UK private aircraft  
-        r'^D-[A-Z]+$',    # German private aircraft
-        r'^F-[A-Z]+$',    # French private aircraft
-        
-        # Special purpose flights
-        r'LIFEGUARD',     # Medical flights
-        r'RESCUE',        # Search and rescue
-        r'POLICE',        # Police flights
-        r'MEDEVAC',       # Medical evacuation
-        r'FIRE',          # Fire fighting
-        
-        # Military patterns (common ones)
-        r'^RCH\d+$',      # US Military
-        r'^CNV\d+$',      # US Military convoy
-        r'^REACH\d+$',    # US Military
-        
-        # Test flights
-        r'TEST\d+',
-        r'FLIGHT\d+',
-    ]
-    
-    for pattern in non_commercial_patterns:
-        if re.match(pattern, callsign):
-            return False
-    
-    # Commercial airline callsigns typically follow patterns:
-    # 3-letter airline code + flight number (UAL123, DAL456, SWA789)
-    commercial_patterns = [
-        r'^[A-Z]{3}\d+[A-Z]?$',     # Standard airline format (UAL123, SWA456A)
-        r'^[A-Z]{2}\d+[A-Z]?$',     # Some airlines use 2-letter codes
-    ]
-    
-    for pattern in commercial_patterns:
-        if re.match(pattern, callsign):
-            # Additional check: must be reasonable flight number (not too high)
-            flight_num = ''.join(filter(str.isdigit, callsign))
-            if flight_num and 1 <= int(flight_num) <= 9999:
-                return True
-    
-    # Category-based filtering (if available)
-    # Categories 2-6 are typically commercial aircraft categories
-    if category is not None and 2 <= category <= 6:
-        return True
-    
-    return False
 
-async def get_flight_details(icao24: str) -> Optional[Dict[str, Any]]:
-    """Get detailed flight information from FlightLabs API using ICAO24 address"""
-    if not FLIGHTLABS_API_KEY:
-        logger.warning("FlightLabs API key not configured")
-        return None
+
+async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) -> tuple[List[Dict[str, Any]], str]:
+    """Get aircraft near the given coordinates using Flightradar24 API
+    
+    Returns:
+        tuple: (aircraft_list, error_message)
+        - aircraft_list: List of aircraft data
+        - error_message: Empty string if successful, error description if failed
+    """
+    if not FR24_API_KEY:
+        logger.warning("Flightradar24 API key not configured")
+        return [], "Flightradar24 API key not configured"
     
     try:
-        url = f"{FLIGHTLABS_BASE_URL}/flights"
-        params = {
-            "access_key": FLIGHTLABS_API_KEY,
-            "hex": icao24.strip()
-        }
-        
-        logger.info(f"FlightLabs API Request: URL={url}")
-        logger.info(f"FlightLabs API Params: hex={icao24.strip()}, access_key=***{FLIGHTLABS_API_KEY[-4:]}")
-        
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, params=params, timeout=5.0)
-            
-            logger.info(f"FlightLabs API Response: Status={response.status_code}")
-            logger.info(f"FlightLabs API Response Headers: {dict(response.headers)}")
-            
-            if response.status_code == 200:
-                response_data = response.json()
-                logger.info(f"FlightLabs API Response Body: {response_data}")
-                
-                # FlightLabs returns data wrapped in {'success': True, 'data': [...]}
-                if response_data and response_data.get('success') and 'data' in response_data:
-                    data = response_data['data']
-                    if data and isinstance(data, list) and len(data) > 0:
-                        flight = data[0]  # Take first matching flight
-                        aircraft_icao = flight.get("aircraft_icao", "")
-                        logger.info(f"FlightLabs API Success: Found flight data for {icao24}")
-                        
-                        return {
-                            "airline_iata": flight.get("airline_iata"),
-                            "airline_icao": flight.get("airline_icao"), 
-                            "flight_number": flight.get("flight_number"),
-                            "aircraft_registration": flight.get("reg_number"),
-                            "aircraft_icao": aircraft_icao,
-                            "aircraft": get_aircraft_name(aircraft_icao),
-                            "origin_airport": flight.get("dep_iata"),
-                            "destination_airport": flight.get("arr_iata"),
-                            "origin_country": flight.get("dep_country"),
-                            "destination_country": flight.get("arr_country"),
-                            "status": flight.get("status")
-                        }
-                    else:
-                        logger.warning(f"FlightLabs API: Empty data array for {icao24}")
-                        return {"error": "No flight data in response"}
-                else:
-                    logger.warning(f"FlightLabs API: Invalid response structure for {icao24}")
-                    return {"error": "Invalid response structure"}
-            else:
-                # Log error response body for debugging
-                try:
-                    error_body = response.text
-                    logger.error(f"FlightLabs API Error: Status={response.status_code}, Body={error_body}")
-                except:
-                    logger.error(f"FlightLabs API Error: Status={response.status_code}, Body=<unable to read>")
-                return {"error": f"FlightLabs API returned status {response.status_code}"}
-                
-    except httpx.TimeoutException:
-        # Specific timeout error
-        logger.error(f"FlightLabs API Timeout: Request timed out after 5 seconds for {icao24}")
-        return {"error": "FlightLabs API timeout (5 seconds exceeded)"}
-    except httpx.RequestError as e:
-        # Network/connection errors
-        logger.error(f"FlightLabs API Connection Error: {str(e)} for {icao24}")
-        return {"error": f"FlightLabs API connection error: {str(e)}"}
-    except Exception as e:
-        # Other unexpected errors
-        logger.error(f"FlightLabs API Unexpected Error: {str(e)} for {icao24}")
-        return {"error": f"FlightLabs API unexpected error: {str(e)}"}
-    
-    return None
-
-async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) -> List[Dict[str, Any]]:
-    """Get aircraft near the given coordinates using OpenSky Network API"""
-    try:
-        # Create bounding box (approximate)
+        # Create bounding box for location filtering
         lat_delta = radius_km / 111.0  # 1 degree lat ≈ 111 km
         lon_delta = radius_km / (111.0 * math.cos(math.radians(lat)))  # Adjust for longitude
         
-        lamin = lat - lat_delta
-        lamax = lat + lat_delta
-        lomin = lng - lon_delta
-        lomax = lng + lon_delta
+        bounds = {
+            "south": lat - lat_delta,
+            "north": lat + lat_delta, 
+            "west": lng - lon_delta,
+            "east": lng + lon_delta
+        }
         
-        url = f"https://opensky-network.org/api/states/all?extended=1&lamin={lamin}&lomin={lomin}&lamax={lamax}&lomax={lomax}"
+        url = f"{FR24_BASE_URL}/api/live/flight-positions/full"
+        headers = {
+            "Authorization": f"Bearer {FR24_API_KEY}",
+            "Accept": "application/json"
+        }
+        
+        params = {
+            "bounds": f"{bounds['south']},{bounds['north']},{bounds['west']},{bounds['east']}",
+            "limit": 1,  # Limit to 1 result for testing
+            "categories": "P"  # Filter to passenger aircraft only
+        }
+        
+        logger.info(f"Flightradar24 API Request: URL={url}")
+        logger.info(f"Flightradar24 API Params: bounds={params['bounds']}, limit={params['limit']}")
         
         async with httpx.AsyncClient() as client:
-            response = await client.get(url, timeout=10.0)
+            response = await client.get(url, headers=headers, params=params, timeout=10.0)
+            
+            logger.info(f"Flightradar24 API Response: Status={response.status_code}")
+            
             if response.status_code == 200:
                 data = response.json()
-                states = data.get("states", [])
+                logger.info(f"Flightradar24 API Response: Found {len(data.get('data', []))} flights")
                 
+                flights = data.get('data', [])
                 aircraft_list = []
-                for state in states:
-                    if len(state) >= 7 and state[6] is not None and state[5] is not None:
-                        aircraft_lat = state[6]
-                        aircraft_lon = state[5]
+                
+                for flight in flights:
+                    try:
+                        # Extract position data
+                        aircraft_lat = flight.get('latitude')
+                        aircraft_lon = flight.get('longitude')
+                        
+                        if aircraft_lat is None or aircraft_lon is None:
+                            continue
+                            
                         distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
                         
-                        icao24 = state[0] if state[0] else None
-                        callsign = state[1].strip() if state[1] else "Unknown"
-                        # Category from extended data (safer access)
-                        category = None
-                        if len(state) > 17 and state[17] is not None:
-                            category = state[17]
-                        
-                        # Filter for likely commercial aircraft only
-                        try:
-                            if not is_likely_commercial(callsign, category):
-                                continue
-                        except Exception:
-                            # If filtering fails, skip this aircraft
+                        # Skip if outside radius (API bounds are approximate)
+                        if distance > radius_km:
                             continue
                         
+                        callsign = flight.get('callsign', '').strip() or "Unknown"
+                        
                         aircraft_info = {
-                            "icao24": icao24,
+                            "icao24": flight.get('icao24'),
                             "callsign": callsign,
-                            "country": state[2] if state[2] else "Unknown",
+                            "flight_number": flight.get('flight_number'),
+                            "airline_iata": flight.get('airline_iata'),
+                            "airline_icao": flight.get('airline_icao'),
+                            "aircraft_registration": flight.get('registration'),
+                            "aircraft_icao": flight.get('aircraft_icao'),
+                            "aircraft": get_aircraft_name(flight.get('aircraft_icao', '')),
+                            "origin_airport": flight.get('origin_airport_iata'),
+                            "destination_airport": flight.get('destination_airport_iata'),
+                            "origin_country": flight.get('origin_country'),
+                            "destination_country": flight.get('destination_country'),
+                            "country": flight.get('country', 'Unknown'),
                             "latitude": aircraft_lat,
                             "longitude": aircraft_lon,
-                            "altitude": state[7] if state[7] else 0,
-                            "velocity": state[9] if state[9] else 0,
-                            "heading": state[10] if state[10] else 0,
+                            "altitude": flight.get('altitude', 0),
+                            "velocity": flight.get('speed', 0),
+                            "heading": flight.get('heading', 0),
                             "distance_km": round(distance, 2),
-                            "category": category,
-                            "is_commercial": True
+                            "status": flight.get('status')
                         }
                         
                         aircraft_list.append(aircraft_info)
+                        
+                    except Exception as e:
+                        logger.warning(f"Error processing flight data: {e}")
+                        continue
                 
-                # Sort by distance and get only the closest aircraft
+                # Sort by distance and return closest aircraft
                 aircraft_list.sort(key=lambda x: x["distance_km"])
+                if aircraft_list:
+                    return aircraft_list[:1], ""
+                else:
+                    return [], "No passenger aircraft found within 100km radius"
                 
-                # Only call FlightLabs for the closest aircraft
-                if aircraft_list and len(aircraft_list) > 0:
-                    closest_aircraft = aircraft_list[0]
-                    icao24 = closest_aircraft.get("icao24")
-                    
-                    # Try to get detailed flight information using ICAO24
-                    if icao24 and FLIGHTLABS_API_KEY:
-                        flight_details = await get_flight_details(icao24)
-                        if flight_details:
-                            if "error" in flight_details:
-                                closest_aircraft["flight_details_error"] = flight_details["error"]
-                            else:
-                                closest_aircraft["flight_details"] = flight_details
-                        else:
-                            closest_aircraft["flight_details_error"] = "No flight data returned from FlightLabs API"
-                    elif icao24 and not FLIGHTLABS_API_KEY:
-                        closest_aircraft["flight_details_error"] = "FlightLabs API key not configured"
-                    elif not icao24:
-                        closest_aircraft["flight_details_error"] = "No ICAO24 address available for this aircraft"
+            else:
+                error_msg = f"Flightradar24 API returned HTTP {response.status_code}"
+                logger.error(f"Flightradar24 API Error: Status={response.status_code}, Body={response.text[:500]}")
+                return [], error_msg
                 
-                return aircraft_list[:1]
+    except httpx.TimeoutException:
+        logger.error(f"Flightradar24 API Timeout: Request timed out after 10 seconds")
+        return [], "Flightradar24 API request timed out (10 seconds)"
+    except httpx.RequestError as e:
+        logger.error(f"Flightradar24 API Connection Error: {str(e)}")
+        return [], f"Network connection error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Flightradar24 API Unexpected Error: {str(e)}")
+        return [], f"Unexpected error: {str(e)}"
     
-    except Exception:
-        pass
-    
-    return []
+    return [], "Unknown error occurred"
 
 async def get_location_from_ip(ip: str) -> tuple[float, float]:
     """Get latitude and longitude from IP address using ipapi.co"""
@@ -293,9 +193,9 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
         logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng} for IP {client_ip}")
     
     # Get nearby aircraft
-    aircraft = await get_nearby_aircraft(user_lat, user_lng)
+    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng)
     
-    # If we found commercial aircraft, return detailed info about the closest one
+    # Return response with unified Flightradar24 data
     if aircraft and len(aircraft) > 0:
         closest_aircraft = aircraft[0]
         return {
@@ -303,7 +203,8 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
             "latitude": user_lat,
             "longitude": user_lng,
             "location_source": "query_params" if lat is not None and lng is not None else "ip_address",
-            "closest_commercial_aircraft": closest_aircraft
+            "closest_passenger_aircraft": closest_aircraft,
+            "data_source": "flightradar24"
         }
     else:
         return {
@@ -311,8 +212,9 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
             "latitude": user_lat,
             "longitude": user_lng,
             "location_source": "query_params" if lat is not None and lng is not None else "ip_address",
-            "closest_commercial_aircraft": None,
-            "message": "No commercial aircraft found nearby"
+            "closest_passenger_aircraft": None,
+            "error_message": error_message,
+            "data_source": "flightradar24"
         }
 
 @app.get("/intro.mp3")

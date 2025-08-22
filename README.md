@@ -9,8 +9,8 @@ Use your Yoto to Learn about the jet planes in the sky around you right now and 
 - **UV** - Fast Python package manager for dependency management
 
 ### External APIs & Services
-- **OpenSky Network API** - Real-time aircraft tracking and flight data with extended metadata
-- **FlightLabs API** - Commercial flight details lookup by ICAO24 transponder address
+- **Flightradar24 API** - Unified live flight tracking with comprehensive aircraft and route data
+- **ElevenLabs API** - Text-to-speech voice synthesis for audio content
 - **ipapi.co** - IP geolocation service for converting IP addresses to coordinates
 
 ### HTTP Client & Networking
@@ -23,17 +23,3 @@ Use your Yoto to Learn about the jet planes in the sky around you right now and 
 ### Development Tools
 - **Claude Code** - AI-powered development assistant for code generation and debugging
 
-### Data & Intelligence
-- **Aircraft Database** - Custom ICAO aircraft type mappings (60+ aircraft models)
-- **Commercial Flight Filtering** - Regex-based patterns to identify airline vs private aircraft
-- **Geographic Algorithms** - Haversine formula for accurate distance calculations
-
-### Key Features
-- **Smart Commercial Aircraft Detection** - Filters for airlines only (UAL, DAL, SWA, etc.)
-- **Real-time IP Geolocation** - User location detection via IP address
-- **ICAO24 Aircraft Identification** - Permanent transponder address lookup
-- **Human-readable Aircraft Names** - "Boeing 737 MAX 8" instead of "B38M"
-- **MP3 Audio Streaming** - Direct S3 streaming with range request support
-- **Comprehensive Flight Details** - Airline, aircraft type, origin/destination airports
-- **Geographic Proximity Search** - 100km radius bounding box calculations
-- **Async/await Architecture** - High performance concurrent API calls
