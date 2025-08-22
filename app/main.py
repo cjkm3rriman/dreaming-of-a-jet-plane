@@ -220,27 +220,31 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
     # Get nearby aircraft
     aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng)
     
-    # Return response with unified Flightradar24 data
+    # Return descriptive sentence about the aircraft
     if aircraft and len(aircraft) > 0:
         closest_aircraft = aircraft[0]
-        return {
-            "ip_address": client_ip,
-            "latitude": user_lat,
-            "longitude": user_lng,
-            "location_source": "query_params" if lat is not None and lng is not None else "ip_address",
-            "closest_passenger_aircraft": closest_aircraft,
-            "data_source": "flightradar24"
-        }
+        
+        # Extract values for the sentence template
+        distance_km = closest_aircraft.get("distance_km", "unknown")
+        flight_number = closest_aircraft.get("flight_number") or closest_aircraft.get("callsign", "unknown flight")
+        destination_city = closest_aircraft.get("destination_city", "an unknown destination")
+        destination_country = closest_aircraft.get("destination_country", "an unknown country")
+        
+        # Build the descriptive sentence
+        if destination_city == "an unknown destination" or destination_country == "an unknown country":
+            sentence = f"Flying overhead just {distance_km} km away from you is flight {flight_number}, travelling to an unknown destination."
+        else:
+            sentence = f"Flying overhead just {distance_km} km away from you is flight {flight_number}, travelling to {destination_city} in {destination_country}."
+        
+        return {"message": sentence}
     else:
-        return {
-            "ip_address": client_ip,
-            "latitude": user_lat,
-            "longitude": user_lng,
-            "location_source": "query_params" if lat is not None and lng is not None else "ip_address",
-            "closest_passenger_aircraft": None,
-            "error_message": error_message,
-            "data_source": "flightradar24"
-        }
+        # Handle error cases with descriptive sentence
+        if error_message:
+            error_sentence = f"No aircraft detected nearby, because of {error_message.lower()}"
+        else:
+            error_sentence = "No aircraft detected nearby, because no passenger aircraft found within 100km radius"
+        
+        return {"message": error_sentence}
 
 @app.get("/intro.mp3")
 async def intro_endpoint(request: Request):
