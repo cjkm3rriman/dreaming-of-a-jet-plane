@@ -93,9 +93,9 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                 
                 for flight in flights:
                     try:
-                        # Extract position data
-                        aircraft_lat = flight.get('latitude')
-                        aircraft_lon = flight.get('longitude')
+                        # Extract position data using Flightradar24 field names
+                        aircraft_lat = flight.get('lat')
+                        aircraft_lon = flight.get('lon')
                         
                         if aircraft_lat is None or aircraft_lon is None:
                             continue
@@ -109,26 +109,28 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         callsign = flight.get('callsign', '').strip() or "Unknown"
                         
                         aircraft_info = {
-                            "icao24": flight.get('icao24'),
+                            "icao24": flight.get('hex'),
                             "callsign": callsign,
-                            "flight_number": flight.get('flight_number'),
-                            "airline_iata": flight.get('airline_iata'),
-                            "airline_icao": flight.get('airline_icao'),
-                            "aircraft_registration": flight.get('registration'),
-                            "aircraft_icao": flight.get('aircraft_icao'),
-                            "aircraft": get_aircraft_name(flight.get('aircraft_icao', '')),
-                            "origin_airport": flight.get('origin_airport_iata'),
-                            "destination_airport": flight.get('destination_airport_iata'),
-                            "origin_country": flight.get('origin_country'),
-                            "destination_country": flight.get('destination_country'),
-                            "country": flight.get('country', 'Unknown'),
+                            "flight_number": flight.get('flight'),
+                            "airline_iata": flight.get('operating_as'),
+                            "airline_icao": flight.get('operating_as'),
+                            "aircraft_registration": flight.get('reg'),
+                            "aircraft_icao": flight.get('type'),
+                            "aircraft": get_aircraft_name(flight.get('type', '')),
+                            "origin_airport": flight.get('orig_iata'),
+                            "destination_airport": flight.get('dest_iata'),
+                            "origin_country": None,  # Not available in this API response
+                            "destination_country": None,  # Not available in this API response
+                            "country": None,  # Not available in this API response
                             "latitude": aircraft_lat,
                             "longitude": aircraft_lon,
-                            "altitude": flight.get('altitude', 0),
-                            "velocity": flight.get('speed', 0),
-                            "heading": flight.get('heading', 0),
+                            "altitude": flight.get('alt', 0),
+                            "velocity": flight.get('gspeed', 0),
+                            "heading": flight.get('track', 0),
                             "distance_km": round(distance, 2),
-                            "status": flight.get('status')
+                            "status": None,  # Not available in this API response
+                            "eta": flight.get('eta'),
+                            "fr24_id": flight.get('fr24_id')
                         }
                         
                         aircraft_list.append(aircraft_info)
