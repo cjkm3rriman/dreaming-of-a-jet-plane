@@ -1,0 +1,14 @@
+{
+  "Rules": [
+    {
+      "ID": "FlightMP3CacheCleanup",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "cache/"
+      },
+      "Expiration": {
+        "Days": 1
+      }
+    }
+  ]
+}

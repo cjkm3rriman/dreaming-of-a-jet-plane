@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 import httpx
 import math
 import os
+import asyncio
 import logging
 from typing import List, Dict, Any, Optional
 
@@ -15,6 +16,7 @@ from .airline_database import get_airline_name
 from .intro import stream_intro, intro_options
 from .scanning import stream_scanning, scanning_options
 from .voice_test import stream_voice_test, voice_test_options
+from .s3_cache import s3_cache
 
 app = FastAPI()
 
@@ -281,6 +283,33 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
         user_lat, user_lng = await get_location_from_ip(client_ip)
         logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng} for IP {client_ip}")
     
+    # Check cache first
+    cache_key = s3_cache.generate_cache_key(user_lat, user_lng)
+    cached_mp3 = await s3_cache.get(cache_key)
+    
+    if cached_mp3:
+        logger.info(f"Serving cached MP3 for location: lat={user_lat}, lng={user_lng}")
+        response_headers = {
+            "Content-Type": "audio/mpeg",
+            "Content-Length": str(len(cached_mp3)),
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+        }
+        
+        return StreamingResponse(
+            iter([cached_mp3]),
+            status_code=200,
+            media_type="audio/mpeg",
+            headers=response_headers
+        )
+    
+    # Cache miss - generate new MP3
+    logger.info(f"Cache miss - generating new MP3 for location: lat={user_lat}, lng={user_lng}")
+    
     # Get nearby aircraft
     aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng)
     
@@ -312,9 +341,14 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
         sentence = f"{detection_sentence} {flight_sentence}"
         
         # Convert sentence to speech
+        logger.info(f"Generating TTS for aircraft detection: {sentence[:50]}...")
         audio_content, tts_error = await convert_text_to_speech(sentence)
         
         if audio_content and not tts_error:
+            logger.info(f"Successfully generated MP3 ({len(audio_content)} bytes) - caching in background")
+            # Cache the newly generated MP3 (don't await - do in background)
+            asyncio.create_task(s3_cache.set(cache_key, audio_content))
+            
             # Return MP3 audio
             response_headers = {
                 "Content-Type": "audio/mpeg",
@@ -344,9 +378,14 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
             error_sentence = "No aircraft detected nearby, because no passenger aircraft found within 100km radius"
         
         # Convert error sentence to speech
+        logger.info(f"Generating TTS for no aircraft found: {error_sentence[:50]}...")
         audio_content, tts_error = await convert_text_to_speech(error_sentence)
         
         if audio_content and not tts_error:
+            logger.info(f"Successfully generated error MP3 ({len(audio_content)} bytes) - caching in background")
+            # Cache the error MP3 too (don't await - do in background)
+            asyncio.create_task(s3_cache.set(cache_key, audio_content))
+            
             # Return MP3 audio
             response_headers = {
                 "Content-Type": "audio/mpeg",

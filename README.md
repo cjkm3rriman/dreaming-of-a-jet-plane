@@ -23,3 +23,19 @@ Use your Yoto to Learn about the jet planes in the sky around you right now and 
 ### Development Tools
 - **Claude Code** - AI-powered development assistant for code generation and debugging
 
+## TODO
+
+### S3 Cache Cleanup Configuration
+Add S3 lifecycle policy to automatically clean up expired cache files:
+
+**Via AWS Console:**
+1. Go to S3 Console → `dreaming-of-a-jet-plane` bucket
+2. Management tab → Lifecycle rules → Create lifecycle rule
+3. Rule name: `FlightMP3CacheCleanup`
+4. Rule scope: Limit to prefix `cache/`  
+5. Lifecycle rule actions: ✓ Expire current versions of objects
+6. Days after object creation: `1`
+7. Create rule
+
+This will automatically delete cache files older than 1 day to prevent storage costs from accumulating.
+
