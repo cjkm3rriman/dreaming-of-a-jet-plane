@@ -8,6 +8,7 @@ class AirportDatabase:
     def __init__(self):
         self._airports: Optional[Dict[str, Dict[str, Any]]] = None
         self._iata_index: Optional[Dict[str, str]] = None
+        self._countries: Optional[Dict[str, str]] = None
     
     def _load_airports(self):
         """Load airports data from JSON file and create IATA index"""
@@ -32,6 +33,21 @@ class AirportDatabase:
         except FileNotFoundError:
             self._airports = {}
             self._iata_index = {}
+    
+    def _load_countries(self):
+        """Load country code to name mapping"""
+        if self._countries is not None:
+            return
+            
+        # Get the directory where this module is located
+        current_dir = os.path.dirname(__file__)
+        countries_file = os.path.join(current_dir, "countries.json")
+        
+        try:
+            with open(countries_file, 'r', encoding='utf-8') as f:
+                self._countries = json.load(f)
+        except FileNotFoundError:
+            self._countries = {}
     
     def get_airport_by_iata(self, iata_code: str) -> Optional[Dict[str, Any]]:
         """Get airport information by IATA code
@@ -64,11 +80,21 @@ class AirportDatabase:
             iata_code: 3-letter IATA airport code
             
         Returns:
-            Tuple of (city, country) or (None, None) if not found
+            Tuple of (city, country_name) or (None, None) if not found
+            Note: country is converted from code to full name (e.g., "US" -> "United States of America")
         """
         airport = self.get_airport_by_iata(iata_code)
         if airport:
-            return airport.get('city'), airport.get('country')
+            city = airport.get('city')
+            country_code = airport.get('country')
+            
+            # Convert country code to full name
+            if country_code:
+                self._load_countries()
+                country_name = self._countries.get(country_code, country_code)  # fallback to code if not found
+                return city, country_name
+            else:
+                return city, None
         return None, None
     
     def get_airport_name(self, iata_code: str) -> Optional[str]:

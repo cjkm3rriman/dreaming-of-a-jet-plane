@@ -22,6 +22,11 @@ app = FastAPI()
 FR24_API_KEY = os.getenv("FR24_API_KEY")
 FR24_BASE_URL = "https://fr24api.flightradar24.com"
 
+# ElevenLabs API configuration
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_TEXT_TO_VOICE_API_KEY")
+ELEVENLABS_BASE_URL = "https://api.elevenlabs.io/v1"
+DEFAULT_VOICE_ID = "goT3UYdM9bhm0n2lmKQx"  # Edward voice - British, Dark, Seductive, Low
+
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance between two points using Haversine formula (in km)"""
     R = 6371  # Earth's radius in kilometers
@@ -39,7 +44,65 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return R * c
 
-
+async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
+    """Convert text to speech using ElevenLabs API
+    
+    Returns:
+        tuple: (audio_content, error_message)
+        - audio_content: MP3 audio bytes if successful, empty bytes if failed
+        - error_message: Empty string if successful, error description if failed
+    """
+    if not ELEVENLABS_API_KEY:
+        logger.warning("ElevenLabs API key not configured")
+        return b"", "ElevenLabs API key not configured"
+    
+    try:
+        # Prepare the request to ElevenLabs API
+        url = f"{ELEVENLABS_BASE_URL}/text-to-speech/{DEFAULT_VOICE_ID}"
+        
+        headers = {
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.5
+            }
+        }
+        
+        logger.info(f"ElevenLabs API Request: URL={url}")
+        logger.info(f"ElevenLabs API Text: {text}")
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, json=payload, headers=headers)
+            
+            logger.info(f"ElevenLabs API Response: Status={response.status_code}")
+            
+            if response.status_code == 200:
+                return response.content, ""
+            else:
+                # Log error response for debugging
+                try:
+                    error_body = response.text
+                    logger.error(f"ElevenLabs API Error: Status={response.status_code}, Body={error_body}")
+                except:
+                    logger.error(f"ElevenLabs API Error: Status={response.status_code}, Body=<unable to read>")
+                
+                return b"", f"ElevenLabs API returned status {response.status_code}"
+                
+    except httpx.TimeoutException:
+        logger.error(f"ElevenLabs API Timeout: Request timed out after 30 seconds")
+        return b"", "ElevenLabs API timeout (30 seconds exceeded)"
+    except httpx.RequestError as e:
+        logger.error(f"ElevenLabs API Connection Error: {str(e)}")
+        return b"", f"ElevenLabs API connection error: {str(e)}"
+    except Exception as e:
+        logger.error(f"ElevenLabs API Unexpected Error: {str(e)}")
+        return b"", f"ElevenLabs API unexpected error: {str(e)}"
 
 async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) -> tuple[List[Dict[str, Any]], str]:
     """Get aircraft near the given coordinates using Flightradar24 API
@@ -227,16 +290,51 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
         # Extract values for the sentence template
         distance_km = closest_aircraft.get("distance_km", "unknown")
         flight_number = closest_aircraft.get("flight_number") or closest_aircraft.get("callsign", "unknown flight")
+        airline_name = closest_aircraft.get("airline_name")
         destination_city = closest_aircraft.get("destination_city", "an unknown destination")
         destination_country = closest_aircraft.get("destination_country", "an unknown country")
         
-        # Build the descriptive sentence
-        if destination_city == "an unknown destination" or destination_country == "an unknown country":
-            sentence = f"Flying overhead just {distance_km} km away from you is flight {flight_number}, travelling to an unknown destination."
+        # Build flight identifier with airline name if available
+        if airline_name:
+            flight_identifier = f"{airline_name} flight {flight_number}"
         else:
-            sentence = f"Flying overhead just {distance_km} km away from you is flight {flight_number}, travelling to {destination_city} in {destination_country}."
+            flight_identifier = f"flight {flight_number}"
         
-        return {"message": sentence}
+        # Build the descriptive sentences
+        detection_sentence = f"Jet plane detected in the sky overhead {distance_km} km from your Yoto player."
+        
+        if destination_city == "an unknown destination" or destination_country == "an unknown country":
+            flight_sentence = f"This is {flight_identifier}, travelling to an unknown destination."
+        else:
+            flight_sentence = f"This is {flight_identifier}, travelling to {destination_city} in {destination_country}."
+        
+        sentence = f"{detection_sentence} {flight_sentence}"
+        
+        # Convert sentence to speech
+        audio_content, tts_error = await convert_text_to_speech(sentence)
+        
+        if audio_content and not tts_error:
+            # Return MP3 audio
+            response_headers = {
+                "Content-Type": "audio/mpeg",
+                "Content-Length": str(len(audio_content)),
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "public, max-age=3600",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+                "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+                "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+            }
+            
+            return StreamingResponse(
+                iter([audio_content]),
+                status_code=200,
+                media_type="audio/mpeg",
+                headers=response_headers
+            )
+        else:
+            # Fall back to text if TTS fails
+            return {"message": sentence, "tts_error": tts_error}
     else:
         # Handle error cases with descriptive sentence
         if error_message:
@@ -244,7 +342,44 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
         else:
             error_sentence = "No aircraft detected nearby, because no passenger aircraft found within 100km radius"
         
-        return {"message": error_sentence}
+        # Convert error sentence to speech
+        audio_content, tts_error = await convert_text_to_speech(error_sentence)
+        
+        if audio_content and not tts_error:
+            # Return MP3 audio
+            response_headers = {
+                "Content-Type": "audio/mpeg",
+                "Content-Length": str(len(audio_content)),
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "public, max-age=3600",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+                "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+                "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+            }
+            
+            return StreamingResponse(
+                iter([audio_content]),
+                status_code=200,
+                media_type="audio/mpeg",
+                headers=response_headers
+            )
+        else:
+            # Fall back to text if TTS fails
+            return {"message": error_sentence, "tts_error": tts_error}
+
+@app.options("/")
+async def root_options():
+    """Handle CORS preflight requests for main endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
 
 @app.get("/intro.mp3")
 async def intro_endpoint(request: Request):
