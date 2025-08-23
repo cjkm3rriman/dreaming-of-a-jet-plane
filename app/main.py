@@ -211,7 +211,8 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                             "altitude": flight.get('alt', 0),
                             "velocity": flight.get('gspeed', 0),
                             "heading": flight.get('track', 0),
-                            "distance_km": round(distance, 2),
+                            "distance_km": round(distance),
+                            "distance_miles": round(distance * 0.621371),
                             "status": None,  # Not available in this API response
                             "eta": flight.get('eta'),
                             "fr24_id": flight.get('fr24_id')
@@ -288,7 +289,7 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
         closest_aircraft = aircraft[0]
         
         # Extract values for the sentence template
-        distance_km = closest_aircraft.get("distance_km", "unknown")
+        distance_miles = closest_aircraft.get("distance_miles", "unknown")
         flight_number = closest_aircraft.get("flight_number") or closest_aircraft.get("callsign", "unknown flight")
         airline_name = closest_aircraft.get("airline_name")
         destination_city = closest_aircraft.get("destination_city", "an unknown destination")
@@ -301,7 +302,7 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
             flight_identifier = f"flight {flight_number}"
         
         # Build the descriptive sentences
-        detection_sentence = f"Jet plane detected in the sky overhead {distance_km} km from your Yoto player."
+        detection_sentence = f"Jet plane detected in the sky overhead {distance_miles} miles from your Yoto player."
         
         if destination_city == "an unknown destination" or destination_country == "an unknown country":
             flight_sentence = f"This is {flight_identifier}, travelling to an unknown destination."
