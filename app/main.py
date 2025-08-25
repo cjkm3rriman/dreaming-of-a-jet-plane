@@ -255,7 +255,7 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
 
 
 @app.get("/")
-async def read_root(request: Request, lat: float = None, lng: float = None, debug: bool = False):
+async def read_root(request: Request, lat: float = None, lng: float = None, debug: int = 0):
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
     
@@ -293,7 +293,7 @@ async def read_root(request: Request, lat: float = None, lng: float = None, debu
     sentence = generate_flight_text(aircraft, error_message)
     
     # Debug mode: return text only without TTS
-    if debug:
+    if debug == 1:
         logger.info(f"Debug mode: returning text without TTS: {sentence[:50]}...")
         debug_info = {
             "debug_mode": True,

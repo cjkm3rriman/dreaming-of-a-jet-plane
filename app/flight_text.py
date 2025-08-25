@@ -43,6 +43,6 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
     else:
         # Handle error cases with descriptive sentence
         if error_message:
-            return f"No aircraft detected nearby, because of {error_message.lower()}"
+            return f"I'm sorry old chum my scanner bot was not able to find any jet planes nearby, because of {error_message.lower()}"
         else:
-            return "No aircraft detected nearby, because no passenger aircraft found within 100km radius"
+            return "I'm sorry old chum my scanner bot was not able to find any jet planes nearby, because no passenger aircraft found within 100km radius"
