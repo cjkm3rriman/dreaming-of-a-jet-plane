@@ -190,8 +190,8 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         origin_city, origin_country = get_city_country(origin_iata) if origin_iata else (None, None)
                         dest_city, dest_country = get_city_country(dest_iata) if dest_iata else (None, None)
                         
-                        # Get airline information from operating_as field (ICAO code)
-                        airline_icao = flight.get('operating_as')
+                        # Get airline information from painted_as field (ICAO code)
+                        airline_icao = flight.get('painted_as')
                         airline_name = get_airline_name(airline_icao) if airline_icao else None
                         
                         aircraft_info = {

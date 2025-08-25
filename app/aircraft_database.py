@@ -23,11 +23,13 @@ class AircraftDatabase:
         except FileNotFoundError:
             self._aircraft = {}
     
-    def get_aircraft_name(self, icao_code: str) -> str:
+    def get_aircraft_name(self, icao_code: str, use_simple_name: bool = True) -> str:
         """Get aircraft name by ICAO code
         
         Args:
             icao_code: Aircraft ICAO type code (e.g., 'A320', 'B737')
+            use_simple_name: If True, returns simplified name (e.g., 'Boeing 787 Dreamliner'),
+                           if False, returns technical name (e.g., 'Boeing 787-8')
             
         Returns:
             Aircraft name or "Unknown Aircraft" if not found
@@ -40,15 +42,23 @@ class AircraftDatabase:
         # Normalize ICAO code
         icao_code = icao_code.strip().upper()
         
-        aircraft_name = self._aircraft.get(icao_code)
-        if aircraft_name:
-            return aircraft_name
+        aircraft_data = self._aircraft.get(icao_code)
+        if aircraft_data:
+            if isinstance(aircraft_data, dict):
+                # New structure with simple and technical names
+                if use_simple_name:
+                    return aircraft_data.get("simple_name", "Unknown Aircraft")
+                else:
+                    return aircraft_data.get("technical_name", "Unknown Aircraft")
+            else:
+                # Old structure (just a string) - fallback
+                return aircraft_data
         else:
             return f"Unknown Aircraft ({icao_code})"
 
 # Global instance for efficient reuse
 _aircraft_db = AircraftDatabase()
 
-def get_aircraft_name(icao_code: str) -> str:
+def get_aircraft_name(icao_code: str, use_simple_name: bool = True) -> str:
     """Get aircraft name by ICAO code"""
-    return _aircraft_db.get_aircraft_name(icao_code)
+    return _aircraft_db.get_aircraft_name(icao_code, use_simple_name)
