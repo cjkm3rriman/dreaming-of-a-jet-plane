@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 import httpx
 import math
 import os
@@ -294,23 +294,82 @@ async def read_root(request: Request, lat: float = None, lng: float = None, debu
     
     # Debug mode: return text only without TTS
     if debug == 1:
-        logger.info(f"Debug mode: returning text without TTS: {sentence[:50]}...")
-        debug_info = {
-            "debug_mode": True,
-            "location": {"lat": user_lat, "lng": user_lng},
-            "cache_key": cache_key,
-            "aircraft_found": len(aircraft) > 0,
-            "aircraft_count": len(aircraft),
-            "message": sentence
-        }
+        logger.info(f"Debug mode: returning HTML without TTS: {sentence[:50]}...")
         
-        # Include aircraft details if found
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Dreaming of a Jet Plane - Debug Mode</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }}
+                .container {{ background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
+                h2 {{ color: #34495e; margin-top: 30px; }}
+                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
+                th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+                th {{ background-color: #3498db; color: white; }}
+                tr:nth-child(even) {{ background-color: #f9f9f9; }}
+                .message {{ background-color: #e8f6f3; padding: 20px; border-left: 4px solid #1abc9c; margin: 20px 0; }}
+                .error {{ background-color: #fadbd8; border-left-color: #e74c3c; }}
+                .success {{ background-color: #d5f4e6; border-left-color: #27ae60; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🛩️ Dreaming of a Jet Plane - Debug Mode</h1>
+                
+                <div class="message {'success' if len(aircraft) > 0 else 'error'}">
+                    <strong>Generated Message:</strong><br>
+                    {sentence}
+                </div>
+                
+                <h2>📍 Location Information</h2>
+                <table>
+                    <tr><th>Parameter</th><th>Value</th></tr>
+                    <tr><td>Latitude</td><td>{user_lat}</td></tr>
+                    <tr><td>Longitude</td><td>{user_lng}</td></tr>
+                    <tr><td>Cache Key</td><td>{cache_key}</td></tr>
+                </table>
+                
+                <h2>✈️ Flight Detection Results</h2>
+                <table>
+                    <tr><th>Parameter</th><th>Value</th></tr>
+                    <tr><td>Aircraft Found</td><td>{'Yes' if len(aircraft) > 0 else 'No'}</td></tr>
+                    <tr><td>Aircraft Count</td><td>{len(aircraft)}</td></tr>
+        """
+        
+        if error_message:
+            html_content += f"""
+                    <tr><td>Error Message</td><td>{error_message}</td></tr>
+            """
+        
+        html_content += """
+                </table>
+        """
+        
+        # Add aircraft details if found
         if aircraft and len(aircraft) > 0:
-            debug_info["aircraft_details"] = aircraft[0]
-        elif error_message:
-            debug_info["error"] = error_message
+            closest_aircraft = aircraft[0]
+            html_content += """
+                <h2>🛫 Aircraft Details</h2>
+                <table>
+                    <tr><th>Property</th><th>Value</th></tr>
+            """
             
-        return debug_info
+            for key, value in closest_aircraft.items():
+                if value is not None and value != "":
+                    html_content += f"<tr><td>{key.replace('_', ' ').title()}</td><td>{value}</td></tr>"
+            
+            html_content += "</table>"
+        
+        html_content += """
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
     
     if aircraft and len(aircraft) > 0:
         # Convert sentence to speech
