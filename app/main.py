@@ -17,6 +17,8 @@ from .intro import stream_intro, intro_options
 from .scanning import stream_scanning, scanning_options
 from .voice_test import stream_voice_test, voice_test_options
 from .s3_cache import s3_cache
+from .flight_text import generate_flight_text
+from .location_utils import get_user_location
 
 app = FastAPI()
 
@@ -251,37 +253,11 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
     
     return [], "Unknown error occurred"
 
-async def get_location_from_ip(ip: str) -> tuple[float, float]:
-    """Get latitude and longitude from IP address using ipapi.co"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"https://ipapi.co/{ip}/json/")
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("latitude", 0.0), data.get("longitude", 0.0)
-    except Exception:
-        pass
-    return 0.0, 0.0
 
 @app.get("/")
-async def read_root(request: Request, lat: float = None, lng: float = None):
-    # Check for real IP in common proxy headers
-    client_ip = (
-        request.headers.get("x-forwarded-for", "").split(",")[0].strip() or
-        request.headers.get("x-real-ip") or
-        request.headers.get("cf-connecting-ip") or  # Cloudflare
-        request.client.host
-    )
-    
-    # Get latitude and longitude - use parameters if provided, otherwise IP lookup
-    if lat is not None and lng is not None:
-        # Use provided coordinates
-        logger.info(f"Using provided coordinates: lat={lat}, lng={lng}")
-        user_lat, user_lng = lat, lng
-    else:
-        # Get latitude and longitude from IP
-        user_lat, user_lng = await get_location_from_ip(client_ip)
-        logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng} for IP {client_ip}")
+async def read_root(request: Request, lat: float = None, lng: float = None, debug: bool = False):
+    # Get user location using shared function
+    user_lat, user_lng = await get_user_location(request, lat, lng)
     
     # Check cache first
     cache_key = s3_cache.generate_cache_key(user_lat, user_lng)
@@ -313,33 +289,30 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
     # Get nearby aircraft
     aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng)
     
-    # Return descriptive sentence about the aircraft
+    # Generate descriptive text about the aircraft
+    sentence = generate_flight_text(aircraft, error_message)
+    
+    # Debug mode: return text only without TTS
+    if debug:
+        logger.info(f"Debug mode: returning text without TTS: {sentence[:50]}...")
+        debug_info = {
+            "debug_mode": True,
+            "location": {"lat": user_lat, "lng": user_lng},
+            "cache_key": cache_key,
+            "aircraft_found": len(aircraft) > 0,
+            "aircraft_count": len(aircraft),
+            "message": sentence
+        }
+        
+        # Include aircraft details if found
+        if aircraft and len(aircraft) > 0:
+            debug_info["aircraft_details"] = aircraft[0]
+        elif error_message:
+            debug_info["error"] = error_message
+            
+        return debug_info
+    
     if aircraft and len(aircraft) > 0:
-        closest_aircraft = aircraft[0]
-        
-        # Extract values for the sentence template
-        distance_miles = closest_aircraft.get("distance_miles", "unknown")
-        flight_number = closest_aircraft.get("flight_number") or closest_aircraft.get("callsign", "unknown flight")
-        airline_name = closest_aircraft.get("airline_name")
-        destination_city = closest_aircraft.get("destination_city", "an unknown destination")
-        destination_country = closest_aircraft.get("destination_country", "an unknown country")
-        
-        # Build flight identifier with airline name if available
-        if airline_name:
-            flight_identifier = f"{airline_name} flight {flight_number}"
-        else:
-            flight_identifier = f"flight {flight_number}"
-        
-        # Build the descriptive sentences
-        detection_sentence = f"Jet plane detected in the sky overhead {distance_miles} miles from your Yoto player."
-        
-        if destination_city == "an unknown destination" or destination_country == "an unknown country":
-            flight_sentence = f"This is {flight_identifier}, travelling to an unknown destination."
-        else:
-            flight_sentence = f"This is {flight_identifier}, travelling to {destination_city} in {destination_country}."
-        
-        sentence = f"{detection_sentence} {flight_sentence}"
-        
         # Convert sentence to speech
         logger.info(f"Generating TTS for aircraft detection: {sentence[:50]}...")
         audio_content, tts_error = await convert_text_to_speech(sentence)
@@ -371,15 +344,9 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
             # Fall back to text if TTS fails
             return {"message": sentence, "tts_error": tts_error}
     else:
-        # Handle error cases with descriptive sentence
-        if error_message:
-            error_sentence = f"No aircraft detected nearby, because of {error_message.lower()}"
-        else:
-            error_sentence = "No aircraft detected nearby, because no passenger aircraft found within 100km radius"
-        
-        # Convert error sentence to speech
-        logger.info(f"Generating TTS for no aircraft found: {error_sentence[:50]}...")
-        audio_content, tts_error = await convert_text_to_speech(error_sentence)
+        # Convert sentence to speech (sentence already generated by generate_flight_text)
+        logger.info(f"Generating TTS for no aircraft found: {sentence[:50]}...")
+        audio_content, tts_error = await convert_text_to_speech(sentence)
         
         if audio_content and not tts_error:
             logger.info(f"Successfully generated error MP3 ({len(audio_content)} bytes) - caching in background")
@@ -406,7 +373,7 @@ async def read_root(request: Request, lat: float = None, lng: float = None):
             )
         else:
             # Fall back to text if TTS fails
-            return {"message": error_sentence, "tts_error": tts_error}
+            return {"message": sentence, "tts_error": tts_error}
 
 @app.options("/")
 async def root_options():

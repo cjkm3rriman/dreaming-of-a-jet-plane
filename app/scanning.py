@@ -8,21 +8,12 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
 from .s3_cache import s3_cache
+from .flight_text import generate_flight_text
+from .location_utils import get_user_location
 
 logger = logging.getLogger(__name__)
 
 
-async def get_location_from_ip(ip: str) -> tuple[float, float]:
-    """Get latitude and longitude from IP address using ipapi.co"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"https://ipapi.co/{ip}/json/")
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("latitude", 0.0), data.get("longitude", 0.0)
-    except Exception:
-        pass
-    return 0.0, 0.0
 
 
 async def pre_generate_flight_mp3(lat: float, lng: float):
@@ -30,47 +21,30 @@ async def pre_generate_flight_mp3(lat: float, lng: float):
     try:
         logger.info(f"Starting MP3 pre-generation for location: lat={lat}, lng={lng}")
         
+        # Check cache first - don't regenerate if already cached
+        cache_key = s3_cache.generate_cache_key(lat, lng)
+        cached_mp3 = await s3_cache.get(cache_key)
+        
+        if cached_mp3:
+            logger.info(f"MP3 already cached for location: lat={lat}, lng={lng} - skipping pre-generation")
+            return
+        
+        logger.info(f"Cache miss - proceeding with MP3 pre-generation for location: lat={lat}, lng={lng}")
+        
         # Import here to avoid circular imports
         from .main import get_nearby_aircraft, convert_text_to_speech
         
         # Get flight data
         aircraft, error_message = await get_nearby_aircraft(lat, lng)
         
-        # Generate the same sentence as main endpoint
-        if aircraft and len(aircraft) > 0:
-            closest_aircraft = aircraft[0]
-            
-            distance_miles = closest_aircraft.get("distance_miles", "unknown")
-            flight_number = closest_aircraft.get("flight_number") or closest_aircraft.get("callsign", "unknown flight")
-            airline_name = closest_aircraft.get("airline_name")
-            destination_city = closest_aircraft.get("destination_city", "an unknown destination")
-            destination_country = closest_aircraft.get("destination_country", "an unknown country")
-            
-            if airline_name:
-                flight_identifier = f"{airline_name} flight {flight_number}"
-            else:
-                flight_identifier = f"flight {flight_number}"
-            
-            detection_sentence = f"Jet plane detected in the sky overhead {distance_miles} miles from your Yoto player."
-            
-            if destination_city == "an unknown destination" or destination_country == "an unknown country":
-                flight_sentence = f"This is {flight_identifier}, travelling to an unknown destination."
-            else:
-                flight_sentence = f"This is {flight_identifier}, travelling to {destination_city} in {destination_country}."
-            
-            sentence = f"{detection_sentence} {flight_sentence}"
-        else:
-            if error_message:
-                sentence = f"No aircraft detected nearby, because of {error_message.lower()}"
-            else:
-                sentence = "No aircraft detected nearby, because no passenger aircraft found within 100km radius"
+        # Generate descriptive text using shared function
+        sentence = generate_flight_text(aircraft, error_message)
         
         # Convert to speech
         audio_content, tts_error = await convert_text_to_speech(sentence)
         
         if audio_content and not tts_error:
-            # Cache the MP3
-            cache_key = s3_cache.generate_cache_key(lat, lng)
+            # Cache the MP3 (cache_key already generated above)
             success = await s3_cache.set(cache_key, audio_content)
             if success:
                 logger.info(f"Successfully pre-generated and cached MP3 for location: lat={lat}, lng={lng}")
@@ -85,20 +59,8 @@ async def pre_generate_flight_mp3(lat: float, lng: float):
 
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
     """Stream scanning MP3 file from S3 and trigger MP3 pre-generation"""
-    # Get location for pre-generation
-    if lat is not None and lng is not None:
-        user_lat, user_lng = lat, lng
-        logger.info(f"Using provided coordinates for pre-generation: lat={lat}, lng={lng}")
-    else:
-        # Get client IP and location
-        client_ip = (
-            request.headers.get("x-forwarded-for", "").split(",")[0].strip() or
-            request.headers.get("x-real-ip") or
-            request.headers.get("cf-connecting-ip") or
-            request.client.host
-        )
-        user_lat, user_lng = await get_location_from_ip(client_ip)
-        logger.info(f"Using IP-based location for pre-generation: lat={user_lat}, lng={user_lng} for IP {client_ip}")
+    # Get user location using shared function
+    user_lat, user_lng = await get_user_location(request, lat, lng)
     
     # Start MP3 pre-generation in background (don't await)
     if user_lat != 0.0 or user_lng != 0.0:  # Only if we have a valid location
