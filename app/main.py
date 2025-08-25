@@ -351,6 +351,11 @@ async def read_root(request: Request, lat: float = None, lng: float = None, debu
         # Add aircraft details if found
         if aircraft and len(aircraft) > 0:
             closest_aircraft = aircraft[0]
+            
+            # Get aircraft coordinates for Google Maps link
+            aircraft_lat = closest_aircraft.get('latitude')
+            aircraft_lng = closest_aircraft.get('longitude')
+            
             html_content += """
                 <h2>🛫 Aircraft Details</h2>
                 <table>
@@ -362,6 +367,23 @@ async def read_root(request: Request, lat: float = None, lng: float = None, debu
                     html_content += f"<tr><td>{key.replace('_', ' ').title()}</td><td>{value}</td></tr>"
             
             html_content += "</table>"
+            
+            # Add Google Maps directions link if we have aircraft coordinates
+            if aircraft_lat and aircraft_lng:
+                maps_url = f"https://www.google.com/maps/dir/?api=1&origin={user_lat},{user_lng}&destination={aircraft_lat},{aircraft_lng}&travelmode=driving"
+                html_content += f"""
+                <h2>🗺️ Google Maps</h2>
+                <div class="message">
+                    <a href="{maps_url}" target="_blank" style="color: #3498db; text-decoration: none; font-weight: bold;">
+                        📍 View Directions from Your Location to Aircraft Position
+                    </a>
+                    <br><br>
+                    <small style="color: #666;">
+                        Your Location: {user_lat}, {user_lng}<br>
+                        Aircraft Location: {aircraft_lat}, {aircraft_lng}
+                    </small>
+                </div>
+                """
         
         html_content += """
             </div>
