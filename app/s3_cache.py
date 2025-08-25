@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from typing import Optional
 import httpx
 import os
+import hmac
+import urllib.parse
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,73 @@ class S3MP3Cache:
         
         logger.info(f"Generated cache key {cache_key} for location {location_str}")
         return f"{self.cache_prefix}{cache_key}.mp3"
+    
+    def _create_aws_signature(self, method: str, url: str, headers: dict, payload: bytes) -> dict:
+        """Create AWS Signature Version 4 headers for S3 request"""
+        from urllib.parse import urlparse
+        import datetime
+        
+        parsed_url = urlparse(url)
+        host = parsed_url.netloc
+        path = parsed_url.path
+        
+        # Create timestamp
+        t = datetime.datetime.utcnow()
+        amzdate = t.strftime('%Y%m%dT%H%M%SZ')
+        datestamp = t.strftime('%Y%m%d')
+        
+        # Create canonical request with all headers that will be sent
+        canonical_uri = path
+        canonical_querystring = ''
+        payload_hash = hashlib.sha256(payload).hexdigest()
+        
+        # Build canonical headers - include all headers that will be sent
+        canonical_headers_dict = {
+            'host': host,
+            'x-amz-content-sha256': payload_hash,
+            'x-amz-date': amzdate,
+        }
+        
+        # Add any x-amz-meta headers from the original headers
+        for key, value in headers.items():
+            if key.lower().startswith('x-amz-meta-'):
+                canonical_headers_dict[key.lower()] = str(value)
+        
+        # Sort headers and build canonical string
+        sorted_headers = sorted(canonical_headers_dict.items())
+        canonical_headers = ''.join([f'{k}:{v}\n' for k, v in sorted_headers])
+        signed_headers = ';'.join([k for k, v in sorted_headers])
+        
+        canonical_request = f'{method}\n{canonical_uri}\n{canonical_querystring}\n{canonical_headers}\n{signed_headers}\n{payload_hash}'
+        
+        # Create string to sign
+        algorithm = 'AWS4-HMAC-SHA256'
+        credential_scope = f'{datestamp}/{self.aws_region}/s3/aws4_request'
+        string_to_sign = f'{algorithm}\n{amzdate}\n{credential_scope}\n{hashlib.sha256(canonical_request.encode()).hexdigest()}'
+        
+        # Create signing key
+        def sign(key, msg):
+            return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+        
+        def getSignatureKey(key, dateStamp, regionName, serviceName):
+            kDate = sign(('AWS4' + key).encode('utf-8'), dateStamp)
+            kRegion = sign(kDate, regionName)
+            kService = sign(kRegion, serviceName)
+            kSigning = sign(kService, "aws4_request")
+            return kSigning
+        
+        signing_key = getSignatureKey(self.aws_secret_key, datestamp, self.aws_region, 's3')
+        signature = hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
+        
+        # Create authorization header
+        authorization_header = f'{algorithm} Credential={self.aws_access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}'
+        
+        # Return headers to add to request
+        return {
+            'x-amz-date': amzdate,
+            'x-amz-content-sha256': payload_hash,
+            'Authorization': authorization_header
+        }
     
     async def get(self, cache_key: str) -> Optional[bytes]:
         """Get MP3 data from S3 cache if not expired"""
@@ -118,18 +187,22 @@ class S3MP3Cache:
                 "x-amz-meta-ttl-minutes": str(self.ttl_minutes)
             }
             
-            # Note: This is a simplified approach. In production, you'd want to:
-            # 1. Use proper AWS authentication (boto3)
-            # 2. Use presigned URLs for security
-            # 3. Handle AWS-specific error responses
-            
             logger.info(f"Uploading to S3 cache: {cache_key} ({len(data)} bytes)")
             
-            # For now, we'll skip the actual S3 upload and just log it
-            # This would need proper AWS SDK integration
-            logger.info(f"Would upload {len(data)} bytes to S3: {s3_url}")
+            # Add AWS signature headers
+            aws_headers = self._create_aws_signature('PUT', s3_url, headers, data)
+            headers.update(aws_headers)
             
-            return True
+            # Perform actual S3 upload
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.put(s3_url, content=data, headers=headers)
+                
+                if response.status_code == 200:
+                    logger.info(f"Successfully uploaded to S3: {cache_key} ({len(data)} bytes)")
+                    return True
+                else:
+                    logger.error(f"S3 upload failed: {response.status_code} - {response.text[:200]}")
+                    return False
             
         except Exception as e:
             logger.error(f"S3 cache set error for key {cache_key}: {e}")

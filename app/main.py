@@ -451,6 +451,36 @@ async def voice_test_options_endpoint():
     """Handle CORS preflight requests for /voice-test endpoint"""
     return await voice_test_options()
 
+@app.get("/test-cache")
+async def test_cache_endpoint():
+    """Test S3 cache functionality without using ElevenLabs API"""
+    # Create dummy MP3 data (just some bytes that could represent audio)
+    dummy_mp3_data = b"fake_mp3_data_for_testing_" * 1000  # ~26KB of fake data
+    
+    # Generate a test cache key
+    test_lat, test_lng = 51.5074, -0.1278  # London coordinates
+    cache_key = s3_cache.generate_cache_key(test_lat, test_lng)
+    
+    logger.info(f"Testing cache upload with key: {cache_key}")
+    
+    # Try to upload to cache
+    upload_success = await s3_cache.set(cache_key, dummy_mp3_data)
+    
+    # Try to retrieve from cache
+    cached_data = await s3_cache.get(cache_key)
+    
+    return {
+        "test_location": {"lat": test_lat, "lng": test_lng},
+        "cache_key": cache_key,
+        "upload_success": upload_success,
+        "upload_data_size": len(dummy_mp3_data),
+        "cache_hit": cached_data is not None,
+        "cached_data_size": len(cached_data) if cached_data else 0,
+        "s3_cache_enabled": s3_cache.enabled,
+        "bucket_name": s3_cache.bucket_name,
+        "aws_configured": bool(s3_cache.aws_access_key and s3_cache.aws_secret_key)
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
