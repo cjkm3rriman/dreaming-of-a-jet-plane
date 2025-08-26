@@ -93,7 +93,9 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
             scanner_info += f" carrying {passenger_capacity} passengers"
             
         if velocity_mph > 0:
-            scanner_info += f" travelling at a whopping {velocity_mph} miles per hour"
+            speed_words = ["whopping", "stupendous", "astounding", "speedy", "breathtaking"]
+            speed_word = random.choice(speed_words)
+            scanner_info += f" travelling at a {speed_word} {velocity_mph} miles per hour"
             
         scanner_sentence = scanner_info + "."
         
