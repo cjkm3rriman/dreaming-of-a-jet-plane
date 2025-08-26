@@ -1,0 +1,722 @@
+{
+    "Tokyo": {
+        "city": "Tokyo",
+        "state": null,
+        "country": "Japan",
+        "population": 37036200,
+        "fun_facts": []
+    },
+    "Delhi": {
+        "city": "Delhi",
+        "state": "Delhi",
+        "country": "India",
+        "population": 34665600,
+        "fun_facts": []
+    },
+    "Shanghai": {
+        "city": "Shanghai",
+        "state": null,
+        "country": "China",
+        "population": 30482100,
+        "fun_facts": []
+    },
+    "Dhaka": {
+        "city": "Dhaka",
+        "state": null,
+        "country": "Bangladesh",
+        "population": 24652900,
+        "fun_facts": []
+    },
+    "Cairo": {
+        "city": "Cairo",
+        "state": null,
+        "country": "Egypt",
+        "population": 23074200,
+        "fun_facts": []
+    },
+    "Sao Paulo": {
+        "city": "Sao Paulo",
+        "state": "São Paulo",
+        "country": "Brazil",
+        "population": 22990000,
+        "fun_facts": []
+    },
+    "Mexico City": {
+        "city": "Mexico City",
+        "state": "Mexico City",
+        "country": "Mexico",
+        "population": 22752400,
+        "fun_facts": []
+    },
+    "Beijing": {
+        "city": "Beijing",
+        "state": null,
+        "country": "China",
+        "population": 22596500,
+        "fun_facts": []
+    },
+    "Mumbai": {
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "country": "India",
+        "population": 22089000,
+        "fun_facts": []
+    },
+    "Osaka": {
+        "city": "Osaka",
+        "state": null,
+        "country": "Japan",
+        "population": 18921600,
+        "fun_facts": []
+    },
+    "Chongqing": {
+        "city": "Chongqing",
+        "state": null,
+        "country": "China",
+        "population": 18171200,
+        "fun_facts": []
+    },
+    "Karachi": {
+        "city": "Karachi",
+        "state": "Sindh",
+        "country": "Pakistan",
+        "population": 18076800,
+        "fun_facts": []
+    },
+    "Kinshasa": {
+        "city": "Kinshasa",
+        "state": null,
+        "country": "Democratic Republic of the Congo",
+        "population": 17778500,
+        "fun_facts": []
+    },
+    "Lagos": {
+        "city": "Lagos",
+        "state": "Lagos",
+        "country": "Nigeria",
+        "population": 17156400,
+        "fun_facts": []
+    },
+    "Istanbul": {
+        "city": "Istanbul",
+        "state": null,
+        "country": "Turkey",
+        "population": 16236700,
+        "fun_facts": []
+    },
+    "Buenos Aires": {
+        "city": "Buenos Aires",
+        "state": null,
+        "country": "Argentina",
+        "population": 15908400,
+        "fun_facts": []
+    },
+    "Kolkata": {
+        "city": "Kolkata",
+        "state": "West Bengal",
+        "country": "India",
+        "population": 15853100,
+        "fun_facts": []
+    },
+    "Manila": {
+        "city": "Manila",
+        "state": "Metro Manila",
+        "country": "Philippines",
+        "population": 14946900,
+        "fun_facts": []
+    },
+    "Tianjin": {
+        "city": "Tianjin",
+        "state": null,
+        "country": "China",
+        "population": 14722600,
+        "fun_facts": []
+    },
+    "Rio de Janeiro": {
+        "city": "Rio de Janeiro",
+        "state": "Rio de Janeiro",
+        "country": "Brazil",
+        "population": 14102300,
+        "fun_facts": []
+    },
+    "Guangzhou": {
+        "city": "Guangzhou",
+        "state": null,
+        "country": "China",
+        "population": 13892400,
+        "fun_facts": []
+    },
+    "Lahore": {
+        "city": "Lahore",
+        "state": "Punjab",
+        "country": "Pakistan",
+        "population": 13487600,
+        "fun_facts": []
+    },
+    "Shenzhen": {
+        "city": "Shenzhen",
+        "state": null,
+        "country": "China",
+        "population": 13067300,
+        "fun_facts": []
+    },
+    "Bangalore": {
+        "city": "Bangalore",
+        "state": "Karnataka",
+        "country": "India",
+        "population": 12764100,
+        "fun_facts": []
+    },
+    "Moscow": {
+        "city": "Moscow",
+        "state": null,
+        "country": "Russia",
+        "population": 12593000,
+        "fun_facts": []
+    },
+    "Chennai": {
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "country": "India",
+        "population": 11639500,
+        "fun_facts": []
+    },
+    "Bogota": {
+        "city": "Bogota",
+        "state": null,
+        "country": "Colombia",
+        "population": 11428100,
+        "fun_facts": []
+    },
+    "Jakarta": {
+        "city": "Jakarta",
+        "state": null,
+        "country": "Indonesia",
+        "population": 11249200,
+        "fun_facts": []
+    },
+    "Paris": {
+        "city": "Paris",
+        "state": null,
+        "country": "France",
+        "population": 11144800,
+        "fun_facts": []
+    },
+    "Seoul": {
+        "city": "Seoul",
+        "state": null,
+        "country": "South Korea",
+        "population": 10951600,
+        "fun_facts": []
+    },
+    "Ho Chi Minh City": {
+        "city": "Ho Chi Minh City",
+        "state": null,
+        "country": "Vietnam",
+        "population": 10715700,
+        "fun_facts": []
+    },
+    "Lima": {
+        "city": "Lima",
+        "state": null,
+        "country": "Peru",
+        "population": 10628400,
+        "fun_facts": []
+    },
+    "London": {
+        "city": "London",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 9540600,
+        "fun_facts": [
+            "London has six ravens living at the Tower of London, and one of them is named Thor - but he's actually a bird, not a superhero!",
+            "People have forgotten some very silly things on London's trains, including a samurai sword, a human skull, and even a coffin!",
+            "There are pelicans living in the middle of London at St James's Park, and they get fed fish every day at 2:30pm like clockwork",
+            "Big Ben's giant clock is fixed by adding or removing old pennies - just like putting coins in a piggy bank to make it heavier!",
+            "London is technically a forest because it has so many trees that it meets the official definition - it's the world's biggest urban jungle!"
+        ]
+    },
+    "Nagoya": {
+        "city": "Nagoya",
+        "state": null,
+        "country": "Japan",
+        "population": 9359300,
+        "fun_facts": []
+    },
+    "Chicago": {
+        "city": "Chicago",
+        "state": "Illinois",
+        "country": "United States",
+        "population": 8916200,
+        "fun_facts": []
+    },
+    "Tehran": {
+        "city": "Tehran",
+        "state": null,
+        "country": "Iran",
+        "population": 8846800,
+        "fun_facts": []
+    },
+    "Hyderabad": {
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "country": "India",
+        "population": 8749900,
+        "fun_facts": []
+    },
+    "Nanjing": {
+        "city": "Nanjing",
+        "state": null,
+        "country": "China",
+        "population": 8534900,
+        "fun_facts": []
+    },
+    "Wuhan": {
+        "city": "Wuhan",
+        "state": null,
+        "country": "China",
+        "population": 8525200,
+        "fun_facts": []
+    },
+    "New York": {
+        "city": "New York",
+        "state": "New York",
+        "country": "United States",
+        "population": 8244900,
+        "fun_facts": []
+    },
+    "Kuala Lumpur": {
+        "city": "Kuala Lumpur",
+        "state": null,
+        "country": "Malaysia",
+        "population": 8211700,
+        "fun_facts": []
+    },
+    "Xi'an": {
+        "city": "Xi'an",
+        "state": null,
+        "country": "China",
+        "population": 8135500,
+        "fun_facts": []
+    },
+    "Singapore": {
+        "city": "Singapore",
+        "state": null,
+        "country": "Singapore",
+        "population": 6014700,
+        "fun_facts": []
+    },
+    "Hong Kong": {
+        "city": "Hong Kong",
+        "state": null,
+        "country": "China",
+        "population": 7413500,
+        "fun_facts": []
+    },
+    "Toronto": {
+        "city": "Toronto",
+        "state": "Ontario",
+        "country": "Canada",
+        "population": 6313000,
+        "fun_facts": []
+    },
+    "Bangkok": {
+        "city": "Bangkok",
+        "state": null,
+        "country": "Thailand",
+        "population": 5980000,
+        "fun_facts": []
+    },
+    "Madrid": {
+        "city": "Madrid",
+        "state": null,
+        "country": "Spain",
+        "population": 5663900,
+        "fun_facts": []
+    },
+    "Pune": {
+        "city": "Pune",
+        "state": "Maharashtra",
+        "country": "India",
+        "population": 5627400,
+        "fun_facts": []
+    },
+    "Santiago": {
+        "city": "Santiago",
+        "state": null,
+        "country": "Chile",
+        "population": 5581400,
+        "fun_facts": []
+    },
+    "Barcelona": {
+        "city": "Barcelona",
+        "state": "Catalonia",
+        "country": "Spain",
+        "population": 5541200,
+        "fun_facts": []
+    },
+    "Riyadh": {
+        "city": "Riyadh",
+        "state": null,
+        "country": "Saudi Arabia",
+        "population": 5451600,
+        "fun_facts": []
+    },
+    "Philadelphia": {
+        "city": "Philadelphia",
+        "state": "Pennsylvania",
+        "country": "United States",
+        "population": 5408500,
+        "fun_facts": []
+    },
+    "Surat": {
+        "city": "Surat",
+        "state": "Gujarat",
+        "country": "India",
+        "population": 5406100,
+        "fun_facts": []
+    },
+    "Miami": {
+        "city": "Miami",
+        "state": "Florida",
+        "country": "United States",
+        "population": 5275400,
+        "fun_facts": []
+    },
+    "Belo Horizonte": {
+        "city": "Belo Horizonte",
+        "state": "Minas Gerais",
+        "country": "Brazil",
+        "population": 5260100,
+        "fun_facts": []
+    },
+    "Milan": {
+        "city": "Milan",
+        "state": null,
+        "country": "Italy",
+        "population": 5232000,
+        "fun_facts": []
+    },
+    "Ankara": {
+        "city": "Ankara",
+        "state": null,
+        "country": "Turkey",
+        "population": 5056000,
+        "fun_facts": []
+    },
+    "Saint Petersburg": {
+        "city": "Saint Petersburg",
+        "state": null,
+        "country": "Russia",
+        "population": 4991000,
+        "fun_facts": []
+    },
+    "Houston": {
+        "city": "Houston",
+        "state": "Texas",
+        "country": "United States",
+        "population": 4731200,
+        "fun_facts": []
+    },
+    "Sydney": {
+        "city": "Sydney",
+        "state": "New South Wales",
+        "country": "Australia",
+        "population": 4700600,
+        "fun_facts": []
+    },
+    "Surabaya": {
+        "city": "Surabaya",
+        "state": null,
+        "country": "Indonesia",
+        "population": 4666300,
+        "fun_facts": []
+    },
+    "Melbourne": {
+        "city": "Melbourne",
+        "state": "Victoria",
+        "country": "Australia",
+        "population": 4640500,
+        "fun_facts": []
+    },
+    "Fortaleza": {
+        "city": "Fortaleza",
+        "state": "Ceará",
+        "country": "Brazil",
+        "population": 4584500,
+        "fun_facts": []
+    },
+    "Bandung": {
+        "city": "Bandung",
+        "state": null,
+        "country": "Indonesia",
+        "population": 4566200,
+        "fun_facts": []
+    },
+    "Medellín": {
+        "city": "Medellín",
+        "state": null,
+        "country": "Colombia",
+        "population": 4538500,
+        "fun_facts": []
+    },
+    "Guadalajara": {
+        "city": "Guadalajara",
+        "state": "Jalisco",
+        "country": "Mexico",
+        "population": 4531000,
+        "fun_facts": []
+    },
+    "Phoenix": {
+        "city": "Phoenix",
+        "state": "Arizona",
+        "country": "United States",
+        "population": 4474000,
+        "fun_facts": []
+    },
+    "Monterrey": {
+        "city": "Monterrey",
+        "state": "Nuevo León",
+        "country": "Mexico",
+        "population": 4470000,
+        "fun_facts": []
+    },
+    "Brasília": {
+        "city": "Brasília",
+        "state": "Federal District",
+        "country": "Brazil",
+        "population": 4470000,
+        "fun_facts": []
+    },
+    "Dallas": {
+        "city": "Dallas",
+        "state": "Texas",
+        "country": "United States",
+        "population": 4432500,
+        "fun_facts": []
+    },
+    "Washington": {
+        "city": "Washington",
+        "state": "District of Columbia",
+        "country": "United States",
+        "population": 4423000,
+        "fun_facts": []
+    },
+    "Boston": {
+        "city": "Boston",
+        "state": "Massachusetts",
+        "country": "United States",
+        "population": 4164100,
+        "fun_facts": []
+    },
+    "Rome": {
+        "city": "Rome",
+        "state": null,
+        "country": "Italy",
+        "population": 4030000,
+        "fun_facts": []
+    },
+    "Detroit": {
+        "city": "Detroit",
+        "state": "Michigan",
+        "country": "United States",
+        "population": 3926900,
+        "fun_facts": []
+    },
+    "Atlanta": {
+        "city": "Atlanta",
+        "state": "Georgia",
+        "country": "United States",
+        "population": 3879400,
+        "fun_facts": []
+    },
+    "Berlin": {
+        "city": "Berlin",
+        "state": null,
+        "country": "Germany",
+        "population": 3748100,
+        "fun_facts": []
+    },
+    "Busan": {
+        "city": "Busan",
+        "state": null,
+        "country": "South Korea",
+        "population": 3678800,
+        "fun_facts": []
+    },
+    "Kiev": {
+        "city": "Kiev",
+        "state": null,
+        "country": "Ukraine",
+        "population": 3650000,
+        "fun_facts": []
+    },
+    "Jeddah": {
+        "city": "Jeddah",
+        "state": null,
+        "country": "Saudi Arabia",
+        "population": 3578000,
+        "fun_facts": []
+    },
+    "Yokohama": {
+        "city": "Yokohama",
+        "state": null,
+        "country": "Japan",
+        "population": 3574000,
+        "fun_facts": []
+    },
+    "Addis Ababa": {
+        "city": "Addis Ababa",
+        "state": null,
+        "country": "Ethiopia",
+        "population": 3570000,
+        "fun_facts": []
+    },
+    "Cape Town": {
+        "city": "Cape Town",
+        "state": "Western Cape",
+        "country": "South Africa",
+        "population": 3566200,
+        "fun_facts": []
+    },
+    "Casablanca": {
+        "city": "Casablanca",
+        "state": null,
+        "country": "Morocco",
+        "population": 3515800,
+        "fun_facts": []
+    },
+    "Montreal": {
+        "city": "Montreal",
+        "state": "Quebec",
+        "country": "Canada",
+        "population": 3497300,
+        "fun_facts": []
+    },
+    "Pyongyang": {
+        "city": "Pyongyang",
+        "state": null,
+        "country": "North Korea",
+        "population": 3470000,
+        "fun_facts": []
+    },
+    "Kabul": {
+        "city": "Kabul",
+        "state": null,
+        "country": "Afghanistan",
+        "population": 3456000,
+        "fun_facts": []
+    },
+    "Nairobi": {
+        "city": "Nairobi",
+        "state": null,
+        "country": "Kenya",
+        "population": 3450000,
+        "fun_facts": []
+    },
+    "Los Angeles": {
+        "city": "Los Angeles",
+        "state": "California",
+        "country": "United States",
+        "population": 3445600,
+        "fun_facts": []
+    },
+    "Ahmedabad": {
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "country": "India",
+        "population": 3434700,
+        "fun_facts": []
+    },
+    "Kano": {
+        "city": "Kano",
+        "state": "Kano",
+        "country": "Nigeria",
+        "population": 3400000,
+        "fun_facts": []
+    },
+    "Ibadan": {
+        "city": "Ibadan",
+        "state": "Oyo",
+        "country": "Nigeria",
+        "population": 3369000,
+        "fun_facts": []
+    },
+    "Algiers": {
+        "city": "Algiers",
+        "state": null,
+        "country": "Algeria",
+        "population": 3354000,
+        "fun_facts": []
+    },
+    "Al Riyadh": {
+        "city": "Al Riyadh",
+        "state": null,
+        "country": "Saudi Arabia",
+        "population": 3324000,
+        "fun_facts": []
+    },
+    "Salvador": {
+        "city": "Salvador",
+        "state": "Bahia",
+        "country": "Brazil",
+        "population": 3282000,
+        "fun_facts": []
+    },
+    "Faisalabad": {
+        "city": "Faisalabad",
+        "state": "Punjab",
+        "country": "Pakistan",
+        "population": 3204700,
+        "fun_facts": []
+    },
+    "Hanoi": {
+        "city": "Hanoi",
+        "state": null,
+        "country": "Vietnam",
+        "population": 3166000,
+        "fun_facts": []
+    },
+    "Rawalpindi": {
+        "city": "Rawalpindi",
+        "state": "Punjab",
+        "country": "Pakistan",
+        "population": 3155000,
+        "fun_facts": []
+    },
+    "San Francisco": {
+        "city": "San Francisco",
+        "state": "California",
+        "country": "United States",
+        "population": 3141200,
+        "fun_facts": []
+    },
+    "Sana'a": {
+        "city": "Sana'a",
+        "state": null,
+        "country": "Yemen",
+        "population": 3110000,
+        "fun_facts": []
+    },
+    "Giza": {
+        "city": "Giza",
+        "state": null,
+        "country": "Egypt",
+        "population": 3084900,
+        "fun_facts": []
+    },
+    "Tel Aviv": {
+        "city": "Tel Aviv",
+        "state": null,
+        "country": "Israel",
+        "population": 3081400,
+        "fun_facts": []
+    },
+    "Dar es Salaam": {
+        "city": "Dar es Salaam",
+        "state": null,
+        "country": "Tanzania",
+        "population": 3080000,
+        "fun_facts": []
+    }
+}

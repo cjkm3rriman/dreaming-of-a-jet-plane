@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Optional
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-from .aircraft_database import get_aircraft_name
+from .aircraft_database import get_aircraft_name, get_passenger_capacity
 from .airport_database import get_city_country
 from .airline_database import get_airline_name
 from .intro import stream_intro, intro_options
@@ -203,6 +203,7 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                             "aircraft_registration": flight.get('reg'),
                             "aircraft_icao": flight.get('type'),
                             "aircraft": get_aircraft_name(flight.get('type', '')),
+                            "passenger_capacity": get_passenger_capacity(flight.get('type', '')),
                             "origin_airport": origin_iata,
                             "origin_city": origin_city,
                             "origin_country": origin_country,
@@ -290,7 +291,7 @@ async def read_root(request: Request, lat: float = None, lng: float = None, debu
     aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng)
     
     # Generate descriptive text about the aircraft
-    sentence = generate_flight_text(aircraft, error_message)
+    sentence = generate_flight_text(aircraft, error_message, user_lat, user_lng)
     
     # Debug mode: return text only without TTS
     if debug == 1:

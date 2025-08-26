@@ -55,6 +55,29 @@ class AircraftDatabase:
                 return aircraft_data
         else:
             return f"Unknown Aircraft ({icao_code})"
+    
+    def get_passenger_capacity(self, icao_code: str) -> int:
+        """Get passenger capacity by ICAO code
+        
+        Args:
+            icao_code: Aircraft ICAO type code (e.g., 'A320', 'B737')
+            
+        Returns:
+            Passenger capacity or 0 if not found
+        """
+        if not icao_code:
+            return 0
+            
+        self._load_aircraft()
+        
+        # Normalize ICAO code
+        icao_code = icao_code.strip().upper()
+        
+        aircraft_data = self._aircraft.get(icao_code)
+        if aircraft_data and isinstance(aircraft_data, dict):
+            return aircraft_data.get("passenger_capacity", 0)
+        else:
+            return 0
 
 # Global instance for efficient reuse
 _aircraft_db = AircraftDatabase()
@@ -62,3 +85,7 @@ _aircraft_db = AircraftDatabase()
 def get_aircraft_name(icao_code: str, use_simple_name: bool = True) -> str:
     """Get aircraft name by ICAO code"""
     return _aircraft_db.get_aircraft_name(icao_code, use_simple_name)
+
+def get_passenger_capacity(icao_code: str) -> int:
+    """Get passenger capacity by ICAO code"""
+    return _aircraft_db.get_passenger_capacity(icao_code)
