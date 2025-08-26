@@ -218,6 +218,13 @@
     },
     "Lima": {
         "city": "Lima",
+        "fun_facts": [
+            "Lima is home to the oldest continuously operating university in the Americas, the National University of San Marcos, founded in 1551.",
+            "Lima has a unique culinary scene and is often referred to as the gastronomic capital of South America, known for dishes like ceviche and lomo saltado.",
+            "The historic center of Lima is a UNESCO World Heritage Site, featuring colonial architecture, beautiful churches, and vibrant plazas.",
+            "Lima is one of the driest capitals in the world, with an average annual rainfall of just 13 millimeters (0.5 inches).",
+            "The city is built on the site of an ancient pre-Columbian settlement called Limaq, which dates back to around 200 AD."
+        ],
         "state": null,
         "country": "Peru",
         "population": 10628400,
@@ -229,11 +236,11 @@
         "country": "United Kingdom",
         "population": 9540600,
         "fun_facts": [
-            "London has six ravens living at the Tower of London, and one of them is named Thor - but he's actually a bird, not a superhero!",
-            "People have forgotten some very silly things on London's trains, including a samurai sword, a human skull, and even a coffin!",
+            "London has six ravens living at the Tower of London guarding the Crown Jewels, and one of them is named Thor like the superhero!",
             "There are pelicans living in the middle of London at St James's Park, and they get fed fish every day at 2:30pm like clockwork",
-            "Big Ben's giant clock is fixed by adding or removing old pennies - just like putting coins in a piggy bank to make it heavier!",
-            "London is technically a forest because it has so many trees that it meets the official definition - it's the world's biggest urban jungle!"
+            "People in London drink over 165 million cups of tea every single day. That's a lot of tea!",
+            "The London Underground is the oldest underground railway network in the world, opening in 1863, over 160 years ago!",
+            "London has so many trees that it is technically a forest. It's the world's biggest urban jungle!"
         ]
     },
     "Nagoya": {

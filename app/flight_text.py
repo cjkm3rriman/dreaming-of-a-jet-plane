@@ -59,7 +59,7 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
         destination_location = destination_country
         user_in_us = user_lat is not None and user_lng is not None and is_location_in_us(user_lat, user_lng)
         
-        if user_in_us and destination_country == "United States of America":
+        if user_in_us and destination_country == "the United States":
             # Get destination airport data to find state
             destination_airport = closest_aircraft.get("destination_airport")
             if destination_airport:
