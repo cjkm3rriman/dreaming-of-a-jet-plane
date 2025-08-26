@@ -4,70 +4,108 @@
         "state": null,
         "country": "Japan",
         "population": 37036200,
-        "fun_facts": []
+        "fun_facts": [
+            "Tokyo has thousands of vending machine where you can buy hamburgers, ice cream, and even clothes from them!",
+            "The Shinkansen bullet train in Tokyo goes 200 miles per hour - that's fast!",
+            "Tokyo has snow monkeys that soak in hot spring pools to keep warm during winter, just like people taking a bath!"
+        ]
     },
     "Delhi": {
         "city": "Delhi",
         "state": "Delhi",
         "country": "India",
         "population": 34665600,
-        "fun_facts": []
+        "fun_facts": [
+            "Delhi has Asia's largest spice market with colorful mountains of spices that smell amazing!",
+            "Cows in Delhi are considered sacred and you can see them walking down the middle of busy streets like they own the place!",
+            "Delhi has a giant fort called the Red Fort that is made of red sandstone and looks like a castle from a fairy tale!"
+        ]
     },
     "Shanghai": {
         "city": "Shanghai",
         "state": null,
         "country": "China",
         "population": 30482100,
-        "fun_facts": []
+        "fun_facts": [
+            "Shanghai has more than 7,000 skyscrapers - that's more than any other city in the world!",
+            "Shanghai has the world's fastest train called the maglev that floats above the tracks using magnets!",
+            "Shanghai's special soup dumplings called xiaolongbao have hot soup inside them - they're like little soup surprises!"
+        ]
     },
     "Dhaka": {
         "city": "Dhaka",
         "state": null,
         "country": "Bangladesh",
         "population": 24652900,
-        "fun_facts": []
+        "fun_facts": [
+            "Dhaka has more rickshaws than any other city in the world with over 1.5 million running every day!",
+            "People in Dhaka travel on colorful wooden boats on the river carrying everything from fruits to livestock!"
+        ]
     },
     "Cairo": {
         "city": "Cairo",
         "state": null,
         "country": "Egypt",
         "population": 23074200,
-        "fun_facts": []
+        "fun_facts": [
+            "When the great pyramids near Cairo were first built, they were covered in shiny limestone that sparkled like diamonds in the sun!",
+            "The Great Sphinx in Cairo has a lion's body and a king's head and is as long as a football pitch!",
+            "Cairo has a giant market called Khan el-Khalili where you can buy everything from spices to jewelry to magic lamps!"
+        ]
     },
     "Sao Paulo": {
         "city": "Sao Paulo",
         "state": "São Paulo",
         "country": "Brazil",
         "population": 22990000,
-        "fun_facts": []
+        "fun_facts": [
+            "Giant guinea pig cousins called capybaras sometimes visit parks in Sao Paulo and they're so big they weigh as much as a large dog!",
+            "People in Sao Paulo eat millions of pizzas every Sunday - they love pizza so much it's like having a weekly pizza party for the whole city!"
+        ]
     },
     "Mexico City": {
         "city": "Mexico City",
         "state": "Mexico City",
         "country": "Mexico",
         "population": 22752400,
-        "fun_facts": []
+        "fun_facts": [
+            "Mexico City has a giant park called Chapultepec that's bigger than Central Park in New York and has a castle on a hill!",
+            "Mexico City has a museum dedicated to tacos where you can learn all about the history of tacos and even try making your own!",
+            "Mexico City is sinking! Some parts of the city are going down 10 inches every year because it's built on a lake bed."
+        ]
     },
     "Beijing": {
         "city": "Beijing",
         "state": null,
         "country": "China",
         "population": 22596500,
-        "fun_facts": []
+        "fun_facts": [
+            "Beijing Zoo has 8 giant pandas that spend 12 hours every day eating bamboo and can munch through 26 pounds of it in one day - that's like eating 104 hamburgers!",
+            "Beijing has green bean-flavored ice pops for sale, that's one way to get your vegetables!",
+            "The Forbidden City Palace in Beijing has 9,000 rooms - that's more rooms than any other palace in the world!"
+        ]
     },
     "Mumbai": {
         "city": "Mumbai",
         "state": "Maharashtra",
         "country": "India",
         "population": 22089000,
-        "fun_facts": []
+        "fun_facts": [
+            "More than 7 million people ride the trains in Mumbai every single day - that's more people than live in the entire city of New York!",
+            "Mumbai's zoo has albino crows that are white instead of black, and you can see elephants, hippos, and cobras all in one place!",
+            "Mumbai is the home of Bollywood where they make hundreds of movies every year!"
+        ]
     },
     "Osaka": {
         "city": "Osaka",
         "state": null,
         "country": "Japan",
         "population": 18921600,
-        "fun_facts": []
+        "fun_facts": [
+            "Osaka is called 'The Kitchen of Japan' because the food is so amazing, and kids can eat sushi that comes to them on spinning conveyor belts!",
+            "Osaka Castle has a playground for kids right next to it, so you can play like a samurai warrior after visiting a real castle!",
+            "Osaka Aquarium has whale sharks that are longer than school buses swimming around with 620 different types of sea animals including penguins and dolphins!"
+        ]
     },
     "Chongqing": {
         "city": "Chongqing",
@@ -282,11 +320,15 @@
         "fun_facts": []
     },
     "New York": {
-        "city": "New York",
+        "city": "New York City",
         "state": "New York",
         "country": "United States",
         "population": 8244900,
-        "fun_facts": []
+        "fun_facts": [
+            "Pizza rats are real! Rats in New York have been spotted carrying pizza slices that are bigger than they are!",
+            "New York is famous for its bagels. They are so special because the water used to make them comes from the mountains and makes them extra yummy!",
+            "New York City has over 30,000 hot dog carts - that's more hot dogs than there are elephants in the whole world!"
+        ]
     },
     "Kuala Lumpur": {
         "city": "Kuala Lumpur",
@@ -594,7 +636,12 @@
         "state": "Quebec",
         "country": "Canada",
         "population": 3497300,
-        "fun_facts": []
+        "fun_facts": [
+            "Montreal has a whole underground city with tunnels that go for 20 miles - you can walk from building to building without ever going outside, even when it's snowing!",
+            "Montreal bagels are made by hand and boiled in honey water before baking, which makes them sweeter and shinier than regular bagels!",
+            "Montreal invented poutine - french fries covered in squeaky cheese curds and gravy - and the word 'poutine' means 'a beautiful mess' in French!",
+            "Montreal is home to Cirque du Soleil, where acrobats and performers do amazing tricks and fly through the air like superheroes!"
+        ]
     },
     "Pyongyang": {
         "city": "Pyongyang",

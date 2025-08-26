@@ -17,7 +17,7 @@ from .intro import stream_intro, intro_options
 from .scanning import stream_scanning, scanning_options
 from .voice_test import stream_voice_test, voice_test_options
 from .s3_cache import s3_cache
-from .flight_text import generate_flight_text
+from .flight_text import generate_flight_text, generate_flight_text_for_aircraft
 from .location_utils import get_user_location
 
 app = FastAPI()
@@ -108,8 +108,14 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
         logger.error(f"ElevenLabs API Unexpected Error: {str(e)}")
         return b"", f"ElevenLabs API unexpected error: {str(e)}"
 
-async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) -> tuple[List[Dict[str, Any]], str]:
-    """Get aircraft near the given coordinates using Flightradar24 API
+async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, limit: int = 3) -> tuple[List[Dict[str, Any]], str]:
+    """Get aircraft near the given coordinates using Flightradar24 API with caching
+    
+    Args:
+        lat: Latitude
+        lng: Longitude
+        radius_km: Search radius in kilometers
+        limit: Maximum number of aircraft to return (default 3)
     
     Returns:
         tuple: (aircraft_list, error_message)
@@ -119,6 +125,16 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
     if not FR24_API_KEY:
         logger.warning("Flightradar24 API key not configured")
         return [], "Flightradar24 API key not configured"
+    
+    # Check API response cache first
+    api_cache_key = s3_cache.generate_cache_key(lat, lng, content_type="json")
+    cached_aircraft = await s3_cache.get(api_cache_key, content_type="json")
+    
+    if cached_aircraft:
+        logger.info(f"API cache hit for location: lat={lat}, lng={lng}")
+        # Return up to limit aircraft from cached data
+        aircraft_list = cached_aircraft.get('aircraft', [])[:limit]
+        return aircraft_list, ""
     
     try:
         # Create bounding box for location filtering
@@ -230,11 +246,21 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
                         logger.warning(f"Error processing flight data: {e}")
                         continue
                 
-                # Sort by distance and return closest aircraft
+                # Sort by distance and cache all aircraft data
                 aircraft_list.sort(key=lambda x: x["distance_km"])
+                
                 if aircraft_list:
-                    return aircraft_list[:1], ""
+                    # Cache the aircraft data for future requests (store all aircraft)
+                    cache_data = {"aircraft": aircraft_list}
+                    asyncio.create_task(s3_cache.set(api_cache_key, cache_data, content_type="json"))
+                    logger.info(f"Cached {len(aircraft_list)} aircraft for location: lat={lat}, lng={lng}")
+                    
+                    # Return up to limit aircraft
+                    return aircraft_list[:limit], ""
                 else:
+                    # Cache empty result too to avoid repeated API calls
+                    cache_data = {"aircraft": []}
+                    asyncio.create_task(s3_cache.set(api_cache_key, cache_data, content_type="json"))
                     return [], "No passenger aircraft found within 100km radius"
                 
             else:
@@ -253,6 +279,202 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100) ->
         return [], f"Unexpected error: {str(e)}"
     
     return [], "Unknown error occurred"
+
+
+async def handle_plane_endpoint(request: Request, plane_index: int, lat: float = None, lng: float = None, debug: int = 0):
+    """Handle individual plane endpoints (/plane/1, /plane/2, /plane/3)
+    
+    Args:
+        request: FastAPI request object
+        plane_index: 1-based plane index (1, 2, 3)
+        lat: Optional latitude override
+        lng: Optional longitude override
+        debug: Debug mode flag
+    """
+    # Get user location using shared function
+    user_lat, user_lng = await get_user_location(request, lat, lng)
+    
+    # Convert to 0-based index
+    zero_based_index = plane_index - 1
+    
+    # Check cache first for the specific plane
+    cache_key = s3_cache.generate_cache_key(user_lat, user_lng, plane_index=plane_index)
+    cached_mp3 = await s3_cache.get(cache_key)
+    
+    if cached_mp3:
+        logger.info(f"Serving cached MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
+        response_headers = {
+            "Content-Type": "audio/mpeg",
+            "Content-Length": str(len(cached_mp3)),
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+        }
+        
+        return StreamingResponse(
+            iter([cached_mp3]),
+            status_code=200,
+            media_type="audio/mpeg",
+            headers=response_headers
+        )
+    
+    # Cache miss - get aircraft data (this will use cached API data if available)
+    logger.info(f"Cache miss - generating new MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
+    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index))
+    
+    # Check if we have the requested plane
+    if aircraft and len(aircraft) > zero_based_index:
+        selected_aircraft = aircraft[zero_based_index]
+        sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng)
+    elif aircraft and len(aircraft) > 0:
+        # Not enough planes, return an appropriate message for this plane index
+        if plane_index == 2:
+            sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+        elif plane_index == 3:
+            plane_count = len(aircraft)
+            if plane_count == 1:
+                sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+            else:
+                sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try listening to plane 1 or plane 2 instead."
+    else:
+        # No aircraft found at all
+        sentence = generate_flight_text([], error_message, user_lat, user_lng)
+    
+    # Debug mode: return text only without TTS
+    if debug == 1:
+        logger.info(f"Debug mode: returning HTML without TTS for plane {plane_index}: {sentence[:50]}...")
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Dreaming of a Jet Plane - Plane {plane_index} - Debug Mode</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }}
+                .container {{ background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
+                h2 {{ color: #34495e; margin-top: 30px; }}
+                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
+                th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
+                th {{ background-color: #3498db; color: white; }}
+                tr:nth-child(even) {{ background-color: #f9f9f9; }}
+                .message {{ background-color: #e8f6f3; padding: 20px; border-left: 4px solid #1abc9c; margin: 20px 0; }}
+                .error {{ background-color: #fadbd8; border-left-color: #e74c3c; }}
+                .success {{ background-color: #d5f4e6; border-left-color: #27ae60; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🛩️ Dreaming of a Jet Plane - Plane {plane_index} - Debug Mode</h1>
+                
+                <div class="message {'success' if aircraft and len(aircraft) > zero_based_index else 'error'}">
+                    <strong>Generated Message:</strong><br>
+                    {sentence}
+                </div>
+                
+                <h2>📍 Location Information</h2>
+                <table>
+                    <tr><th>Parameter</th><th>Value</th></tr>
+                    <tr><td>Latitude</td><td>{user_lat}</td></tr>
+                    <tr><td>Longitude</td><td>{user_lng}</td></tr>
+                    <tr><td>Plane Index</td><td>{plane_index}</td></tr>
+                    <tr><td>Cache Key</td><td>{cache_key}</td></tr>
+                </table>
+                
+                <h2>✈️ Flight Detection Results</h2>
+                <table>
+                    <tr><th>Parameter</th><th>Value</th></tr>
+                    <tr><td>Total Aircraft Found</td><td>{len(aircraft)}</td></tr>
+                    <tr><td>Requested Plane Available</td><td>{'Yes' if aircraft and len(aircraft) > zero_based_index else 'No'}</td></tr>
+        """
+        
+        if error_message:
+            html_content += f"""
+                    <tr><td>Error Message</td><td>{error_message}</td></tr>
+            """
+        
+        html_content += """
+                </table>
+        """
+        
+        # Add aircraft details if found
+        if aircraft and len(aircraft) > zero_based_index:
+            selected_aircraft = aircraft[zero_based_index]
+            
+            # Get aircraft coordinates for Google Maps link
+            aircraft_lat = selected_aircraft.get('latitude')
+            aircraft_lng = selected_aircraft.get('longitude')
+            
+            html_content += f"""
+                <h2>🛫 Plane {plane_index} Details</h2>
+                <table>
+                    <tr><th>Property</th><th>Value</th></tr>
+            """
+            
+            for key, value in selected_aircraft.items():
+                if value is not None and value != "":
+                    html_content += f"<tr><td>{key.replace('_', ' ').title()}</td><td>{value}</td></tr>"
+            
+            html_content += "</table>"
+            
+            # Add Google Maps directions link if we have aircraft coordinates
+            if aircraft_lat and aircraft_lng:
+                maps_url = f"https://www.google.com/maps/dir/?api=1&origin={user_lat},{user_lng}&destination={aircraft_lat},{aircraft_lng}&travelmode=driving"
+                html_content += f"""
+                <h2>🗺️ Google Maps</h2>
+                <div class="message">
+                    <a href="{maps_url}" target="_blank" style="color: #3498db; text-decoration: none; font-weight: bold;">
+                        📍 View Directions from Your Location to Plane {plane_index} Position
+                    </a>
+                    <br><br>
+                    <small style="color: #666;">
+                        Your Location: {user_lat}, {user_lng}<br>
+                        Plane {plane_index} Location: {aircraft_lat}, {aircraft_lng}
+                    </small>
+                </div>
+                """
+        
+        html_content += """
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HTMLResponse(content=html_content)
+    
+    # Generate TTS for the sentence
+    logger.info(f"Generating TTS for plane {plane_index}: {sentence[:50]}...")
+    audio_content, tts_error = await convert_text_to_speech(sentence)
+    
+    if audio_content and not tts_error:
+        logger.info(f"Successfully generated MP3 for plane {plane_index} ({len(audio_content)} bytes) - caching in background")
+        # Cache the newly generated MP3 (don't await - do in background)
+        asyncio.create_task(s3_cache.set(cache_key, audio_content))
+        
+        # Return MP3 audio
+        response_headers = {
+            "Content-Type": "audio/mpeg",
+            "Content-Length": str(len(audio_content)),
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+        }
+        
+        return StreamingResponse(
+            iter([audio_content]),
+            status_code=200,
+            media_type="audio/mpeg",
+            headers=response_headers
+        )
+    else:
+        # Fall back to text if TTS fails
+        return {"message": sentence, "tts_error": tts_error}
 
 
 @app.get("/")
@@ -529,6 +751,60 @@ async def test_cache_endpoint():
         "bucket_name": s3_cache.bucket_name,
         "aws_configured": bool(s3_cache.aws_access_key and s3_cache.aws_secret_key)
     }
+
+@app.get("/plane/1")
+async def plane_1_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0):
+    """Get MP3 for the closest aircraft"""
+    return await handle_plane_endpoint(request, 1, lat, lng, debug)
+
+@app.get("/plane/2")
+async def plane_2_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0):
+    """Get MP3 for the second closest aircraft"""
+    return await handle_plane_endpoint(request, 2, lat, lng, debug)
+
+@app.get("/plane/3")
+async def plane_3_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0):
+    """Get MP3 for the third closest aircraft"""
+    return await handle_plane_endpoint(request, 3, lat, lng, debug)
+
+@app.options("/plane/1")
+async def plane_1_options():
+    """Handle CORS preflight requests for /plane/1 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+@app.options("/plane/2")
+async def plane_2_options():
+    """Handle CORS preflight requests for /plane/2 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+@app.options("/plane/3")
+async def plane_3_options():
+    """Handle CORS preflight requests for /plane/3 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
 
 if __name__ == "__main__":
     import uvicorn

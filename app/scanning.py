@@ -17,44 +17,93 @@ logger = logging.getLogger(__name__)
 
 
 async def pre_generate_flight_mp3(lat: float, lng: float):
-    """Background task to pre-generate and cache flight MP3"""
+    """Background task to pre-generate and cache flight MP3s for all 3 planes"""
     try:
-        logger.info(f"Starting MP3 pre-generation for location: lat={lat}, lng={lng}")
-        
-        # Check cache first - don't regenerate if already cached
-        cache_key = s3_cache.generate_cache_key(lat, lng)
-        cached_mp3 = await s3_cache.get(cache_key)
-        
-        if cached_mp3:
-            logger.info(f"MP3 already cached for location: lat={lat}, lng={lng} - skipping pre-generation")
-            return
-        
-        logger.info(f"Cache miss - proceeding with MP3 pre-generation for location: lat={lat}, lng={lng}")
+        logger.info(f"Starting MP3 pre-generation for all planes at location: lat={lat}, lng={lng}")
         
         # Import here to avoid circular imports
         from .main import get_nearby_aircraft, convert_text_to_speech
+        from .flight_text import generate_flight_text_for_aircraft, generate_flight_text
         
-        # Get flight data
-        aircraft, error_message = await get_nearby_aircraft(lat, lng)
+        # Get flight data (this will use cached API data if available, or cache new data)
+        aircraft, error_message = await get_nearby_aircraft(lat, lng, limit=3)
         
-        # Generate descriptive text using shared function
-        sentence = generate_flight_text(aircraft, error_message)
+        # Pre-generate MP3s for up to 3 planes
+        tasks = []
+        for plane_index in range(1, 4):  # 1, 2, 3
+            zero_based_index = plane_index - 1
+            
+            # Check cache first for this specific plane
+            plane_cache_key = s3_cache.generate_cache_key(lat, lng, plane_index=plane_index)
+            cached_mp3 = await s3_cache.get(plane_cache_key)
+            
+            if cached_mp3:
+                logger.info(f"Plane {plane_index} MP3 already cached for location: lat={lat}, lng={lng} - skipping")
+                continue
+            
+            logger.info(f"Cache miss - proceeding with MP3 pre-generation for plane {plane_index} at location: lat={lat}, lng={lng}")
+            
+            # Generate appropriate text for this plane
+            if aircraft and len(aircraft) > zero_based_index:
+                selected_aircraft = aircraft[zero_based_index]
+                sentence = generate_flight_text_for_aircraft(selected_aircraft, lat, lng)
+            elif aircraft and len(aircraft) > 0:
+                # Not enough planes, generate appropriate message
+                if plane_index == 2:
+                    sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+                elif plane_index == 3:
+                    plane_count = len(aircraft)
+                    if plane_count == 1:
+                        sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+                    else:
+                        sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try listening to plane 1 or plane 2 instead."
+            else:
+                # No aircraft found at all
+                sentence = generate_flight_text([], error_message, lat, lng)
+            
+            # Create task to generate and cache this plane's MP3
+            task = asyncio.create_task(
+                _generate_and_cache_plane_mp3(plane_index, plane_cache_key, sentence, lat, lng)
+            )
+            tasks.append(task)
+        
+        # Wait for all plane MP3s to be generated concurrently
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            successes = sum(1 for r in results if r is True)
+            logger.info(f"Successfully pre-generated and cached {successes} out of {len(tasks)} plane MP3s for location: lat={lat}, lng={lng}")
+        else:
+            logger.info(f"All plane MP3s already cached for location: lat={lat}, lng={lng}")
+            
+    except Exception as e:
+        logger.error(f"Error in MP3 pre-generation: {e}")
+
+
+async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, sentence: str, lat: float, lng: float) -> bool:
+    """Helper function to generate and cache MP3 for a specific plane"""
+    try:
+        # Import here to avoid circular imports
+        from .main import convert_text_to_speech
         
         # Convert to speech
         audio_content, tts_error = await convert_text_to_speech(sentence)
         
         if audio_content and not tts_error:
-            # Cache the MP3 (cache_key already generated above)
+            # Cache the MP3
             success = await s3_cache.set(cache_key, audio_content)
             if success:
-                logger.info(f"Successfully pre-generated and cached MP3 for location: lat={lat}, lng={lng}")
+                logger.info(f"Successfully pre-generated and cached plane {plane_index} MP3 for location: lat={lat}, lng={lng}")
+                return True
             else:
-                logger.warning(f"Failed to cache pre-generated MP3 for location: lat={lat}, lng={lng}")
+                logger.warning(f"Failed to cache pre-generated plane {plane_index} MP3 for location: lat={lat}, lng={lng}")
+                return False
         else:
-            logger.warning(f"TTS generation failed during pre-generation: {tts_error}")
+            logger.warning(f"TTS generation failed for plane {plane_index} during pre-generation: {tts_error}")
+            return False
             
     except Exception as e:
-        logger.error(f"Error in MP3 pre-generation: {e}")
+        logger.error(f"Error generating plane {plane_index} MP3: {e}")
+        return False
 
 
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
