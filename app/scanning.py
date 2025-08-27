@@ -116,11 +116,16 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     client_ip = extract_client_ip(request)
     user_agent = extract_user_agent(request)
     
+    # Create unique session identifier for consistent session tracking
+    import hashlib
+    session_id = hashlib.md5(f"{client_ip}:{user_agent}:{user_lat}:{user_lng}".encode()).hexdigest()
+    
     analytics.track_event("scan:start", {
         "ip": client_ip,
         "$user_agent": user_agent,
-        "lat": user_lat,
-        "lng": user_lng,
+        "$session_id": session_id,
+        "lat": round(user_lat, 3),
+        "lng": round(user_lng, 3),
         "location_source": "params" if (lat is not None and lng is not None) else "ip"
     })
     

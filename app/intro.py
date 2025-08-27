@@ -70,9 +70,10 @@ async def stream_intro(request: Request, lat: float = None, lng: float = None):
                 analytics.track_event("intro", {
                     "ip": client_ip,
                     "$user_agent": user_agent,
+                    "$session_id": session_id,
                     "$insert_id": f"intro_{session_id}",  # Prevents duplicates
-                    "lat": user_lat,
-                    "lng": user_lng,
+                    "lat": round(user_lat, 3),
+                    "lng": round(user_lng, 3),
                     "location_source": "params" if (lat is not None and lng is not None) else "ip"
                 })
                 
