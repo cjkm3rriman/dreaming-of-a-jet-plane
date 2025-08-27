@@ -5,6 +5,7 @@ Shared location detection utilities for consistent location handling across endp
 import logging
 from fastapi import Request
 import httpx
+from ua_parser import user_agent_parser
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,32 @@ def extract_client_ip(request: Request) -> str:
 def extract_user_agent(request: Request) -> str:
     """Extract user agent from request headers"""
     return request.headers.get("user-agent", "unknown")
+
+
+def parse_user_agent(user_agent_string: str) -> dict:
+    """Parse user agent string and return browser/device info"""
+    try:
+        parsed_ua = user_agent_parser.Parse(user_agent_string)
+        
+        # Extract browser info
+        browser_info = {
+            "browser": parsed_ua.get('user_agent', {}).get('family', 'Unknown'),
+            "browser_version": parsed_ua.get('user_agent', {}).get('major', 'Unknown'),
+            "os": parsed_ua.get('os', {}).get('family', 'Unknown'),
+            "os_version": parsed_ua.get('os', {}).get('major', 'Unknown'),
+            "device": parsed_ua.get('device', {}).get('family', 'Unknown')
+        }
+        
+        return browser_info
+    except Exception:
+        # Fallback if parsing fails
+        return {
+            "browser": "Unknown",
+            "browser_version": "Unknown", 
+            "os": "Unknown",
+            "os_version": "Unknown",
+            "device": "Unknown"
+        }
 
 
 async def get_user_location(request: Request, lat: float = None, lng: float = None) -> tuple[float, float]:

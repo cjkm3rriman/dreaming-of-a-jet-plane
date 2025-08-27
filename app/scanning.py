@@ -5,12 +5,13 @@ Scanning endpoint for streaming MP3 file from S3 and pre-generating flight MP3
 import asyncio
 import logging
 import hashlib
+import uuid
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
 from .s3_cache import s3_cache
 from .flight_text import generate_flight_text
-from .location_utils import get_user_location, extract_client_ip, extract_user_agent
+from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
 
 logger = logging.getLogger(__name__)
@@ -117,16 +118,23 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     try:
         client_ip = extract_client_ip(request)
         user_agent = extract_user_agent(request)
+        browser_info = parse_user_agent(user_agent)
         
         # Create unique session identifier for consistent session tracking
         # Use safe string formatting to handle None values
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{user_lat or 0}:{user_lng or 0}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()
+        # Generate a consistent but shorter session ID using first 8 chars of hash
+        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
         
         analytics.track_event("scan:start", {
             "ip": client_ip,
             "$user_agent": user_agent,
-            "$session_id": session_id,
+            "session_id": session_id,  # Use session_id without $ prefix
+            "browser": browser_info["browser"],
+            "browser_version": browser_info["browser_version"],
+            "os": browser_info["os"],
+            "os_version": browser_info["os_version"],
+            "device": browser_info["device"],
             "lat": round(user_lat, 3),
             "lng": round(user_lng, 3),
             "location_source": "params" if (lat is not None and lng is not None) else "ip"

@@ -6,7 +6,8 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
 import hashlib
-from .location_utils import get_user_location, extract_client_ip, extract_user_agent
+import uuid
+from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
 
 
@@ -64,17 +65,24 @@ async def stream_intro(request: Request, lat: float = None, lng: float = None):
                 try:
                     client_ip = extract_client_ip(request)
                     user_agent = extract_user_agent(request)
+                    browser_info = parse_user_agent(user_agent)
                     
-                    # Create unique session identifier to prevent duplicate events
-                    # Use safe string formatting to handle None values
+                    # Create unique session identifier for session tracking
+                    # Use simpler approach with UUID based on user data
                     hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{user_lat or 0}:{user_lng or 0}"
-                    session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()
+                    # Generate a consistent but shorter session ID using first 8 chars of hash
+                    session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
                     
                     analytics.track_event("intro", {
                         "ip": client_ip,
                         "$user_agent": user_agent,
-                        "$session_id": session_id,
+                        "session_id": session_id,  # Use session_id without $ prefix
                         "$insert_id": f"intro_{session_id}",  # Prevents duplicates
+                        "browser": browser_info["browser"],
+                        "browser_version": browser_info["browser_version"],
+                        "os": browser_info["os"],
+                        "os_version": browser_info["os_version"],
+                        "device": browser_info["device"],
                         "lat": round(user_lat, 3),
                         "lng": round(user_lng, 3),
                         "location_source": "params" if (lat is not None and lng is not None) else "ip"
