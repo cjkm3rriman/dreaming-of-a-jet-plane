@@ -61,6 +61,9 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
         return b"", "ElevenLabs API key not configured"
     
     try:
+        # Add 1 second of silence at the beginning using SSML break tag
+        text_with_pause = f'<break time="1s" />{text}'
+        
         # Prepare the request to ElevenLabs API
         url = f"{ELEVENLABS_BASE_URL}/text-to-speech/{DEFAULT_VOICE_ID}"
         
@@ -70,7 +73,7 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
         }
         
         payload = {
-            "text": text,
+            "text": text_with_pause,
             "model_id": "eleven_turbo_v2",
             "voice_settings": {
                 "stability": 0.5,
@@ -328,7 +331,7 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     # Check if we have the requested plane
     if aircraft and len(aircraft) > zero_based_index:
         selected_aircraft = aircraft[zero_based_index]
-        sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng)
+        sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index)
     elif aircraft and len(aircraft) > 0:
         # Not enough planes, return an appropriate message for this plane index
         if plane_index == 2:

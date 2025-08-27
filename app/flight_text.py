@@ -33,13 +33,14 @@ def is_location_in_us(lat: float, lng: float) -> bool:
     return False
 
 
-def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None) -> str:
+def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None, plane_index: int = 1) -> str:
     """Generate descriptive text for a specific aircraft
     
     Args:
         aircraft: Single aircraft data dictionary
         user_lat: User's latitude (for determining US location)
         user_lng: User's longitude (for determining US location)
+        plane_index: 1-based plane index (1, 2, 3) to determine opening words
         
     Returns:
         str: Human-readable sentence describing the flight
@@ -71,9 +72,16 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     else:
         flight_identifier = f"flight {flight_number}"
     
-    # Build the descriptive sentences with random opening word
-    opening_words = ["Marvelous!", "Tally Ho!", "Jolly Good!", "Splendid!", "Exquisite Luck!"]
-    opening_word = random.choice(opening_words)
+    # Build the descriptive sentences with different opening words based on plane index
+    if plane_index == 2:
+        opening_word = "Another"
+    elif plane_index == 3:
+        opening_word = "One more"
+    else:
+        # Default for plane 1 or any other index - keep original random opening words
+        opening_words = ["Marvelous!", "Tally Ho!", "Jolly Good!", "Splendid!", "What Luck!"]
+        opening_word = random.choice(opening_words)
+    
     detection_sentence = f"{opening_word} Jet plane detected in the sky above about {distance_miles} miles from this Yoto right now."
     
     # Add aircraft type, capacity, and speed information
@@ -161,11 +169,13 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
     """
     if aircraft and len(aircraft) > plane_index:
         selected_aircraft = aircraft[plane_index]
-        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng)
+        # Convert 0-based index to 1-based for plane_index parameter
+        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index + 1)
     elif aircraft and len(aircraft) > 0:
         # Fallback to first aircraft if plane_index is out of bounds
         selected_aircraft = aircraft[0]
-        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng)
+        # Use plane index 1 for fallback
+        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, 1)
     else:
         # Handle error cases with descriptive sentence
         if error_message:

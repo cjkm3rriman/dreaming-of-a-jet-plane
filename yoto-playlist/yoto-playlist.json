@@ -1,53 +1,114 @@
 {
-  "cardId": "gnY5r",
-  "updatedAt": "2025-08-20T23:20:54.804Z",
-  "createdAt": "2025-08-17T10:44:16.016Z",
+  "cardId": "9uLhx",
   "title": "Dreaming Of A Jet Plane",
   "metadata": {
     "accent": "British",
     "addToFamilyLibrary": true,
-    "author": "Jet Plane Scanner Robot",
-    "category": "stories",
+    "author": "Jet Plane Scanner Bot",
+    "category": "activities",
     "copyright": "© 2025 Raccoon Research Labs",
     "cover": {
-      "imageL": "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-cover-basic.png"
+      "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/uHgycPdx-sb39837AJrjCTbJKWJVfiVNfqg_mstz_7Y"
     },
-    "description": "Learn about the jet planes in the sky around you right now and what wonderful destinations they are headed to..",
+    "description": "Find jet planes flying in the sky above your Yoto player right now, and learn about the wonderful destinations they are headed to.",
     "genre": ["Education"],
     "languages": ["en"],
     "maxAge": 12,
     "media": {
       "hasStreams": true,
-      "duration": 3
+      "duration": 103
     },
     "minAge": 3,
-    "note": "For ages 3 & abovr",
+    "note": "For ages 3 & above",
     "order": "featured",
     "audioPreviewUrl": "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/intro.mp3",
     "readBy": "Ai",
     "share": true,
-    "status": {
-      "name": "new",
-      "updatedAt": "2025-08-17T06:00:00Z"
-    },
-    "tags": ["audio", "story", "kids"],
+    "tags": ["audio", "planes", "kids"],
     "playbackDirection": "asc"
   },
   "content": {
-    "activity": "yoto_Player",
     "chapters": [
       {
         "key": "chapter1",
+        "title": "Scanning The Skies",
+        "display": {
+              "icon16x16": "yoto:#mmQkTUoEDBtnNVJNZy10GH3_c58aybuOeNoJv5pTo1Y"
+        },
         "tracks": [
           {
             "key": "track1",
-            "title": "Scanning The Skies",
+            "title": "Scanning The Skies for Jet Planes",
             "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/scanning.mp3",
-            "type": "audio",
+            "type": "stream",
             "format": "mp3",
-            "duration": 3,
+            "channels": "stereo",
+            "duration": 13,
             "display": {
-              "icon16x16": "yoto:#VH4rf7ab6852014Dicc-X268W34q98piqnTaHpnpX0w"
+              "icon16x16": "yoto:#mmQkTUoEDBtnNVJNZy10GH3_c58aybuOeNoJv5pTo1Y"
+            }
+          }
+        ]
+      },
+      {
+        "key": "chapter2",
+        "title": "Closest Jet Plane",
+        "overlayLabel": "1",
+        "display": {
+              "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+        },
+        "tracks": [
+          {
+            "key": "track2",
+            "title": "Closest Jet Plane",
+            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/plane/1",
+            "type": "stream",
+            "format": "mp3",
+            "duration": 30,
+            "display": {
+              "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+            }
+          }
+        ]
+      },
+      {
+        "key": "chapter3",
+        "title": "Another Jet Plane",
+        "overlayLabel": "2",
+        "display": {
+              "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+        },
+        "tracks": [
+          {
+            "key": "track3",
+            "title": "Another Jet Plane",
+            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/plane/2",
+            "type": "stream",
+            "format": "mp3",
+            "duration": 30,
+            "display": {
+              "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+            }
+          }
+        ]
+      },
+      {
+        "key": "chapter4",
+        "title": "And Another Jet Plane",
+        "overlayLabel": "3",
+        "display": {
+              "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+        },
+        "tracks": [
+          {
+            "key": "track4",
+            "title": "And Another Jet Plane",
+            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/plane/3",
+            "type": "stream",
+            "format": "mp3",
+            "duration": 30,
+            "display": {
+              "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
             }
           }
         ]
@@ -55,11 +116,10 @@
     ],
     "config": {
       "autoadvance": "true",
-      "resumeTimeout": 300,
+      "resumeTimeout": 3600,
       "trackNumberOverlayTimeout": 5
     },
-    "playbackType": "linear",
-    "version": "1.0.0"
+    "playbackType": "linear"
   },
   "tags": ["education", "fun"],
   "slug": "dreaming-of-a-jet-plane"
