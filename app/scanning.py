@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 
-async def pre_generate_flight_mp3(lat: float, lng: float):
+async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = None):
     """Background task to pre-generate and cache flight MP3s for all 3 planes"""
     try:
         logger.info(f"Starting MP3 pre-generation for all planes at location: lat={lat}, lng={lng}")
@@ -29,7 +29,7 @@ async def pre_generate_flight_mp3(lat: float, lng: float):
         from .flight_text import generate_flight_text_for_aircraft, generate_flight_text
         
         # Get flight data (this will use cached API data if available, or cache new data)
-        aircraft, error_message = await get_nearby_aircraft(lat, lng, limit=3)
+        aircraft, error_message = await get_nearby_aircraft(lat, lng, limit=3, request=request)
         
         # Pre-generate MP3s for up to 3 planes
         tasks = []
@@ -155,7 +155,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     
     # Start MP3 pre-generation in background (don't await)
     if user_lat != 0.0 or user_lng != 0.0:  # Only if we have a valid location
-        asyncio.create_task(pre_generate_flight_mp3(user_lat, user_lng))
+        asyncio.create_task(pre_generate_flight_mp3(user_lat, user_lng, request))
     else:
         logger.warning("Could not determine location for MP3 pre-generation")
     
