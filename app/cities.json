@@ -2067,14 +2067,26 @@
         "state": "Nevada",
         "country": "United States",
         "population": 281714,
-        "fun_facts": []
+        "fun_facts": [
+            "Reno is called 'The Biggest Little City in the World' and has a famous neon sign that lights up the night sky!",
+            "The city is surrounded by beautiful mountains where you can see snow on the peaks even in summer!",
+            "Reno has amazing hot air balloon races where dozens of colorful balloons float through the desert sky like giant flying rainbows!",
+            "There are wild horses called mustangs that roam free in the desert around Reno, just like in old western movies!",
+            "The city has casinos with lights so bright you can see them from space, making the whole downtown glow like a jewel!"
+        ]
     },
     "Chandler": {
         "city": "Chandler",
         "state": "Arizona",
         "country": "United States",
         "population": 281231,
-        "fun_facts": []
+        "fun_facts": [
+            "Chandler has amazing desert sunsets that paint the sky in orange, pink, and purple colors like a giant watercolor painting!",
+            "The city has saguaro cacti that grow 40 feet tall with arms that reach up to the sky like green giants!",
+            "Chandler has ostrich farms where you can see birds that are 9 feet tall and can run 45 miles per hour!",
+            "There are roadrunners in the desert around Chandler that zoom around catching lizards, just like in cartoons!",
+            "The city has swimming pools and water parks everywhere because it's sunny and warm almost every single day!"
+        ]
     },
     "St. Louis": {
         "city": "St. Louis",
@@ -2094,21 +2106,39 @@
         "state": "New York",
         "country": "United States",
         "population": 276617,
-        "fun_facts": []
+        "fun_facts": [
+            "Buffalo is home to Niagara Falls, where millions of gallons of water crash down every minute with a roar you can hear from miles away!",
+            "The city invented Buffalo wings - spicy chicken wings covered in sauce that are so popular they're eaten all over the world!",
+            "Buffalo gets so much snow in winter that people build snow forts taller than cars and have snowball fights in their yards!",
+            "There's a giant boat called the Maid of the Mist that takes people right up to the base of Niagara Falls!",
+            "The city has amazing architecture with buildings that look like castles and have gargoyles watching over the streets!"
+        ]
     },
     "Fort Wayne": {
         "city": "Fort Wayne",
         "state": "Indiana",
         "country": "United States",
         "population": 273203,
-        "fun_facts": []
+        "fun_facts": [
+            "Fort Wayne has a children's zoo where you can ride a train through an African safari and see giraffes up close!",
+            "The city has three rivers that meet right in the middle of town, making it look like a giant water crossroads!",
+            "Fort Wayne has the most amazing county fair with Ferris wheels, cotton candy, and carnival rides that light up the night!",
+            "There are fireflies that light up the summer evenings like thousands of tiny Christmas lights floating in the air!",
+            "The city has delicious pork tenderloin sandwiches that are bigger than dinner plates and taste incredible!"
+        ]
     },
     "Lubbock": {
         "city": "Lubbock",
         "state": "Texas",
         "country": "United States",
         "population": 272086,
-        "fun_facts": []
+        "fun_facts": [
+            "Lubbock is the birthplace of Buddy Holly, a famous rock and roll singer who changed music forever with his catchy songs!",
+            "The city has endless fields of cotton that look like white fluffy clouds covering the ground for miles and miles!",
+            "Lubbock has Texas Tech University with a campus so big you need a map to find your way around - it's like a small city!",
+            "There are prairie dog towns near Lubbock where hundreds of cute little animals pop their heads up like furry whack-a-mole!",
+            "The city has the most amazing barbecue with brisket so tender and smoky it melts in your mouth like butter!"
+        ]
     },
     "St. Petersburg": {
         "city": "St. Petersburg",

@@ -130,6 +130,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
             "ip": client_ip,
             "$user_agent": user_agent,
             "session_id": session_id,  # Use session_id without $ prefix
+            "$insert_id": f"scan_{session_id}",  # Prevents duplicates
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
             "os": browser_info["os"],
