@@ -707,9 +707,9 @@ async def root_options():
     )
 
 @app.get("/intro.mp3")
-async def intro_endpoint(request: Request):
+async def intro_endpoint(request: Request, lat: float = None, lng: float = None):
     """Stream MP3 file from S3"""
-    return await stream_intro(request)
+    return await stream_intro(request, lat, lng)
 
 @app.options("/intro.mp3") 
 async def intro_options_endpoint():

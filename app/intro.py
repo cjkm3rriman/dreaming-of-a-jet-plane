@@ -5,10 +5,29 @@ Intro endpoint for streaming MP3 file from S3
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
+from .location_utils import get_user_location
+from .analytics import analytics
 
 
-async def stream_intro(request: Request):
+async def stream_intro(request: Request, lat: float = None, lng: float = None):
     """Stream MP3 file from S3 with proper headers for browser playback"""
+    # Get user location using shared function
+    user_lat, user_lng = await get_user_location(request, lat, lng)
+    
+    # Track intro event
+    origin_ip = request.client.host if request.client else "unknown"
+    # Check for forwarded headers (common in deployed environments)
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        origin_ip = forwarded_for.split(",")[0].strip()
+    
+    analytics.track_event("intro", {
+        "origin_ip": origin_ip,
+        "lat": user_lat,
+        "lng": user_lng,
+        "location_source": "params" if (lat is not None and lng is not None) else "ip"
+    })
+    
     # MP3 file hosted on S3
     mp3_url = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/intro.mp3"
     
