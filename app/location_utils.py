@@ -53,6 +53,17 @@ def parse_user_agent(user_agent_string: str) -> dict:
             "device": parsed_ua.get('device', {}).get('family', 'Unknown')
         }
         
+        # Special handling for Yoto Player devices
+        if (user_agent_string == "ESP32HTTPClient/1.0" and 
+            browser_info["browser"] == "Other" and 
+            browser_info["device"] == "Other" and 
+            browser_info["os"] == "Other"):
+            browser_info.update({
+                "browser": "Yoto",
+                "device": "Yoto Player",
+                "os": "Yoto"
+            })
+        
         return browser_info
     except Exception:
         # Fallback if parsing fails
