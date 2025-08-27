@@ -14,6 +14,7 @@ This is a FastAPI application called "dreaming-of-a-jet-plane" that uses Yoto to
 - **Flightradar24 API**: Live flight tracking and aircraft data
 - **HTTPX**: Async HTTP client for API requests
 - **ElevenLabs API**: Text-to-speech voice synthesis
+- **Mixpanel**: Analytics tracking for usage metrics
 - **Railway**: Deployment platform
 
 ## Development Commands
@@ -42,14 +43,45 @@ railway up    # Deploy to Railway (if Railway CLI is installed)
 
 **IMPORTANT**: When the user asks to "deploy", this means commit all changes to GitHub which automatically triggers Railway deployment. Use git add, commit, and push to deploy the application.
 
+## Environment Variables
+
+The application requires several environment variables for full functionality:
+
+### Required
+- `FR24_API_KEY`: Flightradar24 API key for live flight data
+- `ELEVENLABS_TEXT_TO_VOICE_API_KEY`: ElevenLabs API key for text-to-speech
+
+### Optional
+- `MIXPANEL_TOKEN`: Mixpanel project token for analytics tracking
+- AWS S3 credentials for caching (if using S3 cache)
+
+See `.env.example` for a template of environment variables.
+
+## Analytics
+
+The application includes comprehensive Mixpanel analytics tracking:
+
+- **Plane Requests**: User location, plane number, results found, errors
+- **Fun Facts**: City, country, and fact count when fun facts are included  
+- **Audio Generation**: Text length, generation time, voice model used
+- **Flight Data API**: Success/failure, response time, aircraft count
+
 ## Project Structure
 
 ```
 app/
-├── __init__.py     # Empty package initializer
-└── main.py         # FastAPI application entry point
-railway.toml        # Railway deployment configuration
-Procfile           # Alternative deployment configuration
+├── __init__.py           # Empty package initializer
+├── main.py               # FastAPI application entry point
+├── analytics.py          # Mixpanel analytics integration
+├── cities_database.py    # Cities data and fun facts
+├── airport_database.py   # Airport lookup functionality
+├── flight_text.py        # Flight text generation
+├── cities.json           # Cities database with fun facts
+├── airports.json         # Airport data for IATA code lookups
+└── ...                   # Other supporting modules
+railway.toml              # Railway deployment configuration
+Procfile                 # Alternative deployment configuration
+.env.example             # Environment variables template
 ```
 
 ## Architecture Notes

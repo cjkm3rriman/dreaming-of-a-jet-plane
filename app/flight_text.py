@@ -82,7 +82,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         opening_words = ["Marvelous!", "Tally Ho!", "Jolly Good!", "Splendid!", "What Luck!"]
         opening_word = random.choice(opening_words)
     
-    detection_sentence = f"{opening_word} Jet plane detected in the sky above about {distance_miles} miles from this Yoto right now."
+    detection_sentence = f"{opening_word} Jet plane detected in the sky above about {distance_miles} miles from this Yoto!"
     
     # Add aircraft type, capacity, and speed information
     aircraft_name = aircraft.get("aircraft", "unknown aircraft type")
@@ -138,9 +138,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
             pass
     
     if destination_city == "an unknown destination" or destination_location == "an unknown country":
-        flight_sentence = f"This is {flight_identifier}, travelling to an unknown destination, {eta_text}."
+        flight_sentence = f"This flight is {flight_identifier}, travelling to an unknown destination, {eta_text}."
     else:
-        flight_sentence = f"This is {flight_identifier}, travelling to {destination_city} in {destination_location}, {eta_text}."
+        flight_sentence = f"This flight is {flight_identifier}, travelling to {destination_city} in {destination_location}, {eta_text}."
     
     # Add random fun fact about destination city if available
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
@@ -149,7 +149,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         fun_facts = get_fun_facts(destination_city)
         if fun_facts:
             random_fact = random.choice(fun_facts)
-            full_response += f"My friend, did you know {random_fact}"
+            full_response += f" Fun fact time. Did you know {random_fact}"
     
     return full_response
 

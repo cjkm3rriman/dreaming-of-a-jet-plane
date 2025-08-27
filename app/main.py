@@ -19,6 +19,7 @@ from .voice_test import stream_voice_test, voice_test_options
 from .s3_cache import s3_cache
 from .flight_text import generate_flight_text, generate_flight_text_for_aircraft
 from .location_utils import get_user_location
+from .analytics import analytics
 
 app = FastAPI()
 
@@ -168,7 +169,10 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
         logger.info(f"Flightradar24 API Params: bounds={params['bounds']}, limit={params['limit']}")
         
         async with httpx.AsyncClient() as client:
+            import time
+            start_time = time.time()
             response = await client.get(url, headers=headers, params=params, timeout=10.0)
+            api_response_time_ms = int((time.time() - start_time) * 1000)
             
             logger.info(f"Flightradar24 API Response: Status={response.status_code}")
             
@@ -252,6 +256,7 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
                 # Sort by distance and cache all aircraft data
                 aircraft_list.sort(key=lambda x: x["distance_km"])
                 
+                
                 if aircraft_list:
                     # Cache the aircraft data for future requests (store all aircraft)
                     cache_data = {"aircraft": aircraft_list}
@@ -328,10 +333,12 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     logger.info(f"Cache miss - generating new MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
     aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index))
     
+    
     # Check if we have the requested plane
     if aircraft and len(aircraft) > zero_based_index:
         selected_aircraft = aircraft[zero_based_index]
         sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index)
+        
     elif aircraft and len(aircraft) > 0:
         # Not enough planes, return an appropriate message for this plane index
         if plane_index == 2:
@@ -450,8 +457,12 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     
     # Generate TTS for the sentence
     logger.info(f"Generating TTS for plane {plane_index}: {sentence[:50]}...")
+    import time
+    tts_start_time = time.time()
     audio_content, tts_error = await convert_text_to_speech(sentence)
+    tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
     
+        
     if audio_content and not tts_error:
         logger.info(f"Successfully generated MP3 for plane {plane_index} ({len(audio_content)} bytes) - caching in background")
         # Cache the newly generated MP3 (don't await - do in background)

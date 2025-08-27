@@ -10,6 +10,7 @@ import httpx
 from .s3_cache import s3_cache
 from .flight_text import generate_flight_text
 from .location_utils import get_user_location
+from .analytics import analytics
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +111,20 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     """Stream scanning MP3 file from S3 and trigger MP3 pre-generation"""
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
+    
+    # Track scan:start event
+    origin_ip = request.client.host if request.client else "unknown"
+    # Check for forwarded headers (common in deployed environments)
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        origin_ip = forwarded_for.split(",")[0].strip()
+    
+    analytics.track_event("scan:start", {
+        "origin_ip": origin_ip,
+        "lat": user_lat,
+        "lng": user_lng,
+        "location_source": "params" if (lat is not None and lng is not None) else "ip"
+    })
     
     # Start MP3 pre-generation in background (don't await)
     if user_lat != 0.0 or user_lng != 0.0:  # Only if we have a valid location
