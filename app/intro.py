@@ -5,6 +5,7 @@ Intro endpoint for streaming MP3 file from S3
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
+import hashlib
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent
 from .analytics import analytics
 
@@ -60,22 +61,37 @@ async def stream_intro(request: Request, lat: float = None, lng: float = None):
                     response_headers["Last-Modified"] = response.headers["last-modified"]
                 
                 # Track successful intro event (only once per user session)
-                client_ip = extract_client_ip(request)
-                user_agent = extract_user_agent(request)
-                
-                # Create unique session identifier to prevent duplicate events
-                import hashlib
-                session_id = hashlib.md5(f"{client_ip}:{user_agent}:{user_lat}:{user_lng}".encode()).hexdigest()
-                
-                analytics.track_event("intro", {
-                    "ip": client_ip,
-                    "$user_agent": user_agent,
-                    "$session_id": session_id,
-                    "$insert_id": f"intro_{session_id}",  # Prevents duplicates
-                    "lat": round(user_lat, 3),
-                    "lng": round(user_lng, 3),
-                    "location_source": "params" if (lat is not None and lng is not None) else "ip"
-                })
+                try:
+                    client_ip = extract_client_ip(request)
+                    user_agent = extract_user_agent(request)
+                    
+                    # Create unique session identifier to prevent duplicate events
+                    # Use safe string formatting to handle None values
+                    hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{user_lat or 0}:{user_lng or 0}"
+                    session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()
+                    
+                    analytics.track_event("intro", {
+                        "ip": client_ip,
+                        "$user_agent": user_agent,
+                        "$session_id": session_id,
+                        "$insert_id": f"intro_{session_id}",  # Prevents duplicates
+                        "lat": round(user_lat, 3),
+                        "lng": round(user_lng, 3),
+                        "location_source": "params" if (lat is not None and lng is not None) else "ip"
+                    })
+                except Exception as e:
+                    # Log error but don't break the response
+                    import logging
+                    logging.getLogger(__name__).error(f"Analytics tracking failed: {e}")
+                    # Still try to track without session data
+                    try:
+                        analytics.track_event("intro", {
+                            "lat": round(user_lat, 3),
+                            "lng": round(user_lng, 3),
+                            "location_source": "params" if (lat is not None and lng is not None) else "ip"
+                        })
+                    except:
+                        pass  # Silently fail if analytics completely broken
                 
                 # Return the content directly
                 return StreamingResponse(

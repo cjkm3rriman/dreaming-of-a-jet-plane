@@ -1989,28 +1989,52 @@
         "state": "North Carolina",
         "country": "United States",
         "population": 307381,
-        "fun_facts": []
+        "fun_facts": [
+            "Greensboro has the International Civil Rights Center where brave heroes fought for equality and changed history forever!",
+            "The city has a giant science center with hands-on experiments where you can create lightning bolts and launch rockets!",
+            "Greensboro has beautiful gardens with over 1,000 different roses that smell like the sweetest perfume!",
+            "There are race cars that zoom around the Greensboro speedway going over 200 miles per hour - faster than the fastest roller coaster!",
+            "The city has the most delicious barbecue in North Carolina with smoky pulled pork that melts in your mouth like butter!"
+        ]
     },
     "Durham": {
         "city": "Durham",
         "state": "North Carolina",
         "country": "United States",
         "population": 301870,
-        "fun_facts": []
+        "fun_facts": [
+            "Durham has Duke University with a campus so beautiful it looks like a castle from a fairy tale!",
+            "The city has the American Tobacco Historic District where old cigarette factories are now filled with amazing restaurants and shops!",
+            "Durham has lemurs at the Duke Lemur Center that jump from tree to tree like furry acrobats with long striped tails!",
+            "There are amazing food trucks in Durham that serve everything from Korean tacos to gourmet donuts on wheels!",
+            "The city has a giant bull statue downtown that's become famous and looks like it's ready to charge down the street!"
+        ]
     },
     "Lincoln": {
         "city": "Lincoln",
         "state": "Nebraska",
         "country": "United States",
         "population": 300619,
-        "fun_facts": []
+        "fun_facts": [
+            "Lincoln has the Nebraska State Capitol building with a giant dome that's 400 feet tall and can be seen from 20 miles away!",
+            "The city has Husker football games where 90,000 people cheer so loud it sounds like thunder and lightning!",
+            "Lincoln has the most amazing sunflower fields that stretch for miles and look like a golden ocean of giant flowers!",
+            "There are prairie dogs living near Lincoln that pop up from underground burrows like furry jack-in-the-boxes!",
+            "The city has the best corn in the world that's so sweet and juicy it tastes like nature's candy!"
+        ]
     },
     "Plano": {
         "city": "Plano",
         "state": "Texas",
         "country": "United States",
         "population": 293286,
-        "fun_facts": []
+        "fun_facts": [
+            "Plano has some of the best schools in America where kids learn amazing things like robotics and coding!",
+            "The city has beautiful hot air balloon festivals where colorful balloons fill the sky like giant floating rainbows!",
+            "Plano has amazing Texas barbecue with brisket so tender it falls apart when you look at it!",
+            "There are armadillos living around Plano that roll up into perfect little balls when they're scared!",
+            "The city has huge shopping centers where you can find anything you want, from cowboy boots to space toys!"
+        ]
     },
     "Anchorage": {
         "city": "Anchorage",
@@ -2030,7 +2054,13 @@
         "state": "Wisconsin",
         "country": "United States",
         "population": 285300,
-        "fun_facts": []
+        "fun_facts": [
+            "Madison is built on a narrow strip of land between two beautiful lakes where people kayak and fish right in the city!",
+            "The city has the University of Wisconsin where students study in buildings that look like castles on a hill!",
+            "Madison has the most amazing cheese in the world - you can visit cheese factories and taste curds that squeak when you bite them!",
+            "There are ice fishing contests in winter where people sit on frozen lakes catching fish through holes in the ice!",
+            "The city has a farmer's market that wraps around the entire state capitol building with the freshest vegetables and homemade pies!"
+        ]
     },
     "Reno": {
         "city": "Reno",

@@ -4,6 +4,7 @@ Scanning endpoint for streaming MP3 file from S3 and pre-generating flight MP3
 
 import asyncio
 import logging
+import hashlib
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
@@ -113,21 +114,35 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     user_lat, user_lng = await get_user_location(request, lat, lng)
     
     # Track scan:start event
-    client_ip = extract_client_ip(request)
-    user_agent = extract_user_agent(request)
-    
-    # Create unique session identifier for consistent session tracking
-    import hashlib
-    session_id = hashlib.md5(f"{client_ip}:{user_agent}:{user_lat}:{user_lng}".encode()).hexdigest()
-    
-    analytics.track_event("scan:start", {
-        "ip": client_ip,
-        "$user_agent": user_agent,
-        "$session_id": session_id,
-        "lat": round(user_lat, 3),
-        "lng": round(user_lng, 3),
-        "location_source": "params" if (lat is not None and lng is not None) else "ip"
-    })
+    try:
+        client_ip = extract_client_ip(request)
+        user_agent = extract_user_agent(request)
+        
+        # Create unique session identifier for consistent session tracking
+        # Use safe string formatting to handle None values
+        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{user_lat or 0}:{user_lng or 0}"
+        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()
+        
+        analytics.track_event("scan:start", {
+            "ip": client_ip,
+            "$user_agent": user_agent,
+            "$session_id": session_id,
+            "lat": round(user_lat, 3),
+            "lng": round(user_lng, 3),
+            "location_source": "params" if (lat is not None and lng is not None) else "ip"
+        })
+    except Exception as e:
+        # Log error but don't break the response
+        logger.error(f"Analytics tracking failed: {e}")
+        # Still try to track without session data
+        try:
+            analytics.track_event("scan:start", {
+                "lat": round(user_lat, 3),
+                "lng": round(user_lng, 3),
+                "location_source": "params" if (lat is not None and lng is not None) else "ip"
+            })
+        except:
+            pass  # Silently fail if analytics completely broken
     
     # Start MP3 pre-generation in background (don't await)
     if user_lat != 0.0 or user_lng != 0.0:  # Only if we have a valid location
