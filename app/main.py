@@ -18,7 +18,7 @@ from .scanning import stream_scanning, scanning_options
 from .voice_test import stream_voice_test, voice_test_options
 from .s3_cache import s3_cache
 from .flight_text import generate_flight_text, generate_flight_text_for_aircraft
-from .location_utils import get_user_location
+from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
 
 app = FastAPI()
@@ -112,7 +112,38 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
         logger.error(f"ElevenLabs API Unexpected Error: {str(e)}")
         return b"", f"ElevenLabs API unexpected error: {str(e)}"
 
-async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, limit: int = 3) -> tuple[List[Dict[str, Any]], str]:
+def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bool, nearby_aircraft: int):
+    """Track scan:complete analytics event with flight data results"""
+    try:
+        import hashlib
+        
+        client_ip = extract_client_ip(request)
+        user_agent = extract_user_agent(request)
+        browser_info = parse_user_agent(user_agent)
+        
+        # Create consistent session ID
+        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
+        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        
+        analytics.track_event("scan:complete", {
+            "ip": client_ip,
+            "$user_agent": user_agent,
+            "session_id": session_id,
+            "$insert_id": f"scan_complete_{session_id}",  # Prevents duplicates
+            "browser": browser_info["browser"],
+            "browser_version": browser_info["browser_version"],
+            "os": browser_info["os"],
+            "os_version": browser_info["os_version"],
+            "device": browser_info["device"],
+            "lat": round(lat, 3),
+            "lng": round(lng, 3),
+            "from_cache": from_cache,
+            "nearby_aircraft": nearby_aircraft
+        })
+    except Exception as e:
+        logger.error(f"Failed to track scan:complete event: {e}")
+
+async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, limit: int = 3, request: Optional[Request] = None) -> tuple[List[Dict[str, Any]], str]:
     """Get aircraft near the given coordinates using Flightradar24 API with caching
     
     Args:
@@ -138,6 +169,11 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
         logger.info(f"API cache hit for location: lat={lat}, lng={lng}")
         # Return up to limit aircraft from cached data
         aircraft_list = cached_aircraft.get('aircraft', [])[:limit]
+        
+        # Track analytics for cache hit if request is provided
+        if request:
+            track_scan_complete(request, lat, lng, from_cache=True, nearby_aircraft=len(aircraft_list))
+        
         return aircraft_list, ""
     
     try:
@@ -263,12 +299,22 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
                     asyncio.create_task(s3_cache.set(api_cache_key, cache_data, content_type="json"))
                     logger.info(f"Cached {len(aircraft_list)} aircraft for location: lat={lat}, lng={lng}")
                     
+                    # Track analytics for successful API response if request is provided
+                    limited_aircraft = aircraft_list[:limit]
+                    if request:
+                        track_scan_complete(request, lat, lng, from_cache=False, nearby_aircraft=len(limited_aircraft))
+                    
                     # Return up to limit aircraft
-                    return aircraft_list[:limit], ""
+                    return limited_aircraft, ""
                 else:
                     # Cache empty result too to avoid repeated API calls
                     cache_data = {"aircraft": []}
                     asyncio.create_task(s3_cache.set(api_cache_key, cache_data, content_type="json"))
+                    
+                    # Track analytics for empty API response if request is provided
+                    if request:
+                        track_scan_complete(request, lat, lng, from_cache=False, nearby_aircraft=0)
+                    
                     return [], "No passenger aircraft found within 100km radius"
                 
             else:
@@ -331,7 +377,7 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     
     # Cache miss - get aircraft data (this will use cached API data if available)
     logger.info(f"Cache miss - generating new MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
-    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index))
+    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index), request=request)
     
     
     # Check if we have the requested plane
@@ -524,7 +570,7 @@ async def read_root(request: Request, lat: float = None, lng: float = None, debu
     logger.info(f"Cache miss - generating new MP3 for location: lat={user_lat}, lng={user_lng}")
     
     # Get nearby aircraft
-    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng)
+    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, request=request)
     
     # Generate descriptive text about the aircraft
     sentence = generate_flight_text(aircraft, error_message, user_lat, user_lng)
