@@ -25,7 +25,7 @@ class Analytics:
                 logger.error(f"Failed to initialize Mixpanel: {e}")
                 self.mp = None
         else:
-            logger.info("MIXPANEL_TOKEN not set, analytics disabled")
+            logger.warning("MIXPANEL_TOKEN not set, analytics disabled")
     
     def track_event(self, event_name: str, properties: Dict[str, Any], user_id: Optional[str] = None):
         """Track an event with properties"""

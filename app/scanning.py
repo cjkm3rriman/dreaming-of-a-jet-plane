@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 import httpx
 from .s3_cache import s3_cache
 from .flight_text import generate_flight_text
-from .location_utils import get_user_location
+from .location_utils import get_user_location, extract_client_ip
 from .analytics import analytics
 
 logger = logging.getLogger(__name__)
@@ -113,14 +113,10 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     user_lat, user_lng = await get_user_location(request, lat, lng)
     
     # Track scan:start event
-    origin_ip = request.client.host if request.client else "unknown"
-    # Check for forwarded headers (common in deployed environments)
-    forwarded_for = request.headers.get("x-forwarded-for")
-    if forwarded_for:
-        origin_ip = forwarded_for.split(",")[0].strip()
+    client_ip = extract_client_ip(request)
     
     analytics.track_event("scan:start", {
-        "origin_ip": origin_ip,
+        "ip": client_ip,
         "lat": user_lat,
         "lng": user_lng,
         "location_source": "params" if (lat is not None and lng is not None) else "ip"
