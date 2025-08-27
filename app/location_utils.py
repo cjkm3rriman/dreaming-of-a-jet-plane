@@ -33,6 +33,11 @@ def extract_client_ip(request: Request) -> str:
     return client_ip
 
 
+def extract_user_agent(request: Request) -> str:
+    """Extract user agent from request headers"""
+    return request.headers.get("user-agent", "unknown")
+
+
 async def get_user_location(request: Request, lat: float = None, lng: float = None) -> tuple[float, float]:
     """Get user location from URL parameters or IP geolocation
     

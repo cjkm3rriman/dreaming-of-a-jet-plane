@@ -5,7 +5,7 @@ Intro endpoint for streaming MP3 file from S3
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
-from .location_utils import get_user_location, extract_client_ip
+from .location_utils import get_user_location, extract_client_ip, extract_user_agent
 from .analytics import analytics
 
 
@@ -59,10 +59,18 @@ async def stream_intro(request: Request, lat: float = None, lng: float = None):
                 if response.headers.get("last-modified"):
                     response_headers["Last-Modified"] = response.headers["last-modified"]
                 
-                # Track successful intro event
+                # Track successful intro event (only once per user session)
                 client_ip = extract_client_ip(request)
+                user_agent = extract_user_agent(request)
+                
+                # Create unique session identifier to prevent duplicate events
+                import hashlib
+                session_id = hashlib.md5(f"{client_ip}:{user_agent}:{user_lat}:{user_lng}".encode()).hexdigest()
+                
                 analytics.track_event("intro", {
                     "ip": client_ip,
+                    "$user_agent": user_agent,
+                    "$insert_id": f"intro_{session_id}",  # Prevents duplicates
                     "lat": user_lat,
                     "lng": user_lng,
                     "location_source": "params" if (lat is not None and lng is not None) else "ip"
