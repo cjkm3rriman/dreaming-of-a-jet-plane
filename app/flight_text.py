@@ -81,16 +81,18 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     
     # Build the descriptive sentences with different opening words based on plane index
-    if plane_index == 2:
-        opening_word = "Another"
-    elif plane_index == 3:
-        opening_word = "One more"
-    else:
-        # Default for plane 1 or any other index - keep original random opening words
-        opening_words = ["Marvelous!", "Tally Ho!", "Jolly Good!", "Splendid!", "What Luck!"]
-        opening_word = random.choice(opening_words)
+    opening_words = ["Marvelous!", "Tally Ho!", "Fantastic!", "Splendid!", "What Luck!"]
+    base_opening_word = random.choice(opening_words)
     
-    detection_sentence = f"{opening_word} Jet plane detected in the sky {distance_miles} miles from this Yoto!"
+    if plane_index == 2:
+        opening_phrase = f"{base_opening_word} Another"
+    elif plane_index == 3:
+        opening_phrase = f"{base_opening_word} One more"
+    else:
+        # Default for plane 1 or any other index
+        opening_phrase = base_opening_word
+    
+    detection_sentence = f"{opening_phrase} jet plane detected in the sky {distance_miles} miles from this Yoto!"
     
     # Add aircraft type, capacity, speed, and altitude information
     aircraft_name = aircraft.get("aircraft", "unknown aircraft type")
