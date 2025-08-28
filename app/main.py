@@ -3,12 +3,17 @@ from fastapi.responses import StreamingResponse, HTMLResponse
 import httpx
 import math
 import os
+import sys
 import asyncio
 import logging
 from typing import List, Dict, Any, Optional
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging with explicit format and stream
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout  # Ensure logs go to stdout not stderr
+)
 logger = logging.getLogger(__name__)
 from .aircraft_database import get_aircraft_name, get_passenger_capacity
 from .airport_database import get_city_country, get_airport_by_iata
@@ -312,14 +317,12 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
                         
                         
                         if aircraft_lat is None or aircraft_lon is None:
-                            logger.info(f"Skipping flight {flight.get('callsign')}: missing coordinates")
                             continue
                             
                         distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
                         
                         # Skip if outside radius (API bounds are approximate)
                         if distance > radius_km:
-                            logger.info(f"Skipping flight {flight.get('callsign')}: outside radius")
                             continue
                         
                         callsign = flight.get('callsign', '').strip() or "Unknown"

@@ -63,7 +63,6 @@ class S3MP3Cache:
             filename = f"{cache_key}.mp3"
         
         full_key = f"{self.cache_prefix}{filename}"
-        logger.info(f"Generated cache key {full_key} for location {location_str}, content_type={content_type}, plane_index={plane_index}")
         return full_key
     
     def _create_aws_signature(self, method: str, url: str, headers: dict, payload: bytes) -> dict:
@@ -171,7 +170,6 @@ class S3MP3Cache:
                         now = datetime.now(last_modified.tzinfo)
                         
                         if now - last_modified > timedelta(minutes=ttl_minutes):
-                            logger.info(f"Cache expired: {cache_key} (age: {now - last_modified}, TTL: {ttl_minutes}min)")
                             return None
                     except Exception as e:
                         logger.warning(f"Error parsing last-modified date: {e}")
@@ -181,7 +179,6 @@ class S3MP3Cache:
                 get_response = await client.get(s3_url, timeout=30.0)
                 
                 if get_response.status_code == 200:
-                    logger.info(f"Cache hit: {cache_key} ({len(get_response.content)} bytes)")
                     
                     # Return appropriate data type
                     if content_type == "json":
