@@ -2227,6 +2227,32 @@
         "population": 190641,
         "fun_facts": []
     },
+    "Shannon": {
+        "city": "Shannon",
+        "state": null,
+        "country": "Ireland",
+        "population": 10256,
+        "fun_facts": [
+            "Shannon has the world's first duty-free airport shop where travelers could buy things without paying taxes - it started the whole duty-free shopping idea!",
+            "The town was built entirely around the airport and is one of the youngest towns in Ireland, created in the 1960s!",
+            "Shannon Airport was a secret refueling stop for transatlantic flights before planes could fly all the way across the ocean!",
+            "The River Shannon is the longest river in Ireland and you can take boat trips to see castles and ancient round towers!",
+            "Shannon has traditional Irish music sessions in cozy pubs where you can hear fiddles, tin whistles, and bodhrán drums!"
+        ]
+    },
+    "Helsinki": {
+        "city": "Helsinki",
+        "state": null,
+        "country": "Finland",
+        "population": 658457,
+        "fun_facts": [
+            "Helsinki has a giant underground city with shops, restaurants, and even a swimming pool carved into solid rock beneath the streets!",
+            "The city has islands connected by ferries where you can have picnics and see the Baltic Sea stretching to the horizon!",
+            "Helsinki has saunas everywhere - even in the parliament building - because Finns love to sweat and then jump into cold water!",
+            "The city has a market square where you can buy the freshest fish, berries, and reindeer meat brought from Lapland!",
+            "Helsinki has beautiful Northern Lights in winter and almost 24-hour sunlight in summer - like living in two different worlds!"
+        ]
+    },
     "Arnavutkoy": {
         "city": "Arnavutkoy",
         "state": null,
