@@ -83,7 +83,6 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
         }
         
         logger.info(f"ElevenLabs API Request: URL={url}")
-        logger.info(f"ElevenLabs API Text: {text}")
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(url, json=payload, headers=headers)
@@ -141,10 +140,11 @@ def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bo
             "nearby_aircraft": nearby_aircraft
         })
     except Exception as e:
-        logger.error(f"Failed to track scan:complete event: {e}")
+        logger.error(f"Failed to track scan:complete event: {e}", exc_info=True)
 
 def track_plane_request(request: Request, lat: float, lng: float, plane_index: int, from_cache: bool):
     """Track plane:request analytics event for plane endpoint requests"""
+    logger.info(f"Tracking plane:request event for plane {plane_index}, from_cache: {from_cache}")
     try:
         import hashlib
         
@@ -172,7 +172,7 @@ def track_plane_request(request: Request, lat: float, lng: float, plane_index: i
             "from_cache": from_cache
         })
     except Exception as e:
-        logger.error(f"Failed to track plane:request event: {e}")
+        logger.error(f"Failed to track plane:request event: {e}", exc_info=True)
 
 def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int):
     """Track generate:audio analytics event with flight and audio details"""
@@ -227,7 +227,7 @@ def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: 
             "model": "eleven_turbo_v2"
         })
     except Exception as e:
-        logger.error(f"Failed to track mp3:generation event: {e}")
+        logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
 
 async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, limit: int = 3, request: Optional[Request] = None) -> tuple[List[Dict[str, Any]], str]:
     """Get aircraft near the given coordinates using Flightradar24 API with caching
@@ -288,8 +288,6 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
             "categories": "P"  # Filter to passenger aircraft only
         }
         
-        logger.info(f"Flightradar24 API Request: URL={url}")
-        logger.info(f"Flightradar24 API Params: bounds={params['bounds']}, limit={params['limit']}")
         
         async with httpx.AsyncClient() as client:
             import time
@@ -302,7 +300,6 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
             if response.status_code == 200:
                 data = response.json()
                 logger.info(f"Flightradar24 API Response: Found {len(data.get('data', []))} flights")
-                logger.info(f"Raw flight data: {data.get('data', [])}")
                 
                 flights = data.get('data', [])
                 aircraft_list = []
@@ -313,14 +310,12 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
                         aircraft_lat = flight.get('lat')
                         aircraft_lon = flight.get('lon')
                         
-                        logger.info(f"Processing flight: {flight.get('callsign')} at lat={aircraft_lat}, lon={aircraft_lon}")
                         
                         if aircraft_lat is None or aircraft_lon is None:
                             logger.info(f"Skipping flight {flight.get('callsign')}: missing coordinates")
                             continue
                             
                         distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
-                        logger.info(f"Flight {flight.get('callsign')} distance: {distance:.2f}km (limit: {radius_km}km)")
                         
                         # Skip if outside radius (API bounds are approximate)
                         if distance > radius_km:
@@ -370,7 +365,6 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
                         }
                         
                         aircraft_list.append(aircraft_info)
-                        logger.info(f"Added flight {callsign} to aircraft list")
                         
                     except Exception as e:
                         logger.warning(f"Error processing flight data: {e}")
