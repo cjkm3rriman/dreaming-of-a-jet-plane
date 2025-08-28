@@ -1527,6 +1527,19 @@
             "The Old Port district has cobblestone streets that are over 150 years old and make a cool clip-clop sound when you walk on them!"
         ]
     },
+    "Bangor, Maine": {
+        "city": "Bangor",
+        "state": "Maine",
+        "country": "United States",
+        "population": 31997,
+        "fun_facts": [
+            "Bangor is the hometown of famous horror writer Stephen King who still lives there in a spooky Victorian house with a bat-shaped fence!",
+            "The city has a giant statue of Paul Bunyan the legendary lumberjack that's 31 feet tall - taller than a three-story building!",
+            "Bangor was once called the 'Lumber Capital of the World' because so many trees floated down the Penobscot River like a wooden highway!",
+            "The city has blueberry fields everywhere and Maine blueberries are the sweetest and juiciest you'll ever taste!",
+            "Bangor International Airport was once a secret refueling stop for military planes during the Cold War - it was like a top-secret gas station!"
+        ]
+    },
     "Memphis, Tennessee": {
         "city": "Memphis",
         "state": "Tennessee",
@@ -2213,6 +2226,32 @@
         "country": "United States",
         "population": 190641,
         "fun_facts": []
+    },
+    "Arnavutkoy": {
+        "city": "Arnavutkoy",
+        "state": null,
+        "country": "Turkey",
+        "population": 295627,
+        "fun_facts": [
+            "Arnavutkoy sits on the beautiful Bosphorus strait where Europe and Asia meet - you can wave at two continents at once!",
+            "The district has Ottoman-era wooden mansions called yalis that look like fairy tale houses floating on the water!",
+            "Arnavutkoy means 'Albanian village' and has narrow cobblestone streets perfect for exploring on foot!",
+            "The area has the most delicious Turkish breakfast with fresh bread, cheese, olives, and honey that tastes like sunshine!",
+            "You can take a ferry boat ride along the Bosphorus and see dolphins jumping in the waves!"
+        ]
+    },
+    "Reykjavik": {
+        "city": "Reykjavik",
+        "state": null,
+        "country": "Iceland",
+        "population": 131136,
+        "fun_facts": [
+            "Reykjavik is the northernmost capital city in the world and you can see the Northern Lights dancing green and pink in the winter sky!",
+            "The city has natural hot springs where people swim outside in steamy blue water even when it's snowing!",
+            "Reykjavik has no mosquitoes because it's too cold and windy for them to survive - it's a bug-free paradise!",
+            "The city runs almost entirely on geothermal energy from underground hot water that heats all the buildings naturally!",
+            "In summer the sun barely sets and it stays bright outside until almost midnight like having extra-long days!"
+        ]
     },
     "Dubai": {
         "city": "Dubai",
