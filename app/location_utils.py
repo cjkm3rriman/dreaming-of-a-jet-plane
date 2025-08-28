@@ -54,7 +54,7 @@ def parse_user_agent(user_agent_string: str) -> dict:
         }
         
         # Special handling for Yoto Player devices
-        if (user_agent_string == "ESP32HTTPClient/1.0" and 
+        if (user_agent_string == "ESP32 HTTP Client/1.0" and 
             browser_info["browser"] == "Other" and 
             browser_info["device"] == "Other" and 
             browser_info["os"] == "Other"):

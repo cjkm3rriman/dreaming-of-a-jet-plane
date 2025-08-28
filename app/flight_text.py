@@ -49,11 +49,14 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     distance_miles = aircraft.get("distance_miles", "unknown")
     flight_number = aircraft.get("flight_number") or aircraft.get("callsign", "unknown flight")
     airline_name = aircraft.get("airline_name")
+    origin_city = aircraft.get("origin_city", "an unknown origin")
+    origin_country = aircraft.get("origin_country", "an unknown country")
     destination_city = aircraft.get("destination_city", "an unknown destination")
     destination_country = aircraft.get("destination_country", "an unknown country")
     
-    # Check if we should use state instead of country for US destinations
+    # Check if we should use state instead of country for US locations
     destination_location = destination_country
+    origin_location = origin_country
     user_in_us = user_lat is not None and user_lng is not None and is_location_in_us(user_lat, user_lng)
     
     if user_in_us and destination_country == "the United States":
@@ -66,11 +69,16 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 if state:
                     destination_location = state
     
-    # Build flight identifier with airline name if available
-    if airline_name:
-        flight_identifier = f"{airline_name} flight {flight_number}"
-    else:
-        flight_identifier = f"flight {flight_number}"
+    if user_in_us and origin_country == "the United States":
+        # Get origin airport data to find state
+        origin_airport = aircraft.get("origin_airport")
+        if origin_airport:
+            airport_data = get_airport_by_iata(origin_airport)
+            if airport_data and airport_data.get("country") == "US":
+                state = airport_data.get("state")
+                if state:
+                    origin_location = state
+    
     
     # Build the descriptive sentences with different opening words based on plane index
     if plane_index == 2:
@@ -82,24 +90,38 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         opening_words = ["Marvelous!", "Tally Ho!", "Jolly Good!", "Splendid!", "What Luck!"]
         opening_word = random.choice(opening_words)
     
-    detection_sentence = f"{opening_word} Jet plane detected in the sky above about {distance_miles} miles from this Yoto!"
+    detection_sentence = f"{opening_word} Jet plane detected in the sky {distance_miles} miles from this Yoto!"
     
-    # Add aircraft type, capacity, and speed information
+    # Add aircraft type, capacity, speed, and altitude information
     aircraft_name = aircraft.get("aircraft", "unknown aircraft type")
     passenger_capacity = aircraft.get("passenger_capacity", 0)
     velocity_knots = aircraft.get("velocity", 0)
     velocity_mph = round(velocity_knots * 1.15078) if velocity_knots else 0
+    altitude_feet = aircraft.get("altitude", 0)
     
-    # Build scanner sentence with capacity and speed
+    # Build scanner sentence with random selection of available data
     scanner_info = f"My scanners tell me this is a {aircraft_name}"
     
+    # Collect available information options
+    available_info = []
+    
     if passenger_capacity and passenger_capacity > 0:
-        scanner_info += f" carrying {passenger_capacity} passengers"
+        available_info.append(f"carrying {passenger_capacity} passengers")
         
     if velocity_mph > 0:
         speed_words = ["whopping", "stupendous", "astounding", "speedy", "breathtaking"]
         speed_word = random.choice(speed_words)
-        scanner_info += f" travelling at a {speed_word} {velocity_mph} miles per hour"
+        available_info.append(f"travelling at a {speed_word} {velocity_mph} miles per hour")
+        
+    if altitude_feet and altitude_feet > 0:
+        altitude_words = ["soaring", "cruising", "flying", "gliding"]
+        altitude_word = random.choice(altitude_words)
+        available_info.append(f"{altitude_word} at {altitude_feet:,} feet")
+    
+    # Randomly select one piece of additional info if available
+    if available_info:
+        selected_info = random.choice(available_info)
+        scanner_info += f" {selected_info}"
         
     scanner_sentence = scanner_info + "."
     
@@ -120,27 +142,31 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 
                 if hours > 0:
                     if hours == 1:
-                        eta_text = f" arriving in {hours} hour"
+                        eta_text = f" landing in {hours} hour"
                     else:
-                        eta_text = f" arriving in {hours} hours"
+                        eta_text = f" landing in {hours} hours"
                     
                     if minutes > 0:
                         eta_text += f" and {minutes} minutes"
                 elif minutes > 0:
                     if minutes == 1:
-                        eta_text = f" arriving in {minutes} minute"
+                        eta_text = f" landing in {minutes} minute"
                     else:
-                        eta_text = f" arriving in {minutes} minutes"
+                        eta_text = f" landing in {minutes} minutes"
                 else:
-                    eta_text = " arriving there very soon"
+                    eta_text = " landing there very soon"
         except (ValueError, TypeError):
             # Invalid ETA timestamp
             pass
     
-    if destination_city == "an unknown destination" or destination_location == "an unknown country":
-        flight_sentence = f"This flight is {flight_identifier}, travelling to an unknown destination, {eta_text}."
+    if (origin_city == "an unknown origin" or origin_location == "an unknown country") and (destination_city == "an unknown destination" or destination_location == "an unknown country"):
+        flight_sentence = f"This {airline_name} flight is travelling to an unknown destination{eta_text}."
+    elif origin_city == "an unknown origin" or origin_location == "an unknown country":
+        flight_sentence = f"This {airline_name} flight is travelling to {destination_city} in {destination_location}{eta_text}."
+    elif destination_city == "an unknown destination" or destination_location == "an unknown country":
+        flight_sentence = f"This {airline_name} flight is travelling from {origin_city} in {origin_location} to an unknown destination{eta_text}."
     else:
-        flight_sentence = f"This flight is {flight_identifier}, travelling to {destination_city} in {destination_location}, {eta_text}."
+        flight_sentence = f"This {airline_name} flight is travelling from {origin_city} in {origin_location} to {destination_city} in {destination_location}{eta_text}."
     
     # Add random fun fact about destination city if available
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
@@ -149,7 +175,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         fun_facts = get_fun_facts(destination_city)
         if fun_facts:
             random_fact = random.choice(fun_facts)
-            full_response += f" Fun fact time. Did you know {random_fact}"
+            fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
+            fun_fact_opening = random.choice(fun_fact_openings)
+            full_response += f" {fun_fact_opening} {random_fact}"
     
     return full_response
 

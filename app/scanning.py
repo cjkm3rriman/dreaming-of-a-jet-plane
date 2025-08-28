@@ -49,7 +49,7 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
             # Generate appropriate text for this plane
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
-                sentence = generate_flight_text_for_aircraft(selected_aircraft, lat, lng)
+                sentence = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index)
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
                 if plane_index == 2:
