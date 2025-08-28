@@ -65,8 +65,9 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
                 sentence = generate_flight_text([], error_message, lat, lng)
             
             # Create task to generate and cache this plane's MP3
+            selected_aircraft = aircraft[zero_based_index] if aircraft and len(aircraft) > zero_based_index else None
             task = asyncio.create_task(
-                _generate_and_cache_plane_mp3(plane_index, plane_cache_key, sentence, lat, lng)
+                _generate_and_cache_plane_mp3(plane_index, plane_cache_key, sentence, lat, lng, request, selected_aircraft)
             )
             tasks.append(task)
         
@@ -82,20 +83,28 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
         logger.error(f"Error in MP3 pre-generation: {e}")
 
 
-async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, sentence: str, lat: float, lng: float) -> bool:
+async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, sentence: str, lat: float, lng: float, request: Request = None, aircraft: dict = None) -> bool:
     """Helper function to generate and cache MP3 for a specific plane"""
     try:
         # Import here to avoid circular imports
-        from .main import convert_text_to_speech
+        from .main import convert_text_to_speech, track_mp3_generation
+        import time
         
-        # Convert to speech
+        # Convert to speech with timing
+        tts_start_time = time.time()
         audio_content, tts_error = await convert_text_to_speech(sentence)
+        tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
         
         if audio_content and not tts_error:
             # Cache the MP3
             success = await s3_cache.set(cache_key, audio_content)
             if success:
                 logger.info(f"Successfully pre-generated and cached plane {plane_index} MP3 for location: lat={lat}, lng={lng}")
+                
+                # Track MP3 generation analytics if we have request and aircraft data
+                if request and aircraft:
+                    track_mp3_generation(request, lat, lng, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content))
+                
                 return True
             else:
                 logger.warning(f"Failed to cache pre-generated plane {plane_index} MP3 for location: lat={lat}, lng={lng}")

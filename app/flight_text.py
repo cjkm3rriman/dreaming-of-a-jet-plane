@@ -172,7 +172,25 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
     
     if destination_city and destination_city != "an unknown destination":
-        fun_facts = get_fun_facts(destination_city)
+        # For US destinations, pass state information to help with city disambiguation
+        if destination_country == "the United States" and destination_location != "an unknown country":
+            # Use the actual state name if we have it, otherwise use destination_location
+            destination_state = aircraft.get("destination_airport")
+            if destination_state:
+                airport_data = get_airport_by_iata(destination_state)
+                if airport_data and airport_data.get("country") == "US":
+                    state = airport_data.get("state")
+                    if state:
+                        fun_facts = get_fun_facts(destination_city, state, "United States")
+                    else:
+                        fun_facts = get_fun_facts(destination_city, destination_location, "United States")
+                else:
+                    fun_facts = get_fun_facts(destination_city, destination_location, "United States")
+            else:
+                fun_facts = get_fun_facts(destination_city, destination_location, "United States")
+        else:
+            fun_facts = get_fun_facts(destination_city)
+            
         if fun_facts:
             random_fact = random.choice(fun_facts)
             fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]

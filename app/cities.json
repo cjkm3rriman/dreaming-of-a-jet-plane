@@ -381,12 +381,11 @@
     },
     "Lima": {
         "city": "Lima",
-        
         "state": null,
         "country": "Peru",
         "population": 10628400,
         "fun_facts": [
-            "It never rains in Lima! The average annual rainfall is just half and inch!"       
+            "It never rains in Lima! The average annual rainfall is just half and inch!"
         ]
     },
     "London": {
@@ -415,7 +414,7 @@
             "Nagoya has a science museum with a giant dome where you can see stars and planets like you're floating in space!"
         ]
     },
-    "Chicago": {
+    "Chicago, Illinois": {
         "city": "Chicago",
         "state": "Illinois",
         "country": "United States",
@@ -480,7 +479,7 @@
             "Wuhan has a university with cherry blossom trees that bloom pink and white flowers, making the whole campus look like a fairy tale!"
         ]
     },
-    "New York": {
+    "New York City, New York": {
         "city": "New York City",
         "state": "New York",
         "country": "United States",
@@ -634,7 +633,7 @@
             "The city has indoor ski slopes where you can go skiing and snowboarding even though it's hot outside!"
         ]
     },
-    "Philadelphia": {
+    "Philadelphia, Pennsylvania": {
         "city": "Philadelphia",
         "state": "Pennsylvania",
         "country": "United States",
@@ -659,7 +658,7 @@
             "The city has sweet shops that make the most delicious milk sweets that melt in your mouth like candy clouds!"
         ]
     },
-    "Miami": {
+    "Miami, Florida": {
         "city": "Miami",
         "state": "Florida",
         "country": "United States",
@@ -724,7 +723,7 @@
             "The city has churches with onion-shaped domes painted in gold, blue, and green that sparkle like jewels!"
         ]
     },
-    "Houston": {
+    "Houston, Texas": {
         "city": "Houston",
         "state": "Texas",
         "country": "United States",
@@ -828,7 +827,7 @@
             "The city has markets where you can buy pinatas in every shape imaginable - from unicorns to dinosaurs to superheroes!"
         ]
     },
-    "Phoenix": {
+    "Phoenix, Arizona": {
         "city": "Phoenix",
         "state": "Arizona",
         "country": "United States",
@@ -867,7 +866,7 @@
             "The city was planned so perfectly that everything is organized into numbered blocks like a giant game board!"
         ]
     },
-    "Dallas": {
+    "Dallas, Texas": {
         "city": "Dallas",
         "state": "Texas",
         "country": "United States",
@@ -880,7 +879,7 @@
             "The city has a zoo with a monorail that takes you above the animals so you can see giraffes eye-to-eye!"
         ]
     },
-    "Washington": {
+    "Washington, DC": {
         "city": "Washington",
         "state": "DC",
         "country": "United States",
@@ -893,7 +892,7 @@
             "The White House in Washington has 132 rooms, including a movie theater, bowling alley, and chocolate shop!"
         ]
     },
-    "Boston": {
+    "Boston, Massachusetts": {
         "city": "Boston",
         "state": "Massachusetts",
         "country": "United States",
@@ -919,7 +918,7 @@
             "Rome has pizza so thin and crispy that it's like eating delicious edible paper covered in cheese and toppings!"
         ]
     },
-    "Detroit": {
+    "Detroit, Michigan": {
         "city": "Detroit",
         "state": "Michigan",
         "country": "United States",
@@ -932,7 +931,7 @@
             "Detroit has murals painted on buildings that are so big and colorful you can see them from airplanes!"
         ]
     },
-    "Atlanta": {
+    "Atlanta, Georgia": {
         "city": "Atlanta",
         "state": "Georgia",
         "country": "United States",
@@ -1100,7 +1099,7 @@
             "The city grows the most beautiful flowers in the world, especially roses that are shipped to countries everywhere!"
         ]
     },
-    "Los Angeles": {
+    "Los Angeles, California": {
         "city": "Los Angeles",
         "state": "California",
         "country": "United States",
@@ -1230,7 +1229,7 @@
             "The city has beautiful gardens with roses that smell so sweet you can smell them from blocks away!"
         ]
     },
-    "San Francisco": {
+    "San Francisco, California": {
         "city": "San Francisco",
         "state": "California",
         "country": "United States",
@@ -1295,9 +1294,9 @@
             "The city has music called Taarab that mixes African, Arab, and Indian sounds into the most amazing musical fusion!"
         ]
     },
-    "San Antonio": {
+    "San Antonio, Texas": {
         "city": "San Antonio",
-        "state": "Texas", 
+        "state": "Texas",
         "country": "United States",
         "population": 1526656,
         "fun_facts": [
@@ -1308,10 +1307,10 @@
             "The city has a giant market called Market Square where mariachi bands play music and you can eat churros covered in cinnamon sugar!"
         ]
     },
-    "San Diego": {
+    "San Diego, California": {
         "city": "San Diego",
         "state": "California",
-        "country": "United States", 
+        "country": "United States",
         "population": 1404452,
         "fun_facts": [
             "San Diego has the most famous zoo in the world with pandas, polar bears, and elephants that you can ride a bus to see!",
@@ -1321,7 +1320,7 @@
             "The city has perfect weather all year - it's sunny and 75 degrees almost every single day like living in paradise!"
         ]
     },
-    "Jacksonville": {
+    "Jacksonville, Florida": {
         "city": "Jacksonville",
         "state": "Florida",
         "country": "United States",
@@ -1334,8 +1333,8 @@
             "The city has a zoo where jaguars swim underwater in pools with glass walls so you can watch them dive like aquatic cats!"
         ]
     },
-    "Fort Worth": {
-        "city": "Fort Worth", 
+    "Fort Worth, Texas": {
+        "city": "Fort Worth",
         "state": "Texas",
         "country": "United States",
         "population": 1008106,
@@ -1347,7 +1346,7 @@
             "The city has a stockyard where you can watch a real cattle drive twice a day with cowboys on horseback!"
         ]
     },
-    "San Jose": {
+    "San Jose, California": {
         "city": "San Jose",
         "state": "California",
         "country": "United States",
@@ -1360,10 +1359,10 @@
             "The city has a museum where you can build and program your own robots and watch them move around!"
         ]
     },
-    "Austin": {
+    "Austin, Texas": {
         "city": "Austin",
         "state": "Texas",
-        "country": "United States", 
+        "country": "United States",
         "population": 993588,
         "fun_facts": [
             "Austin is the 'Live Music Capital of the World' where there are more live music venues than any other city!",
@@ -1373,7 +1372,7 @@
             "The city's motto is 'Keep Austin Weird' and you can see purple painted cows and art cars driving around!"
         ]
     },
-    "Charlotte": {
+    "Charlotte, North Carolina": {
         "city": "Charlotte",
         "state": "North Carolina",
         "country": "United States",
@@ -1386,7 +1385,7 @@
             "The city has a white water center where you can go rafting on artificial rapids right in the middle of the city!"
         ]
     },
-    "Columbus": {
+    "Columbus, Ohio": {
         "city": "Columbus",
         "state": "Ohio",
         "country": "United States",
@@ -1399,9 +1398,9 @@
             "The city has a giant pumpkin festival where people grow pumpkins bigger than cars and carve them into amazing sculptures!"
         ]
     },
-    "Indianapolis": {
+    "Indianapolis, Indiana": {
         "city": "Indianapolis",
-        "state": "Indiana", 
+        "state": "Indiana",
         "country": "United States",
         "population": 891484,
         "fun_facts": [
@@ -1412,7 +1411,7 @@
             "The city has a canal downtown where you can ride in paddle boats shaped like swans!"
         ]
     },
-    "Seattle": {
+    "Seattle, Washington": {
         "city": "Seattle",
         "state": "Washington",
         "country": "United States",
@@ -1425,7 +1424,7 @@
             "The city has so many coffee shops that there's one on almost every corner, and it rains a lot so people drink coffee to stay cozy!"
         ]
     },
-    "Denver": {
+    "Denver, Colorado": {
         "city": "Denver",
         "state": "Colorado",
         "country": "United States",
@@ -1438,7 +1437,7 @@
             "The city has the largest city park system in the nation with red rocks that look like giant sculptures!"
         ]
     },
-    "Oklahoma City": {
+    "Oklahoma City, Oklahoma": {
         "city": "Oklahoma City",
         "state": "Oklahoma",
         "country": "United States",
@@ -1451,7 +1450,7 @@
             "The city has a land run memorial where thousands of people raced on horses and wagons to claim free land over 100 years ago!"
         ]
     },
-    "Nashville": {
+    "Nashville, Tennessee": {
         "city": "Nashville",
         "state": "Tennessee",
         "country": "United States",
@@ -1464,7 +1463,7 @@
             "The city has hot chicken that's so spicy it makes your mouth feel like it's on fire, but people love it anyway!"
         ]
     },
-    "El Paso": {
+    "El Paso, Texas": {
         "city": "El Paso",
         "state": "Texas",
         "country": "United States",
@@ -1477,7 +1476,7 @@
             "The city has ancient Native American rock art on the mountains that's over 4,000 years old - older than the pyramids!"
         ]
     },
-    "Las Vegas": {
+    "Las Vegas, Nevada": {
         "city": "Las Vegas",
         "state": "Nevada",
         "country": "United States",
@@ -1490,7 +1489,7 @@
             "The city lights up so brightly at night that astronauts can see it glowing from space like a bright star on Earth!"
         ]
     },
-    "Louisville": {
+    "Louisville, Kentucky": {
         "city": "Louisville",
         "state": "Kentucky",
         "country": "United States",
@@ -1503,7 +1502,7 @@
             "The city has caves underneath it where people used to store cheese and now you can take underground boat tours!"
         ]
     },
-    "Portland": {
+    "Portland, Oregon": {
         "city": "Portland",
         "state": "Oregon",
         "country": "United States",
@@ -1516,7 +1515,19 @@
             "The city has donuts with weird flavors like maple bacon and cereal toppings that taste like eating breakfast dessert!"
         ]
     },
-    "Memphis": {
+    "Portland, Maine": {
+        "city": "Portland",
+        "state": "Maine", 
+        "country": "United States",
+        "population": 68408,
+        "fun_facts": [
+            "Portland is famous for its amazing lobster rolls that are so good people drive from other states just to eat them!",
+            "The city has more lighthouses per square mile than almost anywhere else in America - they help ships find their way home!",
+            "Portland sits on a peninsula surrounded by water on three sides, making it feel like you're on a giant island!",
+            "The Old Port district has cobblestone streets that are over 150 years old and make a cool clip-clop sound when you walk on them!"
+        ]
+    },
+    "Memphis, Tennessee": {
         "city": "Memphis",
         "state": "Tennessee",
         "country": "United States",
@@ -1529,7 +1540,7 @@
             "The city is where FedEx started, and they have so many airplanes it looks like a sky highway at night!"
         ]
     },
-    "Baltimore": {
+    "Baltimore, Maryland": {
         "city": "Baltimore",
         "state": "Maryland",
         "country": "United States",
@@ -1542,7 +1553,7 @@
             "The city has a fort shaped like a star where the national anthem was written during a big battle with fireworks in the sky!"
         ]
     },
-    "Milwaukee": {
+    "Milwaukee, Wisconsin": {
         "city": "Milwaukee",
         "state": "Wisconsin",
         "country": "United States",
@@ -1555,7 +1566,7 @@
             "The city has a museum where you can ride a real motorcycle and see the biggest motorcycle collection in the world!"
         ]
     },
-    "Albuquerque": {
+    "Albuquerque, New Mexico": {
         "city": "Albuquerque",
         "state": "New Mexico",
         "country": "United States",
@@ -1568,7 +1579,7 @@
             "The city has green chile peppers that are so famous they put them on everything - even ice cream and donuts!"
         ]
     },
-    "Tucson": {
+    "Tucson, Arizona": {
         "city": "Tucson",
         "state": "Arizona",
         "country": "United States",
@@ -1581,7 +1592,7 @@
             "The city has an airplane graveyard with thousands of old planes sitting in the desert like a giant airplane parking lot!"
         ]
     },
-    "Fresno": {
+    "Fresno, California": {
         "city": "Fresno",
         "state": "California",
         "country": "United States",
@@ -1594,7 +1605,7 @@
             "The city has underground gardens where you can walk through rooms carved into the ground and see fruit trees growing below street level!"
         ]
     },
-    "Sacramento": {
+    "Sacramento, California": {
         "city": "Sacramento",
         "state": "California",
         "country": "United States",
@@ -1607,7 +1618,7 @@
             "The city has a huge farmers market where you can taste fruits and vegetables grown right in California's soil!"
         ]
     },
-    "Mesa": {
+    "Mesa, Arizona": {
         "city": "Mesa",
         "state": "Arizona",
         "country": "United States",
@@ -1620,7 +1631,7 @@
             "The city has amazing sunsets that turn the desert sky purple, orange, and pink like a giant painting!"
         ]
     },
-    "Kansas City": {
+    "Kansas City, Missouri": {
         "city": "Kansas City",
         "state": "Missouri",
         "country": "United States",
@@ -1633,7 +1644,7 @@
             "The city has a giant shuttle and space exhibit where you can pretend to be an astronaut!"
         ]
     },
-    "Raleigh": {
+    "Raleigh, North Carolina": {
         "city": "Raleigh",
         "state": "North Carolina",
         "country": "United States",
@@ -1646,7 +1657,7 @@
             "The city has three major universities, so there are students everywhere learning about science, art, and cool inventions!"
         ]
     },
-    "Colorado Springs": {
+    "Colorado Springs, Colorado": {
         "city": "Colorado Springs",
         "state": "Colorado",
         "country": "United States",
@@ -1659,7 +1670,7 @@
             "The city has Garden of the Gods with rocks balanced on top of each other that look like they might fall over but never do!"
         ]
     },
-    "Omaha": {
+    "Omaha, Nebraska": {
         "city": "Omaha",
         "state": "Nebraska",
         "country": "United States",
@@ -1672,7 +1683,7 @@
             "The city has a children's museum where you can climb through a four-story jungle gym and pretend to be different animals!"
         ]
     },
-    "Virginia Beach": {
+    "Virginia Beach, Virginia": {
         "city": "Virginia Beach",
         "state": "Virginia",
         "country": "United States",
@@ -1685,7 +1696,7 @@
             "The city has a boardwalk that's 3 miles long where you can ride bikes, eat funnel cake, and watch street performers!"
         ]
     },
-    "Long Beach": {
+    "Long Beach, California": {
         "city": "Long Beach",
         "state": "California",
         "country": "United States",
@@ -1698,7 +1709,7 @@
             "The city has a grand prix race where cars zoom around the streets at 180 miles per hour!"
         ]
     },
-    "Oakland": {
+    "Oakland, California": {
         "city": "Oakland",
         "state": "California",
         "country": "United States",
@@ -1711,7 +1722,7 @@
             "The city has a museum with a giant blue whale skeleton hanging from the ceiling!"
         ]
     },
-    "Minneapolis": {
+    "Minneapolis, Minnesota": {
         "city": "Minneapolis",
         "state": "Minnesota",
         "country": "United States",
@@ -1724,7 +1735,7 @@
             "The city gets so much snow in winter that people build snow forts and go ice fishing on frozen lakes!"
         ]
     },
-    "Tulsa": {
+    "Tulsa, Oklahoma": {
         "city": "Tulsa",
         "state": "Oklahoma",
         "country": "United States",
@@ -1737,7 +1748,7 @@
             "The city has a river that runs through it where you can kayak and see herons standing perfectly still waiting to catch fish!"
         ]
     },
-    "Tampa": {
+    "Tampa, Florida": {
         "city": "Tampa",
         "state": "Florida",
         "country": "United States",
@@ -1750,7 +1761,7 @@
             "The city has a pirate festival every year where people dress like pirates and have battles with water cannons!"
         ]
     },
-    "Arlington": {
+    "Arlington, Texas": {
         "city": "Arlington",
         "state": "Texas",
         "country": "United States",
@@ -1763,7 +1774,7 @@
             "The city has a river that runs through it where you can go tubing and float like you're on a lazy river ride!"
         ]
     },
-    "Aurora": {
+    "Aurora, Colorado": {
         "city": "Aurora",
         "state": "Colorado",
         "country": "United States",
@@ -1776,7 +1787,7 @@
             "The city has amazing thunderstorms with lightning that lights up the whole sky like nature's fireworks!"
         ]
     },
-    "Wichita": {
+    "Wichita, Kansas": {
         "city": "Wichita",
         "state": "Kansas",
         "country": "United States",
@@ -1789,7 +1800,7 @@
             "The city has a museum where you can see real airplanes and even sit in the cockpit of a fighter jet!"
         ]
     },
-    "Cleveland": {
+    "Cleveland, Ohio": {
         "city": "Cleveland",
         "state": "Ohio",
         "country": "United States",
@@ -1802,7 +1813,7 @@
             "The city has a orchestra that plays in a beautiful concert hall that looks like a golden palace inside!"
         ]
     },
-    "New Orleans": {
+    "New Orleans, Louisiana": {
         "city": "New Orleans",
         "state": "Louisiana",
         "country": "United States",
@@ -1815,7 +1826,7 @@
             "The city is built below sea level, so it's like living in a bowl with water all around!"
         ]
     },
-    "Henderson": {
+    "Henderson, Nevada": {
         "city": "Henderson",
         "state": "Nevada",
         "country": "United States",
@@ -1828,7 +1839,7 @@
             "The city has amazing swimming pools and water parks because it's so hot and sunny all year round!"
         ]
     },
-    "Honolulu": {
+    "Honolulu, Hawaii": {
         "city": "Honolulu",
         "state": "Hawaii",
         "country": "United States",
@@ -1841,7 +1852,7 @@
             "The city has pineapples and coconuts growing everywhere, so you can eat tropical fruit right off the trees!"
         ]
     },
-    "Anaheim": {
+    "Anaheim, California": {
         "city": "Anaheim",
         "state": "California",
         "country": "United States",
@@ -1854,7 +1865,7 @@
             "The city is where Walt Disney built his dream kingdom with castles, rides, and characters that make everyone smile!"
         ]
     },
-    "Orlando": {
+    "Orlando, Florida": {
         "city": "Orlando",
         "state": "Florida",
         "country": "United States",
@@ -1867,7 +1878,7 @@
             "The city has more theme parks than anywhere else in the world - it's like living in a giant playground!"
         ]
     },
-    "Lexington": {
+    "Lexington, Kentucky": {
         "city": "Lexington",
         "state": "Kentucky",
         "country": "United States",
@@ -1880,7 +1891,7 @@
             "The city has bourbon distilleries where they make whiskey in giant oak barrels that smell like vanilla!"
         ]
     },
-    "Riverside": {
+    "Riverside, California": {
         "city": "Riverside",
         "state": "California",
         "country": "United States",
@@ -1893,7 +1904,7 @@
             "The city has a museum dedicated to citrus fruits where you can learn about every type of orange, lemon, and grapefruit!"
         ]
     },
-    "Irvine": {
+    "Irvine, California": {
         "city": "Irvine",
         "state": "California",
         "country": "United States",
@@ -1906,7 +1917,7 @@
             "The city has amazing libraries with reading gardens where you can sit under trees and read your favorite books!"
         ]
     },
-    "Corpus Christi": {
+    "Corpus Christi, Texas": {
         "city": "Corpus Christi",
         "state": "Texas",
         "country": "United States",
@@ -1919,7 +1930,7 @@
             "The city has a bay where you can go fishing and might catch redfish, speckled trout, or even a small shark!"
         ]
     },
-    "Newark": {
+    "Newark, New Jersey": {
         "city": "Newark",
         "state": "New Jersey",
         "country": "United States",
@@ -1932,7 +1943,7 @@
             "The city has a museum where you can see real Egyptian mummies and ancient treasures from around the world!"
         ]
     },
-    "Santa Ana": {
+    "Santa Ana, California": {
         "city": "Santa Ana",
         "state": "California",
         "country": "United States",
@@ -1945,7 +1956,7 @@
             "The city has perfect weather almost every day with sunshine and temperatures that feel just right!"
         ]
     },
-    "Cincinnati": {
+    "Cincinnati, Ohio": {
         "city": "Cincinnati",
         "state": "Ohio",
         "country": "United States",
@@ -1958,7 +1969,7 @@
             "The city has beautiful bridges that light up at night and reflect in the river like colorful ribbons!"
         ]
     },
-    "Pittsburgh": {
+    "Pittsburgh, Pennsylvania": {
         "city": "Pittsburgh",
         "state": "Pennsylvania",
         "country": "United States",
@@ -1971,7 +1982,7 @@
             "The city is famous for pierogies - potato dumplings so delicious they have pierogi races at baseball games!"
         ]
     },
-    "Saint Paul": {
+    "Saint Paul, Minnesota": {
         "city": "Saint Paul",
         "state": "Minnesota",
         "country": "United States",
@@ -1984,7 +1995,7 @@
             "The city has delicious hotdish - a warm casserole with meat, vegetables, and tater tots that's like a hug in a bowl!"
         ]
     },
-    "Greensboro": {
+    "Greensboro, North Carolina": {
         "city": "Greensboro",
         "state": "North Carolina",
         "country": "United States",
@@ -1997,7 +2008,7 @@
             "The city has the most delicious barbecue in North Carolina with smoky pulled pork that melts in your mouth like butter!"
         ]
     },
-    "Durham": {
+    "Durham, North Carolina": {
         "city": "Durham",
         "state": "North Carolina",
         "country": "United States",
@@ -2010,7 +2021,7 @@
             "The city has a giant bull statue downtown that's become famous and looks like it's ready to charge down the street!"
         ]
     },
-    "Lincoln": {
+    "Lincoln, Nebraska": {
         "city": "Lincoln",
         "state": "Nebraska",
         "country": "United States",
@@ -2023,7 +2034,7 @@
             "The city has the best corn in the world that's so sweet and juicy it tastes like nature's candy!"
         ]
     },
-    "Plano": {
+    "Plano, Texas": {
         "city": "Plano",
         "state": "Texas",
         "country": "United States",
@@ -2036,7 +2047,7 @@
             "The city has huge shopping centers where you can find anything you want, from cowboy boots to space toys!"
         ]
     },
-    "Anchorage": {
+    "Anchorage, Alaska": {
         "city": "Anchorage",
         "state": "Alaska",
         "country": "United States",
@@ -2049,7 +2060,7 @@
             "The city has salmon swimming upstream in rivers where you can watch them jump up waterfalls like fishy superheroes!"
         ]
     },
-    "Madison": {
+    "Madison, Wisconsin": {
         "city": "Madison",
         "state": "Wisconsin",
         "country": "United States",
@@ -2062,7 +2073,7 @@
             "The city has a farmer's market that wraps around the entire state capitol building with the freshest vegetables and homemade pies!"
         ]
     },
-    "Reno": {
+    "Reno, Nevada": {
         "city": "Reno",
         "state": "Nevada",
         "country": "United States",
@@ -2075,7 +2086,7 @@
             "The city has casinos with lights so bright you can see them from space, making the whole downtown glow like a jewel!"
         ]
     },
-    "Chandler": {
+    "Chandler, Arizona": {
         "city": "Chandler",
         "state": "Arizona",
         "country": "United States",
@@ -2088,7 +2099,7 @@
             "The city has swimming pools and water parks everywhere because it's sunny and warm almost every single day!"
         ]
     },
-    "St. Louis": {
+    "St. Louis, Missouri": {
         "city": "St. Louis",
         "state": "Missouri",
         "country": "United States",
@@ -2101,7 +2112,7 @@
             "The city invented the ice cream cone during the 1904 World's Fair when they ran out of bowls and made edible cones instead!"
         ]
     },
-    "Buffalo": {
+    "Buffalo, New York": {
         "city": "Buffalo",
         "state": "New York",
         "country": "United States",
@@ -2114,7 +2125,7 @@
             "The city has amazing architecture with buildings that look like castles and have gargoyles watching over the streets!"
         ]
     },
-    "Fort Wayne": {
+    "Fort Wayne, Indiana": {
         "city": "Fort Wayne",
         "state": "Indiana",
         "country": "United States",
@@ -2127,7 +2138,7 @@
             "The city has delicious pork tenderloin sandwiches that are bigger than dinner plates and taste incredible!"
         ]
     },
-    "Lubbock": {
+    "Lubbock, Texas": {
         "city": "Lubbock",
         "state": "Texas",
         "country": "United States",
@@ -2140,63 +2151,63 @@
             "The city has the most amazing barbecue with brisket so tender and smoky it melts in your mouth like butter!"
         ]
     },
-    "St. Petersburg": {
+    "St. Petersburg, Florida": {
         "city": "St. Petersburg",
         "state": "Florida",
         "country": "United States",
         "population": 267102,
         "fun_facts": []
     },
-    "Toledo": {
+    "Toledo, Ohio": {
         "city": "Toledo",
         "state": "Ohio",
         "country": "United States",
         "population": 265638,
         "fun_facts": []
     },
-    "Laredo": {
+    "Laredo, Texas": {
         "city": "Laredo",
         "state": "Texas",
         "country": "United States",
         "population": 261260,
         "fun_facts": []
     },
-    "Glendale": {
+    "Glendale, Arizona": {
         "city": "Glendale",
         "state": "Arizona",
         "country": "United States",
         "population": 258143,
         "fun_facts": []
     },
-    "Irving": {
+    "Irving, Texas": {
         "city": "Irving",
         "state": "Texas",
         "country": "United States",
         "population": 258060,
         "fun_facts": []
     },
-    "Scottsdale": {
+    "Scottsdale, Arizona": {
         "city": "Scottsdale",
         "state": "Arizona",
         "country": "United States",
         "population": 246170,
         "fun_facts": []
     },
-    "Boise": {
+    "Boise, Idaho": {
         "city": "Boise",
         "state": "Idaho",
         "country": "United States",
         "population": 237963,
         "fun_facts": []
     },
-    "Baton Rouge": {
+    "Baton Rouge, Louisiana": {
         "city": "Baton Rouge",
         "state": "Louisiana",
         "country": "United States",
         "population": 220907,
         "fun_facts": []
     },
-    "Fort Lauderdale": {
+    "Fort Lauderdale, Florida": {
         "city": "Fort Lauderdale",
         "state": "Florida",
         "country": "United States",

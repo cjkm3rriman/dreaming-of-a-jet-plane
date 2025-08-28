@@ -143,6 +143,91 @@ def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bo
     except Exception as e:
         logger.error(f"Failed to track scan:complete event: {e}")
 
+def track_plane_request(request: Request, lat: float, lng: float, plane_index: int, from_cache: bool):
+    """Track plane:request analytics event for plane endpoint requests"""
+    try:
+        import hashlib
+        
+        client_ip = extract_client_ip(request)
+        user_agent = extract_user_agent(request)
+        browser_info = parse_user_agent(user_agent)
+        
+        # Create consistent session ID
+        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
+        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        
+        analytics.track_event("plane:request", {
+            "ip": client_ip,
+            "$user_agent": user_agent,
+            "session_id": session_id,
+            "$insert_id": f"plane_req_{session_id}_{plane_index}",  # Prevents duplicates
+            "browser": browser_info["browser"],
+            "browser_version": browser_info["browser_version"],
+            "os": browser_info["os"],
+            "os_version": browser_info["os_version"],
+            "device": browser_info["device"],
+            "lat": round(lat, 3),
+            "lng": round(lng, 3),
+            "plane_index": plane_index,
+            "from_cache": from_cache
+        })
+    except Exception as e:
+        logger.error(f"Failed to track plane:request event: {e}")
+
+def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int):
+    """Track generate:audio analytics event with flight and audio details"""
+    try:
+        import hashlib
+        
+        client_ip = extract_client_ip(request)
+        user_agent = extract_user_agent(request)
+        browser_info = parse_user_agent(user_agent)
+        
+        # Create consistent session ID
+        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
+        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        
+        # Extract destination information
+        destination_city = aircraft.get("destination_city", "unknown")
+        destination_country = aircraft.get("destination_country", "unknown")
+        destination_state = None
+        
+        # For US destinations, try to get state information
+        if destination_country == "the United States":
+            destination_airport = aircraft.get("destination_airport")
+            if destination_airport:
+                airport_data = get_airport_by_iata(destination_airport)
+                if airport_data and airport_data.get("country") == "US":
+                    destination_state = airport_data.get("state")
+        
+        # Check if fun fact was included (look for fun fact openings in the sentence)
+        fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
+        has_fun_fact = any(opening in sentence for opening in fun_fact_openings)
+        
+        analytics.track_event("generate:audio", {
+            "ip": client_ip,
+            "$user_agent": user_agent,
+            "session_id": session_id,
+            "$insert_id": f"mp3_gen_{session_id}_{plane_index}",  # Prevents duplicates
+            "browser": browser_info["browser"],
+            "browser_version": browser_info["browser_version"],
+            "os": browser_info["os"],
+            "os_version": browser_info["os_version"],
+            "device": browser_info["device"],
+            "lat": round(lat, 3),
+            "lng": round(lng, 3),
+            "plane_index": plane_index,
+            "destination_city": destination_city,
+            "destination_state": destination_state,
+            "destination_country": destination_country,
+            "has_fun_fact": has_fun_fact,
+            "generation_time_ms": generation_time_ms,
+            "audio_size_bytes": audio_size_bytes,
+            "text_length": len(sentence)
+        })
+    except Exception as e:
+        logger.error(f"Failed to track mp3:generation event: {e}")
+
 async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, limit: int = 3, request: Optional[Request] = None) -> tuple[List[Dict[str, Any]], str]:
     """Get aircraft near the given coordinates using Flightradar24 API with caching
     
@@ -167,14 +252,15 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
     
     if cached_aircraft:
         logger.info(f"API cache hit for location: lat={lat}, lng={lng}")
-        # Return up to limit aircraft from cached data
-        aircraft_list = cached_aircraft.get('aircraft', [])[:limit]
+        # Get full cached aircraft list
+        full_aircraft_list = cached_aircraft.get('aircraft', [])
         
-        # Track analytics for cache hit if request is provided
+        # Track analytics for cache hit with total count if request is provided
         if request:
-            track_scan_complete(request, lat, lng, from_cache=True, nearby_aircraft=len(aircraft_list))
+            track_scan_complete(request, lat, lng, from_cache=True, nearby_aircraft=len(full_aircraft_list))
         
-        return aircraft_list, ""
+        # Return up to limit aircraft from cached data
+        return full_aircraft_list[:limit], ""
     
     try:
         # Create bounding box for location filtering
@@ -299,13 +385,12 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
                     asyncio.create_task(s3_cache.set(api_cache_key, cache_data, content_type="json"))
                     logger.info(f"Cached {len(aircraft_list)} aircraft for location: lat={lat}, lng={lng}")
                     
-                    # Track analytics for successful API response if request is provided
-                    limited_aircraft = aircraft_list[:limit]
+                    # Track analytics for successful API response with total count if request is provided
                     if request:
-                        track_scan_complete(request, lat, lng, from_cache=False, nearby_aircraft=len(limited_aircraft))
+                        track_scan_complete(request, lat, lng, from_cache=False, nearby_aircraft=len(aircraft_list))
                     
                     # Return up to limit aircraft
-                    return limited_aircraft, ""
+                    return aircraft_list[:limit], ""
                 else:
                     # Cache empty result too to avoid repeated API calls
                     cache_data = {"aircraft": []}
@@ -357,6 +442,10 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     
     if cached_mp3:
         logger.info(f"Serving cached MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
+        
+        # Track plane request analytics for cache hit
+        track_plane_request(request, user_lat, user_lng, plane_index, from_cache=True)
+        
         response_headers = {
             "Content-Type": "audio/mpeg",
             "Content-Length": str(len(cached_mp3)),
@@ -513,6 +602,14 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         logger.info(f"Successfully generated MP3 for plane {plane_index} ({len(audio_content)} bytes) - caching in background")
         # Cache the newly generated MP3 (don't await - do in background)
         asyncio.create_task(s3_cache.set(cache_key, audio_content))
+        
+        # Track MP3 generation analytics if we have aircraft data
+        if aircraft and len(aircraft) > zero_based_index:
+            selected_aircraft = aircraft[zero_based_index]
+            track_mp3_generation(request, user_lat, user_lng, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content))
+        
+        # Track plane request analytics for cache miss
+        track_plane_request(request, user_lat, user_lng, plane_index, from_cache=False)
         
         # Return MP3 audio
         response_headers = {
@@ -677,14 +774,22 @@ async def read_root(request: Request, lat: float = None, lng: float = None, debu
         return HTMLResponse(content=html_content)
     
     if aircraft and len(aircraft) > 0:
-        # Convert sentence to speech
+        # Convert sentence to speech (sentence already generated by generate_flight_text)
         logger.info(f"Generating TTS for aircraft detection: {sentence[:50]}...")
+        import time
+        tts_start_time = time.time()
         audio_content, tts_error = await convert_text_to_speech(sentence)
+        tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
         
         if audio_content and not tts_error:
             logger.info(f"Successfully generated MP3 ({len(audio_content)} bytes) - caching in background")
             # Cache the newly generated MP3 (don't await - do in background)
             asyncio.create_task(s3_cache.set(cache_key, audio_content))
+            
+            # Track MP3 generation analytics for main endpoint (plane index 1 by default)
+            if aircraft and len(aircraft) > 0:
+                selected_aircraft = aircraft[0]  # Main endpoint uses first aircraft
+                track_mp3_generation(request, user_lat, user_lng, 1, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content))
             
             # Return MP3 audio
             response_headers = {
