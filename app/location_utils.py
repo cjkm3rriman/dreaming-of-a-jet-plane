@@ -6,20 +6,56 @@ import logging
 from fastapi import Request
 import httpx
 from ua_parser import user_agent_parser
+import time
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
+# IP location cache: {ip: (lat, lng, timestamp)}
+_ip_cache: Dict[str, Tuple[float, float, float]] = {}
+IP_CACHE_DURATION = 24 * 60 * 60  # 24 hours in seconds
+
 
 async def get_location_from_ip(ip: str) -> tuple[float, float]:
-    """Get latitude and longitude from IP address using ipapi.co"""
+    """Get latitude and longitude from IP address using ipapi.co with 24-hour caching"""
+    current_time = time.time()
+    
+    # Check cache first
+    if ip in _ip_cache:
+        lat, lng, timestamp = _ip_cache[ip]
+        if current_time - timestamp < IP_CACHE_DURATION:
+            logger.info(f"Using cached location for IP {ip}: {lat}, {lng}")
+            return lat, lng
+        else:
+            # Cache expired, remove entry
+            del _ip_cache[ip]
+    
+    # Cache miss or expired - fetch from API
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.get(f"https://ipapi.co/{ip}/json/")
             if response.status_code == 200:
                 data = response.json()
-                return data.get("latitude", 0.0), data.get("longitude", 0.0)
-    except Exception:
-        pass
+                lat = data.get("latitude", 0.0)
+                lng = data.get("longitude", 0.0)
+                
+                # Cache the result
+                _ip_cache[ip] = (lat, lng, current_time)
+                logger.info(f"Cached new location for IP {ip}: {lat}, {lng}")
+                return lat, lng
+                
+            elif response.status_code == 429:
+                logger.warning(f"IP geolocation API rate limited for IP {ip}, using default location")
+                # Cache the fallback location too (but for shorter duration)
+                fallback_lat, fallback_lng = 40.7128, -74.0060
+                _ip_cache[ip] = (fallback_lat, fallback_lng, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
+                return fallback_lat, fallback_lng
+            else:
+                logger.warning(f"IP geolocation API returned status {response.status_code} for IP {ip}")
+                
+    except Exception as e:
+        logger.error(f"IP geolocation API error for IP {ip}: {e}")
+    
     return 0.0, 0.0
 
 
