@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Optional
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 from .aircraft_database import get_aircraft_name, get_passenger_capacity
-from .airport_database import get_city_country
+from .airport_database import get_city_country, get_airport_by_iata
 from .airline_database import get_airline_name
 from .intro import stream_intro, intro_options
 from .scanning import stream_scanning, scanning_options
