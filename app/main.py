@@ -223,7 +223,8 @@ def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: 
             "has_fun_fact": has_fun_fact,
             "generation_time_ms": generation_time_ms,
             "audio_size_bytes": audio_size_bytes,
-            "text_length": len(sentence)
+            "text_length": len(sentence),
+            "model": "eleven_turbo_v2"
         })
     except Exception as e:
         logger.error(f"Failed to track mp3:generation event: {e}")
