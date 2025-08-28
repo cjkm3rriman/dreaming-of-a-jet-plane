@@ -437,104 +437,64 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     # Convert to 0-based index
     zero_based_index = plane_index - 1
     
-    # Check cache first for the specific plane
-    cache_key = s3_cache.generate_cache_key(user_lat, user_lng, plane_index=plane_index)
-    cached_mp3 = await s3_cache.get(cache_key)
-    
-    if cached_mp3:
-        logger.info(f"Serving cached MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
-        
-        # Track plane request analytics for cache hit
-        track_plane_request(request, user_lat, user_lng, plane_index, from_cache=True)
-        
-        response_headers = {
-            "Content-Type": "audio/mpeg",
-            "Content-Length": str(len(cached_mp3)),
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "public, max-age=3600",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-        }
-        
-        return StreamingResponse(
-            iter([cached_mp3]),
-            status_code=200,
-            media_type="audio/mpeg",
-            headers=response_headers
-        )
-    
-    # Cache miss - get aircraft data (this will use cached API data if available)
-    logger.info(f"Cache miss - generating new MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
-    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index), request=request)
-    
-    
-    # Check if we have the requested plane
-    if aircraft and len(aircraft) > zero_based_index:
-        selected_aircraft = aircraft[zero_based_index]
-        sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index)
-        
-    elif aircraft and len(aircraft) > 0:
-        # Not enough planes, return an appropriate message for this plane index
-        if plane_index == 2:
-            sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
-        elif plane_index == 3:
-            plane_count = len(aircraft)
-            if plane_count == 1:
-                sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
-            else:
-                sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try listening to plane 1 or plane 2 instead."
-    else:
-        # No aircraft found at all
-        sentence = generate_flight_text([], error_message, user_lat, user_lng)
-    
-    # Debug mode: return text only without TTS
+    # Debug mode: skip cache and return text only without TTS
     if debug == 1:
+        # Get aircraft data for debug display
+        aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index), request=request)
+        
+        # Generate sentence for debug display
+        if aircraft and len(aircraft) > zero_based_index:
+            selected_aircraft = aircraft[zero_based_index]
+            sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index)
+        elif aircraft and len(aircraft) > 0:
+            # Not enough planes, return an appropriate message for this plane index
+            if plane_index == 2:
+                sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+            elif plane_index == 3:
+                plane_count = len(aircraft)
+                if plane_count == 1:
+                    sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+                else:
+                    sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try listening to plane 1 or plane 2 instead."
+        else:
+            # No aircraft found at all
+            sentence = generate_flight_text([], error_message, user_lat, user_lng)
+            
         logger.info(f"Debug mode: returning HTML without TTS for plane {plane_index}: {sentence[:50]}...")
         
         html_content = f"""
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Dreaming of a Jet Plane - Plane {plane_index} - Debug Mode</title>
+            <title>Dreaming of a Jet Plane - Plane {plane_index} Debug</title>
             <style>
                 body {{ font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }}
                 .container {{ background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
                 h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
-                h2 {{ color: #34495e; margin-top: 30px; }}
-                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
+                h2 {{ color: #34495e; margin-top: 25px; }}
+                table {{ border-collapse: collapse; width: 100%; margin-top: 15px; }}
                 th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
-                th {{ background-color: #3498db; color: white; }}
-                tr:nth-child(even) {{ background-color: #f9f9f9; }}
-                .message {{ background-color: #e8f6f3; padding: 20px; border-left: 4px solid #1abc9c; margin: 20px 0; }}
-                .error {{ background-color: #fadbd8; border-left-color: #e74c3c; }}
-                .success {{ background-color: #d5f4e6; border-left-color: #27ae60; }}
+                th {{ background-color: #f8f9fa; font-weight: bold; }}
+                tr:nth-child(even) {{ background-color: #f8f9fa; }}
+                .sentence {{ background-color: #e8f4fd; padding: 20px; border-radius: 5px; margin: 20px 0; font-size: 16px; line-height: 1.5; }}
+                .message {{ background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; }}
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>🛩️ Dreaming of a Jet Plane - Plane {plane_index} - Debug Mode</h1>
-                
-                <div class="message {'success' if aircraft and len(aircraft) > zero_based_index else 'error'}">
-                    <strong>Generated Message:</strong><br>
+                <h1>✈️ Plane {plane_index} Debug Mode</h1>
+                <div class="sentence">
+                    <strong>Generated Text:</strong><br>
                     {sentence}
                 </div>
                 
-                <h2>📍 Location Information</h2>
+                <h2>📍 Location Details</h2>
                 <table>
-                    <tr><th>Parameter</th><th>Value</th></tr>
-                    <tr><td>Latitude</td><td>{user_lat}</td></tr>
-                    <tr><td>Longitude</td><td>{user_lng}</td></tr>
+                    <tr><th>Property</th><th>Value</th></tr>
+                    <tr><td>User Latitude</td><td>{user_lat}</td></tr>
+                    <tr><td>User Longitude</td><td>{user_lng}</td></tr>
                     <tr><td>Plane Index</td><td>{plane_index}</td></tr>
-                    <tr><td>Cache Key</td><td>{cache_key}</td></tr>
-                </table>
-                
-                <h2>✈️ Flight Detection Results</h2>
-                <table>
-                    <tr><th>Parameter</th><th>Value</th></tr>
-                    <tr><td>Total Aircraft Found</td><td>{len(aircraft)}</td></tr>
-                    <tr><td>Requested Plane Available</td><td>{'Yes' if aircraft and len(aircraft) > zero_based_index else 'No'}</td></tr>
+                    <tr><td>Aircraft Found</td><td>{len(aircraft) if aircraft else 0}</td></tr>
         """
         
         if error_message:
@@ -590,6 +550,58 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         """
         
         return HTMLResponse(content=html_content)
+    
+    # Check cache first for the specific plane
+    cache_key = s3_cache.generate_cache_key(user_lat, user_lng, plane_index=plane_index)
+    cached_mp3 = await s3_cache.get(cache_key)
+    
+    if cached_mp3:
+        logger.info(f"Serving cached MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
+        
+        # Track plane request analytics for cache hit
+        track_plane_request(request, user_lat, user_lng, plane_index, from_cache=True)
+        
+        response_headers = {
+            "Content-Type": "audio/mpeg",
+            "Content-Length": str(len(cached_mp3)),
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+        }
+        
+        return StreamingResponse(
+            iter([cached_mp3]),
+            status_code=200,
+            media_type="audio/mpeg",
+            headers=response_headers
+        )
+    
+    # Cache miss - get aircraft data (this will use cached API data if available)
+    logger.info(f"Cache miss - generating new MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
+    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index), request=request)
+    
+    
+    # Check if we have the requested plane
+    if aircraft and len(aircraft) > zero_based_index:
+        selected_aircraft = aircraft[zero_based_index]
+        sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index)
+        
+    elif aircraft and len(aircraft) > 0:
+        # Not enough planes, return an appropriate message for this plane index
+        if plane_index == 2:
+            sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+        elif plane_index == 3:
+            plane_count = len(aircraft)
+            if plane_count == 1:
+                sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+            else:
+                sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try listening to plane 1 or plane 2 instead."
+    else:
+        # No aircraft found at all
+        sentence = generate_flight_text([], error_message, user_lat, user_lng)
     
     # Generate TTS for the sentence
     logger.info(f"Generating TTS for plane {plane_index}: {sentence[:50]}...")
