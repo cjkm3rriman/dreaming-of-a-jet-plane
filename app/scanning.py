@@ -6,6 +6,7 @@ import asyncio
 import logging
 import hashlib
 import uuid
+import time
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
@@ -15,6 +16,11 @@ from .location_utils import get_user_location, extract_client_ip, extract_user_a
 from .analytics import analytics
 
 logger = logging.getLogger(__name__)
+
+# Cache to prevent duplicate scanning requests within short time window
+# Format: {session_key: last_request_time}
+_scanning_request_cache = {}
+SCANNING_DEBOUNCE_SECONDS = 30  # Prevent duplicate requests within 30 seconds
 
 
 
@@ -118,22 +124,94 @@ async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, senten
         return False
 
 
+async def _stream_scanning_mp3_only(request: Request):
+    """Stream scanning MP3 file from S3 without analytics or background processing"""
+    mp3_url = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/scanning.mp3"
+    
+    try:
+        # Prepare headers for the S3 request
+        request_headers = {}
+        
+        # Handle Range requests for seeking/partial content
+        range_header = request.headers.get("range")
+        if range_header:
+            request_headers["Range"] = range_header
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(mp3_url, headers=request_headers)
+            
+            if response.status_code in [200, 206]:
+                # Get content details
+                content = response.content
+                content_length = len(content)
+                
+                # Build response headers
+                response_headers = {
+                    "Content-Type": "audio/mpeg",
+                    "Content-Length": str(content_length),
+                    "Accept-Ranges": "bytes",
+                    "Cache-Control": "public, max-age=3600",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+                    "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+                    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+                }
+                
+                # Handle range requests
+                if range_header and response.status_code == 206:
+                    content_range = response.headers.get("content-range")
+                    if content_range:
+                        response_headers["Content-Range"] = content_range
+                
+                # Copy important S3 headers if present
+                if response.headers.get("etag"):
+                    response_headers["ETag"] = response.headers["etag"]
+                if response.headers.get("last-modified"):
+                    response_headers["Last-Modified"] = response.headers["last-modified"]
+                
+                return StreamingResponse(
+                    iter([content]),
+                    status_code=response.status_code,
+                    media_type="audio/mpeg",
+                    headers=response_headers
+                )
+            else:
+                return {"error": f"MP3 file not accessible. Status: {response.status_code}", "url": mp3_url}
+                
+    except httpx.TimeoutException:
+        return {"error": "Timeout accessing MP3 file", "url": mp3_url}
+    except Exception as e:
+        return {"error": f"Failed to stream MP3: {str(e)}", "url": mp3_url}
+
+
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
     """Stream scanning MP3 file from S3 and trigger MP3 pre-generation"""
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
     
+    # Create session key for duplicate request prevention
+    client_ip = extract_client_ip(request)
+    user_agent = extract_user_agent(request)
+    hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{user_lat or 0}:{user_lng or 0}"
+    session_key = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+    
+    current_time = time.time()
+    
+    # Check if we've recently processed a request from this session
+    if session_key in _scanning_request_cache:
+        last_request_time = _scanning_request_cache[session_key]
+        if current_time - last_request_time < SCANNING_DEBOUNCE_SECONDS:
+            logger.info(f"Skipping duplicate scanning request from session {session_key} (within {SCANNING_DEBOUNCE_SECONDS}s)")
+            # Still stream the MP3, but skip analytics and background processing
+            return await _stream_scanning_mp3_only(request)
+    
+    # Update cache with current request time
+    _scanning_request_cache[session_key] = current_time
+    
     # Track scan:start event
     try:
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
         browser_info = parse_user_agent(user_agent)
-        
-        # Create unique session identifier for consistent session tracking
-        # Use safe string formatting to handle None values
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{user_lat or 0}:{user_lng or 0}"
-        # Generate a consistent but shorter session ID using first 8 chars of hash
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        session_id = session_key  # Use the same session key for consistency
         
         analytics.track_event("scan:start", {
             "ip": client_ip,
