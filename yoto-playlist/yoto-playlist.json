@@ -4,13 +4,13 @@
   "metadata": {
     "accent": "British",
     "addToFamilyLibrary": true,
-    "author": "Jet Plane Scanner Bot",
+    "author": "Hamish & Scanner Bot",
     "category": "activities",
     "copyright": "© 2025 Raccoon Research Labs",
     "cover": {
       "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/uHgycPdx-sb39837AJrjCTbJKWJVfiVNfqg_mstz_7Y"
     },
-    "description": "Find jet planes flying in the sky above your Yoto player right now, and learn about the wonderful destinations they are headed to.",
+    "description": "Join Hamish to find jet planes flying in the skies above your Yoto player, and learn about the wonderful destinations they are headed to.",
     "genre": ["Education"],
     "languages": ["en"],
     "maxAge": 12,
@@ -43,7 +43,7 @@
             "type": "stream",
             "format": "mp3",
             "channels": "stereo",
-            "duration": 13,
+            "duration": 9,
             "display": {
               "icon16x16": "yoto:#mmQkTUoEDBtnNVJNZy10GH3_c58aybuOeNoJv5pTo1Y"
             }

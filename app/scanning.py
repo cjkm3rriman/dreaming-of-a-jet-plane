@@ -186,6 +186,13 @@ async def _stream_scanning_mp3_only(request: Request):
 
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
     """Stream scanning MP3 file from S3 and trigger MP3 pre-generation"""
+    
+    # Log all request headers for Yoto player analysis
+    logger.info(f"=== SCANNING.MP3 REQUEST HEADERS ===")
+    for header_name, header_value in request.headers.items():
+        logger.info(f"Header: {header_name} = {header_value}")
+    logger.info(f"=== END HEADERS ===")
+    
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
     
@@ -216,7 +223,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
         analytics.track_event("scan:start", {
             "ip": client_ip,
             "$user_agent": user_agent,
-            "session_id": session_id,  # Use session_id without $ prefix
+            "$session_id": session_id,  # Use $session_id label
             "$insert_id": f"scan_{session_id}",  # Prevents duplicates
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],

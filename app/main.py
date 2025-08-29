@@ -132,7 +132,7 @@ def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bo
         analytics.track_event("scan:complete", {
             "ip": client_ip,
             "$user_agent": user_agent,
-            "session_id": session_id,
+            "$session_id": session_id,
             "$insert_id": f"scan_complete_{session_id}",  # Prevents duplicates
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
@@ -164,7 +164,7 @@ def track_plane_request(request: Request, lat: float, lng: float, plane_index: i
         analytics.track_event("plane:request", {
             "ip": client_ip,
             "$user_agent": user_agent,
-            "session_id": session_id,
+            "$session_id": session_id,
             "$insert_id": f"plane_req_{session_id}_{plane_index}",  # Prevents duplicates
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
@@ -212,7 +212,7 @@ def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: 
         analytics.track_event("generate:audio", {
             "ip": client_ip,
             "$user_agent": user_agent,
-            "session_id": session_id,
+            "$session_id": session_id,
             "$insert_id": f"mp3_gen_{session_id}_{plane_index}",  # Prevents duplicates
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
@@ -645,214 +645,8 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
 
 
 @app.get("/")
-async def read_root(request: Request, lat: float = None, lng: float = None, debug: int = 0):
-    # Get user location using shared function
-    user_lat, user_lng = await get_user_location(request, lat, lng)
-    
-    # Check cache first
-    cache_key = s3_cache.generate_cache_key(user_lat, user_lng)
-    cached_mp3 = await s3_cache.get(cache_key)
-    
-    if cached_mp3:
-        logger.info(f"Serving cached MP3 for location: lat={user_lat}, lng={user_lng}")
-        response_headers = {
-            "Content-Type": "audio/mpeg",
-            "Content-Length": str(len(cached_mp3)),
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "public, max-age=3600",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-        }
-        
-        return StreamingResponse(
-            iter([cached_mp3]),
-            status_code=200,
-            media_type="audio/mpeg",
-            headers=response_headers
-        )
-    
-    # Cache miss - generate new MP3
-    logger.info(f"Cache miss - generating new MP3 for location: lat={user_lat}, lng={user_lng}")
-    
-    # Get nearby aircraft
-    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, request=request)
-    
-    # Generate descriptive text about the aircraft
-    sentence = generate_flight_text(aircraft, error_message, user_lat, user_lng)
-    
-    # Debug mode: return text only without TTS
-    if debug == 1:
-        logger.info(f"Debug mode: returning HTML without TTS: {sentence[:50]}...")
-        
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Dreaming of a Jet Plane - Debug Mode</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }}
-                .container {{ background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-                h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
-                h2 {{ color: #34495e; margin-top: 30px; }}
-                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
-                th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
-                th {{ background-color: #3498db; color: white; }}
-                tr:nth-child(even) {{ background-color: #f9f9f9; }}
-                .message {{ background-color: #e8f6f3; padding: 20px; border-left: 4px solid #1abc9c; margin: 20px 0; }}
-                .error {{ background-color: #fadbd8; border-left-color: #e74c3c; }}
-                .success {{ background-color: #d5f4e6; border-left-color: #27ae60; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🛩️ Dreaming of a Jet Plane - Debug Mode</h1>
-                
-                <div class="message {'success' if len(aircraft) > 0 else 'error'}">
-                    <strong>Generated Message:</strong><br>
-                    {sentence}
-                </div>
-                
-                <h2>📍 Location Information</h2>
-                <table>
-                    <tr><th>Parameter</th><th>Value</th></tr>
-                    <tr><td>Latitude</td><td>{user_lat}</td></tr>
-                    <tr><td>Longitude</td><td>{user_lng}</td></tr>
-                    <tr><td>Cache Key</td><td>{cache_key}</td></tr>
-                </table>
-                
-                <h2>✈️ Flight Detection Results</h2>
-                <table>
-                    <tr><th>Parameter</th><th>Value</th></tr>
-                    <tr><td>Aircraft Found</td><td>{'Yes' if len(aircraft) > 0 else 'No'}</td></tr>
-                    <tr><td>Aircraft Count</td><td>{len(aircraft)}</td></tr>
-        """
-        
-        if error_message:
-            html_content += f"""
-                    <tr><td>Error Message</td><td>{error_message}</td></tr>
-            """
-        
-        html_content += """
-                </table>
-        """
-        
-        # Add aircraft details if found
-        if aircraft and len(aircraft) > 0:
-            closest_aircraft = aircraft[0]
-            
-            # Get aircraft coordinates for Google Maps link
-            aircraft_lat = closest_aircraft.get('latitude')
-            aircraft_lng = closest_aircraft.get('longitude')
-            
-            html_content += """
-                <h2>🛫 Aircraft Details</h2>
-                <table>
-                    <tr><th>Property</th><th>Value</th></tr>
-            """
-            
-            for key, value in closest_aircraft.items():
-                if value is not None and value != "":
-                    html_content += f"<tr><td>{key.replace('_', ' ').title()}</td><td>{value}</td></tr>"
-            
-            html_content += "</table>"
-            
-            # Add Google Maps directions link if we have aircraft coordinates
-            if aircraft_lat and aircraft_lng:
-                maps_url = f"https://www.google.com/maps/dir/?api=1&origin={user_lat},{user_lng}&destination={aircraft_lat},{aircraft_lng}&travelmode=driving"
-                html_content += f"""
-                <h2>🗺️ Google Maps</h2>
-                <div class="message">
-                    <a href="{maps_url}" target="_blank" style="color: #3498db; text-decoration: none; font-weight: bold;">
-                        📍 View Directions from Your Location to Aircraft Position
-                    </a>
-                    <br><br>
-                    <small style="color: #666;">
-                        Your Location: {user_lat}, {user_lng}<br>
-                        Aircraft Location: {aircraft_lat}, {aircraft_lng}
-                    </small>
-                </div>
-                """
-        
-        html_content += """
-            </div>
-        </body>
-        </html>
-        """
-        
-        return HTMLResponse(content=html_content)
-    
-    if aircraft and len(aircraft) > 0:
-        # Convert sentence to speech (sentence already generated by generate_flight_text)
-        logger.info(f"Generating TTS for aircraft detection: {sentence[:50]}...")
-        import time
-        tts_start_time = time.time()
-        audio_content, tts_error = await convert_text_to_speech(sentence)
-        tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
-        
-        if audio_content and not tts_error:
-            logger.info(f"Successfully generated MP3 ({len(audio_content)} bytes) - caching in background")
-            # Cache the newly generated MP3 (don't await - do in background)
-            asyncio.create_task(s3_cache.set(cache_key, audio_content))
-            
-            # Track MP3 generation analytics for main endpoint (plane index 1 by default)
-            if aircraft and len(aircraft) > 0:
-                selected_aircraft = aircraft[0]  # Main endpoint uses first aircraft
-                track_mp3_generation(request, user_lat, user_lng, 1, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content))
-            
-            # Return MP3 audio
-            response_headers = {
-                "Content-Type": "audio/mpeg",
-                "Content-Length": str(len(audio_content)),
-                "Accept-Ranges": "bytes",
-                "Cache-Control": "public, max-age=3600",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-                "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-                "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-            }
-            
-            return StreamingResponse(
-                iter([audio_content]),
-                status_code=200,
-                media_type="audio/mpeg",
-                headers=response_headers
-            )
-        else:
-            # Fall back to text if TTS fails
-            return {"message": sentence, "tts_error": tts_error}
-    else:
-        # Convert sentence to speech (sentence already generated by generate_flight_text)
-        logger.info(f"Generating TTS for no aircraft found: {sentence[:50]}...")
-        audio_content, tts_error = await convert_text_to_speech(sentence)
-        
-        if audio_content and not tts_error:
-            logger.info(f"Successfully generated error MP3 ({len(audio_content)} bytes) - caching in background")
-            # Cache the error MP3 too (don't await - do in background)
-            asyncio.create_task(s3_cache.set(cache_key, audio_content))
-            
-            # Return MP3 audio
-            response_headers = {
-                "Content-Type": "audio/mpeg",
-                "Content-Length": str(len(audio_content)),
-                "Accept-Ranges": "bytes",
-                "Cache-Control": "public, max-age=3600",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-                "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-                "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-            }
-            
-            return StreamingResponse(
-                iter([audio_content]),
-                status_code=200,
-                media_type="audio/mpeg",
-                headers=response_headers
-            )
-        else:
-            # Fall back to text if TTS fails
-            return {"message": sentence, "tts_error": tts_error}
+async def read_root():
+    return "dreaming of a jet plane"
 
 @app.options("/")
 async def root_options():
