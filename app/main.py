@@ -19,6 +19,8 @@ from .aircraft_database import get_aircraft_name, get_passenger_capacity
 from .airport_database import get_city_country, get_airport_by_iata
 from .airline_database import get_airline_name
 from .intro import stream_intro, intro_options
+from .overandout import stream_overandout, overandout_options
+from .scanning_again import stream_scanning_again, scanning_again_options
 from .scanning import stream_scanning, scanning_options
 from .voice_test import stream_voice_test, voice_test_options
 from .s3_cache import s3_cache
@@ -672,6 +674,26 @@ async def intro_endpoint(request: Request, lat: float = None, lng: float = None)
 async def intro_options_endpoint():
     """Handle CORS preflight requests for /intro.mp3 endpoint"""
     return await intro_options()
+
+@app.get("/overandout.mp3")
+async def overandout_endpoint(request: Request, lat: float = None, lng: float = None):
+    """Stream MP3 file from S3"""
+    return await stream_overandout(request, lat, lng)
+
+@app.options("/overandout.mp3") 
+async def overandout_options_endpoint():
+    """Handle CORS preflight requests for /overandout.mp3 endpoint"""
+    return await overandout_options()
+
+@app.get("/scanning-again.mp3")
+async def scanning_again_endpoint(request: Request, lat: float = None, lng: float = None):
+    """Stream MP3 file from S3"""
+    return await stream_scanning_again(request, lat, lng)
+
+@app.options("/scanning-again.mp3") 
+async def scanning_again_options_endpoint():
+    """Handle CORS preflight requests for /scanning-again.mp3 endpoint"""
+    return await scanning_again_options()
 
 @app.get("/scanning.mp3")
 async def scanning_endpoint(request: Request):
