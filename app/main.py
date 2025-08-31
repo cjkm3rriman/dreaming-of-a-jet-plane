@@ -192,7 +192,8 @@ def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: 
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
         session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
         
-        # Extract destination information
+        # Extract flight information
+        aircraft_name = aircraft.get("aircraft", "unknown")
         destination_city = aircraft.get("destination_city", "unknown")
         destination_country = aircraft.get("destination_country", "unknown")
         destination_state = None
@@ -222,6 +223,7 @@ def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: 
             "lat": round(lat, 3),
             "lng": round(lng, 3),
             "plane_index": plane_index,
+            "aircraft_name": aircraft_name,
             "destination_city": destination_city,
             "destination_state": destination_state,
             "destination_country": destination_country,

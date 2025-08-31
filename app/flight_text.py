@@ -149,24 +149,37 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
             time_diff = eta_datetime - now
             
             if time_diff.total_seconds() > 0:
-                hours = int(time_diff.total_seconds() // 3600)
-                minutes = int((time_diff.total_seconds() % 3600) // 60)
+                total_minutes = int(time_diff.total_seconds() // 60)
                 
-                if hours > 0:
-                    if hours == 1:
-                        eta_text = f" landing in {hours} hour"
-                    else:
-                        eta_text = f" landing in {hours} hours"
-                    
-                    if minutes > 0:
-                        eta_text += f" and {minutes} minutes"
-                elif minutes > 0:
-                    if minutes == 1:
-                        eta_text = f" landing in {minutes} minute"
-                    else:
-                        eta_text = f" landing in {minutes} minutes"
+                if total_minutes <= 7:
+                    eta_text = " landing in just a few minutes"
+                elif total_minutes <= 15:
+                    eta_text = " landing in about 15 minutes - that's like the time you spend in the bath"
+                elif total_minutes <= 30:
+                    eta_text = " landing in about half an hour - that's like a short car ride"
+                elif total_minutes <= 60:
+                    eta_text = " landing in about an hour - that's like bath time and bed time together"
+                elif total_minutes <= 120:  # 2 hours
+                    eta_text = " landing in about 2 hours - that's like watching 4 episodes of your favorite TV show"
+                elif total_minutes <= 180:  # 3 hours
+                    eta_text = " landing in about 3 hours - that's like watching a really long movie"
+                elif total_minutes <= 240:  # 4 hours
+                    eta_text = " landing in about 4 hours - that's like watching a Disney movie twice"
+                elif total_minutes <= 360:  # 6 hours
+                    eta_text = " landing in about 6 hours - that's like from breakfast to lunch"
+                elif total_minutes <= 480:  # 8 hours
+                    eta_text = " landing in about 8 hours - that's like a full day at school"
+                elif total_minutes <= 720:  # 12 hours
+                    eta_text = " landing in about 12 hours - that's like a whole night's sleep"
                 else:
-                    eta_text = " landing there very soon"
+                    # For very long flights, round to nearest hour
+                    hours = round(total_minutes / 60)
+                    if hours <= 24:
+                        eta_text = f" landing in about {hours} hours - that's like a whole day and night"
+                    else:
+                        eta_text = " landing sometime tomorrow"
+            else:
+                eta_text = " landing there very soon"
         except (ValueError, TypeError):
             # Invalid ETA timestamp
             pass
