@@ -67,8 +67,8 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
         return b"", "ElevenLabs API key not configured"
     
     try:
-        # Add 1 second of silence at the beginning using SSML break tag
-        text_with_pause = f'<break time="1s" />{text}'
+        # Use original text without break tag
+        text_with_pause = text
         
         # Prepare the request to ElevenLabs API
         url = f"{ELEVENLABS_BASE_URL}/text-to-speech/{DEFAULT_VOICE_ID}"
@@ -83,7 +83,7 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
             "model_id": "eleven_turbo_v2",
             "voice_settings": {
                 "stability": 0.5,
-                "similarity_boost": 0.5
+                "similarity_boost": 0.7
             }
         }
         

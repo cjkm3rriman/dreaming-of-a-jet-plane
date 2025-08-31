@@ -51,7 +51,7 @@
   },
   "A318": {
     "technical_name": "Airbus A318 (sharklets)",
-    "simple_name": "Airbus A318 (sharklets)",
+    "simple_name": "Airbus A318",
     "passenger_capacity": 132
   },
   "A319": {
@@ -80,7 +80,7 @@
     "passenger_capacity": 0
   },
   "A337": {
-    "technical_name": "Airbus A330-700 \"BelugaXL\"",
+    "technical_name": "Airbus A330-700 BelugaXL",
     "simple_name": "Airbus A330",
     "passenger_capacity": 0
   },
@@ -701,11 +701,11 @@
   },
   "E545": {
     "technical_name": "Embraer Legacy 450 / Praetor 500",
-    "simple_name": "Embraer Legacy 450 / Praetor 500"
+    "simple_name": "Embraer Legacy 450"
   },
   "E550": {
     "technical_name": "Embraer Legacy 500 / Praetor 600",
-    "simple_name": "Embraer Legacy 500 / Praetor 600"
+    "simple_name": "Embraer Legacy 500"
   },
   "E55P": {
     "technical_name": "Embraer Phenom 300",
