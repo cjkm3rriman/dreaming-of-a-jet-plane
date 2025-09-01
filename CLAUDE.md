@@ -92,3 +92,45 @@ Procfile                 # Alternative deployment configuration
 - **UV Package Management**: Uses `pyproject.toml` for project configuration and `uv.lock` for dependency locking
 
 The application currently has a basic structure with a single endpoint. The main FastAPI app is defined in `app/main.py:3` with a root GET endpoint at `app/main.py:5-7`.
+
+## Adding Cities to the Database
+
+When adding new cities to `app/cities.json`:
+
+### Process:
+1. **Check existing cities**: Use Grep to search for the city name to ensure it doesn't already exist
+2. **Research city information**: Use WebSearch to gather:
+   - Current population (latest available data)
+   - State/province (or null for countries without states)
+   - Country name
+   - Interesting, kid-friendly facts about the city
+
+### Fun Facts Style Guide:
+- Write in a child-friendly, enthusiastic tone with exclamation points
+- Use comparisons that kids can understand ("bigger than 75 football fields!")
+- Include specific numbers and superlatives when possible ("oldest", "largest", "most")
+- Mix historical, cultural, geographical, and modern facts
+- Keep each fact to 1-2 sentences maximum
+- Add 4-5 fun facts per city
+- Use descriptive, colorful language that sparks imagination
+- Include unique local features, food, landmarks, or cultural elements
+
+### JSON Structure:
+```json
+"CityName": {
+    "city": "CityName",
+    "state": "State" or null,
+    "country": "Country",
+    "population": number,
+    "fun_facts": [
+        "Fact 1 with exciting description and specific details!",
+        "Fact 2 about history or culture that kids would find interesting!",
+        "Fact 3 about unique features or fun local traditions!",
+        "Fact 4 about geography, nature, or amazing buildings!",
+        "Fact 5 about food, activities, or modern attractions!"
+    ]
+}
+```
+
+### Example Reference:
+See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. Each fact should be educational but entertaining, helping kids learn while staying engaged.

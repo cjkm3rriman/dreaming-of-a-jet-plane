@@ -110,7 +110,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     # Build scanner sentence with random selection of available data
     aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous"]
     aircraft_descriptor = random.choice(aircraft_descriptors)
-    scanner_info = f"My scanner says Captain {captain_name} is flying this {aircraft_descriptor} {aircraft_name}"
+    scanner_info = f"My scanner says Captain {captain_name} is piloting this {aircraft_descriptor} {aircraft_name}"
     
     # Collect available information options
     available_info = []
@@ -156,9 +156,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 elif total_minutes <= 15:
                     eta_text = " landing in about 15 minutes - that's like the time you spend in the bath"
                 elif total_minutes <= 30:
-                    eta_text = " landing in about half an hour - that's like a short car ride"
+                    eta_text = " landing in about half an hour - that's like a short car ride for you"
                 elif total_minutes <= 60:
-                    eta_text = " landing in about an hour - that's like bath time and bed time together"
+                    eta_text = " landing in about an hour - that's like your bath time and bed time together"
                 elif total_minutes <= 120:  # 2 hours
                     eta_text = " landing in about 2 hours - that's like watching 4 episodes of your favorite TV show"
                 elif total_minutes <= 180:  # 3 hours
@@ -166,11 +166,11 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 elif total_minutes <= 240:  # 4 hours
                     eta_text = " landing in about 4 hours - that's like watching a Disney movie twice"
                 elif total_minutes <= 360:  # 6 hours
-                    eta_text = " landing in about 6 hours - that's like from breakfast to lunch"
+                    eta_text = " landing in about 6 hours - that's the time it takes to go from breakfast to lunch"
                 elif total_minutes <= 480:  # 8 hours
-                    eta_text = " landing in about 8 hours - that's like a full day at school"
+                    eta_text = " landing in about 8 hours - that's like a full day at school for you"
                 elif total_minutes <= 720:  # 12 hours
-                    eta_text = " landing in about 12 hours - that's like a whole night's sleep"
+                    eta_text = " landing in about 12 hours - that's like a whole night's sleep for you"
                 else:
                     # For very long flights, round to nearest hour
                     hours = round(total_minutes / 60)
@@ -189,13 +189,13 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     movement_word = random.choice(movement_words)
     
     if (origin_city == "an unknown origin" or origin_location == "an unknown country") and (destination_city == "an unknown destination" or destination_location == "an unknown country"):
-        flight_sentence = f"This plane belongs {airline_name} and is {movement_word} all the way to somewhere, I am not quite sure."
+        flight_sentence = f"This plane belongs to {airline_name} and is {movement_word} all the way to somewhere, I am not quite sure."
     elif origin_city == "an unknown origin" or origin_location == "an unknown country":
-        flight_sentence = f"This plane belongs {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
+        flight_sentence = f"This plane belongs to {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
     elif destination_city == "an unknown destination" or destination_location == "an unknown country":
-        flight_sentence = f"This plane belongs {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to somewhere?"
+        flight_sentence = f"This plane belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to somewhere?"
     else:
-        flight_sentence = f"This plane belongs {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
+        flight_sentence = f"This plane belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
     
     # Add random fun fact about destination city if available
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"

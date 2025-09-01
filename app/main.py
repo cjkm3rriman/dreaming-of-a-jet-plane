@@ -69,8 +69,8 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
         return b"", "ElevenLabs API key not configured"
     
     try:
-        # Use original text without break tag
-        text_with_pause = text
+        # Add 1 second pause at the start of the text
+        text_with_pause = '<break time="1s"/>' + text
         
         # Prepare the request to ElevenLabs API
         url = f"{ELEVENLABS_BASE_URL}/text-to-speech/{DEFAULT_VOICE_ID}"

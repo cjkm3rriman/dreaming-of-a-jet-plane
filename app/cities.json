@@ -2733,5 +2733,70 @@
             "There are perfume factories near Nice where they make the world's most expensive perfumes from roses, lavender, and jasmine!",
             "Nice has socca - a delicious chickpea pancake that's crispy on the outside and soft inside, cooked in giant pans over wood fires!"
         ]
+    },
+    "Hartford": {
+        "city": "Hartford",
+        "state": "Connecticut",
+        "country": "United States",
+        "population": 122129,
+        "fun_facts": [
+            "Hartford is called the 'Insurance Capital of the World' because so many insurance companies have their headquarters there - like a city of helpful money protectors!",
+            "Hartford is home to the oldest public art museum in America, the Wadsworth Atheneum, which has been showing beautiful paintings and sculptures since 1844!",
+            "The Connecticut River runs right through Hartford, and you can take boat rides on it to see the city from the water like a floating tour!",
+            "Hartford has a famous carousel at Bushnell Park with 48 hand-carved horses that go up and down while playing cheerful music - it's been spinning since 1914!",
+            "Mark Twain, who wrote the adventures of Tom Sawyer and Huckleberry Finn, lived in Hartford and wrote some of his most famous stories in his beautiful Victorian house there!"
+        ]
+    },
+    "Albany": {
+        "city": "Albany",
+        "state": "New York",
+        "country": "United States",
+        "population": 101000,
+        "fun_facts": [
+            "Albany is New York's capital city, but it's so much smaller than New York City that people sometimes call it 'Smallbany' as a cute nickname!",
+            "The Native Americans who lived there first called Albany 'Pempotowwuthut-Muhhcanneuw' which means 'the fireplace of the Mohican nation' - what a long and special name!",
+            "Albany has been New York's capital since 1797, making it one of the oldest continuous state capitals in America - older than many other big cities!",
+            "The New York State Capitol building in Albany took 32 years to build and cost so much money that people called it the 'Million Dollar Staircase' because of its fancy stone steps!",
+            "Albany sits right where the Hudson River meets the Mohawk River, making it a perfect spot for boats to travel between New York City and the Great Lakes!"
+        ]
+    },
+    "Antalya": {
+        "city": "Antalya",
+        "state": null,
+        "country": "Turkey",
+        "population": 1335000,
+        "fun_facts": [
+            "Antalya is over 2,200 years old and was named after King Attalus II who founded it - imagine a city older than most countries!",
+            "Antalya has 640 kilometers of beautiful coastline with crystal clear blue water beaches that have won special 'Blue Flag' awards for being so clean and pretty!",
+            "The city is home to five amazing national parks where you can see waterfalls, caves, and canyons - it has more national parks than any other place in Turkey!",
+            "Antalya is called the 'Pearl of the Mediterranean' because its beaches and ancient ruins sparkle like jewels along the Turkish coast!",
+            "The Land of Legends theme park in Antalya has thrilling roller coasters and a huge aquarium where you can walk through underwater tunnels surrounded by sharks and colorful fish!"
+        ]
+    },
+    "Cancun": {
+        "city": "Cancun",
+        "state": "Quintana Roo",
+        "country": "Mexico",
+        "population": 888797,
+        "fun_facts": [
+            "Just 50 years ago, only three people lived in Cancun taking care of a coconut farm - now almost a million people call it home!",
+            "The name 'Cancun' means 'Nest of Serpents' in the ancient Mayan language, but don't worry - the beaches are much more fun than scary snakes!",
+            "Cancun grew faster than almost any city in the world - in the 1970s the population grew by 62% every single year as people discovered this tropical paradise!",
+            "Over 75,000 people in Cancun still speak Maya, the ancient language of the people who built amazing pyramids and temples thousands of years ago!",
+            "Cancun's beaches are made of tiny pieces of coral and shells that stay cool even on the hottest days - you can walk barefoot on the sand without burning your feet!"
+        ]
+    },
+    "Everett": {
+        "city": "Everett",
+        "state": "Washington",
+        "country": "United States",
+        "population": 111371,
+        "fun_facts": [
+            "Everett is home to the biggest building in the world - the Boeing airplane factory that's so huge you could fit 75 football fields inside it!",
+            "The Boeing factory in Everett builds the enormous 747 jumbo jets, and the very first one was called the 'City of Everett' to honor the town where it was born!",
+            "Thousands of years ago, the Snohomish people lived where Everett is now and called their main village 'Hibulb' - which sounds like a fun word to say!",
+            "The Port of Everett has the largest marina for pleasure boats on the entire Pacific coast - like a giant parking lot just for boats and yachts!",
+            "You can take a tour of the Boeing factory in Everett and watch them build real airplanes - it's like seeing giant metal birds come to life piece by piece!"
+        ]
     }
 }
