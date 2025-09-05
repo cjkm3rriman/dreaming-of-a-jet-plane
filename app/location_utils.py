@@ -30,7 +30,7 @@ def _track_ip_geolocation_failure(request: Request, ip: str, failure_type: str, 
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{fallback_lat or 0}:{fallback_lng or 0}"
         session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
         
-        analytics.track_event("location:ip_geolocation_failed", {
+        analytics.track_event("error:location", {
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
