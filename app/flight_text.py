@@ -261,9 +261,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     # Add closing prompt for plane index 1 and 2
     if plane_index == 1:
-        full_response += " Shall we find another one?"
+        full_response += " Should we find another jet plane?"
     elif plane_index == 2:
-        full_response += " Let's find one more!"
+        full_response += " Let's find one more jet plane shall we?"
     
     return full_response
 
