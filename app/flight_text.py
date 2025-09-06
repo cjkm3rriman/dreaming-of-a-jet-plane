@@ -259,6 +259,12 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
             fun_fact_opening = random.choice(fun_fact_openings)
             full_response += f" {fun_fact_opening} {random_fact}"
     
+    # Add closing prompt for plane index 1 and 2
+    if plane_index == 1:
+        full_response += " Shall we find another one?"
+    elif plane_index == 2:
+        full_response += " Let's find one more!"
+    
     return full_response
 
 
