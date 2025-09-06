@@ -1,0 +1,251 @@
+{
+    "card": {
+        "content": {
+            "playbackType": "linear",
+            "config": {
+                "resumeTimeout": 3600,
+                "autoadvance": "true"
+            },
+            "chapters": [
+                {
+                    "tracks": [
+                        {
+                            "format": "mp3",
+                            "overlayLabel": "1",
+                            "channels": "stereo",
+                            "title": "Scanning The Skies for Jet Planes",
+                            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/scanning.mp3",
+                            "duration": null,
+                            "key": "track1",
+                            "type": "stream",
+                            "display": null,
+                            "ambient": null,
+                            "fileSize": null
+                        }
+                    ],
+                    "overlayLabel": "1",
+                    "title": "Scanning The Skies",
+                    "key": "00",
+                    "display": {
+                        "icon16x16": "yoto:#tal2wCH_bPOitYdPZQUvUSPGK5YobvV-rCXPH7sVGIg"
+                    },
+                    "availableFrom": null,
+                    "ambient": null,
+                    "defaultTrackDisplay": null,
+                    "defaultTrackAmbient": null,
+                    "fileSize": 0,
+                    "duration": 0
+                },
+                {
+                    "tracks": [
+                        {
+                            "format": "mp3",
+                            "display": {
+                                "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+                            },
+                            "overlayLabel": "2",
+                            "title": "Closest Jet Plane",
+                            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/plane/1",
+                            "duration": null,
+                            "key": "track2",
+                            "type": "stream",
+                            "ambient": null,
+                            "fileSize": null
+                        }
+                    ],
+                    "overlayLabel": "2",
+                    "title": "Closest Jet Plane",
+                    "key": "01",
+                    "display": {
+                        "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+                    },
+                    "availableFrom": null,
+                    "ambient": null,
+                    "defaultTrackDisplay": null,
+                    "defaultTrackAmbient": null,
+                    "fileSize": 0,
+                    "duration": 0
+                },
+                {
+                    "tracks": [
+                        {
+                            "format": "mp3",
+                            "display": {
+                                "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
+                            },
+                            "overlayLabel": "3",
+                            "channels": "stereo",
+                            "title": "Scanning…",
+                            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/scanning-again.mp3",
+                            "duration": null,
+                            "key": "track3",
+                            "type": "stream",
+                            "ambient": null,
+                            "fileSize": null
+                        }
+                    ],
+                    "overlayLabel": "3",
+                    "title": "Scanning…",
+                    "key": "02",
+                    "display": {
+                        "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
+                    },
+                    "availableFrom": null,
+                    "ambient": null,
+                    "defaultTrackDisplay": null,
+                    "defaultTrackAmbient": null,
+                    "fileSize": 0,
+                    "duration": 0
+                },
+                {
+                    "tracks": [
+                        {
+                            "format": "mp3",
+                            "display": {
+                                "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
+                            },
+                            "overlayLabel": "4",
+                            "title": "Another Jet Plane",
+                            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/plane/2",
+                            "duration": null,
+                            "key": "track4",
+                            "type": "stream",
+                            "ambient": null,
+                            "fileSize": null
+                        }
+                    ],
+                    "overlayLabel": "4",
+                    "title": "Another Jet Plane",
+                    "key": "03",
+                    "display": {
+                        "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
+                    },
+                    "availableFrom": null,
+                    "ambient": null,
+                    "defaultTrackDisplay": null,
+                    "defaultTrackAmbient": null,
+                    "fileSize": 0,
+                    "duration": 0
+                },
+                {
+                    "tracks": [
+                        {
+                            "format": "mp3",
+                            "overlayLabel": "5",
+                            "channels": "stereo",
+                            "display": {
+                                "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
+                            },
+                            "title": "Scanning...",
+                            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/scanning-again.mp3",
+                            "duration": null,
+                            "key": "track5",
+                            "type": "stream",
+                            "ambient": null,
+                            "fileSize": null
+                        }
+                    ],
+                    "overlayLabel": "5",
+                    "title": "Scanning...",
+                    "key": "04",
+                    "display": {
+                        "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
+                    },
+                    "availableFrom": null,
+                    "ambient": null,
+                    "defaultTrackDisplay": null,
+                    "defaultTrackAmbient": null,
+                    "fileSize": 0,
+                    "duration": 0
+                },
+                {
+                    "tracks": [
+                        {
+                            "format": "mp3",
+                            "overlayLabel": "6",
+                            "display": {
+                                "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
+                            },
+                            "title": "And Another Jet Plane",
+                            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/plane/3",
+                            "duration": null,
+                            "key": "track6",
+                            "type": "stream",
+                            "ambient": null,
+                            "fileSize": null
+                        }
+                    ],
+                    "overlayLabel": "6",
+                    "title": "And Another Jet Plane",
+                    "key": "05",
+                    "display": {
+                        "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
+                    },
+                    "availableFrom": null,
+                    "ambient": null,
+                    "defaultTrackDisplay": null,
+                    "defaultTrackAmbient": null,
+                    "fileSize": 0,
+                    "duration": 0
+                },
+                {
+                    "tracks": [
+                        {
+                            "format": "mp3",
+                            "overlayLabel": "7",
+                            "display": {
+                                "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
+                            },
+                            "trackUrl": "https://dreaming-of-a-jet-plane-production.up.railway.app/overandout.mp3",
+                            "title": "Over and Out",
+                            "duration": null,
+                            "key": "track7",
+                            "type": "stream",
+                            "ambient": null,
+                            "fileSize": null
+                        }
+                    ],
+                    "overlayLabel": "7",
+                    "display": {
+                        "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
+                    },
+                    "key": "06",
+                    "title": "Over and Out",
+                    "availableFrom": null,
+                    "ambient": null,
+                    "defaultTrackDisplay": null,
+                    "defaultTrackAmbient": null,
+                    "fileSize": 0,
+                    "duration": 0
+                }
+            ]
+        },
+        "metadata": {
+            "cover": {
+                "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/pAmsUAUK3KNMoy9htaTJ2xtUnURswPWgGONvtxqH38w"
+            },
+            "author": "Jet Plane Scanner",
+            "order": "featured",
+            "description": "Magically turn your Yoto player into a Jet Plane Scanner that finds aeroplanes in the skies around you and teaches you all about them and the faraway destinations they are headed.",
+            "category": "activities",
+            "media": {
+                "duration": 0,
+                "hasStreams": true,
+                "fileSize": 0,
+                "readableDuration": "",
+                "readableFileSize": 0
+            }
+        },
+        "title": "Dreaming Of A Jet Plane",
+        "cardId": "uuU8r",
+        "userId": "auth0|61c72c5fdee2f00073a4282b",
+        "createdAt": "2025-08-29T12:11:38.675Z",
+        "updatedAt": "2025-09-06T20:42:20.390Z",
+        "creatorEmail": "cjkmerriman@gmail.com",
+        "shareLinkCreatedAt": "2025-08-29T12:13:37.138Z",
+        "slug": "27Y3g3KjqiWkIqdTWc27g2",
+        "shareCount": 11,
+        "sortkey": "27Y3g3KjqiWkIqdTWc27g2",
+        "shareLimit": 0
+    }
+}
