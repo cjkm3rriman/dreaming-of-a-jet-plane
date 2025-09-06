@@ -2798,5 +2798,83 @@
             "The Port of Everett has the largest marina for pleasure boats on the entire Pacific coast - like a giant parking lot just for boats and yachts!",
             "You can take a tour of the Boeing factory in Everett and watch them build real airplanes - it's like seeing giant metal birds come to life piece by piece!"
         ]
+    },
+    "Manchester": {
+        "city": "Manchester",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 568996,
+        "fun_facts": [
+            "Manchester's special symbol is a worker bee because everyone there works as hard as busy little bees in a hive!",
+            "The Manchester bee has only one wing instead of two wings like real bees - it's a special magical bee that decorates the whole city!",
+            "Manchester has huge parks where you can play - Heaton Park is so big it's like 75 football fields all put together!",
+            "There are colorful bee statues all around Manchester that you can find and count - it's like a giant treasure hunt in the city!",
+            "Manchester is home to famous football teams and has a special museum just about football where you can see cool soccer stuff!"
+        ]
+    },
+    "Redmond": {
+        "city": "Redmond",
+        "state": "Washington",
+        "country": "United States",
+        "population": 80040,
+        "fun_facts": [
+            "Redmond is called the 'Bicycle Capital of the Northwest' because everyone there loves riding bikes and they have special bike racing tracks!",
+            "Microsoft and Nintendo make their computer games and programs in Redmond - maybe some of your favorite games were made right there!",
+            "Redmond used to be called 'Salmonberg' because there were so many salmon fish swimming in the rivers, like a fishy parade!",
+            "Marymoor Park in Redmond is huge - it's like having 75 football fields to run around and play in with playgrounds and sports fields!",
+            "Redmond has 47 different parks where you can play - that's more parks than you have fingers and toes times two!"
+        ]
+    },
+    "Charleston": {
+        "city": "Charleston",
+        "state": "South Carolina",
+        "country": "United States",
+        "population": 152000,
+        "fun_facts": [
+            "Charleston has a famous street called Rainbow Row with 13 colorful houses painted like a rainbow - red, yellow, pink, blue, and green!",
+            "You can ride in real horse carriages through Charleston just like in fairy tale movies, and the friendly horses love getting carrots from visitors!",
+            "Charleston has a magical Pineapple Fountain that kids can splash and play in during hot summer days - pineapples mean 'welcome' in Charleston!",
+            "Over 300 dolphins live in Charleston's waters and you can see them jumping and playing from boat tours - they even have names for each other!",
+            "Charleston used to be called 'Charles Towne' after a king named Charles, and it's been around for more than 350 years!"
+        ]
+    },
+    "Beauvais": {
+        "city": "Beauvais",
+        "state": null,
+        "country": "France",
+        "population": 58117,
+        "fun_facts": [
+            "Beauvais has a super tall cathedral that's like stacking 15 giraffes on top of each other - but it was never finished building!",
+            "Inside the cathedral is a giant clock as tall as a 3-story house with 68 moving toy figures that dance around several times each day!",
+            "There's a fun park called Parc Saint Paul with 43 different rides and attractions where kids can even drive real motorbikes!",
+            "You can ride on a real steam train from 1898 that puffs and whistles through the French countryside - choo choo!",
+            "Beauvais has a special farm where you can pet friendly goats, feed rabbits and ducks, and even have birthday parties with the animals!"
+        ]
+    },
+    "Porto": {
+        "city": "Porto",
+        "state": null,
+        "country": "Portugal",
+        "population": 231828,
+        "fun_facts": [
+            "Porto is covered in beautiful blue and white tiles called azulejos that tell stories - the train station alone has over 20,000 tiles like a giant puzzle!",
+            "You can ride old yellow trams that go clickety-clack through the city just like in old movies - it's much more fun than riding a bus!",
+            "Porto has amazing bridges over the Douro River, including one designed by the same man who built the Eiffel Tower in Paris!",
+            "The city is famous for making delicious port wine, which is named after Porto - but don't worry, there's grape juice for kids too!",
+            "Porto is called the 'Unvanquished City' because it was so brave and strong that it never gave up during battles long, long ago!"
+        ]
+    },
+    "Concord": {
+        "city": "Concord",
+        "state": "New Hampshire",
+        "country": "United States",
+        "population": 45021,
+        "fun_facts": [
+            "Concord is the capital city of New Hampshire and has the oldest state house in America where lawmakers still meet in their original rooms!",
+            "The State House has a shiny golden dome and a big wooden eagle on top that's painted gold and has been watching over the city since 1818!",
+            "The first alarm clock ever was invented right here in Concord in 1787, but it could only ring at 4 in the morning - yawn!",
+            "Concord's State House is built with special granite stone that was so beautiful, they used the same stone to build the Library of Congress in Washington D.C.!",
+            "The city has a space museum named after Christa McAuliffe, a teacher from Concord who wanted to be the first teacher in space!"
+        ]
     }
 }

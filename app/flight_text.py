@@ -5,8 +5,33 @@ Shared flight text generation for consistent messaging across endpoints
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import random
+import re
 from .cities_database import get_fun_facts
 from .airport_database import get_airport_by_iata
+
+
+def convert_aircraft_name_digits(aircraft_name: str) -> str:
+    """Convert numbers in aircraft names to individual digits separated by spaces
+    
+    Args:
+        aircraft_name: Aircraft name that may contain numbers
+        
+    Returns:
+        str: Aircraft name with numbers converted to individual digits
+        
+    Examples:
+        "Boeing 737" -> "Boeing 7 3 7"
+        "Airbus A320" -> "Airbus A 3 2 0"
+    """
+    def replace_number(match):
+        number_str = match.group(0)
+        return ' '.join(number_str)
+    
+    # Match sequences of digits
+    pattern = r'\d+'
+    result = re.sub(pattern, replace_number, aircraft_name)
+    
+    return result
 
 
 def is_location_in_us(lat: float, lng: float) -> bool:
@@ -85,15 +110,17 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     base_opening_word = random.choice(opening_words)
     
     if plane_index == 2:
-        detection_sentence = f"{base_opening_word} We've detected another jet plane flying {distance_miles} miles from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've detected another jet plane, flying {distance_miles} miles from this Yoto!"
     elif plane_index == 3:
-        detection_sentence = f"{base_opening_word} We've detected one more jet plane flying {distance_miles} miles from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've detected one more jet plane up there, {distance_miles} miles from this Yoto!"
     else:
         # Default for plane 1 or any other index
-        detection_sentence = f"{base_opening_word} We've detected a jet plane flying {distance_miles} miles from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've detected a jet plane in the sky, {distance_miles} miles from this Yoto!"
     
     # Add aircraft type, capacity, speed, and altitude information
     aircraft_name = aircraft.get("aircraft", "unknown aircraft type")
+    # Convert numbers in aircraft name to individual digits for TTS
+    aircraft_name_with_digits = convert_aircraft_name_digits(aircraft_name)
     passenger_capacity = aircraft.get("passenger_capacity", 0)
     velocity_knots = aircraft.get("velocity", 0)
     velocity_mph = round(velocity_knots * 1.15078) if velocity_knots else 0
@@ -110,7 +137,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     # Build scanner sentence with random selection of available data
     aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous"]
     aircraft_descriptor = random.choice(aircraft_descriptors)
-    scanner_info = f"My scanner says Captain {captain_name} is piloting this {aircraft_descriptor} {aircraft_name}"
+    scanner_info = f"My scanner tells me that Captain {captain_name} is piloting this {aircraft_descriptor} {aircraft_name_with_digits}"
     
     # Collect available information options
     available_info = []
@@ -154,23 +181,29 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 if total_minutes <= 7:
                     eta_text = " landing in just a few minutes"
                 elif total_minutes <= 15:
-                    eta_text = " landing in about 15 minutes - that's like the time you spend in the bath"
+                    eta_text = " landing in about 15 minutes - that's like watching two episodes of Bluey"
+                elif total_minutes <= 20:
+                    eta_text = " landing in about 20 minutes - that's like the time you spend in the water at bath time"
                 elif total_minutes <= 30:
-                    eta_text = " landing in about half an hour - that's like a short car ride for you"
+                    eta_text = " landing in about half an hour - that's like a short car journey for you"
+                elif total_minutes <= 45:
+                    eta_text = " landing in about 45 minutes - that's how long you usually spend at a playground"
                 elif total_minutes <= 60:
-                    eta_text = " landing in about an hour - that's like your bath time and bed time together"
+                    eta_text = " landing in about an hour - that's like the time it takes to do bath and bed time"
+                elif total_minutes <= 90:
+                    eta_text = " landing in about an hour and a half - that's the time it takes to watch a Disney movie"
                 elif total_minutes <= 120:  # 2 hours
-                    eta_text = " landing in about 2 hours - that's like watching 4 episodes of your favorite TV show"
+                    eta_text = " landing in about 2 hours - that's like watching a lot of tv episodes in a row"
                 elif total_minutes <= 180:  # 3 hours
-                    eta_text = " landing in about 3 hours - that's like watching a really long movie"
+                    eta_text = " landing in about 3 hours - that's like watching a really long adult movie"
                 elif total_minutes <= 240:  # 4 hours
                     eta_text = " landing in about 4 hours - that's like watching a Disney movie twice"
                 elif total_minutes <= 360:  # 6 hours
-                    eta_text = " landing in about 6 hours - that's the time it takes to go from breakfast to lunch"
+                    eta_text = " landing in about 6 hours - that's the time between breakfast and lunch"
                 elif total_minutes <= 480:  # 8 hours
                     eta_text = " landing in about 8 hours - that's like a full day at school for you"
                 elif total_minutes <= 720:  # 12 hours
-                    eta_text = " landing in about 12 hours - that's like a whole night's sleep for you"
+                    eta_text = " landing in about 12 hours - that's like a full night's sleep for you"
                 else:
                     # For very long flights, round to nearest hour
                     hours = round(total_minutes / 60)
@@ -254,6 +287,6 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
     else:
         # Handle error cases with descriptive sentence
         if error_message:
-            return f"I'm sorry my old chum but scanner bot was not able to find any jet planes nearby, because of {error_message.lower()}"
+            return f"I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because of {error_message.lower()}"
         else:
-            return "I'm sorry my old chum but scanner bot was not able to find any jet planes nearby, because no passenger aircraft found within 100km radius"
+            return "I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because no passenger aircraft found within 100km radius"
