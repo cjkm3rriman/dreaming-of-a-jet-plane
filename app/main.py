@@ -59,6 +59,11 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
     """Convert text to speech using ElevenLabs API
     
+    TODO: Add AWS Polly fallback to reduce API costs if needed
+    - Implement fallback TTS provider using AWS Polly
+    - Could help reduce costs for high-volume usage
+    - Keep ElevenLabs as primary for quality, Polly as backup
+    
     Returns:
         tuple: (audio_content, error_message)
         - audio_content: MP3 audio bytes if successful, empty bytes if failed
