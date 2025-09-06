@@ -77,11 +77,18 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                     error_reason = data.get("reason", "unknown_error")
                     logger.warning(f"IP geolocation API returned error for IP {ip}: {error_reason}")
                     
-                    # Track API error response
-                    if request:
-                        _track_ip_geolocation_failure(request, ip, f"api_response_error_{error_reason.lower()}", 0.0, 0.0)
+                    # Use NYC fallback for API error responses
+                    fallback_lat, fallback_lng = 40.7128, -74.0060
+                    logger.info(f"Using NYC fallback for API error: {fallback_lat}, {fallback_lng}")
                     
-                    return 0.0, 0.0
+                    # Track API error response with fallback coordinates
+                    if request:
+                        _track_ip_geolocation_failure(request, ip, f"api_response_error_{error_reason.lower()}", fallback_lat, fallback_lng)
+                    
+                    # Cache the fallback location
+                    _ip_cache[ip] = (fallback_lat, fallback_lng, current_time)
+                    
+                    return fallback_lat, fallback_lng
                 
                 lat = data.get("latitude", 0.0)
                 lng = data.get("longitude", 0.0)
@@ -127,9 +134,16 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
         
         # Track API exception event
         if request:
-            _track_ip_geolocation_failure(request, ip, "api_exception", 0.0, 0.0)
+            _track_ip_geolocation_failure(request, ip, "api_exception", 40.7128, -74.0060)
     
-    return 0.0, 0.0
+    # Use NYC fallback for any error case or missing coordinates
+    fallback_lat, fallback_lng = 40.7128, -74.0060
+    logger.info(f"Using NYC fallback location for IP {ip}: {fallback_lat}, {fallback_lng}")
+    
+    # Cache the fallback location
+    _ip_cache[ip] = (fallback_lat, fallback_lng, time.time())
+    
+    return fallback_lat, fallback_lng
 
 
 def extract_client_ip(request: Request) -> str:
