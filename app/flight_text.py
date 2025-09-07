@@ -181,29 +181,29 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 if total_minutes <= 7:
                     eta_text = " landing in just a few minutes"
                 elif total_minutes <= 15:
-                    eta_text = " landing in about 15 minutes - that's like watching two episodes of Bluey"
+                    eta_text = " landing in about 15 minutes - that's about the same time it takes to watch two episodes of Bluey"
                 elif total_minutes <= 20:
-                    eta_text = " landing in about 20 minutes - that's like the time you spend in the water at bath time"
+                    eta_text = " landing in about 20 minutes - that's about the time you spend in the water at bath time"
                 elif total_minutes <= 30:
-                    eta_text = " landing in about half an hour - that's like a short car journey for you"
+                    eta_text = " landing in about half an hour - that's about the length of a short car journey"
                 elif total_minutes <= 45:
-                    eta_text = " landing in about 45 minutes - that's how long you usually spend at a playground"
+                    eta_text = " landing in about 45 minutes - that's how long you usually spend at a the playground"
                 elif total_minutes <= 60:
-                    eta_text = " landing in about an hour - that's like the time it takes to do bath and bed time"
+                    eta_text = " landing in about an hour - that's about the time it takes to do bath and bed time"
                 elif total_minutes <= 90:
-                    eta_text = " landing in about an hour and a half - that's the time it takes to watch a Disney movie"
+                    eta_text = " landing in about an hour and a half - that's about the time it takes to watch a Disney movie"
                 elif total_minutes <= 120:  # 2 hours
                     eta_text = " landing in about 2 hours - that's like watching a lot of tv episodes in a row"
                 elif total_minutes <= 180:  # 3 hours
-                    eta_text = " landing in about 3 hours - that's like watching a really long adult movie"
+                    eta_text = " landing in about 3 hours - that's like when grown-ups watch a really long movie"
                 elif total_minutes <= 240:  # 4 hours
-                    eta_text = " landing in about 4 hours - that's like watching a Disney movie twice"
+                    eta_text = " landing in about 4 hours - that's time to watch two Disney movies back to back"
                 elif total_minutes <= 360:  # 6 hours
-                    eta_text = " landing in about 6 hours - that's the time between breakfast and lunch"
+                    eta_text = " landing in about 6 hours - that's about the time between breakfast and lunch"
                 elif total_minutes <= 480:  # 8 hours
-                    eta_text = " landing in about 8 hours - that's like a full day at school for you"
+                    eta_text = " landing in about 8 hours - that's like a full day at school"
                 elif total_minutes <= 720:  # 12 hours
-                    eta_text = " landing in about 12 hours - that's like a full night's sleep for you"
+                    eta_text = " landing in about 12 hours - that's like a full night's sleep"
                 else:
                     # For very long flights, round to nearest hour
                     hours = round(total_minutes / 60)
@@ -261,9 +261,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     # Add closing prompt for plane index 1 and 2
     if plane_index == 1:
-        full_response += " Should we find another jet plane?"
+        full_response += ". Should we find another jet plane?"
     elif plane_index == 2:
-        full_response += " Let's find one more jet plane shall we?"
+        full_response += ". Let's find one more jet plane shall we?"
     
     return full_response
 

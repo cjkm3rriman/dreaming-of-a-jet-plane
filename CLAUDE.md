@@ -134,3 +134,74 @@ When adding new cities to `app/cities.json`:
 
 ### Example Reference:
 See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. Each fact should be educational but entertaining, helping kids learn while staying engaged.
+
+## AWS Polly TTS Integration Planning
+
+Research and planning for adding AWS Polly as a TTS provider option alongside ElevenLabs (see TODO comments in `app/main.py:62-65`).
+
+### Environment Configuration
+```bash
+# Provider selection
+TTS_PROVIDER=elevenlabs  # Options: "elevenlabs", "polly", or "fallback" (try ElevenLabs, fallback to Polly)
+
+# AWS Polly configuration
+AWS_POLLY_VOICE_ID=Arthur           # British male neural voice (recommended)
+AWS_POLLY_ENGINE=neural             # Options: generative, neural, standard
+AWS_POLLY_REGION=us-east-1         
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+
+# Voice model settings (configurable for future changes)
+AWS_POLLY_OUTPUT_FORMAT=mp3
+AWS_POLLY_SAMPLE_RATE=24000
+```
+
+### AWS Polly Voice Research Findings
+
+**Available British Voices:**
+- **Amy (Female, Generative)** - Only British generative voice available
+- **Arthur (Male, Neural only)** - Not available in generative engine yet
+- No direct male British generative voice equivalent to current Edward voice
+
+**Pricing Comparison (per million characters):**
+- ElevenLabs: ~$22
+- AWS Polly Generative: $30
+- AWS Polly Neural: $16
+- **Free tier**: 100k characters/month generative, 1M characters/month neural
+
+### Integration Architecture Options
+
+**Provider Strategy Options:**
+1. **Primary/Fallback**: Try ElevenLabs first, fallback to Polly on failure
+2. **Switch**: Complete switch to Polly via env variable
+3. **Load Balance**: Route based on usage/cost thresholds
+
+**Function Structure:**
+```python
+async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
+    provider = os.getenv("TTS_PROVIDER", "elevenlabs")
+    
+    if provider == "elevenlabs":
+        return await elevenlabs_tts(text)
+    elif provider == "polly":
+        return await polly_tts(text)
+    elif provider == "fallback":
+        result = await elevenlabs_tts(text)
+        if result[1]:  # Error occurred
+            return await polly_tts(text)
+        return result
+```
+
+**Voice Quality Trade-offs:**
+- Current: ElevenLabs Edward (British Male, Dark, Seductive)
+- Option 1: AWS Polly Amy (British Female, Conversational, Generative)
+- **Option 2: AWS Polly Arthur (British Male, Neural only, lower cost) - RECOMMENDED**
+  - Use `<prosody rate="medium">` SSML for optimal pacing
+  - Best match for current Edward voice characteristics
+  - Lower cost than generative ($16 vs $30 per million characters)
+
+### AWS Requirements
+- **Region**: us-east-1 (required for generative voices)
+- **Dependencies**: boto3, botocore
+- **Credentials**: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+- **Permissions**: polly:SynthesizeSpeech
