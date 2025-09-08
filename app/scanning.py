@@ -98,7 +98,7 @@ async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, senten
         
         # Convert to speech with timing
         tts_start_time = time.time()
-        audio_content, tts_error = await convert_text_to_speech(sentence)
+        audio_content, tts_error, tts_provider_used = await convert_text_to_speech(sentence)
         tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
         
         if audio_content and not tts_error:
@@ -109,7 +109,7 @@ async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, senten
                 
                 # Track MP3 generation analytics if we have request and aircraft data
                 if request and aircraft:
-                    track_mp3_generation(request, lat, lng, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content))
+                    track_mp3_generation(request, lat, lng, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used)
                 
                 return True
             else:
@@ -126,7 +126,9 @@ async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, senten
 
 async def _stream_scanning_mp3_only(request: Request):
     """Stream scanning MP3 file from S3 without analytics or background processing"""
-    mp3_url = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/scanning.mp3"
+    # Import here to avoid circular imports
+    from .main import get_voice_specific_s3_url
+    mp3_url = get_voice_specific_s3_url("scanning.mp3")
     
     try:
         # Prepare headers for the S3 request
@@ -254,7 +256,9 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
         logger.warning("Could not determine location for MP3 pre-generation")
     
     # Continue with normal scanning MP3 streaming
-    mp3_url = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/scanning.mp3"
+    # Import here to avoid circular imports
+    from .main import get_voice_specific_s3_url
+    mp3_url = get_voice_specific_s3_url("scanning.mp3")
     
     try:
         # Prepare headers for the S3 request

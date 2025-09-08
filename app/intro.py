@@ -16,8 +16,11 @@ async def stream_intro(request: Request, lat: float = None, lng: float = None):
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
     
-    # MP3 file hosted on S3
-    mp3_url = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/intro.mp3"
+    # Import here to avoid circular imports
+    from .main import get_voice_specific_s3_url
+    
+    # MP3 file hosted on S3 with voice-specific folder
+    mp3_url = get_voice_specific_s3_url("intro.mp3")
     
     try:
         # Prepare headers for the S3 request

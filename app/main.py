@@ -6,6 +6,8 @@ import os
 import sys
 import asyncio
 import logging
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 from typing import List, Dict, Any, Optional
 
 # Configure logging with explicit format and stream
@@ -34,10 +36,18 @@ app = FastAPI()
 FR24_API_KEY = os.getenv("FR24_API_KEY")
 FR24_BASE_URL = "https://fr24api.flightradar24.com"
 
+# TTS Configuration
+TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "polly", "fallback"
+
 # ElevenLabs API configuration
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_TEXT_TO_VOICE_API_KEY")
 ELEVENLABS_BASE_URL = "https://api.elevenlabs.io/v1"
 DEFAULT_VOICE_ID = "goT3UYdM9bhm0n2lmKQx"  # Edward voice - British, Dark, Seductive, Low
+
+# AWS Polly configuration
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_POLLY_REGION = os.getenv("AWS_POLLY_REGION", "us-east-1")
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance between two points using Haversine formula (in km)"""
@@ -56,13 +66,89 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return R * c
 
-async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
-    """Convert text to speech using ElevenLabs API
+def get_voice_folder() -> str:
+    """Get the voice folder name based on TTS provider configuration
     
-    TODO: Add AWS Polly fallback to reduce API costs if needed
-    - Implement fallback TTS provider using AWS Polly
-    - Could help reduce costs for high-volume usage
-    - Keep ElevenLabs as primary for quality, Polly as backup
+    Returns:
+        str: "edward" for ElevenLabs, "amy" for AWS Polly
+    """
+    provider = TTS_PROVIDER.lower()
+    if provider in ["elevenlabs", "fallback"]:
+        return "edward"
+    elif provider == "polly":
+        return "amy"
+    else:
+        # Default to edward for unknown providers
+        return "edward"
+
+def get_voice_specific_s3_url(filename: str) -> str:
+    """Generate voice-specific S3 URL for static MP3 files
+    
+    Args:
+        filename: The MP3 filename (e.g., "scanning.mp3")
+        
+    Returns:
+        str: Full S3 URL with voice folder (e.g., "https://.../edward/scanning.mp3")
+    """
+    voice_folder = get_voice_folder()
+    return f"https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/{voice_folder}/{filename}"
+
+async def convert_text_to_speech_polly(text: str) -> tuple[bytes, str]:
+    """Convert text to speech using AWS Polly with Arthur voice
+    
+    Returns:
+        tuple: (audio_content, error_message)
+        - audio_content: MP3 audio bytes if successful, empty bytes if failed
+        - error_message: Empty string if successful, error description if failed
+    """
+    if not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
+        logger.warning("AWS credentials not configured for Polly")
+        return b"", "AWS credentials not configured"
+    
+    try:
+        # Create Polly client
+        polly_client = boto3.client(
+            'polly',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            region_name=AWS_POLLY_REGION
+        )
+        
+        # Wrap text in SSML with prosody for medium rate and 1 second pause
+        ssml_text = f'<speak><break time="1s"/><prosody rate="medium">{text}</prosody></speak>'
+        
+        logger.info(f"AWS Polly Request: Voice=Amy, Engine=neural")
+        
+        # Synthesize speech
+        response = polly_client.synthesize_speech(
+            Text=ssml_text,
+            TextType='ssml',
+            OutputFormat='mp3',
+            VoiceId='Amy',
+            Engine='neural',
+            SampleRate='24000'
+        )
+        
+        # Read audio stream
+        audio_content = response['AudioStream'].read()
+        
+        logger.info(f"AWS Polly Response: Success, {len(audio_content)} bytes")
+        return audio_content, ""
+        
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        error_msg = e.response['Error']['Message']
+        logger.error(f"AWS Polly ClientError: {error_code} - {error_msg}")
+        return b"", f"AWS Polly error: {error_code} - {error_msg}"
+    except BotoCoreError as e:
+        logger.error(f"AWS Polly BotoCoreError: {str(e)}")
+        return b"", f"AWS Polly connection error: {str(e)}"
+    except Exception as e:
+        logger.error(f"AWS Polly Unexpected Error: {str(e)}")
+        return b"", f"AWS Polly unexpected error: {str(e)}"
+
+async def convert_text_to_speech_elevenlabs(text: str) -> tuple[bytes, str]:
+    """Convert text to speech using ElevenLabs API
     
     Returns:
         tuple: (audio_content, error_message)
@@ -122,6 +208,43 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
     except Exception as e:
         logger.error(f"ElevenLabs API Unexpected Error: {str(e)}")
         return b"", f"ElevenLabs API unexpected error: {str(e)}"
+
+async def convert_text_to_speech(text: str) -> tuple[bytes, str, str]:
+    """Convert text to speech using configured TTS provider
+    
+    Supports multiple providers based on TTS_PROVIDER environment variable:
+    - "elevenlabs": Use ElevenLabs (default)
+    - "polly": Use AWS Polly
+    - "fallback": Try ElevenLabs first, fallback to Polly on error
+    
+    Returns:
+        tuple: (audio_content, error_message, provider_used)
+        - audio_content: MP3 audio bytes if successful, empty bytes if failed
+        - error_message: Empty string if successful, error description if failed
+        - provider_used: Which provider was actually used ("elevenlabs" or "polly")
+    """
+    provider = TTS_PROVIDER.lower()
+    
+    if provider == "elevenlabs":
+        audio_content, error = await convert_text_to_speech_elevenlabs(text)
+        return audio_content, error, "elevenlabs"
+    elif provider == "polly":
+        audio_content, error = await convert_text_to_speech_polly(text)
+        return audio_content, error, "polly"
+    elif provider == "fallback":
+        # Try ElevenLabs first, fallback to Polly on error
+        logger.info("Using fallback strategy: trying ElevenLabs first")
+        audio_content, error = await convert_text_to_speech_elevenlabs(text)
+        if audio_content and not error:
+            return audio_content, error, "elevenlabs"
+        
+        logger.info(f"ElevenLabs failed ({error}), falling back to AWS Polly")
+        audio_content, error = await convert_text_to_speech_polly(text)
+        return audio_content, error, "polly"
+    else:
+        error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', or 'fallback'"
+        logger.error(error_msg)
+        return b"", error_msg, "unknown"
 
 def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bool, nearby_aircraft: int):
     """Track scan:complete analytics event with flight data results"""
@@ -186,7 +309,7 @@ def track_plane_request(request: Request, lat: float, lng: float, plane_index: i
     except Exception as e:
         logger.error(f"Failed to track plane:request event: {e}", exc_info=True)
 
-def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int):
+def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs"):
     """Track generate:audio analytics event with flight and audio details"""
     try:
         import hashlib
@@ -238,7 +361,8 @@ def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: 
             "generation_time_ms": generation_time_ms,
             "audio_size_bytes": audio_size_bytes,
             "text_length": len(sentence),
-            "model": "eleven_turbo_v2"
+            "tts_provider": tts_provider,
+            "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "amy_neural" if tts_provider == "polly" else "unknown"
         })
     except Exception as e:
         logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
@@ -613,7 +737,7 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     logger.info(f"Generating TTS for plane {plane_index}: {sentence[:50]}...")
     import time
     tts_start_time = time.time()
-    audio_content, tts_error = await convert_text_to_speech(sentence)
+    audio_content, tts_error, tts_provider_used = await convert_text_to_speech(sentence)
     tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
     
         
@@ -625,7 +749,7 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         # Track MP3 generation analytics if we have aircraft data
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            track_mp3_generation(request, user_lat, user_lng, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content))
+            track_mp3_generation(request, user_lat, user_lng, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used)
         
         # Track plane request analytics for cache miss
         track_plane_request(request, user_lat, user_lng, plane_index, from_cache=False)
