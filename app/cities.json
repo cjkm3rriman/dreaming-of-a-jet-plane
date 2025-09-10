@@ -3006,5 +3006,135 @@
             "Famous magician Harry Houdini and actor Charlie Chaplin both performed at Leeds' City Varieties music hall!",
             "Leeds is one of the greenest cities in Europe with two-thirds of the whole city covered in beautiful woodlands and forests!"
         ]
+    },
+    "Tenerife": {
+        "city": "Tenerife",
+        "state": null,
+        "country": "Spain",
+        "population": 967575,
+        "fun_facts": [
+            "Tenerife has the third-highest volcano in the world called Mount Teide, which casts the biggest sea shadow on Earth!",
+            "The island is called 'Island of Eternal Spring' because it feels like springtime all year round with perfect weather!",
+            "Tenerife has amazing black sand beaches made from volcanic activity - it's like playing on beaches from outer space!",
+            "Siam Park in Tenerife is Europe's biggest water park and has been voted the world's best water park nine years in a row!",
+            "Around 500 dolphins and whales live in the waters around Tenerife - you can see them swimming and playing from boats!"
+        ]
+    },
+    "Reus": {
+        "city": "Reus",
+        "state": "Catalonia",
+        "country": "Spain",
+        "population": 109930,
+        "fun_facts": [
+            "Reus is the birthplace of famous architect Antoni Gaudí who designed the magical Sagrada Família cathedral in Barcelona!",
+            "The city was so important for liquor making that people used to say 'Reus, Paris and London' because it was one of the world's centers for vermouth!",
+            "Reus has the only Art Nouveau building in all of Europe that still has its original furniture, ceilings, and lamps from over 100 years ago!",
+            "You can visit the church where baby Gaudí was baptized the day after he was born on June 25th, 1852!",
+            "The Gaudí Centre in Reus has incredible interactive displays that let you explore the magical world of the famous architect!"
+        ]
+    },
+    "Venezia": {
+        "city": "Venezia",
+        "state": null,
+        "country": "Italy",
+        "population": 249466,
+        "fun_facts": [
+            "Venice is built on 118 tiny islands connected by 400 bridges - it's like a magical floating city in the water!",
+            "The city has 400 gondolas painted black that glide through 150 canals instead of roads with cars!",
+            "Venice has the narrowest street in the world at only 53 centimeters wide - you have to squeeze through sideways!",
+            "The famous Bridge of Sighs got its name because prisoners would sigh when seeing their last view of beautiful Venice!",
+            "Venice is the only city in Europe where no cars or trucks are allowed - everyone travels by boat or walking!"
+        ]
+    },
+    "Liverpool": {
+        "city": "Liverpool",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 506552,
+        "fun_facts": [
+            "Liverpool is the birthplace of the Beatles, the most famous rock band ever - they changed music forever!",
+            "The city holds the Guinness World Record as the 'World Capital City of Pop' because more hit songs came from here than anywhere else!",
+            "Liverpool has two amazing football teams, Liverpool FC and Everton FC, and the whole city goes crazy for soccer!",
+            "Tourism from Beatles fans alone brings £100 million to Liverpool every year - people come from all over the world!",
+            "Liverpool was the European Capital of Culture in 2008 and has more museums and galleries than you could visit in a week!"
+        ]
+    },
+    "Skiathos": {
+        "city": "Skiathos",
+        "state": null,
+        "country": "Greece",
+        "population": 6610,
+        "fun_facts": [
+            "Skiathos has over 60 gorgeous beaches with crystal-clear turquoise water scattered around its 44-kilometer coastline!",
+            "Koukounaries Beach is considered the third most beautiful beach in the entire Mediterranean Sea with golden sand!",
+            "The island has soft, golden sand beaches which is super rare for Greece where most beaches have pebbles!",
+            "Lalaria Beach can only be reached by boat and has a spectacular natural stone arch rising right out of the sea!",
+            "Skiathos has 26 numbered bus stops that make beach-hopping easy - you can visit a different amazing beach every day!"
+        ]
+    },
+    "Napoli": {
+        "city": "Napoli",
+        "state": null,
+        "country": "Italy",
+        "population": 909000,
+        "fun_facts": [
+            "Naples is where pizza was invented! The very first pizzeria in the world opened here in 1830 and is still serving pizza today!",
+            "The famous Margherita Pizza was named after a real queen who visited Naples and loved the pizza so much!",
+            "Naples is almost 3,000 years old, making it one of the oldest cities that people have lived in continuously!",
+            "Mount Vesuvius, the volcano that buried Pompeii, is right next to Naples - you can visit the frozen-in-time ancient city!",
+            "Naples has the largest historic city center in all of Europe, recognized by UNESCO as a World Heritage Site!"
+        ]
+    },
+    "Lyon": {
+        "city": "Lyon",
+        "state": null,
+        "country": "France",
+        "population": 472317,
+        "fun_facts": [
+            "Lyon is called the 'Capital of Lights' because it has an amazing light festival every December that lights up the whole city!",
+            "The Lumière brothers invented the very first movie camera in Lyon, making it the birthplace of cinema as we know it!",
+            "Lyon was the silk capital of Europe for centuries - by the 1600s, over 14,000 silk looms were working here!",
+            "The city is famous for having secret passages called 'traboules' that let people sneak between buildings through hidden corridors!",
+            "Lyon is considered the food capital of France with more Michelin-starred restaurants per capita than anywhere else in the world!"
+        ]
+    },
+    "Rabat": {
+        "city": "Rabat",
+        "state": null,
+        "country": "Morocco",
+        "population": 1200000,
+        "fun_facts": [
+            "Rabat is Morocco's capital city where the King of Morocco lives for part of the year in his royal palace!",
+            "The Hassan Tower was built in the 1100s as part of an enormous mosque but was never finished - it still stands 44 meters tall!",
+            "Rabat was once the home of the most feared pirates in North Africa called the Sallee Corsairs who brought great wealth to the town!",
+            "The city has colorful, bustling markets called 'souks' where you can find treasures, spices, and amazing handmade crafts!",
+            "Rabat became a UNESCO World Heritage Site in 2012 because of its incredible mix of Islamic and French colonial architecture!"
+        ]
+    },
+    "Poznan": {
+        "city": "Poznan",
+        "state": null,
+        "country": "Poland",
+        "population": 540000,
+        "fun_facts": [
+            "Poznan is believed to be the birthplace of Poland - it was the very first capital city and where Poland began as a country!",
+            "Every day at noon, two mechanical goats appear from the town hall clock tower and lock horns for everyone to see!",
+            "Poznan created a famous soccer cheer called 'The Poznan' where fans turn around and jump up and down that spread worldwide!",
+            "The first Polish cathedral was built here in 968 AD, and it's where Poland became a Christian nation in 966!",
+            "Poznan has over 60,000 university students living there, making it one of the most youthful and energetic cities in Poland!"
+        ]
+    },
+    "Faro": {
+        "city": "Faro",
+        "state": null,
+        "country": "Portugal",
+        "population": 67566,
+        "fun_facts": [
+            "Faro is the capital of Portugal's sunny Algarve region, famous for having some of Europe's most beautiful beaches!",
+            "The city was originally called 'Ossonuba' by the Romans 2,000 years ago, then renamed 'Faro' by the Moors!",
+            "Faro is home to the amazing Ria Formosa Natural Park, considered one of Portugal's seven natural wonders!",
+            "You can reach Faro's pristine beaches by visiting three stunning islands connected by boats and bridges!",
+            "Faro is where you can try Portugal's most famous pastry, pastéis de nata - delicious custard tarts that taste like heaven!"
+        ]
     }
 }
