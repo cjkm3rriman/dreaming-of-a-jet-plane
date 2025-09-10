@@ -135,6 +135,39 @@ When adding new cities to `app/cities.json`:
 ### Example Reference:
 See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. Each fact should be educational but entertaining, helping kids learn while staying engaged.
 
+## TODO: Priority Cities to Add
+
+Based on analysis of major international flight destinations missing from the cities database, these cities should be prioritized for addition:
+
+### Highest Priority (Major International Hubs)
+1. **Doha, Qatar** - Qatar Airways hub, 2022 World Cup host
+2. **Bali/Denpasar, Indonesia** - Top global tourist destination
+3. **Perth, Australia** - Major Australian city
+4. **Wellington, New Zealand** - National capital
+5. **Marrakech, Morocco** - Iconic UNESCO tourist destination
+
+### High Priority (Regional Capitals & Business Hubs)
+6. **Kuwait City, Kuwait** - Gulf business center
+7. **Chiang Mai, Thailand** - Major Thai tourist city
+8. **Glasgow, Scotland** - Major Scottish cultural center
+9. **Krakow, Poland** - UNESCO World Heritage site
+10. **Quito, Ecuador** - UNESCO site, Galapagos gateway
+
+### Medium Priority (Important Regional Destinations)
+11. **Manama, Bahrain** - Gulf financial center
+12. **Muscat, Oman** - Growing tourism hub
+13. **Cebu, Philippines** - Key regional hub
+14. **Macau** - Gaming and tourism destination
+15. **Brisbane, Australia** - Gateway to Gold Coast
+16. **Christchurch, New Zealand** - South Island hub
+17. **Salzburg, Austria** - Mozart's birthplace
+18. **Seville, Spain** - Cultural capital of Andalusia
+19. **Accra, Ghana** - West African business hub
+20. **San José, Costa Rica** - Eco-tourism hub
+21. **Cartagena, Colombia** - UNESCO coastal gem
+
+These cities represent major gaps in airline destinations and would provide better global coverage for users learning about international flight destinations.
+
 ## AWS Polly TTS Integration Planning
 
 Research and planning for adding AWS Polly as a TTS provider option alongside ElevenLabs (see TODO comments in `app/main.py:62-65`).

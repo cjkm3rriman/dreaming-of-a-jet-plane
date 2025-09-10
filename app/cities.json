@@ -3136,5 +3136,330 @@
             "You can reach Faro's pristine beaches by visiting three stunning islands connected by boats and bridges!",
             "Faro is where you can try Portugal's most famous pastry, pastéis de nata - delicious custard tarts that taste like heaven!"
         ]
+    },
+    "Glasgow": {
+        "city": "Glasgow",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 632350,
+        "fun_facts": [
+            "Glasgow is Scotland's biggest city and was once called the 'Second City of the British Empire' because it was so important!",
+            "The city has two famous soccer teams, Rangers and Celtic, known as the 'Old Firm' who have one of the world's most exciting rivalries!",
+            "Glasgow was the European Capital of Culture in 1990 and has more museums and art galleries than any other city in Europe outside of London!",
+            "The University of Glasgow was founded in 1451, making it older than Christopher Columbus's discovery of America!",
+            "Glasgow's name comes from the Gaelic word 'Glaschu' which means 'green glen' - perfect for such a beautiful Scottish city!"
+        ]
+    },
+    "Krakow": {
+        "city": "Krakow",
+        "state": null,
+        "country": "Poland",
+        "population": 804237,
+        "fun_facts": [
+            "Krakow has Europe's largest medieval market square where people have been buying and selling things for over 700 years!",
+            "The city was one of the very first places in the world to become a UNESCO World Heritage Site in 1978 - that's how special it is!",
+            "Krakow was Poland's capital for over 500 years and still has an amazing castle on a hill called Wawel Castle!",
+            "Near Krakow is the incredible Wieliczka Salt Mine with 190 miles of underground tunnels and even underground chapels!",
+            "The Jagiellonian University in Krakow is one of the oldest universities in the world, founded way back in 1364!"
+        ]
+    },
+    "Salzburg": {
+        "city": "Salzburg",
+        "state": null,
+        "country": "Austria",
+        "population": 158400,
+        "fun_facts": [
+            "Salzburg is the birthplace of Wolfgang Amadeus Mozart, one of the most famous composers who ever lived!",
+            "The city's name means 'Salt Castle' because it became rich and powerful by trading salt hundreds of years ago!",
+            "Salzburg has one of Europe's largest medieval castles called Hohensalzburg Fortress sitting on top of a hill!",
+            "The Sound of Music movie was filmed in Salzburg, and you can still visit many of the beautiful places from the film!",
+            "On Mozart's 250th birthday in 2006, all 35 churches in Salzburg rang their bells at the same time to celebrate!"
+        ]
+    },
+    "Seville": {
+        "city": "Seville",
+        "state": "Andalusia",
+        "country": "Spain",
+        "population": 687488,
+        "fun_facts": [
+            "Seville is the birthplace of flamenco dancing - the passionate, colorful dance that makes Spain famous around the world!",
+            "The city has one of the largest Gothic cathedrals in the world where Christopher Columbus is buried!",
+            "Seville's old town is a UNESCO World Heritage Site with 4 square kilometers of amazing palaces, gardens, and historic buildings!",
+            "Every spring, Seville hosts the incredible April Fair where the whole city celebrates with horses, flamenco, and traditional costumes!",
+            "The Alcázar palace in Seville is over 1,000 years old and was used as a filming location for the TV show Game of Thrones!"
+        ]
+    },
+    "Marrakech": {
+        "city": "Marrakech",
+        "state": null,
+        "country": "Morocco",
+        "population": 1000000,
+        "fun_facts": [
+            "Marrakech is called the 'Red City' because all the buildings are made from beautiful red clay that glows in the sunshine!",
+            "The city has 18 different souks (markets) where over 40,000 people work making carpets, pottery, jewelry, and magical crafts!",
+            "Jemaa el-Fnaa is Africa's largest market square where snake charmers, storytellers, and acrobats perform every day!",
+            "Marrakech's medina (old city) is a UNESCO World Heritage Site that's like a giant maze with thousands of narrow streets to explore!",
+            "The city was founded almost 1,000 years ago in 1070 and has been a magical trading center connecting Africa, Europe, and Asia!"
+        ]
+    },
+    "Accra": {
+        "city": "Accra",
+        "state": null,
+        "country": "Ghana",
+        "population": 4000000,
+        "fun_facts": [
+            "Accra is Ghana's capital and the biggest city in West Africa, where almost 4 million people live together!",
+            "Ghana is the closest country to the center of the Earth if you look at all the coordinates - it's right in the middle!",
+            "The city is super young with 56% of all the people being under 24 years old - it's like a giant playground for young people!",
+            "Accra has people from over 50 different tribes and ethnic groups, making it one of the most diverse cities in Africa!",
+            "Ghana's famous Kente cloth with its bright, colorful patterns is woven right here and worn at special celebrations around the world!"
+        ]
+    },
+    "Luxembourg City": {
+        "city": "Luxembourg City",
+        "state": null,
+        "country": "Luxembourg",
+        "population": 136208,
+        "fun_facts": [
+            "Luxembourg City has the highest GDP per capita in the entire world, making it the richest city on Earth!",
+            "The city was called the 'Gibraltar of the North' because it had one of the strongest fortresses in Europe for 900 years!",
+            "Over 70% of people living in Luxembourg City are from other countries - it's like a mini United Nations!",
+            "All kids in Luxembourg learn at least 3 languages in school: Luxembourgish, German, and French - they're super smart!",
+            "The historic old city became a UNESCO World Heritage Site because of its amazingly preserved medieval fortifications!"
+        ]
+    },
+    "Cologne": {
+        "city": "Cologne",
+        "state": "North Rhine-Westphalia",
+        "country": "Germany",
+        "population": 1000000,
+        "fun_facts": [
+            "Cologne Cathedral is Germany's most visited landmark with 6 million people visiting every year - that's more than the entire population of many countries!",
+            "The cathedral took 632 years to build, starting in 1248 and finishing in 1880 - that's longer than any other building project ever!",
+            "Cologne is older than Paris and was founded by the Romans over 2,000 years ago when it had 40,000 people!",
+            "The Three Wise Men from the Bible are buried in a golden shrine inside Cologne Cathedral - you can still see them today!",
+            "You can climb 533 stone steps to the top of the cathedral towers and see the entire Rhine River from 100 meters high!"
+        ]
+    },
+    "Düsseldorf": {
+        "city": "Düsseldorf",
+        "state": "North Rhine-Westphalia",
+        "country": "Germany",
+        "population": 653253,
+        "fun_facts": [
+            "Düsseldorf is Germany's fashion capital with the famous Königsallee, one of the most luxurious shopping streets in all of Europe!",
+            "The city has people from 180 different countries living together, making it one of the most international cities in Germany!",
+            "Kids in Düsseldorf are famous for doing cartwheels, and every year the city has a giant cartwheeling contest for everyone!",
+            "Düsseldorf sits on the Rhine River and has three different harbors where huge ships come and go every day!",
+            "The city hosts Fashion Week twice a year where famous designers from around the world come to show their latest creations!"
+        ]
+    },
+    "Marseille": {
+        "city": "Marseille",
+        "state": null,
+        "country": "France",
+        "population": 877215,
+        "fun_facts": [
+            "Marseille is France's oldest city, founded by ancient Greek sailors over 2,600 years ago - it's even older than Paris!",
+            "The city has the biggest port in France and the second biggest in the entire Mediterranean Sea with 100 million tons of goods every year!",
+            "France's national anthem 'La Marseillaise' was born right here in Marseille during the French Revolution!",
+            "The beautiful Notre-Dame de la Garde church sits on top of a hill and people call it 'Good Mother' because it watches over the city!",
+            "Marseille is where the famous Marseille soap was first made hundreds of years ago, and it's still made the same way today!"
+        ]
+    },
+    "Valencia": {
+        "city": "Valencia",
+        "state": null,
+        "country": "Spain",
+        "population": 825948,
+        "fun_facts": [
+            "Valencia is the birthplace of paella, the famous Spanish rice dish that's now eaten all around the world!",
+            "The city has an incredible park called Gulliver Park with a giant 70-meter-tall sleeping man that kids can climb all over!",
+            "Valencia enjoys over 300 days of sunshine every year - that's more sunny days than almost anywhere else in Europe!",
+            "The City of Arts and Sciences has a building shaped like a giant eye and Europe's largest aquarium with amazing sea creatures!",
+            "Valencia has beautiful golden sand beaches right in the city where families can swim in the warm Mediterranean Sea!"
+        ]
+    },
+    "Toulouse": {
+        "city": "Toulouse",
+        "state": null,
+        "country": "France",
+        "population": 490000,
+        "fun_facts": [
+            "Toulouse is called the 'Pink City' because all the buildings are made from beautiful pink terracotta bricks that glow in the sunshine!",
+            "The city is home to Airbus, where they build some of the world's biggest airplanes including the giant A380 - you can even tour the factory!",
+            "Toulouse is the capital of European aerospace with 12,000 people working on rockets and space missions to explore the universe!",
+            "The city has one of Europe's oldest universities, founded way back in the 12th century - that's over 800 years ago!",
+            "The beautiful Basilica of Saint-Sernin is over 1,000 years old and is so special it's a UNESCO World Heritage site!"
+        ]
+    },
+    "Tallinn": {
+        "city": "Tallinn",
+        "state": null,
+        "country": "Estonia",
+        "population": 456518,
+        "fun_facts": [
+            "Tallinn has a medieval old town that's so perfectly preserved it looks like a fairy tale kingdom with cobblestone streets and towers!",
+            "Tallinn has one of the best preserved medieval walls in Europe - you can walk on top of it and feel like a knight guarding the castle!",
+            "Tallinn has been a UNESCO World Heritage site since 1997 because it's like stepping back in time 800 years!",
+            "Estonia invented Skype right here in Tallinn - so every time you video call someone, you're using Estonian magic!",
+            "Tallinn has digital citizenship where people from around the world can become e-residents and start businesses online!"
+        ]
+    },
+    "Riga": {
+        "city": "Riga",
+        "state": null,
+        "country": "Latvia",
+        "population": 591882,
+        "fun_facts": [
+            "Riga has over 800 Art Nouveau buildings with faces, flowers, and dragons carved into them - it's like walking through a stone storybook!",
+            "Riga has the biggest wooden building in Europe - a giant warehouse that's over 100 years old and big enough to fit multiple football fields!",
+            "Riga has a Christmas tree tradition - the very first decorated Christmas tree in the world was right here in 1510!",
+            "The old town of Riga is a UNESCO World Heritage site with churches and guild halls that look like gingerbread houses!",
+            "Riga sits where the Daugava River meets the sea, and there are beaches with white sand just 30 minutes from the old medieval city!"
+        ]
+    },
+    "Vilnius": {
+        "city": "Vilnius",
+        "state": null,
+        "country": "Lithuania",
+        "population": 607667,
+        "fun_facts": [
+            "Vilnius has hot air balloons flying over the city almost every day - it's like colorful bubbles floating through the sky!",
+            "Vilnius has one of the largest old towns in Europe that's full of baroque churches with golden domes that sparkle in the sunshine!",
+            "Vilnius has a neighborhood called Užupis that declared itself an independent republic with its own constitution and angel statue!",
+            "The old town of Vilnius is a UNESCO World Heritage site with over 1,500 buildings that are hundreds of years old!",
+            "Vilnius has a cathedral where Lithuanian kings were crowned, and there's a magical tile where you make a wish and spin around three times!"
+        ]
+    },
+    "Bologna": {
+        "city": "Bologna",
+        "state": null,
+        "country": "Italy",
+        "population": 390734,
+        "fun_facts": [
+            "Bologna is called 'La Grassa' (The Fat One) because it has the most delicious food in Italy - even better than pizza and pasta!",
+            "Bologna has the oldest university in the world, founded in 1088 - that's almost 1,000 years of students learning!",
+            "Bologna has 25 miles of covered walkways called porticos so you never get wet when it rains - it's like indoor sidewalks everywhere!",
+            "Bologna is famous for Bolognese sauce (the red sauce on spaghetti) - it was invented right here and the recipe is protected by law!",
+            "Bologna has two leaning towers that are even more tilted than the one in Pisa - they look like giant stone pencils about to fall over!"
+        ]
+    },
+    "Turin": {
+        "city": "Turin",
+        "state": null,
+        "country": "Italy",
+        "population": 886837,
+        "fun_facts": [
+            "Turin is the chocolate capital of Italy where Nutella was invented - the first jar of hazelnut chocolate spread was made right here!",
+            "Turin has a mysterious shroud that some people believe wrapped Jesus - it's kept in a special cathedral and only shown sometimes!",
+            "Turin is where Fiat cars are made - those cute little Italian cars that look like colorful metal beetles zoom around the world!",
+            "Turin hosted the 2006 Winter Olympics and has ski slopes so close you can see snowy mountains from the city center!",
+            "Turin has the tallest brick building in Europe - a tower that's 548 feet tall and looks like a giant red LEGO block!"
+        ]
+    },
+    "Thessaloniki": {
+        "city": "Thessaloniki",
+        "state": null,
+        "country": "Greece",
+        "population": 319045,
+        "fun_facts": [
+            "Thessaloniki has Byzantine churches that are over 1,500 years old with golden mosaics that sparkle like treasure chests!",
+            "Thessaloniki is called the 'co-capital' of Greece and has a giant white tower by the sea that looks like a lighthouse castle!",
+            "Thessaloniki has the best Greek food outside of Athens - souvlaki, moussaka, and honey pastries that taste like edible sunshine!",
+            "The old city of Thessaloniki is a UNESCO World Heritage site with Roman ruins, Byzantine walls, and Turkish baths all in one place!",
+            "Thessaloniki has a huge student population that makes the city buzz with energy - there are more young people here than anywhere in Greece!"
+        ]
+    },
+    "Stuttgart": {
+        "city": "Stuttgart",
+        "state": null,
+        "country": "Germany",
+        "population": 613111,
+        "fun_facts": [
+            "Stuttgart is the birthplace of the automobile - the very first car was invented right here by Karl Benz over 130 years ago!",
+            "Stuttgart is home to Mercedes-Benz and Porsche - you can visit museums with the most amazing sports cars and race cars!",
+            "Stuttgart has a ballet company and opera house that are so famous people travel from around the world to see performances!",
+            "Stuttgart is surrounded by vineyards where they make wine on hills that look like giant green staircases!",
+            "Stuttgart has the Wilhelma zoo and botanical garden where you can see polar bears, elephants, and the most beautiful flowers all in one place!"
+        ]
+    },
+    "Hannover": {
+        "city": "Hannover",
+        "state": null,
+        "country": "Germany",
+        "population": 535061,
+        "fun_facts": [
+            "Hannover has the Herrenhausen Gardens - royal gardens so beautiful they look like outdoor ballrooms with geometric flower patterns!",
+            "Hannover has one of the best zoos in Europe with themed areas like African savannas and Arctic landscapes all in one place!",
+            "Hannover is famous for its trade fairs - the biggest one brings 200,000 visitors who come to see new inventions and technologies!",
+            "Hannover has a New Town Hall with a special elevator that goes up at an angle and gives you amazing views of the whole city!",
+            "Hannover has a red thread painted on the sidewalks that leads tourists to all the best sights - it's like following a treasure map!"
+        ]
+    },
+    "Bergen": {
+        "city": "Bergen",
+        "state": null,
+        "country": "Norway",
+        "population": 291940,
+        "fun_facts": [
+            "Bergen is called 'the city of seven mountains' and is surrounded by peaks that look like giant sleeping trolls!",
+            "Bergen has colorful wooden houses called Bryggen that are a UNESCO World Heritage site and look like a rainbow village!",
+            "Bergen is the rainiest city in Europe - it gets so much rain that people joke about needing gills to live there!",
+            "Bergen is the gateway to Norway's fjords - those deep blue water valleys between mountains that look like nature's swimming pools!",
+            "Bergen has funicular railways that carry you up the mountains so you can see the city and ocean spread out like a living map below!"
+        ]
+    },
+    "Gothenburg": {
+        "city": "Gothenburg",
+        "state": null,
+        "country": "Sweden",
+        "population": 600000,
+        "fun_facts": [
+            "Gothenburg is home to Volvo cars - those super safe Swedish cars that are built to protect families like rolling fortresses!",
+            "Gothenburg has Liseberg, one of Europe's best amusement parks with roller coasters and rides that make you scream with joy!",
+            "Gothenburg has an archipelago with 20 islands you can visit by ferry - it's like having a private island adventure!",
+            "Gothenburg has the biggest port in Scandinavia where huge ships from all over the world come to unload their treasures!",
+            "Gothenburg has trams that cover the whole city - it's the biggest tram network in Scandinavia and looks like electric trains gliding through the streets!"
+        ]
+    },
+    "Zagreb": {
+        "city": "Zagreb",
+        "state": null,
+        "country": "Croatia",
+        "population": 809932,
+        "fun_facts": [
+            "Zagreb has a medieval upper town with a funicular railway that's one of the shortest and steepest in the world!",
+            "Zagreb has St. Mark's Church with a colorful tiled roof that shows the coat of arms of Croatia - it looks like a giant royal puzzle!",
+            "Zagreb has a Museum of Broken Relationships where people donate objects from their failed relationships - it's funny and sad at the same time!",
+            "Zagreb's old town is split into two parts: Gradec (the fortress) and Kaptol (the church area) that used to be rival cities!",
+            "Zagreb has the Stone Gate, a medieval gateway where people still light candles and make wishes like it's a magical portal!"
+        ]
+    },
+    "Belgrade": {
+        "city": "Belgrade",
+        "state": null,
+        "country": "Serbia",
+        "population": 1197114,
+        "fun_facts": [
+            "Belgrade sits where two big rivers meet - the Danube and Sava - making it look like a city floating on a giant water crossroads!",
+            "Belgrade has a fortress called Kalemegdan that's over 2,000 years old and has been destroyed and rebuilt so many times it's like a phoenix castle!",
+            "Belgrade means 'White City' in Serbian because the fortress was built on white stone cliffs that sparkle in the sunshine!",
+            "Belgrade has been fought over in 115 different wars throughout history because everyone wanted to control this important river crossing!",
+            "Belgrade has floating restaurants called splavs on the rivers where you can eat amazing Serbian food while watching boats go by!"
+        ]
+    },
+    "Ljubljana": {
+        "city": "Ljubljana",
+        "state": null,
+        "country": "Slovenia",
+        "population": 300000,
+        "fun_facts": [
+            "Ljubljana is called the 'Dragon City' and has dragon statues everywhere - including four big green dragons guarding the Dragon Bridge!",
+            "Ljubljana has a castle on a hill that you can reach by funicular railway - it looks like a fairy tale castle floating above the city!",
+            "Ljubljana was named European Green Capital because it's one of the most environmentally friendly cities in the world!",
+            "Ljubljana has a river running through the middle with so many beautiful bridges that crossing the water is like hopping from one artwork to another!",
+            "Ljubljana has a neighborhood called Metelkova that's covered in colorful street art and looks like a giant outdoor art gallery!"
+        ]
     }
 }
