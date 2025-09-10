@@ -2876,5 +2876,135 @@
             "Concord's State House is built with special granite stone that was so beautiful, they used the same stone to build the Library of Congress in Washington D.C.!",
             "The city has a space museum named after Christa McAuliffe, a teacher from Concord who wanted to be the first teacher in space!"
         ]
+    },
+    "Palma de Mallorca": {
+        "city": "Palma de Mallorca",
+        "state": null,
+        "country": "Spain",
+        "population": 438234,
+        "fun_facts": [
+            "Palma has Bellver Castle, the only circular castle in Spain, built in the 1300s - it looks like a giant stone donut from above!",
+            "The La Seu Cathedral has one of the largest rose windows in the world, measuring 15 meters wide - that's bigger than three giraffes standing next to each other!",
+            "Palma gets 2800 hours of sunshine each year, which means it's sunny most days - perfect for playing outside!",
+            "The famous spiral pastry called Ensaïmada looks like a cinnamon roll but is even more delicious and is eaten for breakfast!",
+            "Almost half of everyone who lives on the island of Mallorca lives right here in Palma - it's like the whole island's favorite neighborhood!"
+        ]
+    },
+    "Larnaca": {
+        "city": "Larnaca",
+        "state": null,
+        "country": "Cyprus",
+        "population": 155000,
+        "fun_facts": [
+            "Larnaca has a huge salt lake that fills with pink flamingos and wild ducks in winter - it's like a natural bird party!",
+            "The city's name means 'coffin' in ancient Greek because so many old treasure chests and sarcophagi were found buried here!",
+            "Larnaca's main street is called Finikoudes, which means 'little palm trees' and it's lined with hundreds of swaying palm trees!",
+            "The ancient city here was the birthplace of Zeno, a famous philosopher who taught people how to stay calm and happy!",
+            "Nearby Livadia village makes such amazing baskets that UNESCO said their basketry is a world treasure that must be protected!"
+        ]
+    },
+    "Alicante": {
+        "city": "Alicante",
+        "state": null,
+        "country": "Spain",
+        "population": 358608,
+        "fun_facts": [
+            "Alicante has over 300 sunny days every year - that's more sunshine than almost anywhere else in Europe!",
+            "The city has a massive castle called Santa Bárbara on top of a mountain that looks like a giant's fortress protecting the whole coast!",
+            "Alicante's beaches have special Blue Flag awards which means they're so clean and beautiful they're perfect for swimming!",
+            "The city has been home to people for over 7,000 years - that's longer than the pyramids have existed!",
+            "Alicante grows the sweetest almonds and dates in Spain, and they make amazing turron candy that tastes like honey and nuts!"
+        ]
+    },
+    "Bristol": {
+        "city": "Bristol",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 494400,
+        "fun_facts": [
+            "Bristol is where the famous supersonic Concorde airplane was built - it was the fastest passenger plane ever made!",
+            "Bristol has its own special time zone that runs 10 minutes behind London time, and you can still see both times on an old clock downtown!",
+            "The mysterious street artist Banksy is from Bristol, and you can find his amazing artwork painted on walls all around the city!",
+            "Bristol has the oldest working theatre in England called Theatre Royal, where actors have been performing plays for hundreds of years!",
+            "People in Bristol invented Ribena, the delicious blackcurrant drink that's packed with vitamin C to keep you healthy!"
+        ]
+    },
+    "Malaga": {
+        "city": "Malaga",
+        "state": null,
+        "country": "Spain",
+        "population": 592346,
+        "fun_facts": [
+            "Malaga is the birthplace of Pablo Picasso, the most famous artist in the world who painted in colorful, magical ways!",
+            "The city has been home to people for almost 3,000 years - that's longer than any fairytale castle has existed!",
+            "Malaga has a massive fortress called the Alcazaba that looks like something from a princess movie, built high above the city!",
+            "The Cathedral is nicknamed 'The One-Armed' because they never finished building one of its towers - it looks like it's waving hello!",
+            "Malaga is on the Costa del Sol which means 'Coast of the Sun' because it's sunny and warm almost every single day!"
+        ]
+    },
+    "Ibiza": {
+        "city": "Ibiza",
+        "state": null,
+        "country": "Spain",
+        "population": 161485,
+        "fun_facts": [
+            "Ibiza is called the 'Pine Island' because it's covered with thousands of beautiful pine trees that smell like Christmas!",
+            "The island has magical caves called Can Marca with underground music and light shows that make the caves glow in rainbow colors!",
+            "Ibiza is a UNESCO World Heritage site, which means the whole world thinks it's so special it needs to be protected forever!",
+            "In winter, thousands of almond trees bloom with white flowers that make the whole island look like it's covered in snow!",
+            "Ibiza has its very own beer called 'Islena' and special salt made from the sea that sparkles like tiny diamonds!"
+        ]
+    },
+    "Oslo": {
+        "city": "Oslo",
+        "state": null,
+        "country": "Norway",
+        "population": 717710,
+        "fun_facts": [
+            "Oslo is called 'Tiger City' and has a sculpture park with 212 amazing statues made by one artist named Gustav Vigeland!",
+            "Oslo gives London a giant Christmas tree every year that's displayed in Trafalgar Square as a thank you gift!",
+            "The Oslo Opera House has a roof you can walk on - it looks like a giant marble slide going down to the water!",
+            "Oslo is the only city in the world where the Nobel Peace Prize is given out, making it extra special and peaceful!",
+            "The city has over 300 lakes and 40 islands where families can swim, hike, and have barbecues in summer!"
+        ]
+    },
+    "Belfast": {
+        "city": "Belfast",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 345418,
+        "fun_facts": [
+            "Belfast is where the famous Titanic ship was built in the world's biggest shipyard - you can still visit the giant museum about it!",
+            "Some of your favorite Game of Thrones scenes were filmed right around Belfast with dragons and castles!",
+            "Belfast is the hometown of C.S. Lewis who wrote the magical Narnia books about talking lions and snowy kingdoms!",
+            "The city has colorful murals painted on walls everywhere that tell amazing stories about Belfast's history and culture!",
+            "Near Belfast is the Giant's Causeway with 40,000 stone columns that look like giant stepping stones made by ancient volcanos!"
+        ]
+    },
+    "Fort Myers": {
+        "city": "Fort Myers",
+        "state": "Florida",
+        "country": "United States",
+        "population": 104100,
+        "fun_facts": [
+            "Fort Myers was the winter home of Thomas Edison and Henry Ford - you can visit their houses with the biggest banyan tree in America!",
+            "Nearby Sanibel Island is called the 'Seashell Capital of the World' where perfect seashells wash up on the beach every day!",
+            "Fort Myers is where the sport of tarpon fishing was invented - these fish are so big they can jump higher than a house!",
+            "The Boston Red Sox and Minnesota Twins practice baseball here every spring, making it a super exciting place for sports fans!",
+            "Cape Coral near Fort Myers has more canals than Venice, Italy - it's like living in a neighborhood made of waterways!"
+        ]
+    },
+    "Leeds": {
+        "city": "Leeds",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 833000,
+        "fun_facts": [
+            "Leeds is where the world's very first motion picture film was made in 1888 - it was the beginning of all movies!",
+            "The city has the world's oldest working public railway called the Middleton Railway that's still chugging along today!",
+            "Leeds has one of the largest city parks in Europe called Roundhay Park where you can explore for hours and never see it all!",
+            "Famous magician Harry Houdini and actor Charlie Chaplin both performed at Leeds' City Varieties music hall!",
+            "Leeds is one of the greenest cities in Europe with two-thirds of the whole city covered in beautiful woodlands and forests!"
+        ]
     }
 }

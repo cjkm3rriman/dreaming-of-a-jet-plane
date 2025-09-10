@@ -195,7 +195,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 elif total_minutes <= 120:  # 2 hours
                     eta_text = " landing in about 2 hours - that's like watching a lot of tv episodes in a row"
                 elif total_minutes <= 180:  # 3 hours
-                    eta_text = " landing in about 3 hours - that's like when grown-ups watch a really long movie"
+                    eta_text = " landing in about 3 hours - that's like watching a really long grown-ups movie"
                 elif total_minutes <= 240:  # 4 hours
                     eta_text = " landing in about 4 hours - that's time to watch two Disney movies back to back"
                 elif total_minutes <= 360:  # 6 hours
