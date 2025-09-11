@@ -3487,5 +3487,44 @@
             "Bali produces the world's most expensive coffee called Kopi Luwak, made from beans that pass through a cute cat-like creature called a civet!",
             "Balinese babies are carried everywhere for months and aren't allowed to touch the ground because they're considered little angels!"
         ]
+    },
+    "Corfu": {
+        "city": "Corfu",
+        "state": null,
+        "country": "Greece",
+        "population": 100000,
+        "fun_facts": [
+            "Corfu is the only city in Greece surrounded by two castles and is officially called a 'kastropolis' which means castle city!",
+            "According to Greek mythology, the sea god Poseidon fell in love with a beautiful nymph and named this magical island after her!",
+            "Corfu is the only place in Greece where people play cricket - they learned it from the British over 150 years ago!",
+            "During Easter, people in Corfu throw ceramic pots out of their windows to scare away evil spirits and welcome good luck!",
+            "Corfu has one of Europe's largest water parks called Aqualand with amazing slides and pools for endless fun!"
+        ]
+    },
+    "Exeter": {
+        "city": "Exeter",
+        "state": "England",
+        "country": "United Kingdom",
+        "population": 134939,
+        "fun_facts": [
+            "Exeter Cathedral has the widest Gothic nave in the entire world - it's so big you could fit a whole airplane inside!",
+            "Chris Martin from the famous band Coldplay was born in Exeter and went to school at Exeter Cathedral School!",
+            "The UK's weather forecasting headquarters, the Met Office, is based in Exeter - they predict the weather for the whole country!",
+            "Exeter was built by the Romans almost 2,000 years ago and was called 'Isca Dumnoniorum' which means 'water fortress'!",
+            "This brave city survived 25 different sieges and battles throughout history - making it one of Europe's most battle-tested cities!"
+        ]
+    },
+    "Girona": {
+        "city": "Girona",
+        "state": "Catalonia",
+        "country": "Spain",
+        "population": 106476,
+        "fun_facts": [
+            "Girona was transformed into the magical cities of Braavos and King's Landing in the hit TV show Game of Thrones!",
+            "The city has a famous red bridge designed by Gustav Eiffel - the same person who built the Eiffel Tower in Paris!",
+            "Girona Cathedral has the widest Gothic nave in the world at almost 23 meters wide - you could park three school buses side by side!",
+            "This medieval city has survived an incredible 25 sieges and been captured 7 times, making it one of Europe's most fought-over places!",
+            "Girona has one of the world's best-preserved Jewish quarters called 'El Call' with narrow cobblestone streets from over 500 years ago!"
+        ]
     }
 }
