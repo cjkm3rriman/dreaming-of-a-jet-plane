@@ -140,8 +140,6 @@ See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. E
 Based on analysis of major international flight destinations missing from the cities database, these cities should be prioritized for addition:
 
 ### Highest Priority (Major International Hubs)
-1. **Doha, Qatar** - Qatar Airways hub, 2022 World Cup host
-2. **Bali/Denpasar, Indonesia** - Top global tourist destination
 3. **Perth, Australia** - Major Australian city
 4. **Wellington, New Zealand** - National capital
 5. **Marrakech, Morocco** - Iconic UNESCO tourist destination
@@ -165,6 +163,22 @@ Based on analysis of major international flight destinations missing from the ci
 19. **Accra, Ghana** - West African business hub
 20. **San José, Costa Rica** - Eco-tourism hub
 21. **Cartagena, Colombia** - UNESCO coastal gem
+
+### European Destinations (Medium-High Priority)
+22. **Corfu, Greece** - Ionian island paradise
+23. **Exeter, United Kingdom** - Historic English cathedral city
+24. **Paphos, Cyprus** - UNESCO archaeological site
+25. **Split, Croatia** - Adriatic coastal gem with Roman heritage
+26. **Girona, Spain** - Medieval Catalonian city
+27. **Poznan, Poland** - Historic Polish cultural center
+28. **Rzeszow, Poland** - Growing regional hub
+29. **Sibiu, Romania** - Transylvanian medieval city
+30. **Faro, Portugal** - Gateway to the Algarve
+
+### Middle East/Africa Destinations (Medium Priority)
+31. **Hurghada, Egypt** - Red Sea resort destination
+32. **Rabat, Morocco** - Capital city and UNESCO site
+33. **Dalaman, Turkey** - Mediterranean coastal gateway
 
 These cities represent major gaps in airline destinations and would provide better global coverage for users learning about international flight destinations.
 

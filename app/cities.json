@@ -3461,5 +3461,31 @@
             "Ljubljana has a river running through the middle with so many beautiful bridges that crossing the water is like hopping from one artwork to another!",
             "Ljubljana has a neighborhood called Metelkova that's covered in colorful street art and looks like a giant outdoor art gallery!"
         ]
+    },
+    "Doha": {
+        "city": "Doha",
+        "state": null,
+        "country": "Qatar",
+        "population": 666000,
+        "fun_facts": [
+            "Doha hosted the 2022 FIFA World Cup in the most compact tournament ever - all games were played within the city!",
+            "The National Museum of Islamic Art in Doha was designed by the same architect who created the glass pyramid at the Louvre in Paris!",
+            "Doha has an artificial island called The Pearl-Qatar that's shaped like a string of pearls to honor Qatar's history of pearl diving!",
+            "Qatar National Library looks like a giant spaceship and contains over 2 million books including ancient maps and treasures!",
+            "Doha was once just a small fishing village where brave pearl divers searched the ocean depths for beautiful pearls!"
+        ]
+    },
+    "Denpasar": {
+        "city": "Denpasar",
+        "state": null,
+        "country": "Indonesia",
+        "population": 670210,
+        "fun_facts": [
+            "Denpasar is the capital of Bali, known as the 'Island of a Thousand Temples' with over 20,000 beautiful temples scattered everywhere!",
+            "Bali has two active volcanoes that created amazing black sand beaches and super fertile soil perfect for growing rice!",
+            "The sacred monkeys in Bali are considered guardians of temples - over 700 playful macaques live in the famous Ubud Monkey Forest!",
+            "Bali produces the world's most expensive coffee called Kopi Luwak, made from beans that pass through a cute cat-like creature called a civet!",
+            "Balinese babies are carried everywhere for months and aren't allowed to touch the ground because they're considered little angels!"
+        ]
     }
 }
