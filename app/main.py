@@ -17,6 +17,7 @@ logging.basicConfig(
     stream=sys.stdout  # Ensure logs go to stdout not stderr
 )
 logger = logging.getLogger(__name__)
+
 from .aircraft_database import get_aircraft_name, get_passenger_capacity
 from .airport_database import get_city_country, get_airport_by_iata
 from .airline_database import get_airline_name
@@ -92,6 +93,7 @@ def get_voice_specific_s3_url(filename: str) -> str:
     """
     voice_folder = get_voice_folder()
     return f"https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/{voice_folder}/{filename}"
+
 
 async def convert_text_to_speech_polly(text: str) -> tuple[bytes, str]:
     """Convert text to speech using AWS Polly with Arthur voice
@@ -225,26 +227,32 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str, str]:
     """
     provider = TTS_PROVIDER.lower()
     
+    audio_content = b""
+    error = ""
+    provider_used = ""
+    
     if provider == "elevenlabs":
         audio_content, error = await convert_text_to_speech_elevenlabs(text)
-        return audio_content, error, "elevenlabs"
+        provider_used = "elevenlabs"
     elif provider == "polly":
         audio_content, error = await convert_text_to_speech_polly(text)
-        return audio_content, error, "polly"
+        provider_used = "polly"
     elif provider == "fallback":
         # Try ElevenLabs first, fallback to Polly on error
         logger.info("Using fallback strategy: trying ElevenLabs first")
         audio_content, error = await convert_text_to_speech_elevenlabs(text)
         if audio_content and not error:
-            return audio_content, error, "elevenlabs"
-        
-        logger.info(f"ElevenLabs failed ({error}), falling back to AWS Polly")
-        audio_content, error = await convert_text_to_speech_polly(text)
-        return audio_content, error, "polly"
+            provider_used = "elevenlabs"
+        else:
+            logger.info(f"ElevenLabs failed ({error}), falling back to AWS Polly")
+            audio_content, error = await convert_text_to_speech_polly(text)
+            provider_used = "polly"
     else:
         error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', or 'fallback'"
         logger.error(error_msg)
         return b"", error_msg, "unknown"
+    
+    return audio_content, error, provider_used
 
 def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bool, nearby_aircraft: int):
     """Track scan:complete analytics event with flight data results"""
