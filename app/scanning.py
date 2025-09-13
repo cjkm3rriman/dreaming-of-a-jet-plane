@@ -189,11 +189,6 @@ async def _stream_scanning_mp3_only(request: Request):
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
     """Stream scanning MP3 file from S3 and trigger MP3 pre-generation"""
     
-    # Log all request headers for Yoto player analysis
-    logger.info(f"=== SCANNING.MP3 REQUEST HEADERS ===")
-    for header_name, header_value in request.headers.items():
-        logger.info(f"Header: {header_name} = {header_value}")
-    logger.info(f"=== END HEADERS ===")
     
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
