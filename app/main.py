@@ -177,8 +177,8 @@ async def convert_text_to_speech_elevenlabs(text: str) -> tuple[bytes, str]:
             "text": text_with_pause,
             "model_id": "eleven_turbo_v2",
             "voice_settings": {
-                "stability": 0.5,
-                "similarity_boost": 0.7
+                "stability": 0.6,
+                "similarity_boost": 0.5
             }
         }
         
