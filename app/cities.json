@@ -2286,7 +2286,7 @@
             "Reykjavik has natural hot springs where people swim outside in steamy blue water even when it's snowing!",
             "Reykjavik has no mosquitoes because it's too cold and windy for them to survive - it's a bug-free paradise!",
             "Reykjavik runs almost entirely on geothermal energy from underground hot water that heats all the buildings naturally!",
-            "In summer the sun barely sets and it stays bright outside until almost midnight like having extra-long days!"
+            "In summer the sun barely sets in Reykjavik and it stays bright outside until almost midnight like having extra-long days!"
         ]
     },
     "Dubai": {
@@ -3535,6 +3535,149 @@
             "Girona Cathedral has the widest Gothic nave in the world at almost 23 meters wide - you could park three school buses side by side!",
             "This medieval city has survived an incredible 25 sieges and been captured 7 times, making it one of Europe's most fought-over places!",
             "Girona has one of the world's best-preserved Jewish quarters called 'El Call' with narrow cobblestone streets from over 500 years ago!"
+        ]
+    },
+    "Calgary": {
+        "city": "Calgary",
+        "state": "Alberta",
+        "country": "Canada",
+        "population": 1538415,
+        "fun_facts": [
+            "Calgary is the highest major city in Canada at 3,428 feet above sea level - that's almost as high as a mountain!",
+            "The Calgary Stampede is called 'The Greatest Outdoor Show on Earth' and attracts over a million visitors in just 10 days!",
+            "Calgary experiences magical Chinook winds that can warm up the temperature by 20 degrees in just a few hours!",
+            "Over 240 different nationalities call Calgary home and more than 120 languages are spoken - it's like a world in one city!",
+            "Calgary was crowned the cleanest city in the world in 2014 - even cleaner than a freshly washed car!"
+        ]
+    },
+    "Salt Lake City": {
+        "city": "Salt Lake City",
+        "state": "Utah",
+        "country": "the United States",
+        "population": 209593,
+        "fun_facts": [
+            "Salt Lake City was founded by Mormon pioneers in 1847 when Brigham Young declared 'This is the right place!' upon seeing the valley!",
+            "The famous Salt Lake Temple took 40 years to build - that's longer than it takes for you to grow up and have kids of your own!",
+            "Salt Lake City sits 4,226 feet above sea level, making it one of the highest major cities in America!",
+            "The city hosted the 2002 Winter Olympics where athletes from around the world came to compete in the snow!",
+            "The Great Salt Lake is so salty you can float on top of it like a cork - you don't even need to swim!"
+        ]
+    },
+    "Ottawa": {
+        "city": "Ottawa",
+        "state": "Ontario",
+        "country": "Canada",
+        "population": 1070889,
+        "fun_facts": [
+            "Ottawa is Canada's capital city where Queen Victoria herself chose it to be the home of the country's government!",
+            "Parliament Hill has a Peace Tower that gets a new Canadian flag every single day - families can wait over 100 years to get one!",
+            "Ottawa has the world's longest skating rink on the frozen Rideau Canal where you can skate for miles and miles!",
+            "The city ranks as the seventh coldest capital in the entire world with winter temperatures dropping below -25°C!",
+            "Ottawa comes from the Algonquin word 'adawe' which means 'to trade' - it was a place where people came to swap goods!"
+        ]
+    },
+    "Düsseldorf": {
+        "city": "Düsseldorf",
+        "state": "North Rhine-Westphalia",
+        "country": "Germany",
+        "population": 618685,
+        "fun_facts": [
+            "Düsseldorf's old town is called 'the longest bar in the world' because it has over 300 pubs and restaurants packed together!",
+            "The city has a TV tower called Rheinturm with the world's largest digital clock made of lights that you can see from miles away!",
+            "Children in Düsseldorf invented the tradition of cartwheeling, and the city still holds cartwheeling contests every year!",
+            "Düsseldorf has a 'Little Tokyo' area with authentic Japanese shops and restaurants - it's like visiting Japan without leaving Germany!",
+            "The fancy shopping street Königsallee has a beautiful canal running down the middle where swans swim between luxury stores!"
+        ]
+    },
+    "Fort Lauderdale": {
+        "city": "Fort Lauderdale",
+        "state": "Florida",
+        "country": "the United States",
+        "population": 185163,
+        "fun_facts": [
+            "Fort Lauderdale is called the 'Venice of America' because it has 165 miles of inland waterways running through the city!",
+            "The city is the 'yachting capital of the world' with over 50,000 registered yachts and 100 marinas!",
+            "Fort Lauderdale gets about 3,000 hours of sunshine every year - that's more than 8 hours of sunshine every single day!",
+            "In 1977, Fort Lauderdale experienced its first and only recorded snowfall ever, turning the beaches into a winter wonderland!",
+            "The city has 7 miles of beautiful Atlantic Ocean beaches where you can see colorful coral reefs just by swimming a few hundred feet out!"
+        ]
+    },
+    "Panama City": {
+        "city": "Panama City",
+        "state": null,
+        "country": "Panama",
+        "population": 1938000,
+        "fun_facts": [
+            "Panama City is home to the famous Panama Canal that connects the Atlantic and Pacific Oceans - ships can cross between two oceans!",
+            "The Panama Canal is 48 miles long and generates one-third of Panama's entire economy - it's like the country's piggy bank!",
+            "The lowest toll ever paid to cross the Panama Canal was only 36 cents by a man who swam across in 1928!",
+            "Panama City took its name from the Spanish word 'panamá' which means 'many fish' - perfect for a city by the ocean!",
+            "The cargo ship Ancon was the very first vessel to transit the Panama Canal on August 15, 1914 - over 100 years ago!"
+        ]
+    },
+    "West Palm Beach": {
+        "city": "West Palm Beach",
+        "state": "Florida",
+        "country": "the United States",
+        "population": 128545,
+        "fun_facts": [
+            "West Palm Beach is the oldest incorporated municipality in all of South Florida - it was the first official city in the area!",
+            "The famous Worth Avenue has a beautiful clock tower and luxury shops with charming European architecture surrounded by tropical plants!",
+            "In 1977, West Palm Beach experienced its first and only snowfall ever - Floridians woke up to snow on their beaches and lawns!",
+            "The city once had 'Alligator Joe' who wrestled live alligators for tourists at his farm along the waterway!",
+            "West Palm Beach hosts free waterfront concerts called 'Clematis By Night' where families can enjoy music by the water since 1995!"
+        ]
+    },
+    "Rhinelander": {
+        "city": "Rhinelander",
+        "state": "Wisconsin",
+        "country": "the United States",
+        "population": 8118,
+        "fun_facts": [
+            "Rhinelander is the legendary home of the Hodag - a mythical green and white creature that supposedly stalks the local woods!",
+            "The city is known as the 'Ice Fishing Capital of the World' with more than 230 lakes within just twelve miles!",
+            "Rhinelander sits in the heart of Wisconsin's beautiful Northwoods surrounded by thick forests and pristine lakes!",
+            "The city was originally called Pelican Rapids after the stretch of rapids where the Wisconsin and Pelican Rivers meet!",
+            "You can visit the Pioneer Park Logging Museum to see how lumberjacks lived and worked in the old logging days!"
+        ]
+    },
+    "Pisa": {
+        "city": "Pisa",
+        "state": "Tuscany",
+        "country": "Italy",
+        "population": 91104,
+        "fun_facts": [
+            "Pisa is home to the famous Leaning Tower that tilts almost 4 degrees because it was built on soft, squishy ground!",
+            "The great scientist Galileo Galilei was born in Pisa and legend says he dropped cannonballs from the Leaning Tower for experiments!",
+            "It takes 296 steps to climb to the top of the Leaning Tower - that's like climbing a 20-story building!",
+            "The Leaning Tower was built over 800 years ago and took almost 200 years to complete because it kept sinking!",
+            "Over 5 million visitors come to see the Leaning Tower every year, making it one of the most famous buildings in the world!"
+        ]
+    },
+    "St. Louis": {
+        "city": "St. Louis",
+        "state": "Missouri",
+        "country": "the United States",
+        "population": 301578,
+        "fun_facts": [
+            "St. Louis has the amazing Gateway Arch that's 630 feet tall - the same distance between its two legs as its height!",
+            "The Gateway Arch is called the 'Gateway to the West' because pioneers passed through St. Louis before settling the American frontier!",
+            "You can ride a special tram to the top of the Gateway Arch for incredible views of the Mississippi River and the city!",
+            "St. Louis was nicknamed the 'Mound City' because of the many Native American earthworks built there long ago!",
+            "The city sits where the mighty Mississippi River meets the Missouri River - two of America's most important waterways!"
+        ]
+    },
+    "Kenai": {
+        "city": "Kenai",
+        "state": "Alaska",
+        "country": "the United States",
+        "population": 7695,
+        "fun_facts": [
+            "The Kenai River is home to the biggest salmon in the entire world on average - some weigh more than a medium-sized dog!",
+            "Kenai is part of Alaska where you can park by the road, grab a fishing rod, and catch fresh salmon within minutes!",
+            "The Kenai River is 82 miles long and is the most productive sockeye salmon fishery in the world!",
+            "Cook Inlet near Kenai has huge tides that can rise and fall 30 feet or more - that's like a three-story building!",
+            "In 2025, over 4 million sockeye salmon are expected to return to the Kenai River - that's enough fish to feed a small country!"
         ]
     }
 }

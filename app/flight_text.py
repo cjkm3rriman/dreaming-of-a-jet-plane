@@ -110,7 +110,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     base_opening_word = random.choice(opening_words)
     
     if plane_index == 2:
-        detection_sentence = f"{base_opening_word} We've detected another jet plane, flying {distance_miles} miles from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've detected another jet plane, flying high {distance_miles} miles from this Yoto!"
     elif plane_index == 3:
         detection_sentence = f"{base_opening_word} We've detected one more jet plane up there, {distance_miles} miles from this Yoto!"
     else:
@@ -126,13 +126,15 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     velocity_mph = round(velocity_knots * 1.15078) if velocity_knots else 0
     altitude_feet = aircraft.get("altitude", 0)
     
-    # Generate random captain name
-    pilot_last_names = [
-        "Smith", "Johnson", "Mitchell", "Sullivan", "Rodriguez", "Nakamura", 
-        "Mueller", "Petrov", "Anderson", "Thomson", "Williams", "Gonzalez",
-        "Lindberg", "Wright", "Taylor", "Davis", "Wilson", "Garcia", "Brown", "Jensen"
+    # Generate random captain name (first + last)
+    pilot_names = [
+        "James Smith", "Sarah Johnson", "David Mitchell", "Maria Sullivan", 
+        "Carlos Rodriguez", "Yuki Nakamura", "Hans Mueller", "Elena Petrov",
+        "Erik Anderson", "Fiona Thomson", "Michael Williams", "Isabella Gonzalez",
+        "Charles Lindberg", "Amelia Wright", "Emma Taylor", "Marcus Davis",
+        "Grace Wilson", "Sofia Garcia", "Oliver Brown", "Astrid Jensen"
     ]
-    captain_name = random.choice(pilot_last_names)
+    captain_name = random.choice(pilot_names)
     
     # Build scanner sentence with random selection of available data
     aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous"]
@@ -193,7 +195,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 elif total_minutes <= 90:
                     eta_text = " landing in about an hour and a half - that's about the time it takes to watch a Disney movie"
                 elif total_minutes <= 120:  # 2 hours
-                    eta_text = " landing in about 2 hours - that's like watching a lot of tv episodes in a row"
+                    eta_text = " landing in about 2 hours - that's like watching eight of your favorite tv episodes in a row"
                 elif total_minutes <= 180:  # 3 hours
                     eta_text = " landing in about 3 hours - that's like watching a really long grown-ups movie"
                 elif total_minutes <= 240:  # 4 hours
@@ -257,13 +259,13 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
             random_fact = random.choice(fun_facts)
             fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
             fun_fact_opening = random.choice(fun_fact_openings)
-            full_response += f" {fun_fact_opening} {random_fact}"
+            full_response += f" {fun_fact_opening} {random_fact}."
     
     # Add closing prompt for plane index 1 and 2
     if plane_index == 1:
-        full_response += ". Should we find another jet plane?"
+        full_response += " Should we find another jet plane?"
     elif plane_index == 2:
-        full_response += ". Let's find one more jet plane shall we?"
+        full_response += " Let's find one more jet plane shall we?"
     
     return full_response
 

@@ -55,8 +55,11 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
     """Get latitude and longitude from IP address using ipapi.co with 24-hour caching"""
     current_time = time.time()
     
-    # Check cache first
-    if ip in _ip_cache:
+    # Skip caching for localhost/development IPs to make testing easier
+    is_localhost = ip in ['127.0.0.1', 'localhost', '::1']
+    
+    # Check cache first (skip for localhost)
+    if not is_localhost and ip in _ip_cache:
         lat, lng, timestamp = _ip_cache[ip]
         if current_time - timestamp < IP_CACHE_DURATION:
             logger.info(f"Using cached location for IP {ip}: {lat}, {lng}")
@@ -85,8 +88,9 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                     if request:
                         _track_ip_geolocation_failure(request, ip, f"api_response_error_{error_reason.lower()}", fallback_lat, fallback_lng)
                     
-                    # Cache the fallback location
-                    _ip_cache[ip] = (fallback_lat, fallback_lng, current_time)
+                    # Cache the fallback location (skip for localhost)
+                    if not is_localhost:
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, current_time)
                     
                     return fallback_lat, fallback_lng
                 
@@ -102,20 +106,25 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                     if request:
                         _track_ip_geolocation_failure(request, ip, "api_response_null_coordinates", fallback_lat, fallback_lng)
                     
-                    # Cache the fallback location
-                    _ip_cache[ip] = (fallback_lat, fallback_lng, current_time)
+                    # Cache the fallback location (skip for localhost)
+                    if not is_localhost:
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, current_time)
                     return fallback_lat, fallback_lng
                 
-                # Cache the result
-                _ip_cache[ip] = (lat, lng, current_time)
-                logger.info(f"Cached new location for IP {ip}: {lat}, {lng}")
+                # Cache the result (skip for localhost)
+                if not is_localhost:
+                    _ip_cache[ip] = (lat, lng, current_time)
+                    logger.info(f"Cached new location for IP {ip}: {lat}, {lng}")
+                else:
+                    logger.info(f"Skipping cache for localhost IP {ip}: {lat}, {lng}")
                 return lat, lng
                 
             elif response.status_code == 429:
                 logger.warning(f"IP geolocation API rate limited for IP {ip}, using default location")
-                # Cache the fallback location too (but for shorter duration)
+                # Cache the fallback location too (but for shorter duration, skip for localhost)
                 fallback_lat, fallback_lng = 40.7128, -74.0060
-                _ip_cache[ip] = (fallback_lat, fallback_lng, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
+                if not is_localhost:
+                    _ip_cache[ip] = (fallback_lat, fallback_lng, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
                 
                 # Track rate limit event
                 if request:
@@ -140,8 +149,9 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
     fallback_lat, fallback_lng = 40.7128, -74.0060
     logger.info(f"Using NYC fallback location for IP {ip}: {fallback_lat}, {fallback_lng}")
     
-    # Cache the fallback location
-    _ip_cache[ip] = (fallback_lat, fallback_lng, time.time())
+    # Cache the fallback location (skip for localhost)
+    if not (ip in ['127.0.0.1', 'localhost', '::1']):
+        _ip_cache[ip] = (fallback_lat, fallback_lng, time.time())
     
     return fallback_lat, fallback_lng
 

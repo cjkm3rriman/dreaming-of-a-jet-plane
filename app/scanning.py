@@ -59,13 +59,13 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
                 if plane_index == 2:
-                    sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+                    sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try firing up the scanner again in a few minutes."
                 elif plane_index == 3:
                     plane_count = len(aircraft)
                     if plane_count == 1:
-                        sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+                        sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try firing up the scanner again in a few minutes."
                     else:
-                        sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try listening to plane 1 or plane 2 instead."
+                        sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try firing up the scanner again in a few minutes."
             else:
                 # No aircraft found at all
                 sentence = generate_flight_text([], error_message, lat, lng)

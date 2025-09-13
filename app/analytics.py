@@ -17,6 +17,18 @@ class Analytics:
         self.mixpanel_token = os.environ.get('MIXPANEL_TOKEN')
         self.mp = None
         
+        # Disable analytics in development environment (localhost)
+        environment = os.environ.get('ENVIRONMENT', 'development')
+        is_localhost = any([
+            '127.0.0.1' in os.environ.get('HOST', ''),
+            'localhost' in os.environ.get('HOST', ''),
+            environment == 'development'
+        ])
+        
+        if is_localhost:
+            logger.info("Development environment detected, analytics disabled")
+            return
+        
         if self.mixpanel_token:
             try:
                 self.mp = Mixpanel(self.mixpanel_token)
