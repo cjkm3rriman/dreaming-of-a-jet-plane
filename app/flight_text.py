@@ -128,11 +128,19 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     # Generate random captain name (first + last)
     pilot_names = [
-        "James Smith", "Sarah Johnson", "David Mitchell", "Maria Sullivan", 
+        "Skye Smith", "Buck Johnson", "Ace Mitchell", "Maria Sullivan", 
         "Carlos Rodriguez", "Yuki Nakamura", "Hans Mueller", "Elena Petrov",
-        "Erik Anderson", "Fiona Thomson", "Michael Williams", "Isabella Gonzalez",
-        "Charles Lindberg", "Amelia Wright", "Emma Taylor", "Marcus Davis",
-        "Grace Wilson", "Sofia Garcia", "Oliver Brown", "Astrid Jensen"
+        "Erik Anderson", "Fiona Thomson", "Finn Steele", "Isabella Gonzalez",
+        "Charles Lindberg", "Amelia Wright", "Emma Taylor",
+        "Grace Wilson", "Sofia Garcia", "Sterling Brown", "Astrid Jensen", "Boo Boo Butt", 
+        "Lane Fisher", "Reed Archer", "Callum Merriman", "Ezra", "Hunter Havencroft", "Harper Hawk",
+        "Sky Anderson", "Miles Wright", "River Stone", "Dash Cooper", "Storm Mitchell", 
+        "Chase Williams", "Ridge Parker", "Maverick Thompson", "Phoenix Garcia", "Jet Rodriguez", 
+        "Atlas Brown", "Sage Wilson", "Knox Martinez", "Cruz Taylor", "Rex Sullivan", 
+        "Blaze Murphy", "Ridge Campbell", "Stone Jackson", "Fox Bennett", "Hawk Turner", 
+        "Vale Peterson", "Nash Coleman", "Diego Vega", "Nina Frost", "Leo Crane", 
+        "Zara Cross", "Kai Brooks", "Nova Silva", "Rio Santos", "Ivy Chen", 
+        "Drew Falcon", "Skye Morrison", "Belle Storm"
     ]
     captain_name = random.choice(pilot_names)
     
