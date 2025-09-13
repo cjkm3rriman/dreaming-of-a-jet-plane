@@ -606,26 +606,14 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
                 # Sort by distance first for logging comparison  
                 aircraft_list.sort(key=lambda x: x["distance_km"])
                 
-                # Log all aircraft returned from FlightRadar24 (sorted by distance)
-                logger.info(f"FlightRadar24 returned {len(aircraft_list)} aircraft (sorted by distance):")
-                for i, aircraft in enumerate(aircraft_list):
-                    dest_city = aircraft.get('destination_city', 'Unknown')
-                    dest_country = aircraft.get('destination_country', 'Unknown') 
-                    distance = aircraft.get('distance_km', 0)
-                    callsign = aircraft.get('callsign', 'Unknown')
-                    logger.info(f"  {i+1}. {callsign}: {dest_city}, {dest_country} - {distance}km")
+                # Log total aircraft returned from FlightRadar24
+                logger.info(f"FlightRadar24 returned {len(aircraft_list)} aircraft")
                 
                 # Select geographically diverse aircraft prioritizing destination diversity
                 aircraft_list = select_geographically_diverse_aircraft(aircraft_list)
                 
-                # Log selected aircraft after geographic diversity selection
-                logger.info(f"Geographic diversity selected {len(aircraft_list)} aircraft:")
-                for i, aircraft in enumerate(aircraft_list):
-                    dest_city = aircraft.get('destination_city', 'Unknown')
-                    dest_country = aircraft.get('destination_country', 'Unknown')
-                    distance = aircraft.get('distance_km', 0)
-                    callsign = aircraft.get('callsign', 'Unknown')
-                    logger.info(f"  {i+1}. {callsign}: {dest_city}, {dest_country} - {distance}km")
+                # Log total aircraft after geographic diversity selection
+                logger.info(f"Geographic diversity selected {len(aircraft_list)} aircraft")
                 
                 if aircraft_list:
                     # Cache the aircraft data for future requests (store all aircraft)
