@@ -79,6 +79,7 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
             results = await asyncio.gather(*tasks, return_exceptions=True)
             successes = sum(1 for r in results if r is True)
         else:
+            pass
             
     except Exception as e:
         logger.error(f"Error in MP3 pre-generation: {e}")
