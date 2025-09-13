@@ -182,33 +182,24 @@ async def convert_text_to_speech_elevenlabs(text: str) -> tuple[bytes, str]:
             }
         }
         
-        logger.info(f"ElevenLabs API Request: URL={url}")
-        
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(url, json=payload, headers=headers)
-            
-            logger.info(f"ElevenLabs API Response: Status={response.status_code}")
             
             if response.status_code == 200:
                 return response.content, ""
             else:
-                # Log error response for debugging
-                try:
-                    error_body = response.text
-                    logger.error(f"ElevenLabs API Error: Status={response.status_code}, Body={error_body}")
-                except:
-                    logger.error(f"ElevenLabs API Error: Status={response.status_code}, Body=<unable to read>")
+                logger.error(f"ElevenLabs API error: {response.status_code}")
                 
                 return b"", f"ElevenLabs API returned status {response.status_code}"
                 
     except httpx.TimeoutException:
-        logger.error(f"ElevenLabs API Timeout: Request timed out after 30 seconds")
+        logger.error("ElevenLabs API timeout")
         return b"", "ElevenLabs API timeout (30 seconds exceeded)"
     except httpx.RequestError as e:
-        logger.error(f"ElevenLabs API Connection Error: {str(e)}")
+        logger.error(f"ElevenLabs API connection error: {str(e)}")
         return b"", f"ElevenLabs API connection error: {str(e)}"
     except Exception as e:
-        logger.error(f"ElevenLabs API Unexpected Error: {str(e)}")
+        logger.error(f"ElevenLabs API error: {str(e)}")
         return b"", f"ElevenLabs API unexpected error: {str(e)}"
 
 async def convert_text_to_speech(text: str) -> tuple[bytes, str, str]:
@@ -287,7 +278,6 @@ def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bo
 
 def track_plane_request(request: Request, lat: float, lng: float, plane_index: int, from_cache: bool):
     """Track plane:request analytics event for plane endpoint requests"""
-    logger.info(f"Tracking plane:request event for plane {plane_index}, from_cache: {from_cache}")
     try:
         import hashlib
         
@@ -487,7 +477,6 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
     cached_aircraft = await s3_cache.get(api_cache_key, content_type="json")
     
     if cached_aircraft:
-        logger.info(f"API cache hit for location: lat={lat}, lng={lng}")
         # Get full cached aircraft list
         full_aircraft_list = cached_aircraft.get('aircraft', [])
         
@@ -530,11 +519,8 @@ async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, li
             response = await client.get(url, headers=headers, params=params, timeout=10.0)
             api_response_time_ms = int((time.time() - start_time) * 1000)
             
-            logger.info(f"Flightradar24 API Response: Status={response.status_code}")
-            
             if response.status_code == 200:
                 data = response.json()
-                logger.info(f"Flightradar24 API Response: Found {len(data.get('data', []))} flights")
                 
                 flights = data.get('data', [])
                 aircraft_list = []
@@ -666,6 +652,7 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         lng: Optional longitude override
         debug: Debug mode flag
     """
+    logger.info(f"Request to /plane/{plane_index}")
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
     
@@ -815,7 +802,6 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         )
     
     # Cache miss - get aircraft data (this will use cached API data if available)
-    logger.info(f"Cache miss - generating new MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
     aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index), request=request)
     
     
@@ -839,7 +825,6 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         sentence = generate_flight_text([], error_message, user_lat, user_lng)
     
     # Generate TTS for the sentence
-    logger.info(f"Generating TTS for plane {plane_index}: {sentence[:50]}...")
     import time
     tts_start_time = time.time()
     audio_content, tts_error, tts_provider_used = await convert_text_to_speech(sentence)
@@ -847,7 +832,6 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     
         
     if audio_content and not tts_error:
-        logger.info(f"Successfully generated MP3 for plane {plane_index} ({len(audio_content)} bytes) - caching in background")
         # Cache the newly generated MP3 (don't await - do in background)
         asyncio.create_task(s3_cache.set(cache_key, audio_content))
         
@@ -1285,6 +1269,7 @@ async def overandout_options_endpoint():
 @app.get("/scanning-again.mp3")
 async def scanning_again_endpoint(request: Request, lat: float = None, lng: float = None):
     """Stream MP3 file from S3"""
+    logger.info("Request to /scanning-again.mp3")
     return await stream_scanning_again(request, lat, lng)
 
 @app.options("/scanning-again.mp3") 
@@ -1295,6 +1280,7 @@ async def scanning_again_options_endpoint():
 @app.get("/scanning.mp3")
 async def scanning_endpoint(request: Request, lat: float = None, lng: float = None):
     """Stream scanning MP3 file from S3"""
+    logger.info("Request to /scanning.mp3")
     return await stream_scanning(request, lat, lng)
 
 @app.options("/scanning.mp3") 

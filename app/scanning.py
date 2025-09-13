@@ -28,7 +28,6 @@ SCANNING_DEBOUNCE_SECONDS = 30  # Prevent duplicate requests within 30 seconds
 async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = None):
     """Background task to pre-generate and cache flight MP3s for all 3 planes"""
     try:
-        logger.info(f"Starting MP3 pre-generation for all planes at location: lat={lat}, lng={lng}")
         
         # Import here to avoid circular imports
         from .main import get_nearby_aircraft, convert_text_to_speech
@@ -47,10 +46,8 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
             cached_mp3 = await s3_cache.get(plane_cache_key)
             
             if cached_mp3:
-                logger.info(f"Plane {plane_index} MP3 already cached for location: lat={lat}, lng={lng} - skipping")
                 continue
             
-            logger.info(f"Cache miss - proceeding with MP3 pre-generation for plane {plane_index} at location: lat={lat}, lng={lng}")
             
             # Generate appropriate text for this plane
             if aircraft and len(aircraft) > zero_based_index:
@@ -81,9 +78,7 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
         if tasks:
             results = await asyncio.gather(*tasks, return_exceptions=True)
             successes = sum(1 for r in results if r is True)
-            logger.info(f"Successfully pre-generated and cached {successes} out of {len(tasks)} plane MP3s for location: lat={lat}, lng={lng}")
         else:
-            logger.info(f"All plane MP3s already cached for location: lat={lat}, lng={lng}")
             
     except Exception as e:
         logger.error(f"Error in MP3 pre-generation: {e}")
@@ -105,7 +100,6 @@ async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, senten
             # Cache the MP3
             success = await s3_cache.set(cache_key, audio_content)
             if success:
-                logger.info(f"Successfully pre-generated and cached plane {plane_index} MP3 for location: lat={lat}, lng={lng}")
                 
                 # Track MP3 generation analytics if we have request and aircraft data
                 if request and aircraft:
@@ -205,7 +199,6 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     if session_key in _scanning_request_cache:
         last_request_time = _scanning_request_cache[session_key]
         if current_time - last_request_time < SCANNING_DEBOUNCE_SECONDS:
-            logger.info(f"Skipping duplicate scanning request from session {session_key} (within {SCANNING_DEBOUNCE_SECONDS}s)")
             # Still stream the MP3, but skip analytics and background processing
             return await _stream_scanning_mp3_only(request)
     
