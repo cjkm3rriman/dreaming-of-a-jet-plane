@@ -13,8 +13,7 @@
             "Dublin's Phoenix Park is twice the size of Central Park in New York and has wild deer roaming around like nature's playground!",
             "Dublin Zoo is one of the world's oldest zoos with over 600 animals including giraffes, tigers, and adorable red pandas!",
             "St. Patrick's Cathedral has one of the largest organs in Ireland with over 4,000 pipes - imagine the amazing sounds it makes!",
-            "Dublin has a special children's theater called The Ark where kids can watch magical performances and join fun workshops!",
-            "Dublin's city center is so small you can walk across the whole thing in 30 minutes - it's like a giant outdoor playground!"
+            "Dublin has a special children's theater called The Ark where kids can watch magical performances and join fun workshops!"
         ]
     },
     "Manchester": {
@@ -1426,13 +1425,6 @@
             "In 1977, Fort Lauderdale experienced its first and only recorded snowfall ever, turning the beaches into a winter wonderland!",
             "The city has 7 miles of beautiful Atlantic Ocean beaches where you can see colorful coral reefs just by swimming a few hundred feet out!"
         ]
-    },
-    "Fort Lauderdale, Florida": {
-        "city": "Fort Lauderdale",
-        "state": "Florida",
-        "country": "United States",
-        "population": 190641,
-        "fun_facts": []
     },
     "Fort Myers": {
         "city": "Fort Myers",
@@ -3768,6 +3760,45 @@
             "Zürich makes the most delicious chocolate in the world, and you can smell it being made from the street!",
             "There are swans swimming in Lake Zürich that are so elegant they look like they're dancing on the water!",
             "Zurich has trains that arrive exactly on time - if they're even 1 minute late, people are surprised!"
+        ]
+    },
+    "Rhodes": {
+        "city": "Rhodes",
+        "state": null,
+        "country": "Greece",
+        "population": 115000,
+        "fun_facts": [
+            "Rhodes is called the 'Island of the Sun' because it gets sunshine almost every single day of the year!",
+            "Rhodes used to have one of the Seven Wonders of the Ancient World - a giant bronze statue called the Colossus that was 100 feet tall!",
+            "The medieval old town of Rhodes has walls built by knights in shining armor over 700 years ago!",
+            "Rhodes has three different seas meeting around its beaches - imagine swimming where three oceans come together!",
+            "The island is shaped like a diamond and has over 300 sunny days every year - more sunshine than almost anywhere else in Europe!"
+        ]
+    },
+    "Bergamo": {
+        "city": "Bergamo",
+        "state": null,
+        "country": "Italy",
+        "population": 120580,
+        "fun_facts": [
+            "Bergamo is actually two cities in one - there's an old city high up on a hill and a new city down below!",
+            "You can ride a special mountain railway called a funicular that takes you up the steep hill like a magical elevator train!",
+            "The old city has walls around it that are so special they're protected by UNESCO - like a giant castle protecting the whole town!",
+            "Bergamo is known as the 'City of the Thousand' because 1,000 brave people from here helped unite all of Italy!",
+            "The city is surrounded by beautiful mountains called the Alps where you can see snow-capped peaks even on sunny days!"
+        ]
+    },
+    "Bratislava": {
+        "city": "Bratislava",
+        "state": null,
+        "country": "Slovakia",
+        "population": 443679,
+        "fun_facts": [
+            "Bratislava is the only capital city in the world that borders two other countries - Austria and Hungary!",
+            "The city sits right on the mighty Danube River and has a castle that looks like it's from a fairy tale sitting high above the water!",
+            "Eleven kings and eight queens were crowned in Bratislava's beautiful cathedral - imagine all those royal ceremonies!",
+            "Slovakia makes more cars per person than any other country in the world - over 1 million cars are built there every year!",
+            "Bratislava has a Christmas market every December with over 100 magical booths selling treats and toys!"
         ]
     }
 }

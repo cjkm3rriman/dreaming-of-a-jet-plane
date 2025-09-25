@@ -12,13 +12,13 @@ from .airport_database import get_airport_by_iata
 
 def convert_aircraft_name_digits(aircraft_name: str) -> str:
     """Convert numbers in aircraft names to individual digits separated by spaces
-    
+
     Args:
         aircraft_name: Aircraft name that may contain numbers
-        
+
     Returns:
         str: Aircraft name with numbers converted to individual digits
-        
+
     Examples:
         "Boeing 737" -> "Boeing 7 3 7"
         "Airbus A320" -> "Airbus A 3 2 0"
@@ -26,11 +26,33 @@ def convert_aircraft_name_digits(aircraft_name: str) -> str:
     def replace_number(match):
         number_str = match.group(0)
         return ' '.join(number_str)
-    
+
     # Match sequences of digits
     pattern = r'\d+'
     result = re.sub(pattern, replace_number, aircraft_name)
-    
+
+    return result
+
+
+def format_flight_number_for_tts(flight_number: str) -> str:
+    """Format flight number with spaces between letters and numbers for TTS
+
+    Args:
+        flight_number: Flight number like "BA123" or "AA4567"
+
+    Returns:
+        str: Flight number with spaces between letters and numbers
+
+    Examples:
+        "BA123" -> "B A 1 2 3"
+        "AA4567" -> "A A 4 5 6 7"
+        "unknown flight" -> "unknown flight" (unchanged if not alphanumeric)
+    """
+    if not flight_number or flight_number == "unknown flight":
+        return flight_number
+
+    # Add spaces between all characters for flight numbers
+    result = ' '.join(flight_number)
     return result
 
 
@@ -106,7 +128,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     
     # Build the descriptive sentences with different opening words based on plane index
-    opening_words = ["Marvelous!", "Wooosh!", "Fantastic!", "Splendid!", "What Luck!"]
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Golly!"]
     base_opening_word = random.choice(opening_words)
     
     if plane_index == 2:
@@ -126,26 +148,24 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     velocity_mph = round(velocity_knots * 1.15078) if velocity_knots else 0
     altitude_feet = aircraft.get("altitude", 0)
     
-    # Generate random captain name (first + last)
+    # Generate random captain name (last names only)
     pilot_names = [
-        "Skye Smith", "Buck Johnson", "Ace Mitchell", "Maria Sullivan", 
-        "Carlos Rodriguez", "Yuki Nakamura", "Hans Mueller", "Elena Petrov",
-        "Erik Anderson", "Fiona Thomson", "Finn Steele", "Isabella Gonzalez",
-        "Charles Lindberg", "Amelia Wright", "Emma Taylor",
-        "Grace Wilson", "Sofia Garcia", "Sterling Brown", "Astrid Jensen", "Boo Boo Butt", 
-        "Lane Fisher", "Reed Archer", "Callum Merriman", "Ezra", "Hunter Havencroft", "Harper Hawk",
-        "Sky Anderson", "Miles Wright", "River Stone", "Dash Cooper", "Storm Mitchell", 
-        "Chase Williams", "Ridge Parker", "Maverick Thompson", "Phoenix Garcia", "Jet Rodriguez", 
-        "Atlas Brown", "Sage Wilson", "Knox Martinez", "Cruz Taylor", "Rex Sullivan", 
-        "Blaze Murphy", "Ridge Campbell", "Stone Jackson", "Fox Bennett", "Hawk Turner", 
-        "Vale Peterson", "Nash Coleman", "Diego Vega", "Nina Frost", "Leo Crane", 
-        "Zara Cross", "Kai Brooks", "Nova Silva", "Rio Santos", "Ivy Chen", 
-        "Drew Falcon", "Skye Morrison", "Belle Storm"
+        "Smith", "Johnson", "Mitchell", "Sullivan",
+        "Rodriguez", "Nakamura", "Mueller", "Petrov",
+        "Anderson", "Steele", "Gonzalez",
+        "Lindberg", "Wright", "Taylor",
+        "Wilson", "Garcia", "Brown", "Jensen", "Boo Boo Butt",
+        "Merriman", "Ezra", "Havencroft",
+        "Cooper", "Williams", "Wren", "Miles",
+        "Parker", "Thompson", "Martinez", "Campbell", "Jackson", "Turner",
+        "Peterson", "Vega",
+        "Brooks", "Silva", "Santos", "Chen",
+        "Morrison"
     ]
     captain_name = random.choice(pilot_names)
     
     # Build scanner sentence with random selection of available data
-    aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous"]
+    aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous", "gigantic", "enourmous"]
     aircraft_descriptor = random.choice(aircraft_descriptors)
     scanner_info = f"My scanner tells me that Captain {captain_name} is piloting this {aircraft_descriptor} {aircraft_name_with_digits}"
     
@@ -189,31 +209,83 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 total_minutes = int(time_diff.total_seconds() // 60)
                 
                 if total_minutes <= 7:
-                    eta_text = " landing in just a few minutes"
+                    eta_options = [
+                        " landing in just a few minutes",
+                        " landing very soon"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 15:
-                    eta_text = " landing in about 15 minutes - that's about the same time it takes to watch two episodes of Bluey"
+                    eta_options = [
+                        " landing in about 15 minutes - that's about the same time it takes to watch two episodes of Bluey",
+                        " landing in about 15 minutes - that's about how long it takes to eat your dinner"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 20:
-                    eta_text = " landing in about 20 minutes - that's about the time you spend in the water at bath time"
+                    eta_options = [
+                        " landing in about 20 minutes - that's about the time you spend in the water at bath time",
+                        " landing in about 20 minutes - that's about how long it takes to walk to the park and back"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 30:
-                    eta_text = " landing in about half an hour - that's about the length of a short car journey"
+                    eta_options = [
+                        " landing in about half an hour - that's about the length of a short car journey",
+                        " landing in about half an hour - that's about how long it takes to read three bedtime stories"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 45:
-                    eta_text = " landing in about 45 minutes - that's how long you usually spend at the playground"
+                    eta_options = [
+                        " landing in about 45 minutes - that's how long you usually spend at the playground",
+                        " landing in about 45 minutes - that's about the time it takes for grown ups to cook dinner"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 60:
-                    eta_text = " landing in about an hour - that's about the time it takes to do bath and bed time"
+                    eta_options = [
+                        " landing in about an hour - that's about the time it takes to do bath and bed time",
+                        " landing in about an hour - that's about how long a short nap lasts"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 90:
-                    eta_text = " landing in about an hour and a half - that's about the time it takes to watch a Disney movie"
+                    eta_options = [
+                        " landing in about an hour and a half - that's about the time it takes to watch a Disney movie",
+                        " landing in about an hour and a half - that's about how long a fun play date lasts"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 120:  # 2 hours
-                    eta_text = " landing in about 2 hours - that's like watching eight of your favorite tv episodes in a row"
+                    eta_options = [
+                        " landing in about 2 hours - that's like watching eight of your favorite tv episodes in a row",
+                        " landing in about 2 hours - that's about how long a soccer game lasts"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 180:  # 3 hours
-                    eta_text = " landing in about 3 hours - that's like watching a really long grown-ups movie"
+                    eta_options = [
+                        " landing in about 3 hours - that's like watching a really long grown-ups movie",
+                        " landing in about 3 hours - that's about how long it takes to walk around a big zoo"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 240:  # 4 hours
-                    eta_text = " landing in about 4 hours - that's time to watch two Disney movies back to back"
+                    eta_options = [
+                        " landing in about 4 hours - that's time to watch two Disney movies back to back",
+                        " landing in about 4 hours - that's about how long a really fun morning at the beach lasts"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 360:  # 6 hours
-                    eta_text = " landing in about 6 hours - that's about the time between breakfast and lunch"
+                    eta_options = [
+                        " landing in about 6 hours - that's about the time between breakfast and lunch",
+                        " landing in about 6 hours - that's about how long you sleep during the night"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 480:  # 8 hours
-                    eta_text = " landing in about 8 hours - that's like a full day at school"
+                    eta_options = [
+                        " landing in about 8 hours - that's like a full day at school",
+                        " landing in about 8 hours - that's about how long it would take to watch 30 tv episodes in a row!"
+                    ]
+                    eta_text = random.choice(eta_options)
                 elif total_minutes <= 720:  # 12 hours
-                    eta_text = " landing in about 12 hours - that's like a full night's sleep"
+                    eta_options = [
+                        " landing in about 12 hours - that's like a full night's sleep",
+                        " landing in about 12 hours - that's like from breakfast to bedtime"
+                    ]
+                    eta_text = random.choice(eta_options)
                 else:
                     # For very long flights, round to nearest hour
                     hours = round(total_minutes / 60)
@@ -230,15 +302,18 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     # Choose random movement word
     movement_words = ["zooming", "speeding", "whizzing", "zoom zooming", "cloud hopping", "sky skimming"]
     movement_word = random.choice(movement_words)
-    
+
+    # Format flight number for better TTS pronunciation
+    flight_number_tts = format_flight_number_for_tts(flight_number)
+
     if (origin_city == "an unknown origin" or origin_location == "an unknown country") and (destination_city == "an unknown destination" or destination_location == "an unknown country"):
-        flight_sentence = f"This plane belongs to {airline_name} and is {movement_word} all the way to somewhere, I am not quite sure."
+        flight_sentence = f"Flight {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to somewhere, I am not quite sure."
     elif origin_city == "an unknown origin" or origin_location == "an unknown country":
-        flight_sentence = f"This plane belongs to {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
+        flight_sentence = f"Flight {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
     elif destination_city == "an unknown destination" or destination_location == "an unknown country":
-        flight_sentence = f"This plane belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to somewhere?"
+        flight_sentence = f"Flight {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to somewhere?"
     else:
-        flight_sentence = f"This plane belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
+        flight_sentence = f"Flight {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
     
     # Add random fun fact about destination city if available
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
