@@ -307,13 +307,13 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     flight_number_tts = format_flight_number_for_tts(flight_number)
 
     if (origin_city == "an unknown origin" or origin_location == "an unknown country") and (destination_city == "an unknown destination" or destination_location == "an unknown country"):
-        flight_sentence = f"Flight {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to somewhere, I am not quite sure."
+        flight_sentence = f"This flight {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to somewhere, I am not quite sure."
     elif origin_city == "an unknown origin" or origin_location == "an unknown country":
-        flight_sentence = f"Flight {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
+        flight_sentence = f"This flight {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
     elif destination_city == "an unknown destination" or destination_location == "an unknown country":
-        flight_sentence = f"Flight {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to somewhere?"
+        flight_sentence = f"This flight {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to somewhere?"
     else:
-        flight_sentence = f"Flight {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
+        flight_sentence = f"This flight {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
     
     # Add random fun fact about destination city if available
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
