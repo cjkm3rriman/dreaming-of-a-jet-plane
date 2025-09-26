@@ -859,7 +859,13 @@
         "state": "Idaho",
         "country": "United States",
         "population": 237963,
-        "fun_facts": []
+        "fun_facts": [
+            "Boise is called the 'City of Trees' because French explorers found a magical oasis with over 100,000 trees in the desert!",
+            "Boise State University has the only bright blue football field in the world, nicknamed the 'Smurf Turf' - it's like playing on a giant blue carpet!",
+            "The Idaho State Capitol in Boise is the only one in America heated by underground hot springs - it's like the Earth is giving the building a warm hug!",
+            "The Boise River has a 25-mile long path called the Greenbelt where you can walk, bike, and see families of ducks swimming alongside you!",
+            "Boise has 190 miles of hiking trails in the beautiful foothills where you can spot deer, hawks, and maybe even a sneaky fox!"
+        ]
     },
     "Bologna": {
         "city": "Bologna",
@@ -3192,7 +3198,13 @@
         "state": "Arizona",
         "country": "United States",
         "population": 246170,
-        "fun_facts": []
+        "fun_facts": [
+            "Scottsdale is called 'The West's Most Western Town' and has a seal with a cowboy surrounded by a giant 64-pointed starburst!",
+            "Giant saguaro cacti in Scottsdale can grow as tall as a 3-story building and live for 200 years - some are older than your great-great-grandparents!",
+            "Scottsdale has 330 days of sunshine every year - that's more sunny days than almost anywhere else in America!",
+            "You can ride a real train at McCormick-Stillman Railroad Park and play in a kid-sized Wild West town with saloons and cowboy buildings!",
+            "Old Town Scottsdale sells lollipops with real scorpions inside them - they're perfectly safe to eat and the coolest souvenir ever!"
+        ]
     },
     "Seoul": {
         "city": "Seoul",
@@ -3327,7 +3339,13 @@
         "state": "Florida",
         "country": "United States",
         "population": 267102,
-        "fun_facts": []
+        "fun_facts": [
+            "St. Petersburg is called the 'Sunshine City' because it once had sunshine for 768 days straight - that's more than 2 years of sunshine!",
+            "The Salvador Dalí Museum looks like a giant white building with a glass bubble on top made of 1,062 glass triangles!",
+            "You can sit on a bench with a melting clock outside the Dalí Museum, just like the famous paintings by the artist with the funny curly mustache!",
+            "The Tampa Bay Rays baseball stadium has a giant slanted roof and even has real stingrays swimming in a tank inside the ballpark!",
+            "St. Petersburg was home to the very first scheduled airplane flight in 1914 - imagine being one of the first people to ever fly across the bay!"
+        ]
     },
     "Stockholm": {
         "city": "Stockholm",
@@ -3772,7 +3790,7 @@
             "Rhodes used to have one of the Seven Wonders of the Ancient World - a giant bronze statue called the Colossus that was 100 feet tall!",
             "The medieval old town of Rhodes has walls built by knights in shining armor over 700 years ago!",
             "Rhodes has three different seas meeting around its beaches - imagine swimming where three oceans come together!",
-            "The island is shaped like a diamond and has over 300 sunny days every year - more sunshine than almost anywhere else in Europe!"
+            "Rhodes is shaped like a diamond and has over 300 sunny days every year - more sunshine than almost anywhere else in Europe!"
         ]
     },
     "Bergamo": {
@@ -3782,10 +3800,10 @@
         "population": 120580,
         "fun_facts": [
             "Bergamo is actually two cities in one - there's an old city high up on a hill and a new city down below!",
-            "You can ride a special mountain railway called a funicular that takes you up the steep hill like a magical elevator train!",
-            "The old city has walls around it that are so special they're protected by UNESCO - like a giant castle protecting the whole town!",
+            "In Bergamo you can ride a special mountain railway called a funicular that takes you up the steep hill like a magical elevator train!",
+            "The old city in Bergamo has walls around it that are so special they're protected by UNESCO - like a giant castle protecting the whole town!",
             "Bergamo is known as the 'City of the Thousand' because 1,000 brave people from here helped unite all of Italy!",
-            "The city is surrounded by beautiful mountains called the Alps where you can see snow-capped peaks even on sunny days!"
+            "Bergamo is surrounded by beautiful mountains called the Alps where you can see snow-capped peaks even on sunny days!"
         ]
     },
     "Bratislava": {
@@ -3795,10 +3813,62 @@
         "population": 443679,
         "fun_facts": [
             "Bratislava is the only capital city in the world that borders two other countries - Austria and Hungary!",
-            "The city sits right on the mighty Danube River and has a castle that looks like it's from a fairy tale sitting high above the water!",
+            "Bratislava sits right on the mighty Danube River and has a castle that looks like it's from a fairy tale sitting high above the water!",
             "Eleven kings and eight queens were crowned in Bratislava's beautiful cathedral - imagine all those royal ceremonies!",
             "Slovakia makes more cars per person than any other country in the world - over 1 million cars are built there every year!",
             "Bratislava has a Christmas market every December with over 100 magical booths selling treats and toys!"
+        ]
+    },
+    "Brisbane": {
+        "city": "Brisbane",
+        "state": "Queensland",
+        "country": "Australia",
+        "population": 2568170,
+        "fun_facts": [
+            "Brisbane is home to the world's oldest and largest koala sanctuary where you can cuddle over 100 adorable koalas!",
+            "Brisbane will host the 2032 Summer Olympics, making it the third Australian city to welcome athletes from around the world!",
+            "Brisbane has a massive fireworks display called Riverfire every September that lights up the entire sky like magical stars falling down!",
+            "Brisbane's Story Bridge is so tall you can climb to the very top for breathtaking views - it's like being on top of the world!",
+            "Brisbane is nicknamed 'Brissie' and sits on a winding river that looks like a giant snake curving through the landscape!"
+        ]
+    },
+    "Edmonton": {
+        "city": "Edmonton",
+        "state": "Alberta",
+        "country": "Canada",
+        "population": 1185000,
+        "fun_facts": [
+            "Edmonton has the world's largest mall in North America - West Edmonton Mall covers 48 city blocks and has its own amusement park inside!",
+            "Edmonton is called the 'Gateway to the North' and you can see the magical Northern Lights dancing in the sky on clear winter nights!",
+            "Edmonton is home to life-size dinosaur skeletons including Alberta's own Albertosaurus that greets visitors at the Royal Alberta Museum!",
+            "Edmonton is one of Canada's sunniest cities with 325 sunny days per year - more sunshine than most places in Canada!",
+            "West Edmonton Mall has 4 roller coasters, a water park, and even a full-sized ice skating rink all under one giant roof!"
+        ]
+    },
+    "Spokane": {
+        "city": "Spokane",
+        "state": "Washington",
+        "country": "United States",
+        "population": 229608,
+        "fun_facts": [
+            "Spokane is the birthplace of Father's Day - it was first celebrated here in 1910 by a brave lady who wanted to honor her dad!",
+            "Spokane is called the 'Lilac City' because beautiful purple lilac flowers bloom everywhere and smell absolutely amazing!",
+            "Spokane hosts the world's largest 3-on-3 basketball tournament called Hoopfest with thousands of teams playing in the streets!",
+            "Spokane's Riverfront Park has one of America's largest urban waterfalls - the Spokane Falls - where you can ride a sky lift right over the rushing water!",
+            "Spokane's park has the world's largest Radio Flyer wagon playground that's 12 feet tall - imagine climbing on a giant red wagon!"
+        ]
+    },
+    "Cork": {
+        "city": "Cork",
+        "state": null,
+        "country": "Ireland",
+        "population": 224004,
+        "fun_facts": [
+            "Cork is home to the famous Blarney Stone that gives you the 'gift of the gab' when you kiss it - 400,000 people visit every year to try it!",
+            "To kiss the Blarney Stone in Cork, you have to lean backwards off the top of a castle tower and drop your head down - it's like a magical upside-down adventure!",
+            "Cork was the Titanic's very last stop before it sailed across the ocean - the mighty ship picked up 123 more passengers here in 1912!",
+            "The English Market in Cork is a Victorian wonderland where you can find amazing foods from around the world under one beautiful old roof!",
+            "Famous people like Winston Churchill, Ronald Reagan, and even rock star Mick Jagger have all kissed the Blarney Stone in Cork!"
         ]
     }
 }

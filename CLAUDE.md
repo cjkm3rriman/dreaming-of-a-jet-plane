@@ -106,6 +106,7 @@ When adding new cities to `app/cities.json`:
    - Interesting, kid-friendly facts about the city
 
 ### Fun Facts Style Guide:
+- **Always start each fact with the city name** (e.g., "Tokyo has...", "Brisbane is home to...", "Cork was...")
 - Write in a child-friendly, enthusiastic tone with exclamation points
 - Use comparisons that kids can understand ("bigger than 75 football fields!")
 - Include specific numbers and superlatives when possible ("oldest", "largest", "most")
@@ -123,11 +124,11 @@ When adding new cities to `app/cities.json`:
     "country": "Country",
     "population": number,
     "fun_facts": [
-        "Fact 1 with exciting description and specific details!",
-        "Fact 2 about history or culture that kids would find interesting!",
-        "Fact 3 about unique features or fun local traditions!",
-        "Fact 4 about geography, nature, or amazing buildings!",
-        "Fact 5 about food, activities, or modern attractions!"
+        "CityName has exciting description and specific details!",
+        "CityName is famous for history or culture that kids would find interesting!",
+        "CityName features unique local traditions or fun landmarks!",
+        "CityName sits in amazing geography with nature or incredible buildings!",
+        "CityName offers amazing food, activities, or modern attractions!"
     ]
 }
 ```
