@@ -1267,7 +1267,7 @@
         ]
     },
     "Denpasar": {
-        "city": "Denpasar",
+        "city": "Bali",
         "state": null,
         "country": "Indonesia",
         "population": 670210,
@@ -3869,6 +3869,84 @@
             "Cork was the Titanic's very last stop before it sailed across the ocean - the mighty ship picked up 123 more passengers here in 1912!",
             "The English Market in Cork is a Victorian wonderland where you can find amazing foods from around the world under one beautiful old roof!",
             "Famous people like Winston Churchill, Ronald Reagan, and even rock star Mick Jagger have all kissed the Blarney Stone in Cork!"
+        ]
+    },
+    "Adelaide": {
+        "city": "Adelaide",
+        "state": "South Australia",
+        "country": "Australia",
+        "population": 1400000,
+        "fun_facts": [
+            "Adelaide is called the 'City of Churches' because you can literally see a beautiful church on every corner throughout the city!",
+            "Adelaide is home to the only giant pandas in the entire Southern Hemisphere - Yi Lan and Xing Qiu live at Adelaide Zoo and are absolutely adorable!",
+            "Adelaide hosts the world's largest Christmas parade every year where thousands of people celebrate with floats, music, and Santa Claus!",
+            "Adelaide is nicknamed the '20-minute city' because it only takes 20 minutes to get anywhere in the city - it's perfectly sized for exploring!",
+            "Adelaide was the first city in the world to give women the right to vote and has always been a place where everyone is welcome!"
+        ]
+    },
+    "Hobart": {
+        "city": "Hobart",
+        "state": "Tasmania",
+        "country": "Australia",
+        "population": 500000,
+        "fun_facts": [
+            "Hobart is home to the amazing MONA museum that's built inside a cliff underground like a secret art cave for grown-ups!",
+            "Hobart is the only place in the world where you can see Tasmanian devils - fierce little marsupials that are the world's biggest meat-eating pouched animals!",
+            "Hobart is Australia's second-oldest city and was once a place where convicts lived over 200 years ago!",
+            "Hobart was named a UNESCO City of Literature in 2023, and the very first Australian novel was written here in 1831!",
+            "Hobart sits at the bottom of the island of Tasmania, surrounded by mountains and the ocean, making it one of the most beautiful cities in Australia!"
+        ]
+    },
+    "Halifax": {
+        "city": "Halifax",
+        "state": "Nova Scotia",
+        "country": "Canada",
+        "population": 503037,
+        "fun_facts": [
+            "Halifax has the world's largest collection of wooden Titanic artifacts at the Maritime Museum, including pieces from the famous ship!",
+            "Halifax's Citadel Hill has a giant fortress overlooking the city and a famous Town Clock that's been telling time for over 200 years!",
+            "Halifax is home to Canada's oldest public park called Halifax Common, where people have been playing and relaxing since 1763!",
+            "Halifax experienced the biggest man-made explosion in history before nuclear bombs in 1917 when two ships crashed in the harbor!",
+            "Halifax has over 100 Titanic victims buried in its cemeteries, making it the final resting place for many people from the famous ship!"
+        ]
+    },
+    "Saskatoon": {
+        "city": "Saskatoon",
+        "state": "Saskatchewan",
+        "country": "Canada",
+        "population": 260000,
+        "fun_facts": [
+            "Saskatoon is called the 'City of Bridges' because it has 9 amazing bridges crossing the South Saskatchewan River like a giant highway for cars over the water!",
+            "Saskatoon gets its name from sweet purple berries called saskatoon berries that grow all around the area and taste like nature's candy!",
+            "Saskatoon is nicknamed the 'Paris of the Prairies' because of all its beautiful bridges, making it look like the famous city in France!",
+            "Saskatoon is home to famous people like singer Joni Mitchell and hockey legend Gordie Howe who grew up skating on frozen rivers!",
+            "Saskatoon has a special trail called the Meewasin Valley Trail that follows the river where families can bike, walk, and see wildlife all year long!"
+        ]
+    },
+    "White Plains": {
+        "city": "White Plains",
+        "state": "New York",
+        "country": "United States",
+        "population": 62518,
+        "fun_facts": [
+            "White Plains is where the Declaration of Independence was first read aloud to the public from courthouse steps on July 11, 1776!",
+            "White Plains was the site of a Revolutionary War battle in 1776 where George Washington and his troops fought against 6,000 British soldiers!",
+            "White Plains got its name from Native Americans who called it 'Quarropas' meaning 'white marshes' because of the beautiful white plains in the area!",
+            "White Plains is only 31 minutes by train from New York City, making it a perfect place to live near the big city!",
+            "White Plains has been featured in famous movies and TV shows like The Departed and is home to a performing arts center that seats 410 people!"
+        ]
+    },
+    "Tocumen": {
+        "city": "Tocumen",
+        "state": "Panama Province",
+        "country": "Panama",
+        "population": 88543,
+        "fun_facts": [
+            "Tocumen is home to the 'Hub of the Americas' - the biggest and busiest airport in all of Central America with 17.8 million passengers every year!",
+            "Tocumen International Airport was built in 1947 and connects more than 70 destinations across North, Central, and South America like a giant transportation spider web!",
+            "Tocumen is the home base for Copa Airlines, Panama's flag airline that flies to 31 different countries from this one amazing airport!",
+            "Tocumen Airport is perfectly located in the middle of the Americas, making it the ideal stopover point for travelers going anywhere in the continent!",
+            "Tocumen has two huge terminals and serves as a gateway between the Caribbean, South America, North America and Central America - it's like the crossroads of the whole continent!"
         ]
     }
 }
