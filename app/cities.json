@@ -4026,5 +4026,148 @@
             "Nadi is surrounded by coral reefs that are home to 1,500 species of tropical fish and over 300 types of colorful corals - it's like swimming in a living rainbow!",
             "Nadi is where you can find coconut crabs that can climb trees and crack open coconuts with their powerful claws - they're like nature's little superheroes!"
         ]
+    },
+    "Luqa": {
+        "city": "Luqa",
+        "state": null,
+        "country": "Malta",
+        "population": 6028,
+        "fun_facts": [
+            "Luqa is home to Malta International Airport, the only airport serving Malta and where every single plane flying to this tiny island country lands!",
+            "Luqa sits on ancient land where archaeologists have discovered tombs and artifacts that are thousands of years old, hidden beneath the modern airport runways!",
+            "Malta has over 360 churches for only 542,000 people - that's about one church for every 1,000 people, making it one of the most church-filled countries in the world!",
+            "Luqa's airport was built on the land of the old RAF Luqa air base that survived World War II when it was the only airfield left standing after the war!",
+            "Malta is called the 'place of honey' from ancient Greek times because of special bees that live there, and the whole country is smaller than many cities!"
+        ]
+    },
+    "Maroochydore": {
+        "city": "Maroochydore",
+        "state": "Queensland",
+        "country": "Australia",
+        "population": 398840,
+        "fun_facts": [
+            "Maroochydore is part of the amazing Sunshine Coast that has over 100 kilometers of beautiful beaches where you can surf, swim, and build sandcastles every single day!",
+            "Maroochydore sits at the mouth of the Maroochy River where kids can go stand-up paddleboarding in calm waters while watching dolphins jump nearby!",
+            "Maroochydore is home to Australia Zoo where the famous 'Crocodile Hunter' Steve Irwin worked with amazing animals like crocodiles, kangaroos, and koalas!",
+            "Maroochydore has some of the best beginner surfing beaches in the world, especially at nearby Caloundra's Happy Valley where gentle waves are perfect for learning!",
+            "Maroochydore attracts over 3.2 million visitors every year who come to enjoy the sunshine, beaches, and fun attractions like the Big Pineapple and Eumundi Markets!"
+        ]
+    },
+    "Newquay": {
+        "city": "Newquay",
+        "state": "Cornwall",
+        "country": "United Kingdom",
+        "population": 22000,
+        "fun_facts": [
+            "Newquay is the surfing capital of the United Kingdom with world-famous Fistral Beach where you can learn to surf on forgiving waves year-round!",
+            "Newquay has been voted 'One of the Nation's Favourite Seaside Towns' and 'Best Family Holiday Destination' with amazing golden sand beaches!",
+            "Newquay is home to the only lions in Cornwall at Newquay Zoo, plus hundreds of rare and exotic animals from around the world!",
+            "Newquay has direct flights from London, Ireland, Germany, Portugal, and Spain, making it easy for families to visit this coastal paradise!",
+            "Newquay features the legendary big wave called 'Cribbar' and offers activities from surfing to coasteering, plus the amazing Blue Reef Aquarium!"
+        ]
+    },
+    "Lerwick": {
+        "city": "Lerwick",
+        "state": "Shetland Islands",
+        "country": "Scotland",
+        "population": 7500,
+        "fun_facts": [
+            "Lerwick is the northernmost major town in the entire United Kingdom and closer to Norway than to most of Scotland!",
+            "Lerwick celebrates its Viking heritage with spectacular Up Helly Aa fire festivals every winter, featuring torchlit processions and burning Viking longships!",
+            "Lerwick's name means 'bay of clay' in Old Norse, and the town was ruled by Vikings for over 600 years until the 15th century!",
+            "Lerwick is where about half of the Shetland Islands' 23,000 people live, making it the bustling heart of these remote northern islands!",
+            "Lerwick is sometimes called the 'Viking Isles' because of its incredible Norse heritage that's still celebrated today in language, culture, and festivals!"
+        ]
+    },
+    "Trieste": {
+        "city": "Trieste",
+        "state": "Friuli-Venezia Giulia",
+        "country": "Italy",
+        "population": 200609,
+        "fun_facts": [
+            "Trieste is the coffee capital of Italy where the famous Illy coffee company was founded and supplies 40% of all Italian coffee!",
+            "Trieste has the most researchers per person in all of Europe and the most start-up companies in Italy, making it a city of super-smart inventors!",
+            "Trieste is blown by the powerful 'bora' wind that can gust over 150 kilometers per hour, earning it the nickname 'City of Wind'!",
+            "Trieste is where the famous writer James Joyce lived and wrote some of his stories, and the city speaks four different languages!",
+            "Trieste has historic coffee houses over 300 years old where people eat cake that looks like edible artwork and drink coffee served in special ways!"
+        ]
+    },
+    "Dubrovnik": {
+        "city": "Dubrovnik",
+        "state": null,
+        "country": "Croatia",
+        "population": 42000,
+        "fun_facts": [
+            "Dubrovnik is the filming location for King's Landing in the famous TV show Game of Thrones, where dragons and kings ruled from massive stone walls!",
+            "Dubrovnik's ancient city walls are 2 kilometers long and so thick that people can walk on top of them while looking out over the beautiful blue sea!",
+            "Dubrovnik is a UNESCO World Heritage Site that was founded in the 7th century by refugees from Greece and has survived for over 1,300 years!",
+            "Dubrovnik attracts over 1.5 million tourists every year even though only 42,000 people live there - that's like 35 visitors for every resident!",
+            "Dubrovnik's Fort Lovrijenac was used as the Red Keep in Game of Thrones, where kings and queens made important decisions in the famous castle!"
+        ]
+    },
+    "Fairbanks": {
+        "city": "Fairbanks",
+        "state": "Alaska",
+        "country": "United States",
+        "population": 32000,
+        "fun_facts": [
+            "Fairbanks is the best place in the world to see the Northern Lights (Aurora Borealis) with a 90% chance of seeing them if you stay for three nights!",
+            "Fairbanks sits under the 'Auroral Oval' where the magical green, purple, and pink lights dance across the sky from August to April!",
+            "Fairbanks has special heated igloos with clear ceilings where families can lie in warm beds and watch the Northern Lights above them!",
+            "Fairbanks offers amazing winter activities like dog sledding, snowmobiling, ice fishing, and meeting real reindeer in the snowy wilderness!",
+            "Fairbanks has hotels that offer Northern Lights wake-up calls so families won't miss the spectacular light show when it appears in the sky!"
+        ]
+    },
+    "Rotorua": {
+        "city": "Rotorua",
+        "state": "Bay of Plenty",
+        "country": "New Zealand",
+        "population": 72000,
+        "fun_facts": [
+            "Rotorua has the Southern Hemisphere's largest active geyser called Pōhutu that shoots water 100 feet into the air many times every day!",
+            "Rotorua sits on incredible geothermal land with over 500 hot springs and bubbling mud pools that smell like sulfur but create amazing natural wonders!",
+            "Rotorua is home to 40% Māori people who are the guardians of the geothermal features and have named every single hot spring in the area!",
+            "Rotorua has free geothermal foot baths in Kuirau Park where families can soak their feet in naturally heated mineral water from deep underground!",
+            "Rotorua has New Zealand's 4th largest collection of geysers in the world, with 7 active geysers that shoot steam and hot water high into the sky!"
+        ]
+    },
+    "Launceston": {
+        "city": "Launceston",
+        "state": "Tasmania",
+        "country": "Australia",
+        "population": 90953,
+        "fun_facts": [
+            "Launceston has Japanese macaque monkeys living in City Park - 20 red-faced monkeys that were gifted by Japan in 1979 and love swimming in their own pool!",
+            "Launceston has the world's longest single-span chairlift that stretches 308 meters across the spectacular Cataract Gorge - it's like flying through the air above a wilderness!",
+            "Launceston was named Australian Town of the Year in 2022 and is officially a UNESCO City of Gastronomy with amazing food that's famous around the world!",
+            "Launceston has Cataract Gorge right in the city center - a 65-million-year-old gorge with waterfalls, peacocks, and hiking trails just 15 minutes walk from downtown!",
+            "Launceston was the first Australian city to be lit by hydroelectricity and had the first underground sewers - it's been a city of amazing firsts for over 200 years!"
+        ]
+    },
+    "Gran Canaria": {
+        "city": "Gran Canaria",
+        "state": "Canary Islands",
+        "country": "Spain",
+        "population": 870500,
+        "fun_facts": [
+            "Gran Canaria is called a 'miniature continent' because it has deserts, mountains, beaches, and forests all on one amazing island!",
+            "Gran Canaria has the spectacular Maspalomas sand dunes that look like a real piece of the Sahara Desert right next to the ocean where you can ride camels and go sandboarding!",
+            "Gran Canaria is where Christopher Columbus stopped in 1492 to fix his ship before discovering America - it was his last stop before making history!",
+            "Gran Canaria has volcanic mountains in the center that are so tall they create their own weather and you can see snow on the peaks while swimming at the beach!",
+            "Gran Canaria is a World Biosphere Reserve and Starlight destination where you can see more stars than almost anywhere else in the world because there's so little light pollution!"
+        ]
+    },
+    "Williamtown": {
+        "city": "Williamtown",
+        "state": "New South Wales",
+        "country": "Australia",
+        "population": 885,
+        "fun_facts": [
+            "Williamtown is home to RAAF Base Williamtown, where amazing F-35 Lightning II fighter jets soar through the sky like super-fast metal eagles!",
+            "Williamtown has Fighter World museum with over 15 real aircraft on display, including a hand-built Sopwith Camel from World War I that looks like it flew out of a history book!",
+            "Williamtown is where you can watch fighter jets take off and land at the end of the runway - but you'll need earmuffs because they're louder than thunder!",
+            "Williamtown sits on special Tomago sandbeds that act like a giant underground water tank, providing clean drinking water for the whole region!",
+            "Williamtown's air base employs 3,500 people who work with some of the most advanced aircraft in the world, making it like a real-life Top Gun movie set!"
+        ]
     }
 }

@@ -25,7 +25,6 @@ from .intro import stream_intro, intro_options
 from .overandout import stream_overandout, overandout_options
 from .scanning_again import stream_scanning_again, scanning_again_options
 from .scanning import stream_scanning, scanning_options
-from .voice_test import stream_voice_test, voice_test_options
 from .s3_cache import s3_cache
 from .flight_text import generate_flight_text, generate_flight_text_for_aircraft
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
@@ -1288,15 +1287,6 @@ async def scanning_options_endpoint():
     """Handle CORS preflight requests for /scanning.mp3 endpoint"""
     return await scanning_options()
 
-@app.get("/voice-test")
-async def voice_test_endpoint(request: Request):
-    """Convert text to speech using ElevenLabs API and stream audio"""
-    return await stream_voice_test(request)
-
-@app.options("/voice-test") 
-async def voice_test_options_endpoint():
-    """Handle CORS preflight requests for /voice-test endpoint"""
-    return await voice_test_options()
 
 @app.get("/test-cache")
 async def test_cache_endpoint():
