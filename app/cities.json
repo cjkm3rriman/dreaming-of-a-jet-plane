@@ -1266,7 +1266,7 @@
             "Delhi has a giant fort called the Red Fort that is made of red sandstone and looks like a castle from a fairy tale!"
         ]
     },
-    "Denpasar": {
+    "Bali": {
         "city": "Bali",
         "state": null,
         "country": "Indonesia",
@@ -3947,6 +3947,84 @@
             "Tocumen is the home base for Copa Airlines, Panama's flag airline that flies to 31 different countries from this one amazing airport!",
             "Tocumen Airport is perfectly located in the middle of the Americas, making it the ideal stopover point for travelers going anywhere in the continent!",
             "Tocumen has two huge terminals and serves as a gateway between the Caribbean, South America, North America and Central America - it's like the crossroads of the whole continent!"
+        ]
+    },
+    "Canberra": {
+        "city": "Canberra",
+        "state": "Australian Capital Territory",
+        "country": "Australia",
+        "population": 473855,
+        "fun_facts": [
+            "Canberra is the only capital city in the world that was completely planned and designed from scratch by architects who won a worldwide competition!",
+            "Canberra gets its name from an Aboriginal word meaning 'meeting place' where different groups of people would come together!",
+            "Canberra hosts an amazing Hot Air Balloon Spectacular every year with giant balloons shaped like lions, tigers, whales, and even Vincent Van Gogh's head!",
+            "Canberra has a beautiful artificial lake called Lake Burley Griffin that divides the city in half and was specially created when the city was built!",
+            "Canberra is home to Parliament House where all of Australia's important government decisions are made, and you can even fly over it in a hot air balloon!"
+        ]
+    },
+    "Gold Coast": {
+        "city": "Gold Coast",
+        "state": "Queensland",
+        "country": "Australia",
+        "population": 647078,
+        "fun_facts": [
+            "Gold Coast has 70 kilometers of stunning coastline with 42 kilometers of continuous beaches - that's like having one giant beach playground!",
+            "Gold Coast is home to amazing theme parks like Dreamworld, Sea World, Wet'n'Wild, and Movie World where you can have adventures every day!",
+            "Gold Coast has so many waterways and canals that it's called the 'Venice of the South' - you can explore 600 kilometers of waterways by boat!",
+            "Gold Coast's Q1 building is the tallest residential tower in Australia at 322 meters high - you can see from Brisbane to Byron Bay from the top!",
+            "Gold Coast has three world-famous surf beaches where international surfing competitions happen and surfers come from everywhere to ride the perfect waves!"
+        ]
+    },
+    "Townsville": {
+        "city": "Townsville",
+        "state": "Queensland",
+        "country": "Australia",
+        "population": 201313,
+        "fun_facts": [
+            "Townsville is called Australia's 'fortress city' because it has one of the country's biggest military bases and even a Royal Australian Air Force base!",
+            "Townsville is the gateway to the Great Barrier Reef and nearby Magnetic Island, which has 23 beautiful beaches and wild koalas living in the trees!",
+            "Townsville has a famous giant stick figure called the 'Townsville Saint' painted on Castle Hill that can be seen from miles away - it was painted by university students in 1962!",
+            "Townsville is home to Reef HQ, a massive tropical aquarium where you can see sharks, turtles, and colorful fish from the Great Barrier Reef without getting wet!",
+            "Townsville sits right next to Castle Hill, a 286-meter tall rocky mountain that overlooks the city and Magnetic Island like a giant natural watchtower!"
+        ]
+    },
+    "Christchurch": {
+        "city": "Christchurch",
+        "state": "Canterbury",
+        "country": "New Zealand",
+        "population": 412000,
+        "fun_facts": [
+            "Christchurch is called the 'Garden City of the Plains' because it has more parks, gardens, and green spaces than almost any other city in the world!",
+            "Christchurch is home to the amazing Antarctic Centre where you can experience what it's like to visit Antarctica in a 4D theater without freezing!",
+            "Christchurch has been completely rebuilt after major earthquakes in 2010 and 2011, making it one of the world's newest and most modern cities!",
+            "Christchurch is the gateway to seeing more penguin species than anywhere else on Earth - New Zealand has more types of penguins than any other country!",
+            "Christchurch has a special museum called Quake City where kids can learn about earthquakes and volcanoes and how the Earth moves and shakes!"
+        ]
+    },
+    "Cairns": {
+        "city": "Cairns",
+        "state": "Queensland",
+        "country": "Australia",
+        "population": 161932,
+        "fun_facts": [
+            "Cairns is the only place on Earth where two UNESCO World Heritage Sites meet - the ancient Daintree Rainforest and the Great Barrier Reef!",
+            "Cairns is next to the world's oldest rainforest, the Daintree, which has been growing for 135 million years - that's older than the dinosaurs!",
+            "Cairns is the gateway to the Great Barrier Reef, which has 900 tropical islands dotted along it like scattered jewels in the ocean!",
+            "Cairns is home to amazing animals like huge cassowary birds, tree kangaroos that can move backwards, and crocodiles swimming in the rivers!",
+            "Cairns has been home to Aboriginal people for over 60,000 years, making it one of the longest continuously inhabited places on Earth!"
+        ]
+    },
+    "Nadi": {
+        "city": "Nadi",
+        "state": "Viti Levu",
+        "country": "Fiji",
+        "population": 59707,
+        "fun_facts": [
+            "Nadi is the gateway to 333 tropical islands in Fiji, but only 110 of them have people living on them - imagine having your own private island!",
+            "Nadi is home to the largest Hindu temple in the entire Pacific Ocean, the colorful Sri Siva Subramaniya temple that looks like a rainbow palace!",
+            "Nadi welcomes visitors with 'Bula!' which means hello, welcome, good luck, and life all rolled into one amazing word!",
+            "Nadi is surrounded by coral reefs that are home to 1,500 species of tropical fish and over 300 types of colorful corals - it's like swimming in a living rainbow!",
+            "Nadi is where you can find coconut crabs that can climb trees and crack open coconuts with their powerful claws - they're like nature's little superheroes!"
         ]
     }
 }
