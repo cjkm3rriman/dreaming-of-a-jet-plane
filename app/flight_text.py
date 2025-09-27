@@ -353,6 +353,45 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     return full_response
 
 
+def make_error_message_friendly(error_message: str) -> str:
+    """Convert technical error messages to friendly, kid-appropriate explanations"""
+    error_lower = error_message.lower()
+
+    # Common ending for all error messages
+    ending = ", try again in a minute or so will you?"
+
+    # API key issues
+    if "api key not configured" in error_lower:
+        return "my scanner's acting up" + ending
+
+    # No aircraft found
+    if "no passenger aircraft found" in error_lower:
+        return "there aren't any passenger jet planes flying nearby right now" + ending
+
+    # HTTP status errors
+    if "api returned http" in error_lower:
+        return "my scanner's tracking module is acting up" + ending
+
+    # Timeout errors
+    if "timed out" in error_lower:
+        return "my scanner took too long to search and gave up" + ending
+
+    # Network connection errors
+    if "network connection error" in error_lower or "connection error" in error_lower:
+        return "my scanner's connection to the tracking module is acting up" + ending
+
+    # Unexpected errors
+    if "unexpected error" in error_lower:
+        return "something unexpected happened with my scanner" + ending
+
+    # Unknown errors
+    if "unknown error" in error_lower:
+        return "my scanner encountered a mystery problem" + ending
+
+    # Default fallback for any other error
+    return "my scanner had a technical hiccup" + ending
+
+
 def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional[str] = None, user_lat: float = None, user_lng: float = None, plane_index: int = 0) -> str:
     """Generate descriptive text about detected aircraft or no-aircraft conditions
     
@@ -376,8 +415,10 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
         # Use plane index 1 for fallback
         return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, 1)
     else:
-        # Handle error cases with descriptive sentence
+        # Handle error cases with friendly error messages
         if error_message:
-            return f"I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because of {error_message.lower()}"
+            friendly_error = make_error_message_friendly(error_message)
+            return f"I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because {friendly_error}"
         else:
-            return "I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because no passenger aircraft found within 100km radius"
+            friendly_error = make_error_message_friendly("no passenger aircraft found within 100km radius")
+            return f"I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because {friendly_error}"
