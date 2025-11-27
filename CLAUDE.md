@@ -253,3 +253,28 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
 - **Dependencies**: boto3, botocore
 - **Credentials**: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 - **Permissions**: polly:SynthesizeSpeech
+
+## TODO: Smart Fun Facts Based on User Location
+
+### Feature: Use Departure City Fun Facts When User is at Destination
+
+**Problem**: Currently, the app always shows fun facts about the destination city, even when the user is already located in that city.
+
+**Solution**:
+1. Extract city information from existing `ipapi.co` IP geolocation response (currently only using lat/lng)
+2. Compare user's city with flight destination city
+3. If they match, show fun facts about the departure/origin city instead
+4. Include friendly intro like "Since you're already in {destination}, here's something about where this flight came from!"
+
+**Implementation Notes**:
+- Modify `get_location_from_ip()` in `location_utils.py` to return city data alongside coordinates
+- Update `generate_flight_text_for_aircraft()` in `flight_text.py` to accept and use user city
+- Add simple string comparison with case-insensitive matching
+- Graceful fallback to current behavior if city data unavailable
+
+**Benefits**:
+- More relevant content for local users
+- Educational value about departure cities
+- Better user experience with personalized context
+
+**Files to modify**: `app/location_utils.py`, `app/flight_text.py`, function callers
