@@ -254,6 +254,67 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
 - **Credentials**: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 - **Permissions**: polly:SynthesizeSpeech
 
+## TODO: Google TTS Integration with Gemini Flash
+
+### Feature: Add Google TTS as Alternative Voice Provider
+
+**Goal**: Implement Google Text-to-Speech using the Gemini Flash model as an alternative to ElevenLabs and AWS Polly.
+
+**Voice Configuration**:
+- **Model**: Gemini Flash
+- **Voice**: Sadachbia
+- **Voice Prompt**: "Read the text in an upper-class British male voice, with a deep, rich baritone tone, confident pacing, precise articulation, and a refined, formal delivery style."
+
+**SSML Voice Configuration Examples**:
+
+Option 1 - Basic configuration:
+```xml
+<speak>
+  <voice language="en-GB" gender="male">
+    <prosody pitch="-6st" rate="90%" volume="+0dB">
+      Read the following with an upper-class British male accent, using a deep, resonant baritone tone and a calm, polished delivery.
+    </prosody>
+  </voice>
+</speak>
+```
+
+Option 2 - Advanced configuration with pitch contour:
+```xml
+<speak>
+  <voice language="en-GB" gender="male">
+    <prosody pitch="-8st" rate="88%" contour="(0%, +0st) (35%, -6st) (65%, -8st) (100%, -4st)">
+      Please read this text in an upper-class British male accent, using a deep, resonant baritone voice.
+      Maintain a refined, confident tone with precise articulation and smooth, measured pacing.
+    </prosody>
+  </voice>
+</speak>
+```
+
+**Environment Configuration**:
+```bash
+# Provider selection
+TTS_PROVIDER=google  # Options: "elevenlabs", "polly", "google", or "fallback"
+
+# Google TTS configuration
+GOOGLE_TTS_API_KEY=your_google_api_key
+GOOGLE_TTS_MODEL=gemini-flash
+GOOGLE_TTS_VOICE=Sadachbia
+GOOGLE_TTS_PROMPT="Read the text in an upper-class British male voice, with a deep, rich baritone tone, confident pacing, precise articulation, and a refined, formal delivery style."
+```
+
+**Implementation Notes**:
+- Add Google Cloud Text-to-Speech or Gemini API client
+- Integrate into existing TTS provider selection logic alongside ElevenLabs and AWS Polly
+- Use voice prompt to guide the Gemini Flash model's voice generation
+- Test voice quality and compare with current ElevenLabs Edward voice
+- Consider pricing and rate limits for Google TTS/Gemini API
+
+**Dependencies**:
+- Google Cloud TTS SDK or Gemini API client library
+- API credentials and authentication
+
+**Files to modify**: `app/main.py`, add new `google_tts.py` module
+
 ## TODO: Smart Fun Facts Based on User Location
 
 ### Feature: Use Departure City Fun Facts When User is at Destination
