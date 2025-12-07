@@ -7,7 +7,11 @@ requires-python = ">=3.11"
 dependencies = [
     "boto3>=1.40.25",
     "fastapi[standard]>=0.116.1",
+    "ffmpeg-python>=0.2.0",
+    "google-cloud-texttospeech>=2.29.0",
+    "google-genai>=1.52.0",
     "httpx>=0.28.1",
     "mixpanel>=4.11.1",
+    "pydub>=0.25.1",
     "ua-parser>=1.0.1",
 ]

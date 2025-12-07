@@ -45,17 +45,26 @@ railway up    # Deploy to Railway (if Railway CLI is installed)
 
 ## Environment Variables
 
+**IMPORTANT**: This project uses **Railway environment variables**, NOT local `.env` files. All environment variables are configured in the Railway dashboard at:
+https://railway.app/project/dreaming-of-a-jet-plane/settings
+
+The `.env.example` file serves as documentation only. When testing locally, environment variables must be exported manually or set in your shell.
+
 The application requires several environment variables for full functionality:
 
 ### Required
 - `FR24_API_KEY`: Flightradar24 API key for live flight data
-- `ELEVENLABS_TEXT_TO_VOICE_API_KEY`: ElevenLabs API key for text-to-speech
+- `GOOGLE_API_KEY`: Google API key for Gemini TTS
+- `TTS_PROVIDER`: TTS provider to use (options: `elevenlabs`, `polly`, `google`, `fallback`)
 
 ### Optional
+- `ELEVENLABS_TEXT_TO_VOICE_API_KEY`: ElevenLabs API key for text-to-speech (if using ElevenLabs)
 - `MIXPANEL_TOKEN`: Mixpanel project token for analytics tracking
+- `TTS_PROVIDER_OVERRIDE_SECRET`: Secret key for testing different TTS providers via query parameters
 - AWS S3 credentials for caching (if using S3 cache)
+- AWS Polly credentials (if using Polly TTS provider)
 
-See `.env.example` for a template of environment variables.
+See `.env.example` for a complete template of environment variables.
 
 ## Analytics
 
@@ -136,184 +145,15 @@ When adding new cities to `app/cities.json`:
 ### Example Reference:
 See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. Each fact should be educational but entertaining, helping kids learn while staying engaged.
 
-## TODO: Priority Cities to Add
 
-Based on analysis of major international flight destinations missing from the cities database, these cities should be prioritized for addition:
+## TODO: Google TTS Streaming via Gemini API Flash
 
-### Highest Priority (Major International Hubs)
-3. **Perth, Australia** - Major Australian city
-4. **Wellington, New Zealand** - National capital
-5. **Marrakech, Morocco** - Iconic UNESCO tourist destination
+1. Get a proof of concept working, so I can stream audio and save to cache at same time
+2. Have intro initiate non-streamign requests as background processes
+3. if hitting plane endpoints directly and a cache miss, start streaming & cache
 
-### High Priority (Regional Capitals & Business Hubs)
-6. **Kuwait City, Kuwait** - Gulf business center
-7. **Chiang Mai, Thailand** - Major Thai tourist city
-8. **Glasgow, Scotland** - Major Scottish cultural center
-9. **Krakow, Poland** - UNESCO World Heritage site
-10. **Quito, Ecuador** - UNESCO site, Galapagos gateway
+Consider caching of plane data too and if that expires?
 
-### Medium Priority (Important Regional Destinations)
-11. **Manama, Bahrain** - Gulf financial center
-12. **Muscat, Oman** - Growing tourism hub
-13. **Cebu, Philippines** - Key regional hub
-14. **Macau** - Gaming and tourism destination
-15. **Brisbane, Australia** - Gateway to Gold Coast
-16. **Christchurch, New Zealand** - South Island hub
-17. **Salzburg, Austria** - Mozart's birthplace
-18. **Seville, Spain** - Cultural capital of Andalusia
-19. **Accra, Ghana** - West African business hub
-20. **San José, Costa Rica** - Eco-tourism hub
-21. **Cartagena, Colombia** - UNESCO coastal gem
-
-### European Destinations (Medium-High Priority)
-22. **Corfu, Greece** - Ionian island paradise
-23. **Exeter, United Kingdom** - Historic English cathedral city
-24. **Paphos, Cyprus** - UNESCO archaeological site
-25. **Split, Croatia** - Adriatic coastal gem with Roman heritage
-26. **Girona, Spain** - Medieval Catalonian city
-27. **Poznan, Poland** - Historic Polish cultural center
-28. **Rzeszow, Poland** - Growing regional hub
-29. **Sibiu, Romania** - Transylvanian medieval city
-30. **Faro, Portugal** - Gateway to the Algarve
-
-### Middle East/Africa Destinations (Medium Priority)
-31. **Hurghada, Egypt** - Red Sea resort destination
-32. **Rabat, Morocco** - Capital city and UNESCO site
-33. **Dalaman, Turkey** - Mediterranean coastal gateway
-
-These cities represent major gaps in airline destinations and would provide better global coverage for users learning about international flight destinations.
-
-## AWS Polly TTS Integration Planning
-
-Research and planning for adding AWS Polly as a TTS provider option alongside ElevenLabs (see TODO comments in `app/main.py:62-65`).
-
-### Environment Configuration
-```bash
-# Provider selection
-TTS_PROVIDER=elevenlabs  # Options: "elevenlabs", "polly", or "fallback" (try ElevenLabs, fallback to Polly)
-
-# AWS Polly configuration
-AWS_POLLY_VOICE_ID=Arthur           # British male neural voice (recommended)
-AWS_POLLY_ENGINE=neural             # Options: generative, neural, standard
-AWS_POLLY_REGION=us-east-1         
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-
-# Voice model settings (configurable for future changes)
-AWS_POLLY_OUTPUT_FORMAT=mp3
-AWS_POLLY_SAMPLE_RATE=24000
-```
-
-### AWS Polly Voice Research Findings
-
-**Available British Voices:**
-- **Amy (Female, Generative)** - Only British generative voice available
-- **Arthur (Male, Neural only)** - Not available in generative engine yet
-- No direct male British generative voice equivalent to current Edward voice
-
-**Pricing Comparison (per million characters):**
-- ElevenLabs: ~$22
-- AWS Polly Generative: $30
-- AWS Polly Neural: $16
-- **Free tier**: 100k characters/month generative, 1M characters/month neural
-
-### Integration Architecture Options
-
-**Provider Strategy Options:**
-1. **Primary/Fallback**: Try ElevenLabs first, fallback to Polly on failure
-2. **Switch**: Complete switch to Polly via env variable
-3. **Load Balance**: Route based on usage/cost thresholds
-
-**Function Structure:**
-```python
-async def convert_text_to_speech(text: str) -> tuple[bytes, str]:
-    provider = os.getenv("TTS_PROVIDER", "elevenlabs")
-    
-    if provider == "elevenlabs":
-        return await elevenlabs_tts(text)
-    elif provider == "polly":
-        return await polly_tts(text)
-    elif provider == "fallback":
-        result = await elevenlabs_tts(text)
-        if result[1]:  # Error occurred
-            return await polly_tts(text)
-        return result
-```
-
-**Voice Quality Trade-offs:**
-- Current: ElevenLabs Edward (British Male, Dark, Seductive)
-- Option 1: AWS Polly Amy (British Female, Conversational, Generative)
-- **Option 2: AWS Polly Arthur (British Male, Neural only, lower cost) - RECOMMENDED**
-  - Use `<prosody rate="medium">` SSML for optimal pacing
-  - Best match for current Edward voice characteristics
-  - Lower cost than generative ($16 vs $30 per million characters)
-
-### AWS Requirements
-- **Region**: us-east-1 (required for generative voices)
-- **Dependencies**: boto3, botocore
-- **Credentials**: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-- **Permissions**: polly:SynthesizeSpeech
-
-## TODO: Google TTS Integration with Gemini Flash
-
-### Feature: Add Google TTS as Alternative Voice Provider
-
-**Goal**: Implement Google Text-to-Speech using the Gemini Flash model as an alternative to ElevenLabs and AWS Polly.
-
-**Voice Configuration**:
-- **Model**: Gemini Flash
-- **Voice**: Sadachbia
-- **Voice Prompt**: "Read the text in an upper-class British male voice, with a deep, rich baritone tone, confident pacing, precise articulation, and a refined, formal delivery style."
-
-**SSML Voice Configuration Examples**:
-
-Option 1 - Basic configuration:
-```xml
-<speak>
-  <voice language="en-GB" gender="male">
-    <prosody pitch="-6st" rate="90%" volume="+0dB">
-      Read the following with an upper-class British male accent, using a deep, resonant baritone tone and a calm, polished delivery.
-    </prosody>
-  </voice>
-</speak>
-```
-
-Option 2 - Advanced configuration with pitch contour:
-```xml
-<speak>
-  <voice language="en-GB" gender="male">
-    <prosody pitch="-8st" rate="88%" contour="(0%, +0st) (35%, -6st) (65%, -8st) (100%, -4st)">
-      Please read this text in an upper-class British male accent, using a deep, resonant baritone voice.
-      Maintain a refined, confident tone with precise articulation and smooth, measured pacing.
-    </prosody>
-  </voice>
-</speak>
-```
-
-**Environment Configuration**:
-```bash
-# Provider selection
-TTS_PROVIDER=google  # Options: "elevenlabs", "polly", "google", or "fallback"
-
-# Google TTS configuration
-GOOGLE_TTS_API_KEY=your_google_api_key
-GOOGLE_TTS_MODEL=gemini-flash
-GOOGLE_TTS_VOICE=Sadachbia
-GOOGLE_TTS_PROMPT="Read the text in an upper-class British male voice, with a deep, rich baritone tone, confident pacing, precise articulation, and a refined, formal delivery style."
-```
-
-**Implementation Notes**:
-- Add Google Cloud Text-to-Speech or Gemini API client
-- Integrate into existing TTS provider selection logic alongside ElevenLabs and AWS Polly
-- Use voice prompt to guide the Gemini Flash model's voice generation
-- Test voice quality and compare with current ElevenLabs Edward voice
-- Consider pricing and rate limits for Google TTS/Gemini API
-
-**Dependencies**:
-- Google Cloud TTS SDK or Gemini API client library
-- API credentials and authentication
-
-**Files to modify**: `app/main.py`, add new `google_tts.py` module
 
 ## TODO: Smart Fun Facts Based on User Location
 
@@ -339,3 +179,25 @@ GOOGLE_TTS_PROMPT="Read the text in an upper-class British male voice, with a de
 - Better user experience with personalized context
 
 **Files to modify**: `app/location_utils.py`, `app/flight_text.py`, function callers
+
+
+## TODO: Clean Up Error Handling and Logging
+
+**Scope**: Review and improve error handling and logging throughout the application
+
+**Tasks**:
+- Standardize error logging format and levels across all modules
+- Review exception handling patterns for consistency
+- Ensure all external API calls have proper error handling
+- Add appropriate try/except blocks where missing
+- Consider structured logging for better observability
+- Review and clean up debug log statements
+- Ensure analytics failures don't break user-facing functionality
+- Add request ID tracking for better debugging
+
+**Files to review**: All modules in `app/`, particularly:
+- `app/main.py` - Main application logic and TTS providers
+- `app/scanning.py` - Pre-generation flow
+- `app/analytics.py` - Analytics tracking
+- `app/location_utils.py` - IP geolocation
+- `app/s3_cache.py` - S3 caching operations

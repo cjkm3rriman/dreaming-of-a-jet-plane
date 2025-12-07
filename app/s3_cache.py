@@ -15,11 +15,11 @@ import json
 logger = logging.getLogger(__name__)
 
 class S3MP3Cache:
-    def __init__(self, 
-                 bucket_name: str = "dreaming-of-a-jet-plane", 
+    def __init__(self,
+                 bucket_name: str = "dreaming-of-a-jet-plane",
                  cache_prefix: str = "cache/",
-                 ttl_minutes: int = 2,
-                 api_ttl_minutes: int = 2):
+                 ttl_minutes: int = 3,
+                 api_ttl_minutes: int = 3):
         self.bucket_name = bucket_name
         self.cache_prefix = cache_prefix
         self.ttl_minutes = ttl_minutes
@@ -37,31 +37,45 @@ class S3MP3Cache:
             self.enabled = True
             logger.info(f"S3 cache initialized: bucket={bucket_name}, prefix={cache_prefix}")
     
-    def generate_cache_key(self, lat: float, lng: float, content_type: str = "mp3", plane_index: Optional[int] = None) -> str:
+    def generate_cache_key(self, lat: float, lng: float, content_type: str = "audio", plane_index: Optional[int] = None, tts_provider: Optional[str] = None, audio_format: Optional[str] = None) -> str:
         """Generate cache key based on rounded location coordinates
-        
+
         Args:
             lat: Latitude
-            lng: Longitude  
-            content_type: Type of content ("mp3", "json")
+            lng: Longitude
+            content_type: Type of content ("audio", "json")
             plane_index: Optional plane index for multiple aircraft (1, 2, 3)
+            tts_provider: Optional TTS provider name for audio caching (different providers = different cache)
+            audio_format: Optional audio format extension ("mp3", "ogg")
         """
         # Round to 2 decimal places (~1km precision) to increase cache hits
         rounded_lat = round(lat, 2)
         rounded_lng = round(lng, 2)
-        
+
         # Create hash of location
         location_str = f"{rounded_lat},{rounded_lng}"
         cache_key = hashlib.md5(location_str.encode()).hexdigest()
-        
-        # Build filename based on content type and plane index
+
+        # Build filename based on content type, plane index, and TTS provider
         if content_type == "json":
             filename = f"{cache_key}_aircraft.json"
         elif plane_index is not None:
-            filename = f"{cache_key}_plane{plane_index}.mp3"
+            # Determine file extension from explicit format or provider mapping
+            if audio_format:
+                ext = audio_format
+            elif tts_provider:
+                # Map provider to format
+                format_map = {"google": "mp3", "elevenlabs": "mp3", "polly": "mp3"}  # TODO: Switch Google back to OGG later
+                ext = format_map.get(tts_provider.lower(), "mp3")
+            else:
+                ext = "mp3"
+
+            # Include TTS provider in filename for audio files
+            provider_suffix = f"_{tts_provider}" if tts_provider else ""
+            filename = f"{cache_key}_plane{plane_index}{provider_suffix}.{ext}"
         else:
-            filename = f"{cache_key}.mp3"
-        
+            filename = f"{cache_key}.mp3"  # Legacy format
+
         full_key = f"{self.cache_prefix}{filename}"
         return full_key
     
@@ -132,15 +146,15 @@ class S3MP3Cache:
             'Authorization': authorization_header
         }
     
-    async def get(self, cache_key: str, content_type: str = "mp3") -> Optional[Union[bytes, Dict[str, Any]]]:
+    async def get(self, cache_key: str, content_type: str = "audio") -> Optional[Union[bytes, Dict[str, Any]]]:
         """Get data from S3 cache if not expired
-        
+
         Args:
             cache_key: Cache key to retrieve
-            content_type: Type of content ("mp3", "json") - determines TTL and return type
-        
+            content_type: Type of content ("audio", "json") - determines TTL and return type
+
         Returns:
-            bytes for MP3 content, dict for JSON content, None if not found/expired
+            bytes for audio content, dict for JSON content, None if not found/expired
         """
         if not self.enabled:
             return None
@@ -200,13 +214,13 @@ class S3MP3Cache:
             logger.error(f"S3 cache get error for key {cache_key}: {e}")
             return None
     
-    async def set(self, cache_key: str, data: Union[bytes, Dict[str, Any]], content_type: str = "mp3") -> bool:
+    async def set(self, cache_key: str, data: Union[bytes, Dict[str, Any]], content_type: str = "audio") -> bool:
         """Store data in S3 cache
-        
+
         Args:
             cache_key: Cache key
-            data: Data to store (bytes for MP3, dict for JSON)
-            content_type: Type of content ("mp3", "json")
+            data: Data to store (bytes for audio, dict for JSON)
+            content_type: Type of content ("audio", "json")
         """
         if not self.enabled:
             logger.warning("S3 cache disabled - cannot store data")
@@ -223,13 +237,17 @@ class S3MP3Cache:
                     ttl_minutes = self.api_ttl_minutes
                 else:
                     raise ValueError("Data must be dict for JSON content_type")
-            else:
+            else:  # "audio"
                 if isinstance(data, bytes):
                     data_bytes = data
-                    content_type_header = "audio/mpeg"
+                    # Determine MIME type from cache key extension
+                    if cache_key.endswith('.ogg'):
+                        content_type_header = "audio/ogg"
+                    else:
+                        content_type_header = "audio/mpeg"
                     ttl_minutes = self.ttl_minutes
                 else:
-                    raise ValueError("Data must be bytes for MP3 content_type")
+                    raise ValueError("Data must be bytes for audio content_type")
             
             headers = {
                 "Content-Type": content_type_header,
@@ -261,7 +279,7 @@ class S3MP3Cache:
             logger.error(f"S3 cache set error for key {cache_key}: {e}")
             return False
     
-    async def exists_and_fresh(self, cache_key: str, content_type: str = "mp3") -> bool:
+    async def exists_and_fresh(self, cache_key: str, content_type: str = "audio") -> bool:
         """Check if cached file exists and is still fresh"""
         if not self.enabled:
             return False

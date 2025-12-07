@@ -137,7 +137,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         detection_sentence = f"{base_opening_word} We've detected one more jet plane up there, {distance_miles} miles from this Yoto!"
     else:
         # Default for plane 1 or any other index
-        detection_sentence = f"{base_opening_word} We've detected a jet plane in the sky, {distance_miles} miles from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_miles} miles from this Yoto!"
     
     # Add aircraft type, capacity, speed, and altitude information
     aircraft_name = aircraft.get("aircraft", "unknown aircraft type")
@@ -165,7 +165,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     captain_name = random.choice(pilot_names)
     
     # Build scanner sentence with random selection of available data
-    aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous", "gigantic", "enourmous"]
+    aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous", "gigantic", "enormous"]
     aircraft_descriptor = random.choice(aircraft_descriptors)
     scanner_info = f"My scanner tells me that Captain {captain_name} is piloting this {aircraft_descriptor} {aircraft_name_with_digits}"
     

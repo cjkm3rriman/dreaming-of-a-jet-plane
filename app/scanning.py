@@ -25,30 +25,44 @@ SCANNING_DEBOUNCE_SECONDS = 30  # Prevent duplicate requests within 30 seconds
 
 
 
-async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = None):
-    """Background task to pre-generate and cache flight MP3s for all 3 planes"""
+async def pre_generate_flight_audio(lat: float, lng: float, request: Request = None, tts_override: str = None):
+    """Background task to pre-generate and cache flight audio for all 3 planes
+
+    Args:
+        lat: Latitude
+        lng: Longitude
+        request: Optional FastAPI Request object
+        tts_override: Optional TTS provider override
+    """
     try:
-        
+
         # Import here to avoid circular imports
-        from .main import get_nearby_aircraft, convert_text_to_speech
+        from .main import get_nearby_aircraft, convert_text_to_speech, TTS_PROVIDER
         from .flight_text import generate_flight_text_for_aircraft, generate_flight_text
         
         # Get flight data (this will use cached API data if available, or cache new data)
         aircraft, error_message = await get_nearby_aircraft(lat, lng, limit=3, request=request)
-        
-        # Pre-generate MP3s for up to 3 planes
+
+        # Determine effective TTS provider
+        effective_provider = tts_override if tts_override else TTS_PROVIDER
+
+        # Get audio format for this provider
+        from .main import get_audio_format_for_provider
+        file_ext, mime_type = get_audio_format_for_provider(effective_provider)
+
+        # Pre-generate audio for up to 3 planes
         tasks = []
         for plane_index in range(1, 4):  # 1, 2, 3
             zero_based_index = plane_index - 1
-            
-            # Check cache first for this specific plane
-            plane_cache_key = s3_cache.generate_cache_key(lat, lng, plane_index=plane_index)
-            cached_mp3 = await s3_cache.get(plane_cache_key)
-            
-            if cached_mp3:
+
+            # Check cache first for this specific plane (include TTS provider and format in cache key)
+            plane_cache_key = s3_cache.generate_cache_key(lat, lng, plane_index=plane_index, tts_provider=effective_provider, audio_format=file_ext)
+            cached_audio = await s3_cache.get(plane_cache_key)
+
+            if cached_audio:
                 continue
-            
-            
+
+
             # Generate appropriate text for this plane
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
@@ -66,11 +80,11 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
             else:
                 # No aircraft found at all
                 sentence = generate_flight_text([], error_message, lat, lng)
-            
-            # Create task to generate and cache this plane's MP3
+
+            # Create task to generate and cache this plane's audio
             selected_aircraft = aircraft[zero_based_index] if aircraft and len(aircraft) > zero_based_index else None
             task = asyncio.create_task(
-                _generate_and_cache_plane_mp3(plane_index, plane_cache_key, sentence, lat, lng, request, selected_aircraft)
+                _generate_and_cache_plane_audio(plane_index, plane_cache_key, sentence, lat, lng, request, selected_aircraft, tts_override)
             )
             tasks.append(task)
         
@@ -85,37 +99,51 @@ async def pre_generate_flight_mp3(lat: float, lng: float, request: Request = Non
         logger.error(f"Error in MP3 pre-generation: {e}")
 
 
-async def _generate_and_cache_plane_mp3(plane_index: int, cache_key: str, sentence: str, lat: float, lng: float, request: Request = None, aircraft: dict = None) -> bool:
-    """Helper function to generate and cache MP3 for a specific plane"""
+async def _generate_and_cache_plane_audio(plane_index: int, cache_key: str, sentence: str, lat: float, lng: float, request: Request = None, aircraft: dict = None, tts_override: str = None) -> bool:
+    """Helper function to generate and cache audio for a specific plane
+
+    Args:
+        plane_index: 1-based plane index (1, 2, 3)
+        cache_key: S3 cache key (already includes TTS provider and format)
+        sentence: Text to convert to speech
+        lat: Latitude
+        lng: Longitude
+        request: Optional FastAPI Request object
+        aircraft: Optional aircraft data dict
+        tts_override: Optional TTS provider override
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
     try:
         # Import here to avoid circular imports
-        from .main import convert_text_to_speech, track_mp3_generation
+        from .main import convert_text_to_speech, track_audio_generation
         import time
-        
-        # Convert to speech with timing
+
+        # Convert to speech with timing (pass TTS override)
         tts_start_time = time.time()
-        audio_content, tts_error, tts_provider_used = await convert_text_to_speech(sentence)
+        audio_content, tts_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
         tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
-        
+
         if audio_content and not tts_error:
-            # Cache the MP3
+            # Cache the audio
             success = await s3_cache.set(cache_key, audio_content)
             if success:
-                
-                # Track MP3 generation analytics if we have request and aircraft data
+
+                # Track audio generation analytics if we have request and aircraft data
                 if request and aircraft:
-                    track_mp3_generation(request, lat, lng, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used)
-                
+                    track_audio_generation(request, lat, lng, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext)
+
                 return True
             else:
-                logger.warning(f"Failed to cache pre-generated plane {plane_index} MP3 for location: lat={lat}, lng={lng}")
+                logger.warning(f"Failed to cache pre-generated plane {plane_index} audio for location: lat={lat}, lng={lng}")
                 return False
         else:
             logger.warning(f"TTS generation failed for plane {plane_index} during pre-generation: {tts_error}")
             return False
-            
+
     except Exception as e:
-        logger.error(f"Error generating plane {plane_index} MP3: {e}")
+        logger.error(f"Error generating plane {plane_index} audio: {e}")
         return False
 
 
@@ -182,11 +210,14 @@ async def _stream_scanning_mp3_only(request: Request):
 
 
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
-    """Stream scanning MP3 file from S3 and trigger MP3 pre-generation"""
-    
-    
+    """Stream scanning MP3 file from S3 and trigger audio pre-generation"""
+
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
+
+    # Get TTS provider override from query parameters
+    from .main import get_tts_provider_override
+    tts_override = get_tts_provider_override(request)
     
     # Create session key for duplicate request prevention
     client_ip = extract_client_ip(request)
@@ -238,11 +269,11 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
         except:
             pass  # Silently fail if analytics completely broken
     
-    # Start MP3 pre-generation in background (don't await)
+    # Start audio pre-generation in background (don't await)
     if user_lat != 0.0 or user_lng != 0.0:  # Only if we have a valid location
-        asyncio.create_task(pre_generate_flight_mp3(user_lat, user_lng, request))
+        asyncio.create_task(pre_generate_flight_audio(user_lat, user_lng, request, tts_override))
     else:
-        logger.warning("Could not determine location for MP3 pre-generation")
+        logger.warning("Could not determine location for audio pre-generation")
     
     # Continue with normal scanning MP3 streaming
     # Import here to avoid circular imports

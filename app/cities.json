@@ -4169,5 +4169,83 @@
             "Williamtown sits on special Tomago sandbeds that act like a giant underground water tank, providing clean drinking water for the whole region!",
             "Williamtown's air base employs 3,500 people who work with some of the most advanced aircraft in the world, making it like a real-life Top Gun movie set!"
         ]
+    },
+    "Puerto Vallarta": {
+        "city": "Puerto Vallarta",
+        "state": "Jalisco",
+        "country": "Mexico",
+        "population": 578000,
+        "fun_facts": [
+            "Puerto Vallarta sits on Banderas Bay, which is one of the most beautiful bays in the world with water so calm and clear it's perfect for swimming!",
+            "Puerto Vallarta has beaches with amazing names like Playa Camarones (Shrimp Beach) and Playa de los Muertos (Beach of the Dead), which got its spooky name from a legendary pirate battle!",
+            "Puerto Vallarta is visited by thousands of baby sea turtles every year from July to December, when tiny olive ridley turtles hatch on the beaches and race to the ocean!",
+            "Puerto Vallarta's waters are home to humpback whales that travel here every year to have their babies and take care of them in the warm Pacific Ocean!",
+            "Puerto Vallarta grew from a tiny village of only 4,809 people in 1950 to over half a million today - that's more than 100 times bigger!"
+        ]
+    },
+    "Punta Cana": {
+        "city": "Punta Cana",
+        "state": null,
+        "country": "Dominican Republic",
+        "population": 139000,
+        "fun_facts": [
+            "Punta Cana's name means 'tips of white palms' in Spanish because of all the beautiful white palm trees swaying along the beaches!",
+            "Punta Cana is nicknamed La Costa del Coco, which means the Coconut Coast, because coconut palms grow everywhere like a tropical forest!",
+            "Punta Cana has beaches facing both the Caribbean Sea AND the Atlantic Ocean, so you can swim in two different oceans in the same day!",
+            "Punta Cana is the second-most popular tourist destination in all of Latin America, with over 11 million visitors coming here every year!",
+            "Punta Cana has its own airport that was the western hemisphere's first privately owned international airport, making it super special!"
+        ]
+    },
+    "Victoria": {
+        "city": "Victoria",
+        "state": "British Columbia",
+        "country": "Canada",
+        "population": 441000,
+        "fun_facts": [
+            "Victoria is called the 'City of Gardens' because flowers bloom here even in winter, with crocuses, daffodils, and cherry trees adding splashes of color when other cities are covered in snow!",
+            "Victoria is home to the world's tallest free-standing totem pole, which towers over Beacon Hill Park like a giant wooden skyscraper decorated with colorful carved animals!",
+            "Victoria's Parliament Buildings are lit up with over 3,000 sparkling lights at night, making them look like a magical fairy tale castle!",
+            "Victoria has waters surrounding it where over 80 orca whales live in 3 different family groups, and you might see them jumping and splashing near the shore!",
+            "Victoria has more restaurants per person than any other city in Canada, so you'll never run out of delicious food to try!"
+        ]
+    },
+    "Palm Springs": {
+        "city": "Palm Springs",
+        "state": "California",
+        "country": "United States",
+        "population": 46000,
+        "fun_facts": [
+            "Palm Springs is built in the Coachella Valley, which is part of the Colorado Desert, where the sun shines almost every single day of the year!",
+            "Palm Springs has special land that belongs to the Agua Caliente Band of Cahuilla Indians, who first called this place 'Se-Khi,' meaning 'boiling water' because of the hot springs!",
+            "Palm Springs has a population that triples between November and March when 'snowbirds' fly down from cold places to enjoy the warm desert sunshine!",
+            "Palm Springs has streets named after important Cahuilla families like Andreas, Arenas, and Patencio, honoring the Native American people who lived here first!",
+            "Palm Springs is famous for over 400 special stars on the Palm Springs Walk of Stars, where celebrities from movies, music, and sports are honored just like in Hollywood!"
+        ]
+    },
+    "San Jose del Cabo": {
+        "city": "San Jose del Cabo",
+        "state": "Baja California Sur",
+        "country": "Mexico",
+        "population": 163000,
+        "fun_facts": [
+            "San Jose del Cabo sits near the southern tip of Baja California where the Gulf of California meets the Pacific Ocean, creating amazing turquoise waters!",
+            "San Jose del Cabo was originally called Añiñi by the indigenous Pericu people before Spanish explorers arrived and founded a mission here in 1730!",
+            "San Jose del Cabo has a special river that provided freshwater for Spanish galleons sailing all the way from the Philippines hundreds of years ago!",
+            "San Jose del Cabo is one of only two places in the world where you can find the critically endangered rice rat called Oryzomys peninsulae!",
+            "San Jose del Cabo is growing super fast, with the whole Los Cabos area expected to reach 800,000 people by 2040 - that's like building several new cities!"
+        ]
+    },
+    "Sarasota": {
+        "city": "Sarasota",
+        "state": "Florida",
+        "country": "United States",
+        "population": 58000,
+        "fun_facts": [
+            "Sarasota has been called the 'Circus Capital of the World' since the 1920s when the famous Ringling Bros. and Barnum & Bailey Circus made it their winter home!",
+            "Sarasota's Siesta Beach was named the #1 Beach in America and #4 in the world, with sand made of 99% pure quartz that's so white it looks like snow and never gets hot!",
+            "Sarasota's beach sand is millions of years old and came all the way from the Appalachian Mountains, traveling for ages before becoming the softest beach sand you've ever felt!",
+            "Sarasota has a special beach called Shark Tooth Beach where you have almost a 100% chance of finding real fossilized shark teeth in the sand!",
+            "Sarasota has a magical Children's Rainforest Garden with rope bridges and treetop platforms that let you explore the forest canopy 12 feet up in the air like a jungle explorer!"
+        ]
     }
 }

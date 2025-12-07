@@ -18,6 +18,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Filter out HEAD requests from httpx logs to reduce noise
+class SupressHeadRequestsFilter(logging.Filter):
+    def filter(self, record):
+        # Suppress log records that contain "HEAD" HTTP requests
+        return 'HEAD' not in record.getMessage()
+
+# Apply filter to httpx logger
+httpx_logger = logging.getLogger('httpx')
+httpx_logger.addFilter(SupressHeadRequestsFilter())
+
+# Suppress verbose Google GenAI SDK logs (AFC notifications, etc.)
+google_genai_logger = logging.getLogger('google_genai')
+google_genai_logger.setLevel(logging.WARNING)
+
 from .aircraft_database import get_aircraft_name, get_passenger_capacity
 from .airport_database import get_city_country, get_airport_by_iata
 from .airline_database import get_airline_name
@@ -29,15 +43,23 @@ from .s3_cache import s3_cache
 from .flight_text import generate_flight_text, generate_flight_text_for_aircraft
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
+from .website_home import register_website_home_routes
+from .test_gemini_tts import register_test_gemini_tts_routes
 
 app = FastAPI()
+
+# Register website home routes
+register_website_home_routes(app)
+
+# Register test Gemini TTS routes
+register_test_gemini_tts_routes(app)
 
 # Flightradar24 API configuration
 FR24_API_KEY = os.getenv("FR24_API_KEY")
 FR24_BASE_URL = "https://fr24api.flightradar24.com"
 
 # TTS Configuration
-TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "polly", "fallback"
+TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "polly", "google", "fallback"
 
 # ElevenLabs API configuration
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_TEXT_TO_VOICE_API_KEY")
@@ -48,6 +70,67 @@ DEFAULT_VOICE_ID = "goT3UYdM9bhm0n2lmKQx"  # Edward voice - British, Dark, Seduc
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_POLLY_REGION = os.getenv("AWS_POLLY_REGION", "us-east-1")
+
+# Google Gemini TTS configuration
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+# TTS Provider Override configuration
+TTS_PROVIDER_OVERRIDE_SECRET = os.getenv("TTS_PROVIDER_OVERRIDE_SECRET")
+
+def get_tts_provider_override(request: Request) -> Optional[str]:
+    """Extract and validate TTS provider override from query parameters
+
+    Allows testing different TTS providers via query parameters:
+    Example: ?tts=google&secret=your_secret_key
+
+    Args:
+        request: FastAPI Request object
+
+    Returns:
+        str: Provider name if valid override, None otherwise
+    """
+    if not TTS_PROVIDER_OVERRIDE_SECRET:
+        return None
+
+    # Extract query parameters
+    tts_param = request.query_params.get("tts")
+    secret_param = request.query_params.get("secret")
+
+    # Validate both parameters are present
+    if not tts_param or not secret_param:
+        return None
+
+    # Validate secret
+    if secret_param != TTS_PROVIDER_OVERRIDE_SECRET:
+        logger.warning(f"Invalid TTS override secret attempt from IP: {extract_client_ip(request)}")
+        return None
+
+    # Validate provider is supported
+    valid_providers = ["elevenlabs", "polly", "google", "fallback"]
+    if tts_param.lower() not in valid_providers:
+        logger.warning(f"Invalid TTS provider override: {tts_param}")
+        return None
+
+    logger.info(f"TTS provider override: {tts_param} from IP: {extract_client_ip(request)}")
+    return tts_param.lower()
+
+def get_audio_format_for_provider(provider: str) -> tuple[str, str]:
+    """Get audio file extension and MIME type for TTS provider
+
+    Args:
+        provider: TTS provider name (elevenlabs, polly, google)
+
+    Returns:
+        tuple: (file_extension, mime_type)
+        - file_extension: "mp3" or "ogg"
+        - mime_type: "audio/mpeg" or "audio/ogg"
+    """
+    format_map = {
+        "elevenlabs": ("mp3", "audio/mpeg"),
+        "polly": ("mp3", "audio/mpeg"),
+        "google": ("mp3", "audio/mpeg"),  # TODO: Switch back to OGG later
+    }
+    return format_map.get(provider.lower(), ("mp3", "audio/mpeg"))
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance between two points using Haversine formula (in km)"""
@@ -68,15 +151,17 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 def get_voice_folder() -> str:
     """Get the voice folder name based on TTS provider configuration
-    
+
     Returns:
-        str: "edward" for ElevenLabs, "amy" for AWS Polly
+        str: "edward" for ElevenLabs, "amy" for AWS Polly, "sadachbia" for Google TTS
     """
     provider = TTS_PROVIDER.lower()
     if provider in ["elevenlabs", "fallback"]:
         return "edward"
     elif provider == "polly":
         return "amy"
+    elif provider == "google":
+        return "sadachbia"
     else:
         # Default to edward for unknown providers
         return "edward"
@@ -148,6 +233,102 @@ async def convert_text_to_speech_polly(text: str) -> tuple[bytes, str]:
         logger.error(f"AWS Polly Unexpected Error: {str(e)}")
         return b"", f"AWS Polly unexpected error: {str(e)}"
 
+async def convert_text_to_speech_google(text: str) -> tuple[bytes, str]:
+    """Convert text to speech using Google Gemini 2.5 Flash Preview TTS
+
+    Returns:
+        tuple: (audio_content, error_message)
+        - audio_content: OGG Opus audio bytes if successful, empty bytes if failed
+        - error_message: Empty string if successful, error description if failed
+    """
+    if not GOOGLE_API_KEY:
+        logger.warning("Google API key not configured")
+        return b"", "Google API key not configured"
+
+    try:
+        # Import Google GenAI SDK
+        from google import genai
+        from google.genai import types
+        import subprocess
+        import time
+
+        # Initialize Gemini client
+        client = genai.Client(api_key=GOOGLE_API_KEY)
+
+        # Gemini TTS configuration
+        MODEL_ID = "gemini-2.5-flash-preview-tts"
+        VOICE_NAME = "Sadachbia"
+        VOICE_PROMPT = "Read the text in a posh British male voice, with a deep, rich baritone tone. Use precise articulation and a refined, formal delivery with minimal inflection and a very even pitch."
+
+        logger.info(f"Gemini TTS Request: Model={MODEL_ID}, Voice={VOICE_NAME}, Text='{text[:50]}...'")
+
+        # Start timing
+        start_time = time.time()
+
+        # Prepend voice prompt to the text content with colon separator
+        prompt_with_text = f"{VOICE_PROMPT}: {text}"
+
+        # Generate audio using Gemini (run in thread pool to avoid blocking event loop)
+        def _generate_gemini_audio():
+            return client.models.generate_content(
+                model=MODEL_ID,
+                contents=prompt_with_text,
+                config=types.GenerateContentConfig(
+                    temperature=1.1,
+                    response_modalities=["AUDIO"],
+                    speech_config=types.SpeechConfig(
+                        language_code="en-GB",
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                voice_name=VOICE_NAME
+                            )
+                        )
+                    )
+                )
+            )
+
+        response = await asyncio.to_thread(_generate_gemini_audio)
+
+        # Extract PCM data from response
+        pcm_data = response.candidates[0].content.parts[0].inline_data.data
+        api_time = time.time() - start_time
+        logger.info(f"Gemini API complete: {len(pcm_data)} bytes PCM in {api_time:.2f}s")
+
+        # Convert PCM to MP3 using ffmpeg (run in thread pool to avoid blocking event loop)
+        def _convert_pcm_to_mp3():
+            ffmpeg_process = subprocess.Popen(
+                [
+                    'ffmpeg',
+                    '-f', 's16le',  # 16-bit little-endian PCM
+                    '-ar', '24000',  # 24kHz sample rate
+                    '-ac', '1',  # mono
+                    '-i', 'pipe:0',  # input from stdin
+                    '-af', 'asetrate=24000*0.97,aresample=24000,atempo=1.2',  # Lower pitch 3% + speed up 20%
+                    '-c:a', 'libmp3lame',  # MP3 codec
+                    '-b:a', '64k',  # bitrate
+                    '-f', 'mp3',  # MP3 format
+                    'pipe:1'  # output to stdout
+                ],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            return ffmpeg_process.communicate(input=pcm_data)
+
+        mp3_data, ffmpeg_error = await asyncio.to_thread(_convert_pcm_to_mp3)
+
+        total_time = time.time() - start_time
+        logger.info(f"Conversion complete: {len(mp3_data)} bytes MP3 in {total_time:.2f}s total")
+
+        return mp3_data, ""
+
+    except ImportError as e:
+        logger.error(f"Gemini TTS ImportError: {str(e)}")
+        return b"", f"Gemini TTS import error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Gemini TTS Error: {str(e)}")
+        return b"", f"Gemini TTS unexpected error: {str(e)}"
+
 async def convert_text_to_speech_elevenlabs(text: str) -> tuple[bytes, str]:
     """Convert text to speech using ElevenLabs API
     
@@ -201,32 +382,42 @@ async def convert_text_to_speech_elevenlabs(text: str) -> tuple[bytes, str]:
         logger.error(f"ElevenLabs API error: {str(e)}")
         return b"", f"ElevenLabs API unexpected error: {str(e)}"
 
-async def convert_text_to_speech(text: str) -> tuple[bytes, str, str]:
-    """Convert text to speech using configured TTS provider
-    
+async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) -> tuple[bytes, str, str, str, str]:
+    """Convert text to speech using configured or overridden TTS provider
+
     Supports multiple providers based on TTS_PROVIDER environment variable:
     - "elevenlabs": Use ElevenLabs (default)
     - "polly": Use AWS Polly
+    - "google": Use Google Gemini Flash TTS
     - "fallback": Try ElevenLabs first, fallback to Polly on error
-    
+
+    Args:
+        text: Text to convert to speech
+        tts_override: Optional TTS provider override (from query params)
+
     Returns:
-        tuple: (audio_content, error_message, provider_used)
-        - audio_content: MP3 audio bytes if successful, empty bytes if failed
+        tuple: (audio_content, error_message, provider_used, file_extension, mime_type)
+        - audio_content: Audio bytes if successful, empty bytes if failed
         - error_message: Empty string if successful, error description if failed
-        - provider_used: Which provider was actually used ("elevenlabs" or "polly")
+        - provider_used: Which provider was actually used ("elevenlabs", "polly", or "google")
+        - file_extension: File extension for the audio format ("mp3" or "ogg")
+        - mime_type: MIME type for the audio format ("audio/mpeg" or "audio/ogg")
     """
-    provider = TTS_PROVIDER.lower()
-    
+    provider = tts_override.lower() if tts_override else TTS_PROVIDER.lower()
+
     audio_content = b""
     error = ""
     provider_used = ""
-    
+
     if provider == "elevenlabs":
         audio_content, error = await convert_text_to_speech_elevenlabs(text)
         provider_used = "elevenlabs"
     elif provider == "polly":
         audio_content, error = await convert_text_to_speech_polly(text)
         provider_used = "polly"
+    elif provider == "google":
+        audio_content, error = await convert_text_to_speech_google(text)
+        provider_used = "google"
     elif provider == "fallback":
         # Try ElevenLabs first, fallback to Polly on error
         logger.info("Using fallback strategy: trying ElevenLabs first")
@@ -238,11 +429,13 @@ async def convert_text_to_speech(text: str) -> tuple[bytes, str, str]:
             audio_content, error = await convert_text_to_speech_polly(text)
             provider_used = "polly"
     else:
-        error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', or 'fallback'"
+        error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', 'google', or 'fallback'"
         logger.error(error_msg)
-        return b"", error_msg, "unknown"
-    
-    return audio_content, error, provider_used
+        return b"", error_msg, "unknown", "mp3", "audio/mpeg"
+
+    # Get format info for the provider that was used
+    file_ext, mime_type = get_audio_format_for_provider(provider_used)
+    return audio_content, error, provider_used, file_ext, mime_type
 
 def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bool, nearby_aircraft: int):
     """Track scan:complete analytics event with flight data results"""
@@ -306,7 +499,7 @@ def track_plane_request(request: Request, lat: float, lng: float, plane_index: i
     except Exception as e:
         logger.error(f"Failed to track plane:request event: {e}", exc_info=True)
 
-def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs"):
+def track_audio_generation(request: Request, lat: float, lng: float, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3"):
     """Track generate:audio analytics event with flight and audio details"""
     try:
         import hashlib
@@ -359,7 +552,8 @@ def track_mp3_generation(request: Request, lat: float, lng: float, plane_index: 
             "audio_size_bytes": audio_size_bytes,
             "text_length": len(sentence),
             "tts_provider": tts_provider,
-            "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "amy_neural" if tts_provider == "polly" else "unknown"
+            "audio_format": audio_format,
+            "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "amy_neural" if tts_provider == "polly" else "gemini-2.5-flash-preview-tts" if tts_provider == "google" else "unknown"
         })
     except Exception as e:
         logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
@@ -654,7 +848,11 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     logger.info(f"Request to /plane/{plane_index}")
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
-    
+
+    # Get TTS provider override from query parameters
+    tts_override = get_tts_provider_override(request)
+    effective_provider = tts_override if tts_override else TTS_PROVIDER
+
     # Convert to 0-based index
     zero_based_index = plane_index - 1
     
@@ -771,20 +969,23 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         """
         
         return HTMLResponse(content=html_content)
-    
-    # Check cache first for the specific plane
-    cache_key = s3_cache.generate_cache_key(user_lat, user_lng, plane_index=plane_index)
-    cached_mp3 = await s3_cache.get(cache_key)
-    
-    if cached_mp3:
-        logger.info(f"Serving cached MP3 for plane {plane_index} at location: lat={user_lat}, lng={user_lng}")
-        
+
+    # Get audio format for the effective provider
+    file_ext, mime_type = get_audio_format_for_provider(effective_provider)
+
+    # Check cache first for the specific plane (include TTS provider and format in cache key)
+    cache_key = s3_cache.generate_cache_key(user_lat, user_lng, plane_index=plane_index, tts_provider=effective_provider, audio_format=file_ext)
+    cached_audio = await s3_cache.get(cache_key)
+
+    if cached_audio:
+        logger.info(f"Serving cached audio for plane {plane_index} at location: lat={user_lat}, lng={user_lng}, format={file_ext}")
+
         # Track plane request analytics for cache hit
         track_plane_request(request, user_lat, user_lng, plane_index, from_cache=True)
-        
+
         response_headers = {
-            "Content-Type": "audio/mpeg",
-            "Content-Length": str(len(cached_mp3)),
+            "Content-Type": mime_type,
+            "Content-Length": str(len(cached_audio)),
             "Accept-Ranges": "bytes",
             "Cache-Control": "public, max-age=3600",
             "Access-Control-Allow-Origin": "*",
@@ -792,11 +993,11 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
             "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
             "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
         }
-        
+
         return StreamingResponse(
-            iter([cached_mp3]),
+            iter([cached_audio]),
             status_code=200,
-            media_type="audio/mpeg",
+            media_type=mime_type,
             headers=response_headers
         )
     
@@ -826,25 +1027,24 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     # Generate TTS for the sentence
     import time
     tts_start_time = time.time()
-    audio_content, tts_error, tts_provider_used = await convert_text_to_speech(sentence)
+    audio_content, tts_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
     tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
-    
-        
+
     if audio_content and not tts_error:
-        # Cache the newly generated MP3 (don't await - do in background)
+        # Cache the newly generated audio (don't await - do in background)
         asyncio.create_task(s3_cache.set(cache_key, audio_content))
-        
-        # Track MP3 generation analytics if we have aircraft data
+
+        # Track audio generation analytics if we have aircraft data
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            track_mp3_generation(request, user_lat, user_lng, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used)
-        
+            track_audio_generation(request, user_lat, user_lng, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext)
+
         # Track plane request analytics for cache miss
         track_plane_request(request, user_lat, user_lng, plane_index, from_cache=False)
-        
-        # Return MP3 audio
+
+        # Return audio with correct format
         response_headers = {
-            "Content-Type": "audio/mpeg",
+            "Content-Type": actual_mime_type,
             "Content-Length": str(len(audio_content)),
             "Accept-Ranges": "bytes",
             "Cache-Control": "public, max-age=3600",
@@ -853,397 +1053,17 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
             "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
             "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
         }
-        
+
         return StreamingResponse(
             iter([audio_content]),
             status_code=200,
-            media_type="audio/mpeg",
+            media_type=actual_mime_type,
             headers=response_headers
         )
     else:
         # Fall back to text if TTS fails
         return {"message": sentence, "tts_error": tts_error}
 
-
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
-        <!-- Primary Meta Tags -->
-        <title>Dreaming of a Jet Plane - Interactive Yoto Plane Scanner</title>
-        <meta name="title" content="Dreaming of a Jet Plane - Interactive Yoto Plane Scanner">
-        <meta name="description" content="Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.">
-        <meta name="keywords" content="Yoto, airplane scanner, jet plane, kids learning, educational app, flight tracker, children audio">
-        <meta name="author" content="Callum Merriman">
-        <meta name="robots" content="index, follow">
-        
-        <!-- Open Graph / Facebook -->
-        <meta property="og:type" content="website">
-        <meta property="og:url" content="https://dreamingofajetplane.com/">
-        <meta property="og:title" content="Dreaming of a Jet Plane - Interactive Yoto Plane Scanner">
-        <meta property="og:description" content="Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.">
-        <meta property="og:image" content="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-share.jpg">
-        <meta property="og:site_name" content="Dreaming of a Jet Plane">
-        
-        <!-- Twitter -->
-        <meta property="twitter:card" content="summary_large_image">
-        <meta property="twitter:url" content="https://dreamingofajetplane.com/">
-        <meta property="twitter:title" content="Dreaming of a Jet Plane - Interactive Yoto Plane Scanner">
-        <meta property="twitter:description" content="Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.">
-        <meta property="twitter:image" content="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-share.jpg">
-        
-        <!-- Additional SEO -->
-        <link rel="canonical" href="https://dreamingofajetplane.com/">
-        <meta name="theme-color" content="#f45436">
-        
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-        
-        <!-- Structured Data -->
-        <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
-          "name": "Dreaming of a Jet Plane",
-          "description": "Interactive Yoto Plane Scanner that finds airplanes in the skies and teaches kids about destinations",
-          "applicationCategory": "Educational",
-          "operatingSystem": "Yoto Player",
-          "creator": {
-            "@type": "Person",
-            "name": "Callum Merriman",
-            "url": "https://www.linkedin.com/in/cjkmerriman/"
-          },
-          "url": "https://dreamingofajetplane.com/",
-          "video": {
-            "@type": "VideoObject",
-            "name": "Dreaming of a Jet Plane Demo",
-            "description": "Demo video showing the Yoto Plane Scanner in action",
-            "thumbnailUrl": "https://img.youtube.com/vi/heSlOrH17po/maxresdefault.jpg",
-            "embedUrl": "https://www.youtube.com/embed/heSlOrH17po"
-          }
-        }
-        </script>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-            
-            body, html {
-                min-height: 100%;
-                background: #fff;
-                overflow-x: hidden;
-                cursor: none;
-            }
-            
-            .video-container {
-                position: relative;
-                width: 100vw;
-                display: flex;
-                align-items: flex-start;
-                justify-content: center;
-            }
-            
-            video {
-                width: 100%;
-                height: auto;
-                display: block;
-            }
-            
-            .content-container {
-                width: 100%;
-                max-width: 900px;
-                margin: 0 auto;
-                padding: 2rem;
-                background: #fff;
-                color: #000;
-                font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            }
-            
-            .content-grid {
-                display: grid;
-                grid-template-columns: 2fr 1fr;
-                gap: 3rem;
-                align-items: center;
-            }
-            
-            .description {
-                font-size: 1.1rem;
-                line-height: 1.6;
-                color: #333;
-                font-weight: 600;
-            }
-            
-            .button-column {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-            
-            .yoto-button {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                background: linear-gradient(180deg, #f45436 0%, #e03e20 100%);
-                color: white;
-                text-decoration: none;
-                padding: 1.2rem 2.5rem;
-                border-radius: 15px;
-                font-size: 1.1rem;
-                font-weight: 700;
-                text-align: center;
-                transition: all 0.2s ease;
-                box-shadow: 0 4px 0 #c1301a, 0 6px 20px rgba(244, 84, 54, 0.3);
-                border: none;
-                cursor: pointer;
-                font-family: inherit;
-                letter-spacing: 0.5px;
-                white-space: nowrap;
-                padding-top: 1.3rem;
-                padding-bottom: 1.1rem;
-            }
-            
-            .button-icon {
-                width: 28px;
-                height: 28px;
-                border-radius: 4px;
-            }
-            
-            .yoto-button:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 5px 0 #c1301a, 0 8px 25px rgba(244, 84, 54, 0.4);
-                background: linear-gradient(180deg, #f66648 0%, #e03e20 100%);
-            }
-            
-            .yoto-button:active {
-                transform: translateY(2px);
-                box-shadow: 0 2px 0 #c1301a, 0 4px 15px rgba(244, 84, 54, 0.3);
-            }
-            
-            .footer {
-                background: #fff;
-                padding: 2rem;
-                text-align: center;
-                border-top: 1px solid #eee;
-                font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            }
-            
-            .footer p {
-                margin: 0;
-                color: #666;
-                font-size: 0.9rem;
-            }
-            
-            .footer a {
-                color: #f45436;
-                text-decoration: none;
-                font-weight: 600;
-                transition: color 0.2s ease;
-            }
-            
-            .footer a:hover {
-                color: #e03e20;
-                text-decoration: underline;
-            }
-            
-            @media (max-width: 768px) {
-                .content-grid {
-                    grid-template-columns: 1fr;
-                    gap: 2rem;
-                    text-align: center;
-                }
-                
-                .content-container {
-                    padding: 1.5rem;
-                }
-                
-                .footer {
-                    padding: 1.5rem;
-                }
-            }
-            
-            .loading {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: white;
-                font-family: Arial, sans-serif;
-                font-size: 24px;
-                z-index: 10;
-            }
-            
-            .click-to-play {
-                position: absolute;
-                top: 2rem;
-                right: 2rem;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
-                color: #333;
-                padding: 1.2rem 2.5rem;
-                border-radius: 15px;
-                font-size: 1.1rem;
-                font-weight: 700;
-                text-align: center;
-                transition: all 0.2s ease;
-                box-shadow: 0 4px 0 #b0b0b0, 0 6px 20px rgba(224, 224, 224, 0.3);
-                border: none;
-                cursor: pointer;
-                font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                letter-spacing: 0.5px;
-                white-space: nowrap;
-                padding-top: 1.3rem;
-                padding-bottom: 1.1rem;
-                z-index: 20;
-            }
-            
-            .click-to-play:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 5px 0 #b0b0b0, 0 8px 25px rgba(224, 224, 224, 0.4);
-                background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%);
-            }
-            
-            .click-to-play:active {
-                transform: translateY(2px);
-                box-shadow: 0 2px 0 #b0b0b0, 0 4px 15px rgba(224, 224, 224, 0.3);
-            }
-            
-            .hidden {
-                display: none;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="video-container">
-            <div class="loading" id="loading">Loading video...</div>
-            <div class="click-to-play hidden" id="playButton">🔊 Turn On Sound</div>
-            <video 
-                id="mainVideo"
-                autoplay 
-                muted 
-                loop 
-                playsinline
-                preload="auto">
-                <source src="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/Dreaming+Of+A+Jet+Plane+-+Yoto.mp4" type="video/mp4">
-                <!-- Fallback to YouTube embed if video file not available -->
-                <div style="position: relative; width: 100%; height: 100%;">
-                    <iframe 
-                        src="https://www.youtube.com/embed/heSlOrH17po?autoplay=1&mute=1&loop=1&playlist=heSlOrH17po&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1" 
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-                        title="Dreaming of a Jet Plane"
-                        allowfullscreen>
-                    </iframe>
-                </div>
-            </video>
-        </div>
-        
-        <div class="content-container">
-            <div class="content-grid">
-                <div class="description">
-                    <p>Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.</p>
-                </div>
-                <div class="button-column">
-                    <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" class="yoto-button">
-                        <img src="https://play-lh.googleusercontent.com/x2yP9r4V-Gnh87GubVMOdwj8kpOW4pFFkB483C4-dCk_odXfuAH4sYqvwmeVFWsHQ5Y" alt="Yoto" class="button-icon">
-                        Add To Library
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <footer class="footer">
-            <p>Created by <a href="https://www.linkedin.com/in/cjkmerriman/" target="_blank">Callum Merriman</a></p>
-        </footer>
-        
-        <script>
-            const video = document.getElementById('mainVideo');
-            const loading = document.getElementById('loading');
-            const playButton = document.getElementById('playButton');
-            
-            // Handle video loading
-            video.addEventListener('loadstart', () => {
-                loading.style.display = 'block';
-            });
-            
-            video.addEventListener('canplay', () => {
-                loading.style.display = 'none';
-                
-                // Try to play with sound first
-                video.muted = false;
-                const playPromise = video.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        // If autoplay with sound fails, fall back to muted autoplay
-                        video.muted = true;
-                        video.play().then(() => {
-                            // Show button to enable sound
-                            playButton.classList.remove('hidden');
-                        }).catch(() => {
-                            // If even muted autoplay fails, show play button
-                            playButton.classList.remove('hidden');
-                            playButton.textContent = '▶ Click to Play';
-                        });
-                    });
-                }
-            });
-            
-            video.addEventListener('error', () => {
-                loading.textContent = 'Loading YouTube player...';
-                // Video failed to load, fallback will show
-            });
-            
-            // Handle click to play with sound
-            playButton.addEventListener('click', () => {
-                video.muted = false;
-                video.play();
-                playButton.classList.add('hidden');
-            });
-            
-            // Hide cursor after inactivity
-            let cursorTimer;
-            document.addEventListener('mousemove', () => {
-                document.body.style.cursor = 'default';
-                clearTimeout(cursorTimer);
-                cursorTimer = setTimeout(() => {
-                    document.body.style.cursor = 'none';
-                }, 3000);
-            });
-            
-            // Click anywhere to enable sound
-            document.addEventListener('click', (e) => {
-                if (e.target !== playButton && video.muted) {
-                    video.muted = false;
-                    playButton.classList.add('hidden');
-                }
-            });
-        </script>
-    </body>
-    </html>
-    """
-
-@app.options("/")
-async def root_options():
-    """Handle CORS preflight requests for main endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
 
 @app.get("/intro.mp3")
 async def intro_endpoint(request: Request, lat: float = None, lng: float = None):
@@ -1288,49 +1108,43 @@ async def scanning_options_endpoint():
     return await scanning_options()
 
 
-@app.get("/test-cache")
-async def test_cache_endpoint():
-    """Test S3 cache functionality without using ElevenLabs API"""
-    # Create dummy MP3 data (just some bytes that could represent audio)
-    dummy_mp3_data = b"fake_mp3_data_for_testing_" * 1000  # ~26KB of fake data
-    
-    # Generate a test cache key
-    test_lat, test_lng = 51.5074, -0.1278  # London coordinates
-    cache_key = s3_cache.generate_cache_key(test_lat, test_lng)
-    
-    logger.info(f"Testing cache upload with key: {cache_key}")
-    
-    # Try to upload to cache
-    upload_success = await s3_cache.set(cache_key, dummy_mp3_data)
-    
-    # Try to retrieve from cache
-    cached_data = await s3_cache.get(cache_key)
-    
-    return {
-        "test_location": {"lat": test_lat, "lng": test_lng},
-        "cache_key": cache_key,
-        "upload_success": upload_success,
-        "upload_data_size": len(dummy_mp3_data),
-        "cache_hit": cached_data is not None,
-        "cached_data_size": len(cached_data) if cached_data else 0,
-        "s3_cache_enabled": s3_cache.enabled,
-        "bucket_name": s3_cache.bucket_name,
-        "aws_configured": bool(s3_cache.aws_access_key and s3_cache.aws_secret_key)
-    }
-
 @app.get("/plane/1")
-async def plane_1_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0):
-    """Get MP3 for the closest aircraft"""
+async def plane_1_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0, tts: str = None, secret: str = None):
+    """Get MP3 for the closest aircraft
+
+    Query Parameters:
+        lat: Optional latitude override
+        lng: Optional longitude override
+        debug: Debug mode (1 = return HTML, 0 = return audio)
+        tts: TTS provider override (requires secret)
+        secret: Secret key for TTS provider override
+    """
     return await handle_plane_endpoint(request, 1, lat, lng, debug)
 
 @app.get("/plane/2")
-async def plane_2_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0):
-    """Get MP3 for the second closest aircraft"""
+async def plane_2_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0, tts: str = None, secret: str = None):
+    """Get MP3 for the second closest aircraft
+
+    Query Parameters:
+        lat: Optional latitude override
+        lng: Optional longitude override
+        debug: Debug mode (1 = return HTML, 0 = return audio)
+        tts: TTS provider override (requires secret)
+        secret: Secret key for TTS provider override
+    """
     return await handle_plane_endpoint(request, 2, lat, lng, debug)
 
 @app.get("/plane/3")
-async def plane_3_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0):
-    """Get MP3 for the third closest aircraft"""
+async def plane_3_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0, tts: str = None, secret: str = None):
+    """Get MP3 for the third closest aircraft
+
+    Query Parameters:
+        lat: Optional latitude override
+        lng: Optional longitude override
+        debug: Debug mode (1 = return HTML, 0 = return audio)
+        tts: TTS provider override (requires secret)
+        secret: Secret key for TTS provider override
+    """
     return await handle_plane_endpoint(request, 3, lat, lng, debug)
 
 @app.options("/plane/1")
