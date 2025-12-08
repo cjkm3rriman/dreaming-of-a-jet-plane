@@ -147,11 +147,11 @@ async def _generate_and_cache_plane_audio(plane_index: int, cache_key: str, sent
         return False
 
 
-async def _stream_scanning_mp3_only(request: Request):
+async def _stream_scanning_mp3_only(request: Request, tts_override: str = None):
     """Stream scanning MP3 file from S3 without analytics or background processing"""
     # Import here to avoid circular imports
     from .main import get_voice_specific_s3_url
-    mp3_url = get_voice_specific_s3_url("scanning.mp3")
+    mp3_url = get_voice_specific_s3_url("scanning.mp3", tts_override)
     
     try:
         # Prepare headers for the S3 request
@@ -232,7 +232,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
         last_request_time = _scanning_request_cache[session_key]
         if current_time - last_request_time < SCANNING_DEBOUNCE_SECONDS:
             # Still stream the MP3, but skip analytics and background processing
-            return await _stream_scanning_mp3_only(request)
+            return await _stream_scanning_mp3_only(request, tts_override)
     
     # Update cache with current request time
     _scanning_request_cache[session_key] = current_time
@@ -278,7 +278,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     # Continue with normal scanning MP3 streaming
     # Import here to avoid circular imports
     from .main import get_voice_specific_s3_url
-    mp3_url = get_voice_specific_s3_url("scanning.mp3")
+    mp3_url = get_voice_specific_s3_url("scanning.mp3", tts_override)
     
     try:
         # Prepare headers for the S3 request

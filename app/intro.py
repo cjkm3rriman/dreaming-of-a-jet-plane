@@ -15,12 +15,15 @@ async def stream_intro(request: Request, lat: float = None, lng: float = None):
     """Stream MP3 file from S3 with proper headers for browser playback"""
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
-    
+
     # Import here to avoid circular imports
-    from .main import get_voice_specific_s3_url
-    
+    from .main import get_voice_specific_s3_url, get_tts_provider_override
+
+    # Get TTS provider override from query parameters
+    tts_override = get_tts_provider_override(request)
+
     # MP3 file hosted on S3 with voice-specific folder
-    mp3_url = get_voice_specific_s3_url("intro.mp3")
+    mp3_url = get_voice_specific_s3_url("intro.mp3", tts_override)
     
     try:
         # Prepare headers for the S3 request

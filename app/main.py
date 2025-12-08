@@ -207,13 +207,16 @@ def get_audio_format_for_provider(provider: str) -> tuple[str, str]:
     }
     return format_map.get(provider.lower(), ("mp3", "audio/mpeg"))
 
-def get_voice_folder() -> str:
+def get_voice_folder(tts_override: Optional[str] = None) -> str:
     """Get the voice folder name based on TTS provider configuration
+
+    Args:
+        tts_override: Optional TTS provider override (e.g., "google", "polly")
 
     Returns:
         str: "edward" for ElevenLabs, "amy" for AWS Polly, "sadachbia" for Google TTS
     """
-    provider = TTS_PROVIDER.lower()
+    provider = (tts_override or TTS_PROVIDER).lower()
     if provider in ["elevenlabs", "fallback"]:
         return "edward"
     elif provider == "polly":
@@ -224,16 +227,17 @@ def get_voice_folder() -> str:
         # Default to edward for unknown providers
         return "edward"
 
-def get_voice_specific_s3_url(filename: str) -> str:
+def get_voice_specific_s3_url(filename: str, tts_override: Optional[str] = None) -> str:
     """Generate voice-specific S3 URL for static MP3 files
-    
+
     Args:
         filename: The MP3 filename (e.g., "scanning.mp3")
-        
+        tts_override: Optional TTS provider override (e.g., "google", "polly")
+
     Returns:
         str: Full S3 URL with voice folder (e.g., "https://.../edward/scanning.mp3")
     """
-    voice_folder = get_voice_folder()
+    voice_folder = get_voice_folder(tts_override)
     return f"https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/{voice_folder}/{filename}"
 
 
