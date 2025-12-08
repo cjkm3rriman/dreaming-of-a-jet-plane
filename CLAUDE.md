@@ -175,6 +175,84 @@ See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. E
 **Files to modify**: `app/location_utils.py`, `app/flight_text.py`, function callers
 
 
+## TODO: Improve Aircraft Selection Diversity and Filtering
+
+**Problem**: With multiple providers (FR24 and Airlabs) returning different result sets, we need smarter aircraft selection to provide diverse, interesting flight information while filtering out less relevant flights.
+
+**Goals**:
+1. **Filter out cargo and private flights** - Focus on passenger flights that are more interesting for users
+2. **Prioritize destination diversity** - Avoid showing 3 flights all going to the same city
+3. **Consider destination rareness** - Prioritize interesting/exotic destinations over common short-haul routes
+4. **Leverage multiple providers** - Use Airlabs' broader coverage to find more diverse results
+5. **Smart selection algorithm** - Balance distance, destination interest, and diversity
+
+**Implementation Ideas**:
+
+### 1. Cargo & Private Flight Filtering
+- Use existing `is_cargo_airline()` and `is_private_airline()` functions from `airline_database.py`
+- Filter these out early in the selection process unless no passenger flights are available
+- Track analytics on filtered vs. shown flights
+
+### 2. Destination Diversity Scoring
+- When selecting 3 aircraft, prefer flights going to different cities/countries
+- Penalize selecting multiple flights to the same destination
+- Consider: "Flight to Paris, London, Tokyo" > "Flight to Paris, Paris, Lyon"
+
+### 3. Destination Rareness/Interest Score
+- Score destinations based on:
+  - Distance from user (longer = more interesting)
+  - Population size (major cities = more interesting, from `cities.json`)
+  - Geographic diversity (different continents/regions)
+  - Whether we have fun facts for the destination (indicates it's noteworthy)
+- Create a simple scoring system to rank flights
+
+### 4. Selection Algorithm
+```
+For each aircraft in nearby results:
+  - Skip if cargo/private (unless no passenger flights available)
+  - Calculate interest score = (distance_score + destination_score + diversity_score)
+  - distance_score: normalize distance to 0-100 scale
+  - destination_score: based on city population, continent, fun facts availability
+  - diversity_score: bonus points if destination differs from already-selected flights
+
+Select top 3 flights by interest score
+```
+
+### 5. Provider Strategy
+- Try primary provider first (FR24 or Airlabs)
+- If results are low-diversity (e.g., all same destination, mostly cargo), try fallback provider
+- Merge results from multiple providers and apply selection algorithm
+- Track which provider contributed each selected flight in analytics
+
+**Benefits**:
+- More interesting flight information for users
+- Better educational value with diverse destinations
+- Avoid showing boring cargo/private flights
+- Make better use of multiple provider data
+
+**Files to modify**:
+- `app/main.py` - Add aircraft selection/filtering logic
+- `app/airline_database.py` - Already has cargo/private detection (✓)
+- `app/cities_database.py` - Use for destination scoring
+- `app/aircraft_providers/*.py` - Consider filtering at provider level
+- `app/analytics.py` - Track diversity metrics
+
+**Phase 1 (Quick Wins)**:
+- Filter out cargo airlines using existing `is_cargo_airline()`
+- Filter out private/charter airlines using existing `is_private_airline()`
+- Simple destination deduplication (don't show 3 flights to same city)
+
+**Phase 2 (Smart Selection)**:
+- Implement destination interest scoring
+- Add diversity bonuses to selection algorithm
+- Consider distance and destination population
+
+**Phase 3 (Advanced)**:
+- Multi-provider result merging with smart selection
+- Geographic diversity scoring (different continents)
+- Analytics dashboard for selection quality
+
+
 ## TODO: Clean Up Error Handling and Logging
 
 **Scope**: Review and improve error handling and logging throughout the application
