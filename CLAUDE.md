@@ -149,15 +149,6 @@ When adding new cities to `app/cities.json`:
 See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. Each fact should be educational but entertaining, helping kids learn while staying engaged.
 
 
-## TODO: Google TTS Streaming via Gemini API Flash
-
-1. Get a proof of concept working, so I can stream audio and save to cache at same time
-2. Have intro initiate non-streamign requests as background processes
-3. if hitting plane endpoints directly and a cache miss, start streaming & cache
-
-Consider caching of plane data too and if that expires?
-
-
 ## TODO: Smart Fun Facts Based on User Location
 
 ### Feature: Use Departure City Fun Facts When User is at Destination
