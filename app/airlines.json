@@ -413,7 +413,10 @@
   "EGU": "Eagle Air",
   "EIA": "Evergreen International Airlines",
   "EIN": "Aer Lingus",
-  "EJA": "NetJets",
+  "EJA": {
+    "name": "NetJets",
+    "private_or_charter": true
+  },
   "EJU": "easyJet Europe",
   "ELA": "Eastland Air",
   "ELB": "Ellinair",
@@ -463,7 +466,10 @@
   "FCL": "Florida Coastal Airlines",
   "FDA": "Fuji Dream Airlines",
   "FDB": "Flydubai",
-  "FDX": "FedEx Express",
+  "FDX": {
+    "name": "FedEx Express",
+    "cargo_only": true
+  },
   "FDY": "Sun Air International",
   "FEA": "Far Eastern Air Transport",
   "FEG": "FlyEgypt",
@@ -539,13 +545,16 @@
   "GNT": "Amber Air",
   "GON": "Gonini Air Services",
   "GOW": "GoAir",
-  "GPD": "Tradewind Aviation",
+  "GPD": "Tradewind",
   "GRG": "Air Georgia",
   "GRL": "Air Greenland",
   "GRN": "Rio Grande Air",
   "GRO": "Allegro",
   "GSM": "Flyglobespan",
-  "GTI": "Atlas Air",
+  "GTI": {
+    "name": "Atlas Air",
+    "cargo_only": true
+  },
   "GUJ": "Gujarat Airways",
   "GUN": "Grant Aviation",
   "GUY": "Air Guyane",
@@ -892,7 +901,10 @@
   "NIA": "Nile Air",
   "NIG": "Aero Contractors",
   "NIH": "NAM Air",
-  "NJE": "NetJets Europe",
+  "NJE": {
+    "name": "NetJets Europe",
+    "private_or_charter": true
+  },
   "NJS": "National Jet Systems",
   "NKF": "Barents AirLink",
   "NKS": "Spirit Airlines",
@@ -1291,7 +1303,10 @@
   "ULS": "Ultra Air",
   "UMK": "Yuzhmashavia",
   "UPA": "Air Foyle",
-  "UPS": "United Parcel Service",
+  "UPS": {
+    "name": "United Parcel Service",
+    "cargo_only": true
+  },
   "URG": "Air Urga",
   "URN": "Turan Air",
   "USH": "US Helicopter",

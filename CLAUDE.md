@@ -11,7 +11,7 @@ This is a FastAPI application called "dreaming-of-a-jet-plane" that uses Yoto to
 - **Python 3.13+**: Core language
 - **UV**: Python package manager for dependency management
 - **FastAPI**: Web framework with standard extras
-- **Flightradar24 API**: Live flight tracking and aircraft data
+- **Flightradar24 & Airlabs APIs**: Live flight tracking and aircraft data across multiple providers
 - **HTTPX**: Async HTTP client for API requests
 - **ElevenLabs API**: Text-to-speech voice synthesis
 - **Mixpanel**: Analytics tracking for usage metrics
@@ -56,11 +56,14 @@ The application requires several environment variables for full functionality:
 - `FR24_API_KEY`: Flightradar24 API key for live flight data
 - `GOOGLE_API_KEY`: Google API key for Gemini TTS
 - `TTS_PROVIDER`: TTS provider to use (options: `elevenlabs`, `polly`, `google`, `fallback`)
+- `LIVE_AIRCRAFT_PROVIDER`: Primary live aircraft provider key (e.g., `fr24` or `airlabs`)
 
 ### Optional
 - `ELEVENLABS_TEXT_TO_VOICE_API_KEY`: ElevenLabs API key for text-to-speech (if using ElevenLabs)
 - `MIXPANEL_TOKEN`: Mixpanel project token for analytics tracking
-- `TTS_PROVIDER_OVERRIDE_SECRET`: Secret key for testing different TTS providers via query parameters
+- `PROVIDER_OVERRIDE_SECRET`: Shared secret for overriding both TTS and live aircraft providers via query parameters
+- `LIVE_AIRCRAFT_PROVIDER_FALLBACKS`: Comma-separated list of fallback providers to try if the primary fails
+- `AIRLABS_API_KEY`: Airlabs API key (needed if `airlabs` is used as a primary or fallback provider)
 - AWS S3 credentials for caching (if using S3 cache)
 - AWS Polly credentials (if using Polly TTS provider)
 

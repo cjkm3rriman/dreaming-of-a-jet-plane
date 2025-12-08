@@ -37,7 +37,7 @@ class S3MP3Cache:
             self.enabled = True
             logger.info(f"S3 cache initialized: bucket={bucket_name}, prefix={cache_prefix}")
     
-    def generate_cache_key(self, lat: float, lng: float, content_type: str = "audio", plane_index: Optional[int] = None, tts_provider: Optional[str] = None, audio_format: Optional[str] = None) -> str:
+    def generate_cache_key(self, lat: float, lng: float, content_type: str = "audio", plane_index: Optional[int] = None, tts_provider: Optional[str] = None, audio_format: Optional[str] = None, namespace: Optional[str] = None) -> str:
         """Generate cache key based on rounded location coordinates
 
         Args:
@@ -47,6 +47,7 @@ class S3MP3Cache:
             plane_index: Optional plane index for multiple aircraft (1, 2, 3)
             tts_provider: Optional TTS provider name for audio caching (different providers = different cache)
             audio_format: Optional audio format extension ("mp3", "ogg")
+            namespace: Optional namespace to differentiate caches (e.g., provider name)
         """
         # Round to 2 decimal places (~1km precision) to increase cache hits
         rounded_lat = round(lat, 2)
@@ -54,6 +55,8 @@ class S3MP3Cache:
 
         # Create hash of location
         location_str = f"{rounded_lat},{rounded_lng}"
+        if namespace:
+            location_str = f"{location_str}:{namespace}"
         cache_key = hashlib.md5(location_str.encode()).hexdigest()
 
         # Build filename based on content type, plane index, and TTS provider

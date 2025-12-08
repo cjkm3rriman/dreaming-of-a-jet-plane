@@ -14,7 +14,7 @@ Check it out: https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2
 - **UV** - Fast Python package manager for dependency management
 
 ### External APIs & Services
-- **Flightradar24 API** - Unified live flight tracking with comprehensive aircraft and route data
+- **Flightradar24 & Airlabs APIs** - Multi-provider live flight tracking with aircraft and route data
 - **ElevenLabs API** - Primary text-to-speech voice synthesis (Edward voice)
 - **AWS Polly** - Secondary/fallback text-to-speech with neural voices (Amy voice)
 - **ipapi.co** - IP geolocation service for converting IP addresses to coordinates

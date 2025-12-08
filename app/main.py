@@ -1,7 +1,6 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, HTMLResponse
 import httpx
-import math
 import os
 import sys
 import asyncio
@@ -32,9 +31,7 @@ httpx_logger.addFilter(SupressHeadRequestsFilter())
 google_genai_logger = logging.getLogger('google_genai')
 google_genai_logger.setLevel(logging.WARNING)
 
-from .aircraft_database import get_aircraft_name, get_passenger_capacity
-from .airport_database import get_city_country, get_airport_by_iata
-from .airline_database import get_airline_name
+from .airport_database import get_airport_by_iata
 from .intro import stream_intro, intro_options
 from .overandout import stream_overandout, overandout_options
 from .scanning_again import stream_scanning_again, scanning_again_options
@@ -45,6 +42,8 @@ from .location_utils import get_user_location, extract_client_ip, extract_user_a
 from .analytics import analytics
 from .website_home import register_website_home_routes
 from .test_gemini_tts import register_test_gemini_tts_routes
+from .test_live_aircraft import register_test_live_aircraft_routes
+from .aircraft_providers import get_provider_definition, get_provider_names
 
 app = FastAPI()
 
@@ -54,9 +53,10 @@ register_website_home_routes(app)
 # Register test Gemini TTS routes
 register_test_gemini_tts_routes(app)
 
-# Flightradar24 API configuration
-FR24_API_KEY = os.getenv("FR24_API_KEY")
-FR24_BASE_URL = "https://fr24api.flightradar24.com"
+# Live aircraft provider configuration
+LIVE_AIRCRAFT_PROVIDER = (os.getenv("LIVE_AIRCRAFT_PROVIDER") or "fr24").lower()
+LIVE_AIRCRAFT_PROVIDER_FALLBACKS = [p.strip().lower() for p in os.getenv("LIVE_AIRCRAFT_PROVIDER_FALLBACKS", "").split(",") if p.strip()]
+PROVIDER_OVERRIDE_SECRET = os.getenv("PROVIDER_OVERRIDE_SECRET")
 
 # TTS Configuration
 TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "polly", "google", "fallback"
@@ -74,9 +74,6 @@ AWS_POLLY_REGION = os.getenv("AWS_POLLY_REGION", "us-east-1")
 # Google Gemini TTS configuration
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# TTS Provider Override configuration
-TTS_PROVIDER_OVERRIDE_SECRET = os.getenv("TTS_PROVIDER_OVERRIDE_SECRET")
-
 def get_tts_provider_override(request: Request) -> Optional[str]:
     """Extract and validate TTS provider override from query parameters
 
@@ -89,7 +86,7 @@ def get_tts_provider_override(request: Request) -> Optional[str]:
     Returns:
         str: Provider name if valid override, None otherwise
     """
-    if not TTS_PROVIDER_OVERRIDE_SECRET:
+    if not PROVIDER_OVERRIDE_SECRET:
         return None
 
     # Extract query parameters
@@ -101,7 +98,7 @@ def get_tts_provider_override(request: Request) -> Optional[str]:
         return None
 
     # Validate secret
-    if secret_param != TTS_PROVIDER_OVERRIDE_SECRET:
+    if secret_param != PROVIDER_OVERRIDE_SECRET:
         logger.warning(f"Invalid TTS override secret attempt from IP: {extract_client_ip(request)}")
         return None
 
@@ -113,6 +110,84 @@ def get_tts_provider_override(request: Request) -> Optional[str]:
 
     logger.info(f"TTS provider override: {tts_param} from IP: {extract_client_ip(request)}")
     return tts_param.lower()
+
+
+def get_aircraft_provider_override(request: Optional[Request]) -> Optional[str]:
+    """Allow overriding the live aircraft provider for debugging"""
+    if not request or not PROVIDER_OVERRIDE_SECRET:
+        return None
+
+    provider_param = request.query_params.get("aircraft_provider") or request.query_params.get("provider")
+    secret_param = request.query_params.get("secret")
+
+    if not provider_param or not secret_param:
+        return None
+
+    if secret_param != PROVIDER_OVERRIDE_SECRET:
+        logger.warning(
+            f"Invalid aircraft provider override secret attempt from IP: {extract_client_ip(request)}"
+        )
+        return None
+
+    provider_value = provider_param.lower()
+    valid_providers = get_provider_names()
+
+    if provider_value not in valid_providers:
+        logger.warning(f"Invalid aircraft provider override: {provider_param}")
+        return None
+
+    logger.info(
+        f"Aircraft provider override '{provider_value}' from IP: {extract_client_ip(request)}"
+    )
+    return provider_value
+
+
+def get_live_aircraft_providers(request: Optional[Request], forced_provider: Optional[str] = None) -> List[str]:
+    """Determine the ordered list of providers to try"""
+    override = forced_provider or get_aircraft_provider_override(request)
+    provider_names = get_provider_names()
+
+    if override:
+        return [override]
+
+    ordered: List[str] = []
+    seen = set()
+
+    def _add_provider(name: Optional[str]):
+        if not name:
+            return
+        if name not in provider_names:
+            logger.warning(f"Requested aircraft provider '{name}' is not registered")
+            return
+        if name not in seen:
+            ordered.append(name)
+            seen.add(name)
+
+    _add_provider(LIVE_AIRCRAFT_PROVIDER)
+    for fallback in LIVE_AIRCRAFT_PROVIDER_FALLBACKS:
+        _add_provider(fallback)
+
+    if not ordered:
+        _add_provider("fr24")
+
+    return ordered
+
+
+def ensure_override_secret(secret: Optional[str]):
+    """Validate override secret when sensitive parameters are provided"""
+    if not PROVIDER_OVERRIDE_SECRET:
+        raise HTTPException(status_code=403, detail="Override secret is not configured")
+
+    if secret != PROVIDER_OVERRIDE_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid override secret")
+
+
+def validate_flight_position_override(lat: Optional[float], lng: Optional[float], secret: Optional[str]):
+    """Ensure manual lat/lng overrides are authorized"""
+    if lat is None and lng is None:
+        return
+
+    ensure_override_secret(secret)
 
 def get_audio_format_for_provider(provider: str) -> tuple[str, str]:
     """Get audio file extension and MIME type for TTS provider
@@ -131,23 +206,6 @@ def get_audio_format_for_provider(provider: str) -> tuple[str, str]:
         "google": ("mp3", "audio/mpeg"),  # TODO: Switch back to OGG later
     }
     return format_map.get(provider.lower(), ("mp3", "audio/mpeg"))
-
-def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Calculate distance between two points using Haversine formula (in km)"""
-    R = 6371  # Earth's radius in kilometers
-    
-    lat1_rad = math.radians(lat1)
-    lon1_rad = math.radians(lon1)
-    lat2_rad = math.radians(lat2)
-    lon2_rad = math.radians(lon2)
-    
-    dlat = lat2_rad - lat1_rad
-    dlon = lon2_rad - lon1_rad
-    
-    a = math.sin(dlat/2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    
-    return R * c
 
 def get_voice_folder() -> str:
     """Get the voice folder name based on TTS provider configuration
@@ -437,7 +495,14 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
     file_ext, mime_type = get_audio_format_for_provider(provider_used)
     return audio_content, error, provider_used, file_ext, mime_type
 
-def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bool, nearby_aircraft: int):
+def track_scan_complete(
+    request: Request,
+    lat: float,
+    lng: float,
+    from_cache: bool,
+    nearby_aircraft: int,
+    provider: str,
+):
     """Track scan:complete analytics event with flight data results"""
     try:
         import hashlib
@@ -463,7 +528,8 @@ def track_scan_complete(request: Request, lat: float, lng: float, from_cache: bo
             "lat": round(lat, 3),
             "lng": round(lng, 3),
             "from_cache": from_cache,
-            "nearby_aircraft": nearby_aircraft
+            "nearby_aircraft": nearby_aircraft,
+            "aircraft_provider": provider
         })
     except Exception as e:
         logger.error(f"Failed to track scan:complete event: {e}", exc_info=True)
@@ -647,195 +713,141 @@ def select_geographically_diverse_aircraft(aircraft_list: List[Dict[str, Any]]) 
     
     return selected_aircraft[:3]  # Ensure we never return more than 3
 
-async def get_nearby_aircraft(lat: float, lng: float, radius_km: float = 100, limit: int = 3, request: Optional[Request] = None) -> tuple[List[Dict[str, Any]], str]:
-    """Get aircraft near the given coordinates using Flightradar24 API with caching
-    
-    Args:
-        lat: Latitude
-        lng: Longitude
-        radius_km: Search radius in kilometers
-        limit: Maximum number of aircraft to return (default 3)
-    
-    Returns:
-        tuple: (aircraft_list, error_message)
-        - aircraft_list: List of aircraft data
-        - error_message: Empty string if successful, error description if failed
-    """
-    if not FR24_API_KEY:
-        logger.warning("Flightradar24 API key not configured")
-        return [], "Flightradar24 API key not configured"
-    
-    # Check API response cache first
-    api_cache_key = s3_cache.generate_cache_key(lat, lng, content_type="json")
-    cached_aircraft = await s3_cache.get(api_cache_key, content_type="json")
-    
-    if cached_aircraft:
-        # Get full cached aircraft list
-        full_aircraft_list = cached_aircraft.get('aircraft', [])
-        
-        # Track analytics for cache hit with total count if request is provided
+async def get_nearby_aircraft(
+    lat: float,
+    lng: float,
+    radius_km: float = 100,
+    limit: int = 3,
+    request: Optional[Request] = None,
+    provider_override: Optional[str] = None,
+) -> tuple[List[Dict[str, Any]], str]:
+    """Get aircraft near the given coordinates using configured providers with caching"""
+
+    provider_sequence = get_live_aircraft_providers(request, provider_override)
+    if not provider_sequence:
+        logger.error("No aircraft providers are configured")
         if request:
-            track_scan_complete(request, lat, lng, from_cache=True, nearby_aircraft=len(full_aircraft_list))
-        
-        # Return up to limit aircraft from cached data
-        return full_aircraft_list[:limit], ""
-    
-    try:
-        # Create bounding box for location filtering
-        lat_delta = radius_km / 111.0  # 1 degree lat ≈ 111 km
-        lon_delta = radius_km / (111.0 * math.cos(math.radians(lat)))  # Adjust for longitude
-        
-        bounds = {
-            "south": lat - lat_delta,
-            "north": lat + lat_delta, 
-            "west": lng - lon_delta,
-            "east": lng + lon_delta
-        }
-        
-        url = f"{FR24_BASE_URL}/api/live/flight-positions/full"
-        headers = {
-            "Authorization": f"Bearer {FR24_API_KEY}",
-            "Accept": "application/json",
-            "Accept-Version": "v1"
-        }
-        
-        params = {
-            "bounds": f"{bounds['north']:.3f},{bounds['south']:.3f},{bounds['west']:.3f},{bounds['east']:.3f}",
-            "limit": 5,  # Get multiple aircraft to find the actual nearest
-            "categories": "P"  # Filter to passenger aircraft only
-        }
-        
-        
-        async with httpx.AsyncClient() as client:
-            import time
-            start_time = time.time()
-            response = await client.get(url, headers=headers, params=params, timeout=10.0)
-            api_response_time_ms = int((time.time() - start_time) * 1000)
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                flights = data.get('data', [])
-                aircraft_list = []
-                
-                for flight in flights:
-                    try:
-                        # Extract position data using Flightradar24 field names
-                        aircraft_lat = flight.get('lat')
-                        aircraft_lon = flight.get('lon')
-                        
-                        
-                        if aircraft_lat is None or aircraft_lon is None:
-                            continue
-                            
-                        distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
-                        
-                        # Skip if outside radius (API bounds are approximate)
-                        if distance > radius_km:
-                            continue
-                        
-                        callsign = flight.get('callsign', '').strip() or "Unknown"
-                        
-                        # Get origin and destination airport information
-                        origin_iata = flight.get('orig_iata')
-                        dest_iata = flight.get('dest_iata')
-                        
-                        origin_city, origin_country = get_city_country(origin_iata) if origin_iata else (None, None)
-                        dest_city, dest_country = get_city_country(dest_iata) if dest_iata else (None, None)
-                        
-                        # Get airline information from painted_as field (ICAO code)
-                        airline_icao = flight.get('painted_as')
-                        airline_name = get_airline_name(airline_icao) if airline_icao else None
-                        
-                        aircraft_info = {
-                            "icao24": flight.get('hex'),
-                            "callsign": callsign,
-                            "flight_number": flight.get('flight'),
-                            "airline_icao": airline_icao,
-                            "airline_name": airline_name,
-                            "aircraft_registration": flight.get('reg'),
-                            "aircraft_icao": flight.get('type'),
-                            "aircraft": get_aircraft_name(flight.get('type', '')),
-                            "passenger_capacity": get_passenger_capacity(flight.get('type', '')),
-                            "origin_airport": origin_iata,
-                            "origin_city": origin_city,
-                            "origin_country": origin_country,
-                            "destination_airport": dest_iata,
-                            "destination_city": dest_city,
-                            "destination_country": dest_country,
-                            "country": None,  # Not available in this API response
-                            "latitude": aircraft_lat,
-                            "longitude": aircraft_lon,
-                            "altitude": flight.get('alt', 0),
-                            "velocity": flight.get('gspeed', 0),
-                            "heading": flight.get('track', 0),
-                            "distance_km": round(distance),
-                            "distance_miles": round(distance * 0.621371),
-                            "status": None,  # Not available in this API response
-                            "eta": flight.get('eta'),
-                            "fr24_id": flight.get('fr24_id')
-                        }
-                        
-                        aircraft_list.append(aircraft_info)
-                        
-                    except Exception as e:
-                        logger.warning(f"Error processing flight data: {e}")
-                        continue
-                
-                # Sort by distance first for logging comparison  
-                aircraft_list.sort(key=lambda x: x["distance_km"])
-                
-                # Log total aircraft returned from FlightRadar24
-                logger.info(f"FlightRadar24 returned {len(aircraft_list)} aircraft")
-                
-                # Select geographically diverse aircraft prioritizing destination diversity
-                aircraft_list = select_geographically_diverse_aircraft(aircraft_list)
-                
-                # Log total aircraft after geographic diversity selection
-                logger.info(f"Geographic diversity selected {len(aircraft_list)} aircraft")
-                
-                if aircraft_list:
-                    # Cache the aircraft data for future requests (store all aircraft)
-                    cache_data = {"aircraft": aircraft_list}
-                    asyncio.create_task(s3_cache.set(api_cache_key, cache_data, content_type="json"))
-                    logger.info(f"Cached {len(aircraft_list)} aircraft for location: lat={lat}, lng={lng}")
-                    
-                    # Track analytics for successful API response with total count if request is provided
-                    if request:
-                        track_scan_complete(request, lat, lng, from_cache=False, nearby_aircraft=len(aircraft_list))
-                    
-                    # Return up to limit aircraft
-                    return aircraft_list[:limit], ""
-                else:
-                    # Cache empty result too to avoid repeated API calls
-                    cache_data = {"aircraft": []}
-                    asyncio.create_task(s3_cache.set(api_cache_key, cache_data, content_type="json"))
-                    
-                    # Track analytics for empty API response if request is provided
-                    if request:
-                        track_scan_complete(request, lat, lng, from_cache=False, nearby_aircraft=0)
-                    
-                    return [], "No passenger aircraft found within 100km radius"
-                
+            track_scan_complete(request, lat, lng, from_cache=False, nearby_aircraft=0, provider="unknown")
+        return [], "No aircraft providers configured"
+
+    provider_errors: List[str] = []
+    provider_fetch_limit = max(limit + 2, 5)
+
+    for provider_name in provider_sequence:
+        provider_def = get_provider_definition(provider_name)
+        if not provider_def:
+            logger.warning(f"Requested aircraft provider '{provider_name}' is not registered")
+            provider_errors.append(f"Provider '{provider_name}' is not registered")
+            continue
+
+        display_name = provider_def.get("display_name", provider_name)
+
+        is_configured, config_error = provider_def["is_configured"]()
+        if not is_configured:
+            logger.warning(f"{display_name} is not configured: {config_error}")
+            provider_errors.append(config_error or f"{display_name} is not configured")
+            continue
+
+        cache_key = s3_cache.generate_cache_key(
+            lat,
+            lng,
+            content_type="json",
+            namespace=f"provider:{provider_name}",
+        )
+        cached_aircraft = await s3_cache.get(cache_key, content_type="json")
+
+        if cached_aircraft is not None:
+            full_aircraft_list = cached_aircraft.get("aircraft", [])
+            if full_aircraft_list:
+                logger.info(f"Using cached aircraft data from {display_name}")
+                if request:
+                    track_scan_complete(
+                        request,
+                        lat,
+                        lng,
+                        from_cache=True,
+                        nearby_aircraft=len(full_aircraft_list),
+                        provider=provider_name,
+                    )
+                return full_aircraft_list[:limit], ""
             else:
-                error_msg = f"Flightradar24 API returned HTTP {response.status_code}"
-                logger.error(f"Flightradar24 API Error: Status={response.status_code}, Body={response.text[:500]}")
-                return [], error_msg
-                
-    except httpx.TimeoutException:
-        logger.error(f"Flightradar24 API Timeout: Request timed out after 10 seconds")
-        return [], "Flightradar24 API request timed out (10 seconds)"
-    except httpx.RequestError as e:
-        logger.error(f"Flightradar24 API Connection Error: {str(e)}")
-        return [], f"Network connection error: {str(e)}"
-    except Exception as e:
-        logger.error(f"Flightradar24 API Unexpected Error: {str(e)}")
-        return [], f"Unexpected error: {str(e)}"
-    
-    return [], "Unknown error occurred"
+                logger.info(
+                    f"Cache hit for {display_name} but no aircraft available; trying next provider"
+                )
+                provider_errors.append(f"{display_name} cache had no aircraft")
+                continue
+
+        try:
+            aircraft_list, provider_error = await provider_def["fetch"](
+                lat, lng, radius_km, provider_fetch_limit
+            )
+        except Exception as exc:
+            logger.error(f"{display_name} provider raised exception: {exc}", exc_info=True)
+            provider_errors.append(f"{display_name} exception: {exc}")
+            continue
+
+        if aircraft_list:
+            aircraft_list.sort(key=lambda x: x.get("distance_km", float("inf")))
+            aircraft_list = select_geographically_diverse_aircraft(aircraft_list)
+
+            cache_data = {"provider": provider_name, "aircraft": aircraft_list}
+            asyncio.create_task(s3_cache.set(cache_key, cache_data, content_type="json"))
+            logger.info(
+                f"Cached {len(aircraft_list)} aircraft from {display_name} for lat={lat}, lng={lng}"
+            )
+
+            if request:
+                track_scan_complete(
+                    request,
+                    lat,
+                    lng,
+                    from_cache=False,
+                    nearby_aircraft=len(aircraft_list),
+                    provider=provider_name,
+                )
+
+            return aircraft_list[:limit], ""
+
+        # No aircraft returned, cache the empty response to avoid rapid retries
+        cache_data = {"provider": provider_name, "aircraft": []}
+        asyncio.create_task(s3_cache.set(cache_key, cache_data, content_type="json"))
+        logger.info(f"{display_name} returned no aircraft; trying next provider if available")
+        provider_errors.append(provider_error or f"{display_name} returned no aircraft")
+
+    final_error = "; ".join(error for error in provider_errors if error) or "No aircraft providers available"
+
+    if request:
+        fallback_provider = provider_sequence[-1] if provider_sequence else "unknown"
+        track_scan_complete(
+            request,
+            lat,
+            lng,
+            from_cache=False,
+            nearby_aircraft=0,
+            provider=fallback_provider,
+        )
+
+    return [], final_error
 
 
-async def handle_plane_endpoint(request: Request, plane_index: int, lat: float = None, lng: float = None, debug: int = 0):
+register_test_live_aircraft_routes(
+    app,
+    get_user_location_fn=get_user_location,
+    get_nearby_aircraft_fn=get_nearby_aircraft,
+    get_provider_definition_fn=get_provider_definition,
+    provider_override_secret_getter=lambda: PROVIDER_OVERRIDE_SECRET,
+)
+
+
+async def handle_plane_endpoint(
+    request: Request,
+    plane_index: int,
+    lat: float = None,
+    lng: float = None,
+    debug: int = 0,
+    secret: Optional[str] = None,
+    provider: Optional[str] = None,
+):
     """Handle individual plane endpoints (/plane/1, /plane/2, /plane/3)
     
     Args:
@@ -846,6 +858,13 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         debug: Debug mode flag
     """
     logger.info(f"Request to /plane/{plane_index}")
+    validate_flight_position_override(lat, lng, secret)
+
+    forced_provider = None
+    if provider:
+        ensure_override_secret(secret)
+        forced_provider = provider.lower()
+
     # Get user location using shared function
     user_lat, user_lng = await get_user_location(request, lat, lng)
 
@@ -868,13 +887,13 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         elif aircraft and len(aircraft) > 0:
             # Not enough planes, return an appropriate message for this plane index
             if plane_index == 2:
-                sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+                sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
             elif plane_index == 3:
                 plane_count = len(aircraft)
                 if plane_count == 1:
-                    sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+                    sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
                 else:
-                    sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try listening to plane 1 or plane 2 instead."
+                    sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
         else:
             # No aircraft found at all
             sentence = generate_flight_text([], error_message, user_lat, user_lng)
@@ -1002,7 +1021,13 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
         )
     
     # Cache miss - get aircraft data (this will use cached API data if available)
-    aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index), request=request)
+    aircraft, error_message = await get_nearby_aircraft(
+        user_lat,
+        user_lng,
+        limit=max(3, plane_index),
+        request=request,
+        provider_override=forced_provider,
+    )
     
     
     # Check if we have the requested plane
@@ -1013,13 +1038,13 @@ async def handle_plane_endpoint(request: Request, plane_index: int, lat: float =
     elif aircraft and len(aircraft) > 0:
         # Not enough planes, return an appropriate message for this plane index
         if plane_index == 2:
-            sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+            sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
         elif plane_index == 3:
             plane_count = len(aircraft)
             if plane_count == 1:
-                sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try listening to plane 1 instead."
+                sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
             else:
-                sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try listening to plane 1 or plane 2 instead."
+                sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
     else:
         # No aircraft found at all
         sentence = generate_flight_text([], error_message, user_lat, user_lng)
@@ -1109,43 +1134,70 @@ async def scanning_options_endpoint():
 
 
 @app.get("/plane/1")
-async def plane_1_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0, tts: str = None, secret: str = None):
+async def plane_1_endpoint(
+    request: Request,
+    lat: float = None,
+    lng: float = None,
+    debug: int = 0,
+    tts: str = None,
+    secret: str = None,
+    provider: str = None,
+):
     """Get MP3 for the closest aircraft
 
     Query Parameters:
-        lat: Optional latitude override
-        lng: Optional longitude override
+        lat: Optional latitude override (requires secret)
+        lng: Optional longitude override (requires secret)
         debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
-        secret: Secret key for TTS provider override
+        provider: Aircraft data provider override (requires secret)
+        secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 1, lat, lng, debug)
+    return await handle_plane_endpoint(request, 1, lat, lng, debug, secret, provider)
 
 @app.get("/plane/2")
-async def plane_2_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0, tts: str = None, secret: str = None):
+async def plane_2_endpoint(
+    request: Request,
+    lat: float = None,
+    lng: float = None,
+    debug: int = 0,
+    tts: str = None,
+    secret: str = None,
+    provider: str = None,
+):
     """Get MP3 for the second closest aircraft
 
     Query Parameters:
-        lat: Optional latitude override
-        lng: Optional longitude override
+        lat: Optional latitude override (requires secret)
+        lng: Optional longitude override (requires secret)
         debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
-        secret: Secret key for TTS provider override
+        provider: Aircraft data provider override (requires secret)
+        secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 2, lat, lng, debug)
+    return await handle_plane_endpoint(request, 2, lat, lng, debug, secret, provider)
 
 @app.get("/plane/3")
-async def plane_3_endpoint(request: Request, lat: float = None, lng: float = None, debug: int = 0, tts: str = None, secret: str = None):
+async def plane_3_endpoint(
+    request: Request,
+    lat: float = None,
+    lng: float = None,
+    debug: int = 0,
+    tts: str = None,
+    secret: str = None,
+    provider: str = None,
+):
     """Get MP3 for the third closest aircraft
 
     Query Parameters:
-        lat: Optional latitude override
-        lng: Optional longitude override
+        lat: Optional latitude override (requires secret)
+        lng: Optional longitude override (requires secret)
         debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
-        secret: Secret key for TTS provider override
+        provider: Aircraft data provider override (requires secret)
+        secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 3, lat, lng, debug)
+    return await handle_plane_endpoint(request, 3, lat, lng, debug, secret, provider)
 
 @app.options("/plane/1")
 async def plane_1_options():

@@ -93,13 +93,13 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         str: Human-readable sentence describing the flight
     """
     # Extract values for the sentence template
-    distance_miles = aircraft.get("distance_miles", "unknown")
-    flight_number = aircraft.get("flight_number") or aircraft.get("callsign", "unknown flight")
-    airline_name = aircraft.get("airline_name")
-    origin_city = aircraft.get("origin_city", "an unknown origin")
-    origin_country = aircraft.get("origin_country", "an unknown country")
-    destination_city = aircraft.get("destination_city", "an unknown destination")
-    destination_country = aircraft.get("destination_country", "an unknown country")
+    distance_miles = aircraft.get("distance_miles") or "unknown"
+    flight_number = aircraft.get("flight_number") or aircraft.get("callsign") or "unknown flight"
+    airline_name = aircraft.get("airline_name") or "an unknown airline"
+    origin_city = aircraft.get("origin_city") or "an unknown origin"
+    origin_country = aircraft.get("origin_country") or "an unknown country"
+    destination_city = aircraft.get("destination_city") or "an unknown destination"
+    destination_country = aircraft.get("destination_country") or "an unknown country"
     
     # Check if we should use state instead of country for US locations
     destination_location = destination_country
@@ -140,7 +140,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_miles} miles from this Yoto!"
     
     # Add aircraft type, capacity, speed, and altitude information
-    aircraft_name = aircraft.get("aircraft", "unknown aircraft type")
+    aircraft_name = aircraft.get("aircraft") or "unknown aircraft type"
     # Convert numbers in aircraft name to individual digits for TTS
     aircraft_name_with_digits = convert_aircraft_name_digits(aircraft_name)
     passenger_capacity = aircraft.get("passenger_capacity", 0)
@@ -362,11 +362,11 @@ def make_error_message_friendly(error_message: str) -> str:
 
     # API key issues
     if "api key not configured" in error_lower:
-        return "my scanner's acting up" + ending
+        return "my scanner's acting all silly" + ending
 
     # No aircraft found
     if "no passenger aircraft found" in error_lower:
-        return "there aren't any passenger jet planes flying nearby right now" + ending
+        return "there just are not any jet planes in this celestial quadrant right now" + ending
 
     # HTTP status errors
     if "api returned http" in error_lower:

@@ -72,17 +72,17 @@
   "A332": {
     "technical_name": "Airbus A330-200 Freighter",
     "simple_name": "Airbus A330",
-    "passenger_capacity": 0
+    "passenger_capacity": 301
   },
   "A333": {
     "technical_name": "Airbus A330-300 Freighter",
     "simple_name": "Airbus A330",
-    "passenger_capacity": 0
+    "passenger_capacity": 335
   },
   "A337": {
     "technical_name": "Airbus A330-700 BelugaXL",
     "simple_name": "Airbus A330",
-    "passenger_capacity": 0
+    "passenger_capacity": 332
   },
   "A338": {
     "technical_name": "Airbus A330-800",
@@ -428,7 +428,8 @@
   },
   "BCS1": {
     "technical_name": "Bombardier CSeries CS100 / Airbus A220-100",
-    "simple_name": "Airbus A220"
+    "simple_name": "Airbus A220",
+    "passenger_capacity": 122
   },
   "BCS3": {
     "technical_name": "Bombardier CSeries CS300 / Airbus A220-300",
@@ -473,15 +474,15 @@
   },
   "C25A": {
     "technical_name": "Cessna Citation CJ2",
-    "simple_name": "Cessna Citation CJ2"
+    "simple_name": "Cessna CJ2"
   },
   "C25B": {
     "technical_name": "Cessna Citation CJ3",
-    "simple_name": "Cessna Citation CJ3"
+    "simple_name": "Cessna CJ3"
   },
   "C25C": {
     "technical_name": "Cessna Citation CJ4",
-    "simple_name": "Cessna Citation CJ4"
+    "simple_name": "Cessna CJ4"
   },
   "C30J": {
     "technical_name": "Lockheed Martin C-130J Hercules",
@@ -489,11 +490,11 @@
   },
   "C408": {
     "technical_name": "Cessna 408 SkyCourier",
-    "simple_name": "Cessna 408 SkyCourier"
+    "simple_name": "Cessna SkyCourier"
   },
   "C500": {
     "technical_name": "Cessna Citation I",
-    "simple_name": "Cessna Citation I"
+    "simple_name": "Cessna Citation"
   },
   "C510": {
     "technical_name": "Cessna Citation Mustang",
@@ -505,15 +506,16 @@
   },
   "C550": {
     "technical_name": "Cessna Citation II",
-    "simple_name": "Cessna Citation II"
+    "simple_name": "Cessna"
   },
   "C560": {
     "technical_name": "Cessna Citation V",
-    "simple_name": "Cessna Citation V"
+    "simple_name": "Cessna"
   },
   "C56X": {
     "technical_name": "Cessna Citation Excel",
-    "simple_name": "Cessna Citation Excel"
+    "simple_name": "Cessna Citation Excel",
+    "passenger_capacity": 8
   },
   "C5M": {
     "technical_name": "Lockheed C-5M Super Galaxy",
@@ -521,23 +523,23 @@
   },
   "C650": {
     "technical_name": "Cessna Citation III, VI, VII",
-    "simple_name": "Cessna Citation III, VI, VII"
+    "simple_name": "Cessna"
   },
   "C680": {
     "technical_name": "Cessna Citation Sovereign",
-    "simple_name": "Cessna Citation Sovereign"
+    "simple_name": "Cessna"
   },
   "C68A": {
     "technical_name": "Cessna Citation Latitude",
-    "simple_name": "Cessna Citation Latitude"
+    "simple_name": "Cessna"
   },
   "C700": {
     "technical_name": "Cessna Citation Longitude",
-    "simple_name": "Cessna Citation Longitude"
+    "simple_name": "CCessna"
   },
   "C750": {
     "technical_name": "Cessna Citation X",
-    "simple_name": "Cessna Citation X"
+    "simple_name": "Cessna"
   },
   "C919": {
     "technical_name": "Comac C919",
@@ -549,11 +551,11 @@
   },
   "CL30": {
     "technical_name": "Bombardier BD-100 Challenger 300",
-    "simple_name": "Bombardier BD-100 Challenger 300"
+    "simple_name": "Bombardier Challenger"
   },
   "CL60": {
     "technical_name": "Canadair Challenger 600",
-    "simple_name": "Canadair Challenger 600"
+    "simple_name": "Canadair Challenger"
   },
   "CN35": {
     "technical_name": "CASA/IPTN CN-235",
@@ -561,27 +563,27 @@
   },
   "CRJ1": {
     "technical_name": "Canadair Regional Jet 100",
-    "simple_name": "Canadair Regional Jet 100"
+    "simple_name": "Canadair Regional Jet "
   },
   "CRJ2": {
     "technical_name": "Canadair Regional Jet 200",
-    "simple_name": "Canadair Regional Jet 200"
+    "simple_name": "Canadair Regional Jet"
   },
   "CRJ7": {
     "technical_name": "Canadair Regional Jet 700 | Regional Jet 550",
-    "simple_name": "Canadair Regional Jet 700 | Regional Jet 550"
+    "simple_name": "Canadair Regional Jet"
   },
   "CRJ9": {
     "technical_name": "Canadair Regional Jet 900",
-    "simple_name": "Canadair Regional Jet 900"
+    "simple_name": "Canadair Regional Jet"
   },
   "CRJX": {
     "technical_name": "Canadair Regional Jet 1000",
-    "simple_name": "Canadair Regional Jet 1000"
+    "simple_name": "Canadair Regional Jet"
   },
   "CVLT": {
     "technical_name": "Convair CV-580, Convair CV-600, Convair CV-640",
-    "simple_name": "Convair CV-580, Convair CV-600, Convair CV-640"
+    "simple_name": "Convair CV"
   },
   "D228": {
     "technical_name": "Dornier 228",
@@ -657,27 +659,27 @@
   },
   "E110": {
     "technical_name": "Embraer EMB 110 Bandeirante",
-    "simple_name": "Embraer EMB 110 Bandeirante"
+    "simple_name": "Embraer EMB 110"
   },
   "E120": {
     "technical_name": "Embraer EMB 120 Brasilia",
-    "simple_name": "Embraer EMB 120 Brasilia"
+    "simple_name": "Embraer EMB 120"
   },
   "E135": {
     "technical_name": "Embraer RJ140",
-    "simple_name": "Embraer 140 Regional Jet"
+    "simple_name": "Embraer 140"
   },
   "E145": {
     "technical_name": "Embraer RJ145",
-    "simple_name": "Embraer 145 Regional Jet"
+    "simple_name": "Embraer 145"
   },
   "E170": {
     "technical_name": "Embraer 170",
-    "simple_name": "Embraer 170 Regional Jet"
+    "simple_name": "Embraer 170"
   },
   "E190": {
     "technical_name": "Embraer 190 / Lineage 1000",
-    "simple_name": "Embraer 190 Regional Jet"
+    "simple_name": "Embraer 190"
   },
   "E195": {
     "technical_name": "Embraer 195",
@@ -693,15 +695,15 @@
   },
   "E35L": {
     "technical_name": "Embraer Legacy 600 / Legacy 650",
-    "simple_name": "Embraer Legacy 600 / Legacy 650"
+    "simple_name": "Embraer Legacy"
   },
   "E50P": {
     "technical_name": "Embraer Phenom 100",
-    "simple_name": "Embraer Phenom 100"
+    "simple_name": "Embraer Phenom "
   },
   "E545": {
     "technical_name": "Embraer Legacy 450 / Praetor 500",
-    "simple_name": "Embraer Legacy 450"
+    "simple_name": "Embraer Legacy"
   },
   "E550": {
     "technical_name": "Embraer Legacy 500 / Praetor 600",
@@ -709,11 +711,11 @@
   },
   "E55P": {
     "technical_name": "Embraer Phenom 300",
-    "simple_name": "Embraer Phenom 300"
+    "simple_name": "Embraer Phenom"
   },
   "E75L": {
     "technical_name": "Embraer 175 (long wing)",
-    "simple_name": "Embraer 175 Long Wing"
+    "simple_name": "Embraer 175"
   },
   "E75S": {
     "technical_name": "Embraer 175 (short wing)",
@@ -937,6 +939,11 @@
     "technical_name": "Pilatus PC-24",
     "simple_name": "Pilatus PC-24"
   },
+  "PC12": {
+    "technical_name": "Pilatus PC-12",
+    "simple_name": "Pilatus PC-12",
+    "passenger_capacity": 8
+  },
   "RJ1H": {
     "technical_name": "Avro RJ100",
     "simple_name": "Avro RJ100"
@@ -963,7 +970,7 @@
   },
   "SF34": {
     "technical_name": "Saab SF340A/B",
-    "simple_name": "Saab SF340A/B"
+    "simple_name": "Saab 340"
   },
   "SH33": {
     "technical_name": "Shorts SD.330",
