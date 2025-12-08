@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 import os
 import logging
@@ -10,22 +10,33 @@ def register_test_gemini_tts_routes(app: FastAPI):
     """Register test Gemini TTS routes to the FastAPI app"""
 
     @app.get("/test-gemini-tts")
-    async def test_gemini_tts_endpoint(text: str = "Ah! It is I, Air Traffic Controller Heathcliff, who shall be manning the jet plane scanner today. I am standing in for Hamish, who has, rather wisely, taken himself off to the Maldivian archipelago for a brief respite. Lets spot some jet planes shall we?"):
+    async def test_gemini_tts_endpoint(secret: str = None):
         """
         Test endpoint for Gemini 2.5 Pro Preview TTS using google-genai SDK
 
         Query Parameters:
-        - text: The text to convert to speech (optional, defaults to test message)
+        - secret: Required authentication secret for accessing this test endpoint
 
         Returns:
-        - OGG audio file on success (converted from PCM)
+        - MP3 audio file on success (converted from PCM)
         - JSON error message on failure
         """
+        # Check secret requirement
+        PROVIDER_OVERRIDE_SECRET = os.getenv("PROVIDER_OVERRIDE_SECRET")
+        if not PROVIDER_OVERRIDE_SECRET:
+            raise HTTPException(status_code=403, detail="Provider override secret is not configured")
+
+        if secret != PROVIDER_OVERRIDE_SECRET:
+            raise HTTPException(status_code=403, detail="Invalid or missing secret")
+
         GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
         if not GOOGLE_API_KEY:
             logger.warning("Google API key not configured")
             return {"error": "GOOGLE_API_KEY environment variable not set"}
+
+        # Fixed test text (not configurable via parameter)
+        text = "Ah! It is I, Air Traffic Controller Heathcliff, who shall be manning the jet plane scanner today. I am standing in for Hamish, who has, rather wisely, taken himself off to the Maldivian archipelago for a brief respite. Lets spot some jet planes shall we?"
 
         try:
             # Import Google GenAI SDK
