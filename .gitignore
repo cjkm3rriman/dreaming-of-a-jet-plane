@@ -19,3 +19,7 @@ assets/
 
 # macOS system files
 .DS_Store
+
+# Test/debug endpoints
+app/test_gemini_tts.py
+app/test_live_aircraft.py
