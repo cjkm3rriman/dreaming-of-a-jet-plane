@@ -11,7 +11,7 @@ import httpx
 from ..aircraft_database import get_aircraft_name, get_passenger_capacity
 from ..airport_database import get_city_country, get_airport_by_iata
 from ..airline_database import get_airline_name, is_cargo_airline, is_private_airline
-from ..location_utils import calculate_distance
+from ..location_utils import calculate_distance, is_point_near_route
 
 ESTIMATED_SPEED_KMH = 400 * 1.60934  # Assume constant cruise speed
 LANDING_BUFFER_MINUTES = 30
@@ -121,6 +121,38 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
             )
             origin_iata = flight.get("dep_iata")
             dest_iata = flight.get("arr_iata")
+
+            # Validate aircraft position makes sense for its route using great circle math
+            # Skip aircraft whose flight path doesn't pass near the user
+            if origin_iata and dest_iata:
+                origin_airport = get_airport_by_iata(origin_iata)
+                dest_airport = get_airport_by_iata(dest_iata)
+
+                if origin_airport and dest_airport:
+                    origin_lat = origin_airport.get("lat")
+                    origin_lon = origin_airport.get("lon")
+                    dest_lat = dest_airport.get("lat")
+                    dest_lon = dest_airport.get("lon")
+
+                    if all([origin_lat, origin_lon, dest_lat, dest_lon]):
+                        # Validate if the flight route could reasonably pass near the user
+                        # Uses multiple checks: endpoint proximity, geographic bounds, and generous great circle tolerance
+                        route_is_valid = is_point_near_route(
+                            point_lat=lat,
+                            point_lng=lng,
+                            origin_lat=origin_lat,
+                            origin_lng=origin_lon,
+                            dest_lat=dest_lat,
+                            dest_lng=dest_lon
+                        )
+
+                        if not route_is_valid:
+                            logger.warning(
+                                f"Skipping aircraft with invalid route: {callsign} at ({aircraft_lat:.2f}, {aircraft_lon:.2f}) "
+                                f"reports {origin_iata}→{dest_iata} route, which doesn't pass near user location. "
+                                f"This is likely stale/incorrect position data from Airlabs API."
+                            )
+                            continue
 
             origin_city, origin_country = get_city_country(origin_iata) if origin_iata else (None, None)
             dest_city, dest_country = get_city_country(dest_iata) if dest_iata else (None, None)

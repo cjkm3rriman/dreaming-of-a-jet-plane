@@ -4247,5 +4247,70 @@
             "Sarasota has a special beach called Shark Tooth Beach where you have almost a 100% chance of finding real fossilized shark teeth in the sand!",
             "Sarasota has a magical Children's Rainforest Garden with rope bridges and treetop platforms that let you explore the forest canopy 12 feet up in the air like a jungle explorer!"
         ]
+    },
+    "Basel": {
+        "city": "Basel",
+        "state": null,
+        "country": "Switzerland",
+        "population": 180000,
+        "fun_facts": [
+            "Basel sits right where three countries meet - Switzerland, France, and Germany - so you can visit three countries in one day!",
+            "Basel hosts Art Basel every June, the world's most important fair for modern and contemporary art with amazing paintings and sculptures!",
+            "Basel's University was founded way back in 1460, making it one of the oldest universities in all of Switzerland!",
+            "Basel sits on the Rhine River and has Switzerland's only cargo port where big ships bring goods from all over Europe!",
+            "Basel was home to famous mathematicians like Leonhard Euler and the Bernoulli family who discovered amazing math secrets centuries ago!"
+        ]
+    },
+    "Nottingham": {
+        "city": "Nottingham",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 345531,
+        "fun_facts": [
+            "Nottingham is famous for being the home of the legendary Robin Hood who robbed from the rich to give to the poor!",
+            "Nottingham has one of England's oldest pubs, Ye Olde Trip To Jerusalem, built right into the caves under Nottingham Castle in 1189!",
+            "Nottingham's Goose Fair is one of the oldest events in the world, starting around 1284 - that's over 740 years of fun and games!",
+            "Nottingham has a giant bell called Little John that's so loud you can hear it boom from 7 miles away when it rings!",
+            "Nottingham Forest football team won the UEFA European Cup twice in a row, making them legendary champions of all of Europe!"
+        ]
+    },
+    "Winnipeg": {
+        "city": "Winnipeg",
+        "state": "Manitoba",
+        "country": "Canada",
+        "population": 854100,
+        "fun_facts": [
+            "Winnipeg is where Winnie-the-Pooh got his name - the famous teddy bear was named after this city!",
+            "Winnipeg gets SO incredibly cold that the coldest temperature ever recorded was -47.8°C, which is colder than most freezers!",
+            "Winnipeg sits where the Red River and Assiniboine River meet, almost exactly in the middle of North America like a giant bullseye!",
+            "Winnipeg has over 100 different languages spoken by people from all around the world, making it a super diverse and multicultural city!",
+            "Winnipeg's Canadian Museum of Human Rights was the first national museum built outside of Canada's capital, and it teaches about fairness and kindness!"
+        ]
+    },
+    "Inverness": {
+        "city": "Inverness",
+        "state": "Scotland",
+        "country": "United Kingdom",
+        "population": 46933,
+        "fun_facts": [
+            "Inverness is the northernmost city in all of the United Kingdom, making it the most northern city you can visit!",
+            "Inverness sits where the River Ness flows from the famous Loch Ness, home of the legendary Loch Ness Monster named Nessie!",
+            "Inverness is one of Europe's fastest-growing cities and was voted the happiest place in all of Scotland in 2014!",
+            "Inverness is where Macbeth's castle was set in Shakespeare's famous play about kings, queens, and drama!",
+            "Inverness hosts the Highland Games every year since 1822, with traditional Scottish sports like caber tossing where people flip giant telephone poles!"
+        ]
+    },
+    "Santiago de Compostela": {
+        "city": "Santiago de Compostela",
+        "state": "Galicia",
+        "country": "Spain",
+        "population": 97292,
+        "fun_facts": [
+            "Santiago de Compostela is the famous end point of the Way of St. James, a pilgrimage route that people have walked for over 1,000 years!",
+            "Santiago de Compostela has a magical legend - a bright star guided a shepherd to discover Saint James' burial spot, which is why it's called Compostela, meaning 'field of the star'!",
+            "Santiago de Compostela claims to have the oldest hotel in the entire world, the Hostal dos Reyes Católicos, which has been welcoming travelers for centuries!",
+            "Santiago de Compostela is one of the rainiest cities in Spain with over 300 rainy days per year - you'd need your umbrella almost every single day!",
+            "Santiago de Compostela's Old Town became a UNESCO World Heritage Site in 1985, filled with beautiful ancient buildings and narrow medieval streets that look like they're from a fairy tale!"
+        ]
     }
 }

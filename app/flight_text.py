@@ -150,24 +150,31 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     # Generate random captain name (last names only)
     pilot_names = [
-        "Smith", "Johnson", "Mitchell", "Sullivan",
-        "Rodriguez", "Nakamura", "Mueller", "Petrov",
-        "Anderson", "Steele", "Gonzalez",
-        "Lindberg", "Wright", "Taylor",
-        "Wilson", "Garcia", "Brown", "Jensen", "Boo Boo Butt",
-        "Merriman", "Ezra", "Havencroft",
-        "Cooper", "Williams", "Wren", "Miles",
-        "Parker", "Thompson", "Martinez", "Campbell", "Jackson", "Turner",
-        "Peterson", "Vega",
-        "Brooks", "Silva", "Santos", "Chen",
-        "Morrison"
+        "Al-Saud", "Anderson", "Boo Boo Butt", "Brooks", "Brown",
+        "Campbell", "Chen", "Cooper", "Ezra", "Garcia", "Gonzalez",
+        "Hassan", "Havencroft", "Jackson", "Jensen", "Johnson",
+        "Jørgensen", "Khoury", "Kouyaté", "Kovács", "Li", "Lindberg",
+        "Martinez", "Merriman", "Miles", "Mitchell", "Morrison", "Mueller",
+        "Nakamura", "Nkosi", "Novak", "Okafor", "Olsen", "Parker", "Patel",
+        "Peterson", "Petrov", "Popescu", "Rodriguez", "Santos", "Sharma",
+        "Silva", "Singh", "Smith", "Steele", "Sullivan", "Svensson",
+        "Taylor", "Thompson", "Turner", "Vega", "Wang", "Williams",
+        "Wilson", "Wren", "Wright", "Zhang"
     ]
     captain_name = random.choice(pilot_names)
     
     # Build scanner sentence with random selection of available data
     aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous", "gigantic", "enormous"]
-    aircraft_descriptor = random.choice(aircraft_descriptors)
-    scanner_info = f"My scanner tells me that Captain {captain_name} is piloting this {aircraft_descriptor} {aircraft_name_with_digits}"
+    small_aircraft_descriptors = ["shiny", "beautiful", "swanky"]
+    descriptor_pool = aircraft_descriptors
+    if passenger_capacity and passenger_capacity <= 50:
+        descriptor_pool = small_aircraft_descriptors
+    aircraft_descriptor = random.choice(descriptor_pool)
+    private_jet_phrase = " private jet" if aircraft.get("is_private_operator") else ""
+    scanner_info = (
+        f"My scanner tells me that Captain {captain_name} is piloting this "
+        f"{aircraft_descriptor} {aircraft_name_with_digits}{private_jet_phrase}"
+    )
     
     # Collect available information options
     available_info = []

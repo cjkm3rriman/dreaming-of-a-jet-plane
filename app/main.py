@@ -32,6 +32,8 @@ google_genai_logger = logging.getLogger('google_genai')
 google_genai_logger.setLevel(logging.WARNING)
 
 from .airport_database import get_airport_by_iata
+from .airline_database import AirlineDatabase
+from .location_utils import calculate_distance, calculate_min_distance_to_route
 from .intro import stream_intro, intro_options
 from .overandout import stream_overandout, overandout_options
 from .scanning_again import stream_scanning_again, scanning_again_options
@@ -628,94 +630,166 @@ def track_audio_generation(request: Request, lat: float, lng: float, plane_index
     except Exception as e:
         logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
 
-def select_geographically_diverse_aircraft(aircraft_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Select aircraft prioritizing destination diversity (city + country) over proximity
-    
+def select_diverse_aircraft(
+    aircraft_list: List[Dict[str, Any]],
+    user_lat: Optional[float] = None,
+    user_lng: Optional[float] = None
+) -> List[Dict[str, Any]]:
+    """Select diverse aircraft using multiple strategies for educational value and interest
+
+    Selection strategies:
+    - Geographic diversity: Prioritizes different countries and cities for destination variety
+    - Cargo/private inclusion: Places one cargo or private flight in position 2 (if available)
+    - Distance from user: Deprioritizes destinations within 100 miles of user's location
+
     Args:
         aircraft_list: List of aircraft data with destination information
-    
+        user_lat: Optional user latitude for destination distance filtering
+        user_lng: Optional user longitude for destination distance filtering
+
     Returns:
-        List of aircraft sorted by destination diversity first, then proximity
+        List of up to 3 aircraft selected for maximum diversity and educational value
     """
     if not aircraft_list:
-        return aircraft_list
-    
-    # Group aircraft by destination city, then by country as fallback
-    city_groups = {}
-    country_groups = {}
-    
+        return []
+
+    NEARBY_THRESHOLD_KM = 160  # 100 miles
+    airline_db = AirlineDatabase()
+
+    # Step 1: Enrich aircraft with destination distance from user
+    _add_destination_distance_from_user(aircraft_list, user_lat, user_lng)
+
+    # Step 2: Categorize aircraft by operator type and destination distance
+    cargo_private = []
+    passenger_far = []  # Destinations > 100 miles from user
+    passenger_near = []  # Destinations <= 100 miles from user
+
     for aircraft in aircraft_list:
-        dest_city = aircraft.get("destination_city")
-        dest_country = aircraft.get("destination_country")
-        
-        # Group by city (most specific)
-        if dest_city:
-            if dest_city not in city_groups:
-                city_groups[dest_city] = []
-            city_groups[dest_city].append(aircraft)
-        
-        # Also group by country for fallback
-        if dest_country:
-            if dest_country not in country_groups:
-                country_groups[dest_country] = []
-            country_groups[dest_country].append(aircraft)
-        
-    # Sort aircraft within each group by distance (closest first)
-    for city, planes in city_groups.items():
-        planes.sort(key=lambda x: x.get("distance_km", float('inf')))
-    for country, planes in country_groups.items():
-        planes.sort(key=lambda x: x.get("distance_km", float('inf')))
-    
-    selected_aircraft = []
-    used_cities = set()
+        airline_icao = aircraft.get("airline_icao")
+
+        # TODO: Remove this skip once cargo testing is complete
+        # Currently excluding cargo aircraft completely for testing purposes
+        if airline_icao and airline_db.is_cargo_airline(airline_icao):
+            continue  # Skip cargo aircraft entirely
+
+        # TODO: Add back cargo to this check once testing is complete
+        # Currently limited to private only for additional cargo testing
+        if airline_icao and airline_db.is_private_airline(airline_icao):
+            cargo_private.append(aircraft)
+        else:
+            # Categorize passenger flights by destination distance
+            dest_distance = aircraft.get("destination_distance_from_user_km")
+            if dest_distance is not None and dest_distance < NEARBY_THRESHOLD_KM:
+                passenger_near.append(aircraft)
+            else:
+                passenger_far.append(aircraft)
+
+    # Step 3: Select diverse passenger flights (prioritize far destinations)
+    passenger_pool = passenger_far + passenger_near
+    selected = _select_by_destination_diversity(passenger_pool, max_count=3)
+
+    # Step 4: Sort by proximity (closest aircraft first)
+    selected.sort(key=lambda x: x.get("distance_km", float('inf')))
+
+    # Step 5: Insert cargo/private flights intelligently
+    if cargo_private:
+        cargo_private.sort(key=lambda x: x.get("distance_km", float('inf')))
+
+        if len(selected) >= 2:
+            # We have 2+ passenger flights: insert cargo/private in position 2
+            selected.insert(1, cargo_private[0])
+            selected = selected[:3]
+        elif len(selected) == 1:
+            # Only 1 passenger flight: add up to 2 cargo/private
+            selected.append(cargo_private[0])
+            if len(cargo_private) > 1:
+                selected.append(cargo_private[1])
+        else:
+            # No passenger flights: use up to 3 cargo/private
+            selected = cargo_private[:3]
+
+    return selected[:3]
+
+
+def _add_destination_distance_from_user(aircraft_list: List[Dict[str, Any]], user_lat: Optional[float], user_lng: Optional[float]) -> None:
+    """Add destination_distance_from_user_km to each aircraft"""
+    if user_lat is None or user_lng is None:
+        return
+
+    for aircraft in aircraft_list:
+        dest_airport_iata = aircraft.get("destination_airport")
+        if not dest_airport_iata:
+            aircraft["destination_distance_from_user_km"] = None
+            continue
+
+        dest_airport = get_airport_by_iata(dest_airport_iata)
+        if not dest_airport:
+            aircraft["destination_distance_from_user_km"] = None
+            continue
+
+        dest_lat = dest_airport.get("lat")
+        dest_lng = dest_airport.get("lon")
+        if dest_lat is None or dest_lng is None:
+            aircraft["destination_distance_from_user_km"] = None
+            continue
+
+        try:
+            dest_distance = calculate_distance(user_lat, user_lng, dest_lat, dest_lng)
+            aircraft["destination_distance_from_user_km"] = dest_distance
+        except Exception as e:
+            logger.debug(f"Failed to calculate destination distance: {e}")
+            aircraft["destination_distance_from_user_km"] = None
+
+
+def _select_by_destination_diversity(aircraft_list: List[Dict[str, Any]], max_count: int = 3) -> List[Dict[str, Any]]:
+    """Select aircraft ensuring diverse destinations (different countries, then cities)"""
+    selected = []
+    selected_indices = set()  # Track indices instead of relying on flight_id
     used_countries = set()
-    
-    # First pass: select one aircraft per destination COUNTRY (prioritize country diversity)
-    for country, planes in country_groups.items():
-        if len(selected_aircraft) < 3:
-            selected_aircraft.append(planes[0])  # Closest plane to this country
-            used_countries.add(country)
-            # Also track the city to avoid duplicate cities when possible
-            dest_city = planes[0].get("destination_city")
+    used_cities = set()
+
+    # Pass 1: Select one aircraft per unique country
+    for idx, aircraft in enumerate(aircraft_list):
+        if len(selected) >= max_count:
+            break
+
+        dest_country = aircraft.get("destination_country")
+        dest_city = aircraft.get("destination_city")
+
+        if dest_country and dest_country not in used_countries:
+            selected.append(aircraft)
+            selected_indices.add(idx)
+            used_countries.add(dest_country)
             if dest_city:
                 used_cities.add(dest_city)
-    
-    # Second pass: if we still need more aircraft, select from unused cities (within used countries)
-    if len(selected_aircraft) < 3:
-        for city, planes in city_groups.items():
-            if city not in used_cities and len(selected_aircraft) < 3:
-                # Add this plane even if the country is already used (city diversity within countries)
-                selected_aircraft.append(planes[0])
-                used_cities.add(city)
-                dest_country = planes[0].get("destination_country")
-                if dest_country:
-                    used_countries.add(dest_country)
-    
-    # Third pass: if we still need more aircraft, add more from any city/country
-    if len(selected_aircraft) < 3:
-        for city, planes in city_groups.items():
-            for plane in planes[1:]:  # Skip the first plane (may already be selected)
-                if len(selected_aircraft) >= 3:
-                    break
-                # Check if this specific plane is already selected
-                if not any(p.get("flight_id") == plane.get("flight_id") for p in selected_aircraft):
-                    selected_aircraft.append(plane)
-            if len(selected_aircraft) >= 3:
+
+    # Pass 2: If still need more, select aircraft with unused cities (same country OK)
+    if len(selected) < max_count:
+        for idx, aircraft in enumerate(aircraft_list):
+            if len(selected) >= max_count:
                 break
-    
-    # Fourth pass: add aircraft without destination cities/countries if still needed
-    if len(selected_aircraft) < 3:
-        aircraft_without_dest = [a for a in aircraft_list if not a.get("destination_city") and not a.get("destination_country")]
-        aircraft_without_dest.sort(key=lambda x: x.get("distance_km", float('inf')))
-        for plane in aircraft_without_dest:
-            if len(selected_aircraft) >= 3:
+
+            # Skip if already selected
+            if idx in selected_indices:
+                continue
+
+            dest_city = aircraft.get("destination_city")
+            if dest_city and dest_city not in used_cities:
+                selected.append(aircraft)
+                selected_indices.add(idx)
+                used_cities.add(dest_city)
+
+    # Pass 3: Fill remaining slots with any aircraft not yet selected
+    if len(selected) < max_count:
+        for idx, aircraft in enumerate(aircraft_list):
+            if len(selected) >= max_count:
                 break
-            selected_aircraft.append(plane)
-    
-    # Sort final selection by distance to maintain proximity logic
-    selected_aircraft.sort(key=lambda x: x.get("distance_km", float('inf')))
-    
-    return selected_aircraft[:3]  # Ensure we never return more than 3
+
+            if idx not in selected_indices:
+                selected.append(aircraft)
+                selected_indices.add(idx)
+
+    return selected
 
 async def get_nearby_aircraft(
     lat: float,
@@ -792,7 +866,7 @@ async def get_nearby_aircraft(
 
         if aircraft_list:
             aircraft_list.sort(key=lambda x: x.get("distance_km", float("inf")))
-            aircraft_list = select_geographically_diverse_aircraft(aircraft_list)
+            aircraft_list = select_diverse_aircraft(aircraft_list, user_lat=lat, user_lng=lng)
 
             cache_data = {"provider": provider_name, "aircraft": aircraft_list}
             asyncio.create_task(s3_cache.set(cache_key, cache_data, content_type="json"))
@@ -840,6 +914,9 @@ register_test_live_aircraft_routes(
     get_nearby_aircraft_fn=get_nearby_aircraft,
     get_provider_definition_fn=get_provider_definition,
     provider_override_secret_getter=lambda: PROVIDER_OVERRIDE_SECRET,
+    select_diverse_aircraft_fn=select_diverse_aircraft,
+    calculate_min_distance_to_route_fn=calculate_min_distance_to_route,
+    get_airport_by_iata_fn=get_airport_by_iata,
 )
 
 

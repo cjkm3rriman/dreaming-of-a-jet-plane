@@ -35,8 +35,7 @@ def register_test_gemini_tts_routes(app: FastAPI):
             logger.warning("Google API key not configured")
             return {"error": "GOOGLE_API_KEY environment variable not set"}
 
-        # Fixed test text (not configurable via parameter)
-        text = "Ah! It is I, Air Traffic Controller Heathcliff, who shall be manning the jet plane scanner today. I am standing in for Hamish, who has, rather wisely, taken himself off to the Maldivian archipelago for a brief respite. Lets spot some jet planes shall we?"
+        text = "Great job my old chum! We spotted some absolutely delightful jet planes. Start up your Yoto jet plane scanner again soon, becuase you never know what celestial surprises we might find up there. Hugo out for now..."
 
         try:
             # Import Google GenAI SDK

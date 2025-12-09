@@ -643,7 +643,7 @@
   },
   "DH8D": {
     "technical_name": "De Havilland Canada DHC-8-400 Dash 8Q",
-    "simple_name": "De Havilland Canada DHC-8-400 Dash 8Q"
+    "simple_name": "Bombardier Q400"
   },
   "DHC5": {
     "technical_name": "De Havilland Canada DHC-5 Buffalo",
@@ -672,6 +672,10 @@
   "E145": {
     "technical_name": "Embraer RJ145",
     "simple_name": "Embraer 145"
+  },
+  "E45X": {
+    "technical_name": "Embraer ERJ-145XR",
+    "simple_name": "Embraer 145 XR"
   },
   "E170": {
     "technical_name": "Embraer 170",
@@ -787,11 +791,11 @@
   },
   "GL5T": {
     "technical_name": "Bombardier BD-700 Global 5000",
-    "simple_name": "Bombardier BD-700 Global 5000"
+    "simple_name": "Bombardier Global 5000"
   },
   "GLEX": {
     "technical_name": "Bombardier Global Express / Raytheon Sentinel",
-    "simple_name": "Bombardier Global Express / Raytheon Sentinel"
+    "simple_name": "Raytheon Sentinel"
   },
   "GLF4": {
     "technical_name": "Gulfstream IV",

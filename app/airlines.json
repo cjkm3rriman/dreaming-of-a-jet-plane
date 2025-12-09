@@ -308,7 +308,10 @@
   "CLH": "Lufthansa CityLine",
   "CLI": "Clickair",
   "CLU": "Cargo Logic Air",
-  "CLX": "Cargolux",
+  "CLX": {
+    "name": "Cargolux",
+    "cargo_only": true
+  },
   "CMA": "CMA-CGM AIRCARGO",
   "CMI": "Continental Micronesia",
   "CMP": "Copa Airlines",

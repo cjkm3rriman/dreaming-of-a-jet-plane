@@ -55,10 +55,10 @@ def _track_ip_geolocation_failure(request: Request, ip: str, failure_type: str, 
 async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float, float]:
     """Get latitude and longitude from IP address using ipapi.co with 24-hour caching"""
     current_time = time.time()
-    
+
     # Skip caching for localhost/development IPs to make testing easier
     is_localhost = ip in ['127.0.0.1', 'localhost', '::1']
-    
+
     # Check cache first (skip for localhost)
     if not is_localhost and ip in _ip_cache:
         lat, lng, timestamp = _ip_cache[ip]
@@ -80,19 +80,19 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                 if data.get("error", False):
                     error_reason = data.get("reason", "unknown_error")
                     logger.warning(f"IP geolocation API returned error for IP {ip}: {error_reason}")
-                    
+
                     # Use NYC fallback for API error responses
                     fallback_lat, fallback_lng = 40.7128, -74.0060
                     logger.info(f"Using NYC fallback for API error: {fallback_lat}, {fallback_lng}")
-                    
+
                     # Track API error response with fallback coordinates
                     if request:
                         _track_ip_geolocation_failure(request, ip, f"api_response_error_{error_reason.lower()}", fallback_lat, fallback_lng)
-                    
+
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
                         _ip_cache[ip] = (fallback_lat, fallback_lng, current_time)
-                    
+
                     return fallback_lat, fallback_lng
                 
                 lat = data.get("latitude", 0.0)
@@ -226,6 +226,143 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     return R * c
+
+
+def calculate_min_distance_to_route(
+    point_lat: float,
+    point_lng: float,
+    origin_lat: float,
+    origin_lng: float,
+    dest_lat: float,
+    dest_lng: float
+) -> float:
+    """
+    Calculate the minimum distance from a point to a great circle route.
+
+    Returns the closest distance in kilometers.
+    """
+    from geographiclib.geodesic import Geodesic
+
+    try:
+        geod = Geodesic.WGS84
+        line = geod.InverseLine(origin_lat, origin_lng, dest_lat, dest_lng)
+        route_distance_m = line.s13
+
+        sample_interval_m = 100000  # 100 km
+        num_samples = max(int(route_distance_m / sample_interval_m), 10)
+        min_distance_km = float('inf')
+
+        for i in range(num_samples + 1):
+            distance_along_route = (i / num_samples) * route_distance_m
+            position = line.Position(distance_along_route)
+            sample_lat = position['lat2']
+            sample_lng = position['lon2']
+
+            distance_to_sample = calculate_distance(point_lat, point_lng, sample_lat, sample_lng)
+            min_distance_km = min(min_distance_km, distance_to_sample)
+
+        return min_distance_km
+
+    except Exception as e:
+        logger.error(f"Error calculating minimum distance to route: {e}", exc_info=True)
+        return float('inf')
+
+
+def is_point_near_route(
+    point_lat: float,
+    point_lng: float,
+    origin_lat: float,
+    origin_lng: float,
+    dest_lat: float,
+    dest_lng: float,
+    max_distance_km: float = 500
+) -> bool:
+    """
+    Determine if a point could reasonably be near a flight route between origin and destination.
+
+    NOTE: Real aircraft don't fly perfect great circles! They follow:
+    - Airways and air traffic control routes
+    - Jet streams (especially trans-oceanic routes)
+    - ETOPS restrictions for twin-engine aircraft
+    - Weather avoidance
+    - North Atlantic Tracks (NAT) which change daily
+
+    This function uses multiple checks to balance accuracy with real-world route deviations:
+    1. Great circle distance (with generous tolerance for route deviations)
+    2. Endpoint proximity (if origin OR destination is nearby, likely valid)
+    3. Geographic bounding box (user should be roughly "between" origin and destination)
+
+    Args:
+        point_lat: Latitude of the point to check (e.g., user location)
+        point_lng: Longitude of the point to check
+        origin_lat: Latitude of route origin airport
+        origin_lng: Longitude of route origin airport
+        dest_lat: Latitude of route destination airport
+        dest_lng: Longitude of route destination airport
+        max_distance_km: Maximum distance in km to consider "near" the route (default: 500km)
+
+    Returns:
+        True if the point could reasonably be on or near the flight route, False otherwise
+    """
+    # Check 1: Is user close to origin or destination airport?
+    # If so, definitely valid (takeoff/landing/approach)
+    distance_to_origin = calculate_distance(point_lat, point_lng, origin_lat, origin_lng)
+    distance_to_dest = calculate_distance(point_lat, point_lng, dest_lat, dest_lng)
+
+    ENDPOINT_PROXIMITY_KM = 300  # Within 300km of origin or destination
+    if distance_to_origin < ENDPOINT_PROXIMITY_KM or distance_to_dest < ENDPOINT_PROXIMITY_KM:
+        logger.debug(
+            f"Route validation PASS: Point is near endpoint "
+            f"(origin: {distance_to_origin:.0f}km, dest: {distance_to_dest:.0f}km)"
+        )
+        return True
+
+    # Check 2: Is user roughly "between" origin and destination geographically?
+    # This catches completely wrong routes like BNE->DFW showing in Connecticut
+    lat_min = min(origin_lat, dest_lat) - 10  # 10 degree margin (~1100km)
+    lat_max = max(origin_lat, dest_lat) + 10
+    lng_min = min(origin_lng, dest_lng) - 10
+    lng_max = max(origin_lng, dest_lng) + 10
+
+    # Handle date line crossing for longitude
+    if abs(origin_lng - dest_lng) > 180:
+        # Route crosses date line, invert the check
+        if not (lng_min <= point_lng <= lng_max):
+            logger.debug(
+                f"Route validation FAIL: Point outside geographic bounds of route "
+                f"(lat range: {lat_min:.1f} to {lat_max:.1f}, lng range: {lng_min:.1f} to {lng_max:.1f}, "
+                f"point: {point_lat:.1f}, {point_lng:.1f})"
+            )
+            return False
+    else:
+        # Normal case
+        if not (lat_min <= point_lat <= lat_max and lng_min <= point_lng <= lng_max):
+            logger.debug(
+                f"Route validation FAIL: Point outside geographic bounds of route "
+                f"(lat range: {lat_min:.1f} to {lat_max:.1f}, lng range: {lng_min:.1f} to {lng_max:.1f}, "
+                f"point: {point_lat:.1f}, {point_lng:.1f})"
+            )
+            return False
+
+    # Check 3: Calculate great circle distance with VERY generous tolerance
+    # Trans-oceanic routes can deviate 1000+ km due to jet streams, NATs, ETOPS, etc.
+    min_distance_km = calculate_min_distance_to_route(
+        point_lat, point_lng, origin_lat, origin_lng, dest_lat, dest_lng
+    )
+
+    GENEROUS_TOLERANCE_KM = 1500  # Very generous for trans-oceanic route deviations
+    if min_distance_km < GENEROUS_TOLERANCE_KM:
+        logger.debug(
+            f"Route validation PASS: Point is {min_distance_km:.0f}km from great circle "
+            f"(within {GENEROUS_TOLERANCE_KM}km generous tolerance for route deviations)"
+        )
+        return True
+    else:
+        logger.warning(
+            f"Route validation FAIL: Point is {min_distance_km:.0f}km from great circle "
+            f"(exceeds {GENEROUS_TOLERANCE_KM}km tolerance)"
+        )
+        return False
 
 
 async def get_user_location(request: Request, lat: float = None, lng: float = None) -> tuple[float, float]:
