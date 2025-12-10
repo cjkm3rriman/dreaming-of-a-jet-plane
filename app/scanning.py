@@ -213,7 +213,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     """Stream scanning MP3 file from S3 and trigger audio pre-generation"""
 
     # Get user location using shared function
-    user_lat, user_lng = await get_user_location(request, lat, lng)
+    user_lat, user_lng, country_code = await get_user_location(request, lat, lng)
 
     # Get TTS provider override from query parameters
     from .main import get_tts_provider_override

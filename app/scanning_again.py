@@ -14,7 +14,7 @@ from .analytics import analytics
 async def stream_scanning_again(request: Request, lat: float = None, lng: float = None):
     """Stream MP3 file from S3 with proper headers for browser playback"""
     # Get user location using shared function
-    user_lat, user_lng = await get_user_location(request, lat, lng)
+    user_lat, user_lng, country_code = await get_user_location(request, lat, lng)
 
     # Import here to avoid circular imports
     from .main import get_voice_specific_s3_url, get_tts_provider_override
