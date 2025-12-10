@@ -172,14 +172,19 @@ def uses_metric_system(country_code: str) -> bool:
         bool: False if country primarily uses imperial (miles), True for metric (kilometers)
 
     Note:
-        Only a few countries use imperial measurements:
+        Countries/territories that use imperial measurements:
         - US: United States (miles for all distances)
         - GB: United Kingdom (miles for road distances, though officially metric)
         - LR: Liberia (officially uses imperial)
         - MM: Myanmar (officially uses imperial, though transitioning)
+        - AI: Anguilla (British Overseas Territory, uses imperial)
+        - AG: Antigua and Barbuda (former British colony, uses imperial)
+        - BB: Barbados (former British colony, uses imperial)
+        - KY: Cayman Islands (British Overseas Territory, uses imperial)
+        - PR: Puerto Rico (US territory, uses imperial)
     """
     # Countries that primarily use imperial/miles for distance measurements
-    IMPERIAL_COUNTRIES = {"US", "GB", "LR", "MM"}
+    IMPERIAL_COUNTRIES = {"US", "GB", "LR", "MM", "AI", "AG", "BB", "KY", "PR"}
 
     return country_code.upper() not in IMPERIAL_COUNTRIES
 
