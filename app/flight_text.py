@@ -8,6 +8,7 @@ import random
 import re
 from .cities_database import get_fun_facts
 from .airport_database import get_airport_by_iata
+from .location_utils import uses_metric_system
 
 
 def convert_aircraft_name_digits(aircraft_name: str) -> str:
@@ -80,20 +81,74 @@ def is_location_in_us(lat: float, lng: float) -> bool:
     return False
 
 
-def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None, plane_index: int = 1) -> str:
+def km_to_miles(km: float) -> float:
+    """Convert kilometers to miles
+
+    Args:
+        km: Distance in kilometers
+
+    Returns:
+        float: Distance in miles
+    """
+    return km * 0.621371
+
+
+def format_distance(distance_km: float, use_metric: bool) -> tuple[int, str]:
+    """Format distance with appropriate units
+
+    Args:
+        distance_km: Distance in kilometers
+        use_metric: True for kilometers, False for miles
+
+    Returns:
+        tuple: (distance_value, unit_name) e.g., (100, "kilometers") or (62, "miles")
+    """
+    if use_metric:
+        return int(round(distance_km)), "kilometers"
+    else:
+        distance_miles = km_to_miles(distance_km)
+        return int(round(distance_miles)), "miles"
+
+
+def format_speed(speed_kmh: float, use_metric: bool) -> tuple[int, str]:
+    """Format speed with appropriate units
+
+    Args:
+        speed_kmh: Speed in km/h
+        use_metric: True for km/h, False for mph
+
+    Returns:
+        tuple: (speed_value, unit_name) e.g., (800, "kilometers per hour") or (497, "miles per hour")
+    """
+    if use_metric:
+        return int(round(speed_kmh)), "kilometers per hour"
+    else:
+        speed_mph = km_to_miles(speed_kmh)
+        return int(round(speed_mph)), "miles per hour"
+
+
+def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None, plane_index: int = 1, country_code: str = "US") -> str:
     """Generate descriptive text for a specific aircraft
-    
+
     Args:
         aircraft: Single aircraft data dictionary
         user_lat: User's latitude (for determining US location)
         user_lng: User's longitude (for determining US location)
         plane_index: 1-based plane index (1, 2, 3) to determine opening words
-        
+        country_code: ISO 3166-1 alpha-2 country code for unit localization (default: "US")
+
     Returns:
         str: Human-readable sentence describing the flight
     """
+    # Determine if user's country uses metric system
+    use_metric = uses_metric_system(country_code)
+
     # Extract values for the sentence template
-    distance_miles = aircraft.get("distance_miles") or "unknown"
+    distance_km = aircraft.get("distance_km", 0)
+    if distance_km > 0:
+        distance_value, distance_unit = format_distance(distance_km, use_metric)
+    else:
+        distance_value, distance_unit = "unknown", ""
     flight_number = aircraft.get("flight_number") or aircraft.get("callsign") or "unknown flight"
     airline_name = aircraft.get("airline_name") or "an unknown airline"
     origin_city = aircraft.get("origin_city") or "an unknown origin"
@@ -130,14 +185,20 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     # Build the descriptive sentences with different opening words based on plane index
     opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Golly!"]
     base_opening_word = random.choice(opening_words)
-    
+
+    # Format distance with appropriate units
+    if distance_value != "unknown":
+        distance_str = f"{distance_value} {distance_unit}"
+    else:
+        distance_str = "an unknown distance"
+
     if plane_index == 2:
-        detection_sentence = f"{base_opening_word} We've detected another jet plane, flying high {distance_miles} miles from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've detected another jet plane, flying high {distance_str} from this Yoto!"
     elif plane_index == 3:
-        detection_sentence = f"{base_opening_word} We've detected one more jet plane up there, {distance_miles} miles from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've detected one more jet plane up there, {distance_str} from this Yoto!"
     else:
         # Default for plane 1 or any other index
-        detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_miles} miles from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_str} from this Yoto!"
     
     # Add aircraft type, capacity, speed, and altitude information
     aircraft_name = aircraft.get("aircraft") or "unknown aircraft type"
@@ -145,7 +206,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     aircraft_name_with_digits = convert_aircraft_name_digits(aircraft_name)
     passenger_capacity = aircraft.get("passenger_capacity", 0)
     velocity_knots = aircraft.get("velocity", 0)
-    velocity_mph = round(velocity_knots * 1.15078) if velocity_knots else 0
+    velocity_kmh = round(velocity_knots * 1.852) if velocity_knots else 0  # Convert knots to km/h
     altitude_feet = aircraft.get("altitude", 0)
     
     # Generate random captain name (last names only)
@@ -170,10 +231,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     if passenger_capacity and passenger_capacity <= 50:
         descriptor_pool = small_aircraft_descriptors
     aircraft_descriptor = random.choice(descriptor_pool)
-    private_jet_phrase = " private jet" if aircraft.get("is_private_operator") else ""
     scanner_info = (
         f"My scanner tells me that Captain {captain_name} is piloting this "
-        f"{aircraft_descriptor} {aircraft_name_with_digits}{private_jet_phrase}"
+        f"{aircraft_descriptor} {aircraft_name_with_digits}"
     )
     
     # Collect available information options
@@ -181,13 +241,14 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     if passenger_capacity and passenger_capacity > 0:
         available_info.append(f"carrying {passenger_capacity} passengers")
-        
-    if velocity_mph > 0:
+
+    if velocity_kmh > 0:
         speed_words = ["whopping", "stupendous", "astounding", "speedy", "super fast"]
         speed_word = random.choice(speed_words)
         # Use "an" for words starting with vowel sounds
         article = "an" if speed_word[0].lower() in 'aeiou' else "a"
-        available_info.append(f"travelling at {article} {speed_word} {velocity_mph} miles per hour")
+        speed_value, speed_unit = format_speed(velocity_kmh, use_metric)
+        available_info.append(f"travelling at {article} {speed_word} {speed_value} {speed_unit}")
         
     if altitude_feet and altitude_feet > 0:
         altitude_words = ["soaring", "cruising", "flying"]
@@ -310,17 +371,21 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     movement_words = ["zooming", "speeding", "whizzing", "zoom zooming", "cloud hopping", "sky skimming"]
     movement_word = random.choice(movement_words)
 
-    # Format flight number for better TTS pronunciation
-    flight_number_tts = format_flight_number_for_tts(flight_number)
+    # Format flight number for better TTS pronunciation, or use "private jet" for private operators
+    is_private_jet = aircraft.get("is_private_operator", False)
+    if is_private_jet:
+        flight_number_tts = "private jet"
+    else:
+        flight_number_tts = format_flight_number_for_tts(flight_number)
 
     if (origin_city == "an unknown origin" or origin_location == "an unknown country") and (destination_city == "an unknown destination" or destination_location == "an unknown country"):
-        flight_sentence = f"This flight {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to somewhere, I am not quite sure."
+        flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to somewhere exciting, It is not quite clear'."
     elif origin_city == "an unknown origin" or origin_location == "an unknown country":
-        flight_sentence = f"This flight {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
+        flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
     elif destination_city == "an unknown destination" or destination_location == "an unknown country":
-        flight_sentence = f"This flight {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to somewhere?"
+        flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to somewhere exciting, it is not quite clear."
     else:
-        flight_sentence = f"This flight {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
+        flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
     
     # Add random fun fact about destination city if available
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
@@ -399,28 +464,29 @@ def make_error_message_friendly(error_message: str) -> str:
     return "my scanner had a technical hiccup" + ending
 
 
-def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional[str] = None, user_lat: float = None, user_lng: float = None, plane_index: int = 0) -> str:
+def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional[str] = None, user_lat: float = None, user_lng: float = None, plane_index: int = 0, country_code: str = "US") -> str:
     """Generate descriptive text about detected aircraft or no-aircraft conditions
-    
+
     Args:
         aircraft: List of aircraft data (empty list if no aircraft found)
         error_message: Optional error message if aircraft detection failed
         user_lat: User's latitude (for determining US location)
         user_lng: User's longitude (for determining US location)
         plane_index: Index of aircraft to use from the list (0-based)
-        
+        country_code: ISO 3166-1 alpha-2 country code for unit localization (default: "US")
+
     Returns:
         str: Human-readable sentence describing the flight situation
     """
     if aircraft and len(aircraft) > plane_index:
         selected_aircraft = aircraft[plane_index]
         # Convert 0-based index to 1-based for plane_index parameter
-        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index + 1)
+        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index + 1, country_code)
     elif aircraft and len(aircraft) > 0:
         # Fallback to first aircraft if plane_index is out of bounds
         selected_aircraft = aircraft[0]
         # Use plane index 1 for fallback
-        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, 1)
+        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, 1, country_code)
     else:
         # Handle error cases with friendly error messages
         if error_message:

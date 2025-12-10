@@ -52,8 +52,12 @@ def _track_ip_geolocation_failure(request: Request, ip: str, failure_type: str, 
         logger.error(f"Failed to track IP geolocation failure event: {e}", exc_info=True)
 
 
-async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float, float]:
-    """Get latitude and longitude from IP address using ipapi.co with 24-hour caching"""
+async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float, float, str]:
+    """Get latitude, longitude, and country code from IP address using ipapi.co with 24-hour caching
+
+    Returns:
+        tuple: (latitude, longitude, country_code) where country_code is ISO 3166-1 alpha-2 (e.g., "US", "GB", "FR")
+    """
     current_time = time.time()
 
     # Skip caching for localhost/development IPs to make testing easier
@@ -61,10 +65,10 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
     # Check cache first (skip for localhost)
     if not is_localhost and ip in _ip_cache:
-        lat, lng, timestamp = _ip_cache[ip]
+        lat, lng, country_code, timestamp = _ip_cache[ip]
         if current_time - timestamp < IP_CACHE_DURATION:
-            logger.info(f"Using cached location for IP {ip}: {lat}, {lng}")
-            return lat, lng
+            logger.info(f"Using cached location for IP {ip}: {lat}, {lng}, {country_code}")
+            return lat, lng, country_code
         else:
             # Cache expired, remove entry
             del _ip_cache[ip]
@@ -82,8 +86,8 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                     logger.warning(f"IP geolocation API returned error for IP {ip}: {error_reason}")
 
                     # Use NYC fallback for API error responses
-                    fallback_lat, fallback_lng = 40.7128, -74.0060
-                    logger.info(f"Using NYC fallback for API error: {fallback_lat}, {fallback_lng}")
+                    fallback_lat, fallback_lng, fallback_country = 40.7128, -74.0060, "US"
+                    logger.info(f"Using NYC fallback for API error: {fallback_lat}, {fallback_lng}, {fallback_country}")
 
                     # Track API error response with fallback coordinates
                     if request:
@@ -91,47 +95,48 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
-                        _ip_cache[ip] = (fallback_lat, fallback_lng, current_time)
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, current_time)
 
-                    return fallback_lat, fallback_lng
-                
+                    return fallback_lat, fallback_lng, fallback_country
+
                 lat = data.get("latitude", 0.0)
                 lng = data.get("longitude", 0.0)
+                country_code = data.get("country_code", "US")
                 
                 # Check if we got null/missing coordinates and use NYC fallback
                 if lat == 0.0 and lng == 0.0:
-                    fallback_lat, fallback_lng = 40.7128, -74.0060
+                    fallback_lat, fallback_lng, fallback_country = 40.7128, -74.0060, "US"
                     logger.warning(f"IP geolocation API returned 0.0,0.0 for IP {ip}, using NYC fallback")
-                    
+
                     # Track null coordinates event
                     if request:
                         _track_ip_geolocation_failure(request, ip, "api_response_null_coordinates", fallback_lat, fallback_lng)
-                    
+
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
-                        _ip_cache[ip] = (fallback_lat, fallback_lng, current_time)
-                    return fallback_lat, fallback_lng
-                
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, current_time)
+                    return fallback_lat, fallback_lng, fallback_country
+
                 # Cache the result (skip for localhost)
                 if not is_localhost:
-                    _ip_cache[ip] = (lat, lng, current_time)
-                    logger.info(f"Cached new location for IP {ip}: {lat}, {lng}")
+                    _ip_cache[ip] = (lat, lng, country_code, current_time)
+                    logger.info(f"Cached new location for IP {ip}: {lat}, {lng}, {country_code}")
                 else:
-                    logger.info(f"Skipping cache for localhost IP {ip}: {lat}, {lng}")
-                return lat, lng
+                    logger.info(f"Skipping cache for localhost IP {ip}: {lat}, {lng}, {country_code}")
+                return lat, lng, country_code
                 
             elif response.status_code == 429:
                 logger.warning(f"IP geolocation API rate limited for IP {ip}, using default location")
                 # Cache the fallback location too (but for shorter duration, skip for localhost)
-                fallback_lat, fallback_lng = 40.7128, -74.0060
+                fallback_lat, fallback_lng, fallback_country = 40.7128, -74.0060, "US"
                 if not is_localhost:
-                    _ip_cache[ip] = (fallback_lat, fallback_lng, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
-                
+                    _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
+
                 # Track rate limit event
                 if request:
                     _track_ip_geolocation_failure(request, ip, "rate_limited", fallback_lat, fallback_lng)
-                
-                return fallback_lat, fallback_lng
+
+                return fallback_lat, fallback_lng, fallback_country
             else:
                 logger.warning(f"IP geolocation API returned status {response.status_code} for IP {ip}")
                 
@@ -147,14 +152,36 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
             _track_ip_geolocation_failure(request, ip, "api_exception", 40.7128, -74.0060)
     
     # Use NYC fallback for any error case or missing coordinates
-    fallback_lat, fallback_lng = 40.7128, -74.0060
-    logger.info(f"Using NYC fallback location for IP {ip}: {fallback_lat}, {fallback_lng}")
-    
+    fallback_lat, fallback_lng, fallback_country = 40.7128, -74.0060, "US"
+    logger.info(f"Using NYC fallback location for IP {ip}: {fallback_lat}, {fallback_lng}, {fallback_country}")
+
     # Cache the fallback location (skip for localhost)
     if not (ip in ['127.0.0.1', 'localhost', '::1']):
-        _ip_cache[ip] = (fallback_lat, fallback_lng, time.time())
-    
-    return fallback_lat, fallback_lng
+        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, time.time())
+
+    return fallback_lat, fallback_lng, fallback_country
+
+
+def uses_metric_system(country_code: str) -> bool:
+    """Determine if a country uses the metric system based on its country code
+
+    Args:
+        country_code: ISO 3166-1 alpha-2 country code (e.g., "US", "GB", "FR")
+
+    Returns:
+        bool: False if country primarily uses imperial (miles), True for metric (kilometers)
+
+    Note:
+        Only a few countries use imperial measurements:
+        - US: United States (miles for all distances)
+        - GB: United Kingdom (miles for road distances, though officially metric)
+        - LR: Liberia (officially uses imperial)
+        - MM: Myanmar (officially uses imperial, though transitioning)
+    """
+    # Countries that primarily use imperial/miles for distance measurements
+    IMPERIAL_COUNTRIES = {"US", "GB", "LR", "MM"}
+
+    return country_code.upper() not in IMPERIAL_COUNTRIES
 
 
 def extract_client_ip(request: Request) -> str:
@@ -305,15 +332,26 @@ def is_point_near_route(
         True if the point could reasonably be on or near the flight route, False otherwise
     """
     # Check 1: Is user close to origin or destination airport?
-    # If so, definitely valid (takeoff/landing/approach)
+    # If so, likely valid (takeoff/landing/approach), but still apply 50% ratio check
     distance_to_origin = calculate_distance(point_lat, point_lng, origin_lat, origin_lng)
     distance_to_dest = calculate_distance(point_lat, point_lng, dest_lat, dest_lng)
+    route_distance_km = calculate_distance(origin_lat, origin_lng, dest_lat, dest_lng)
 
     ENDPOINT_PROXIMITY_KM = 300  # Within 300km of origin or destination
     if distance_to_origin < ENDPOINT_PROXIMITY_KM or distance_to_dest < ENDPOINT_PROXIMITY_KM:
+        # Even if near endpoint, reject if distance to endpoint > 50% of route distance
+        # This catches false positives like 60km flights showing 299km away
+        closest_endpoint_distance = min(distance_to_origin, distance_to_dest)
+        if closest_endpoint_distance > (route_distance_km * 0.5):
+            logger.warning(
+                f"Route validation FAIL: Near endpoint ({closest_endpoint_distance:.0f}km) but > 50% of route distance "
+                f"({route_distance_km:.0f}km). Likely false positive."
+            )
+            return False
+
         logger.debug(
             f"Route validation PASS: Point is near endpoint "
-            f"(origin: {distance_to_origin:.0f}km, dest: {distance_to_dest:.0f}km)"
+            f"(origin: {distance_to_origin:.0f}km, dest: {distance_to_dest:.0f}km, route: {route_distance_km:.0f}km)"
         )
         return True
 
@@ -350,39 +388,65 @@ def is_point_near_route(
         point_lat, point_lng, origin_lat, origin_lng, dest_lat, dest_lng
     )
 
+    # Check 3a: Reject routes where closest distance is > 50% of total route distance
+    # This catches false positives especially with private jets on short routes
+    # Example: 200km flight, closest point 120km away = 60% = false positive
+    # Note: route_distance_km already calculated in Check 1
+    if min_distance_km > (route_distance_km * 0.5):
+        logger.warning(
+            f"Route validation FAIL: Closest distance ({min_distance_km:.0f}km) is > 50% of route distance "
+            f"({route_distance_km:.0f}km). Likely false positive for short route."
+        )
+        return False
+
+    # Check 3b: Absolute distance tolerance for longer routes
     GENEROUS_TOLERANCE_KM = 1500  # Very generous for trans-oceanic route deviations
     if min_distance_km < GENEROUS_TOLERANCE_KM:
         logger.debug(
             f"Route validation PASS: Point is {min_distance_km:.0f}km from great circle "
-            f"(within {GENEROUS_TOLERANCE_KM}km generous tolerance for route deviations)"
+            f"(within {GENEROUS_TOLERANCE_KM}km generous tolerance for route deviations, "
+            f"route distance: {route_distance_km:.0f}km)"
         )
         return True
     else:
         logger.warning(
             f"Route validation FAIL: Point is {min_distance_km:.0f}km from great circle "
-            f"(exceeds {GENEROUS_TOLERANCE_KM}km tolerance)"
+            f"(exceeds {GENEROUS_TOLERANCE_KM}km tolerance, route distance: {route_distance_km:.0f}km)"
         )
         return False
 
 
-async def get_user_location(request: Request, lat: float = None, lng: float = None) -> tuple[float, float]:
+async def get_user_location(request: Request, lat: float = None, lng: float = None, country: str = None) -> tuple[float, float, str]:
     """Get user location from URL parameters or IP geolocation
-    
+
     Args:
         request: FastAPI Request object
         lat: Optional latitude from URL parameters
         lng: Optional longitude from URL parameters
-        
+        country: Optional country code override from URL parameters (e.g., "FR", "GB", "US")
+
     Returns:
-        tuple: (latitude, longitude) as floats
+        tuple: (latitude, longitude, country_code)
+               - When lat/lng provided, country_code defaults to "US" unless overridden
+               - When using IP geolocation, country_code comes from ipapi.co
     """
     if lat is not None and lng is not None:
         # Use provided coordinates
-        logger.info(f"Using provided coordinates: lat={lat}, lng={lng}")
-        return lat, lng
+        # Default to US when coordinates are explicitly provided (no way to determine country from coords alone)
+        # Unless country parameter is provided for testing
+        country_code = country.upper() if country else "US"
+        logger.info(f"Using provided coordinates: lat={lat}, lng={lng}, country={country_code}")
+        return lat, lng, country_code
     else:
-        # Get latitude and longitude from IP
+        # Get latitude, longitude, and country code from IP
         client_ip = extract_client_ip(request)
-        user_lat, user_lng = await get_location_from_ip(client_ip, request)
-        logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng} for IP {client_ip}")
-        return user_lat, user_lng
+        user_lat, user_lng, country_code = await get_location_from_ip(client_ip, request)
+
+        # Allow country override even when using IP geolocation (for testing)
+        if country:
+            country_code = country.upper()
+            logger.info(f"Using IP-based location with country override: lat={user_lat}, lng={user_lng}, country={country_code} for IP {client_ip}")
+        else:
+            logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng}, country={country_code} for IP {client_ip}")
+
+        return user_lat, user_lng, country_code

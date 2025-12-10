@@ -188,7 +188,10 @@
   "BCF": "BACH Flugbetriebsges",
   "BCI": "Blue Islands",
   "BCL": "British Caribbean Airways",
-  "BCS": "European Air Transport",
+  "BCS": {
+    "name": "European Air Transport",
+    "cargo_only": true
+  },
   "BCY": "CityJet",
   "BDA": "Blue Dart Aviation",
   "BDR": "Badr Airlines",

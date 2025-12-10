@@ -4312,5 +4312,69 @@
             "Santiago de Compostela is one of the rainiest cities in Spain with over 300 rainy days per year - you'd need your umbrella almost every single day!",
             "Santiago de Compostela's Old Town became a UNESCO World Heritage Site in 1985, filled with beautiful ancient buildings and narrow medieval streets that look like they're from a fairy tale!"
         ]
+    },
+    "Burlington": {
+        "city": "Burlington",
+        "state": "Vermont",
+        "country": "the United States",
+        "population": 44199,
+        "fun_facts": [
+            "Burlington is the smallest city to be the most populated city in its entire state - it's tiny but mighty!",
+            "Burlington sits on the beautiful shores of Lake Champlain where people have spotted a mysterious monster called Champ over 300 times!",
+            "Burlington is home to Ben & Jerry's first ice cream shop, which started serving their world-famous flavors out of an old gas station!",
+            "Burlington hosts exciting dragon boat races on Lake Champlain every August where colorful boats with dragon heads race to raise money for charity!",
+            "Burlington has one of the largest year-round farmers' markets in Vermont where you can find fresh maple syrup and yummy local treats!"
+        ]
+    },
+    "Des Moines": {
+        "city": "Des Moines",
+        "state": "Iowa",
+        "country": "the United States",
+        "population": 215123,
+        "fun_facts": [
+            "Des Moines is the capital and biggest city in Iowa, and has been the most populated city in the state since 1880!",
+            "Des Moines got its name from the Des Moines River, which means 'River of the Monks' in French - imagine monks paddling down the river!",
+            "Des Moines is home to the famous Iowa State Fair every August, one of the largest state fairs in America with giant butter sculptures and thrilling rides!",
+            "Des Moines has a beautiful golden dome on top of its State Capitol building that's covered in real gold and shines like the sun!",
+            "Des Moines hosts the Yankee Doodle Pops concert every year where a symphony orchestra plays fun patriotic music with fireworks!"
+        ]
+    },
+    "Bridgetown": {
+        "city": "Bridgetown",
+        "state": null,
+        "country": "Barbados",
+        "population": 84913,
+        "fun_facts": [
+            "Bridgetown is the only place outside the United States that George Washington ever visited - he stayed there in 1751!",
+            "Bridgetown became a UNESCO World Heritage Site in 2011 because its historic buildings and old British garrison are so special and well-preserved!",
+            "Bridgetown has one of the oldest Jewish synagogues in all of the Americas, built way back in 1654!",
+            "Bridgetown hosts the amazing Crop Over festival every summer with colorful carnival parades, calypso music, and dancers in spectacular costumes!",
+            "Bridgetown locals speak a special language called Bajan, which is a fun mix of English and Caribbean words that sounds like musical poetry!"
+        ]
+    },
+    "Nassau": {
+        "city": "Nassau",
+        "state": null,
+        "country": "the Bahamas",
+        "population": 322617,
+        "fun_facts": [
+            "Nassau was once a famous pirate hideout where legendary pirates like Blackbeard and Calico Jack sailed the Caribbean seas!",
+            "Nassau celebrates an incredible carnival called Junkanoo every December 26th with people in dazzling costumes dancing through the streets to drums and cowbells!",
+            "Nassau welcomes over 5 million tourists every year who come to see its crystal-clear turquoise waters and powder-white beaches!",
+            "Nassau sits on New Providence Island, which is home to 70 percent of all the people who live in the Bahamas!",
+            "Nassau was originally called Charles Town after King Charles II of England before being renamed after Prince William of Orange-Nassau!"
+        ]
+    },
+    "Hebron": {
+        "city": "Hebron",
+        "state": "Kentucky",
+        "country": "the United States",
+        "population": 6776,
+        "fun_facts": [
+            "Hebron is home to the Cincinnati/Northern Kentucky International Airport, one of the busiest cargo airports in the entire world!",
+            "Hebron has four giant Amazon fulfillment centers in an area called World Park - that's where lots of packages start their journey to homes everywhere!",
+            "Hebron is perfectly located in the Tri-State area where Ohio, Kentucky, and Indiana all meet - you can visit three states in one day!",
+            "Hebron has grown so much in recent years that new neighborhoods pop up like mushrooms after rain, welcoming families from all over!"
+        ]
     }
 }

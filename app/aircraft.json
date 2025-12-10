@@ -457,8 +457,8 @@
   },
   "BLCF": {
     "technical_name": "Boeing 747-400 LCF Dreamlifter",
-    "simple_name": "Boeing 747 Jumbo Jet",
-    "passenger_capacity": 0
+    "simple_name": "Boeing 747 Dreamlifter",
+    "passenger_capacity": 2
   },
   "C130": {
     "technical_name": "Lockheed L-182 / 282 / 382 (L-100) Hercules",
@@ -466,7 +466,8 @@
   },
   "C208": {
     "technical_name": "Cessna 208 Caravan",
-    "simple_name": "Cessna"
+    "simple_name": "Cessna 208 Caravan",
+    "passenger_capacity": 9
   },
   "C212": {
     "technical_name": "CASA / IPTN 212 Aviocar",
@@ -474,15 +475,18 @@
   },
   "C25A": {
     "technical_name": "Cessna Citation CJ2",
-    "simple_name": "Cessna CJ2"
+    "simple_name": "Cessna CJ2",
+    "passenger_capacity": 7
   },
   "C25B": {
     "technical_name": "Cessna Citation CJ3",
-    "simple_name": "Cessna CJ3"
+    "simple_name": "Cessna CJ3",
+    "passenger_capacity": 7
   },
   "C25C": {
     "technical_name": "Cessna Citation CJ4",
-    "simple_name": "Cessna CJ4"
+    "simple_name": "Cessna CJ4",
+    "passenger_capacity": 8
   },
   "C30J": {
     "technical_name": "Lockheed Martin C-130J Hercules",
@@ -490,27 +494,33 @@
   },
   "C408": {
     "technical_name": "Cessna 408 SkyCourier",
-    "simple_name": "Cessna SkyCourier"
+    "simple_name": "Cessna SkyCourier",
+    "passenger_capacity": 19
   },
   "C500": {
     "technical_name": "Cessna Citation I",
-    "simple_name": "Cessna Citation"
+    "simple_name": "Cessna Citation",
+    "passenger_capacity": 6
   },
   "C510": {
     "technical_name": "Cessna Citation Mustang",
-    "simple_name": "Cessna Citation Mustang"
+    "simple_name": "Cessna Citation Mustang",
+    "passenger_capacity": 4
   },
   "C525": {
     "technical_name": "Cessna CitationJet",
-    "simple_name": "Cessna CitationJet"
+    "simple_name": "Cessna CitationJet",
+    "passenger_capacity": 6
   },
   "C550": {
     "technical_name": "Cessna Citation II",
-    "simple_name": "Cessna"
+    "simple_name": "Cessna Citation Two",
+    "passenger_capacity": 8
   },
   "C560": {
     "technical_name": "Cessna Citation V",
-    "simple_name": "Cessna"
+    "simple_name": "Cessna Citation Five",
+    "passenger_capacity": 8
   },
   "C56X": {
     "technical_name": "Cessna Citation Excel",
@@ -523,23 +533,28 @@
   },
   "C650": {
     "technical_name": "Cessna Citation III, VI, VII",
-    "simple_name": "Cessna"
+    "simple_name": "Cessna Citation",
+    "passenger_capacity": 8
   },
   "C680": {
     "technical_name": "Cessna Citation Sovereign",
-    "simple_name": "Cessna"
+    "simple_name": "Cessna Citation Sovereign",
+    "passenger_capacity": 8
   },
   "C68A": {
     "technical_name": "Cessna Citation Latitude",
-    "simple_name": "Cessna"
+    "simple_name": "Cessna Citation Latitude",
+    "passenger_capacity": 9
   },
   "C700": {
     "technical_name": "Cessna Citation Longitude",
-    "simple_name": "CCessna"
+    "simple_name": "Cessna Citation Longitude",
+    "passenger_capacity": 9
   },
   "C750": {
     "technical_name": "Cessna Citation X",
-    "simple_name": "Cessna"
+    "simple_name": "Cessna Citation X",
+    "passenger_capacity": 9
   },
   "C919": {
     "technical_name": "Comac C919",
@@ -563,23 +578,23 @@
   },
   "CRJ1": {
     "technical_name": "Canadair Regional Jet 100",
-    "simple_name": "Canadair Regional Jet "
+    "simple_name": "Canadair Regional Jet 100"
   },
   "CRJ2": {
     "technical_name": "Canadair Regional Jet 200",
-    "simple_name": "Canadair Regional Jet"
+    "simple_name": "Canadair Regional Jet 200"
   },
   "CRJ7": {
     "technical_name": "Canadair Regional Jet 700 | Regional Jet 550",
-    "simple_name": "Canadair Regional Jet"
+    "simple_name": "Canadair Regional Jet 700"
   },
   "CRJ9": {
     "technical_name": "Canadair Regional Jet 900",
-    "simple_name": "Canadair Regional Jet"
+    "simple_name": "Canadair Regional Jet 900"
   },
   "CRJX": {
     "technical_name": "Canadair Regional Jet 1000",
-    "simple_name": "Canadair Regional Jet"
+    "simple_name": "Canadair Regional Jet 1000"
   },
   "CVLT": {
     "technical_name": "Convair CV-580, Convair CV-600, Convair CV-640",
@@ -747,7 +762,8 @@
   },
   "F406": {
     "technical_name": "Reims-Cessna F406 Caravan II",
-    "simple_name": "Reims-Cessna F406 Caravan II"
+    "simple_name": "Reims-Cessna F406 Caravan II",
+    "passenger_capacity": 10
   },
   "F50": {
     "technical_name": "Fokker 50",
@@ -811,7 +827,7 @@
   },
   "H25B": {
     "technical_name": "British Aerospace 125 series / Hawker/Raytheon 700/800/800XP/850/900",
-    "simple_name": "British Aerospace 125 series / Hawker/Raytheon 700/800/800XP/850/900"
+    "simple_name": "Hawker Raytheon"
   },
   "H25C": {
     "technical_name": "British Aerospace 125-1000 series / Hawker/Raytheon 1000",

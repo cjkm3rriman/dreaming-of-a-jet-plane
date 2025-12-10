@@ -359,6 +359,7 @@ async def convert_text_to_speech_google(text: str) -> tuple[bytes, str]:
         logger.info(f"Gemini API complete: {len(pcm_data)} bytes PCM in {api_time:.2f}s")
 
         # Convert PCM to MP3 using ffmpeg (run in thread pool to avoid blocking event loop)
+        # Adds 1 second of silence at the start for Yoto player compatibility
         def _convert_pcm_to_mp3():
             ffmpeg_process = subprocess.Popen(
                 [
@@ -367,9 +368,9 @@ async def convert_text_to_speech_google(text: str) -> tuple[bytes, str]:
                     '-ar', '24000',  # 24kHz sample rate
                     '-ac', '1',  # mono
                     '-i', 'pipe:0',  # input from stdin
-                    '-af', 'asetrate=24000*0.97,aresample=24000,atempo=1.2',  # Lower pitch 3% + speed up 20%
+                    '-af', 'asetrate=24000*0.97,aresample=24000,atempo=1.2,adelay=1000|1000',  # Lower pitch 3% + speed up 20% + add 1s delay
                     '-c:a', 'libmp3lame',  # MP3 codec
-                    '-b:a', '64k',  # bitrate
+                    '-b:a', '128k',  # bitrate (increased from 64k for better MP3 quality)
                     '-f', 'mp3',  # MP3 format
                     'pipe:1'  # output to stdout
                 ],
@@ -928,15 +929,17 @@ async def handle_plane_endpoint(
     debug: int = 0,
     secret: Optional[str] = None,
     provider: Optional[str] = None,
+    country: Optional[str] = None,
 ):
     """Handle individual plane endpoints (/plane/1, /plane/2, /plane/3)
-    
+
     Args:
         request: FastAPI request object
         plane_index: 1-based plane index (1, 2, 3)
         lat: Optional latitude override
         lng: Optional longitude override
         debug: Debug mode flag
+        country: Optional country code override (e.g., "FR", "GB", "US") for testing metric/imperial units
     """
     logger.info(f"Request to /plane/{plane_index}")
     validate_flight_position_override(lat, lng, secret)
@@ -947,7 +950,7 @@ async def handle_plane_endpoint(
         forced_provider = provider.lower()
 
     # Get user location using shared function
-    user_lat, user_lng = await get_user_location(request, lat, lng)
+    user_lat, user_lng, country_code = await get_user_location(request, lat, lng, country)
 
     # Get TTS provider override from query parameters
     tts_override = get_tts_provider_override(request)
@@ -964,7 +967,7 @@ async def handle_plane_endpoint(
         # Generate sentence for debug display
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index)
+            sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
         elif aircraft and len(aircraft) > 0:
             # Not enough planes, return an appropriate message for this plane index
             if plane_index == 2:
@@ -977,7 +980,7 @@ async def handle_plane_endpoint(
                     sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
         else:
             # No aircraft found at all
-            sentence = generate_flight_text([], error_message, user_lat, user_lng)
+            sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code)
             
         logger.info(f"Debug mode: returning HTML without TTS for plane {plane_index}: {sentence[:50]}...")
         
@@ -1114,7 +1117,7 @@ async def handle_plane_endpoint(
     # Check if we have the requested plane
     if aircraft and len(aircraft) > zero_based_index:
         selected_aircraft = aircraft[zero_based_index]
-        sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index)
+        sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
         
     elif aircraft and len(aircraft) > 0:
         # Not enough planes, return an appropriate message for this plane index
@@ -1128,7 +1131,7 @@ async def handle_plane_endpoint(
                 sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
     else:
         # No aircraft found at all
-        sentence = generate_flight_text([], error_message, user_lat, user_lng)
+        sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code)
     
     # Generate TTS for the sentence
     import time
@@ -1223,6 +1226,7 @@ async def plane_1_endpoint(
     tts: str = None,
     secret: str = None,
     provider: str = None,
+    country: str = None,
 ):
     """Get MP3 for the closest aircraft
 
@@ -1232,9 +1236,10 @@ async def plane_1_endpoint(
         debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
         provider: Aircraft data provider override (requires secret)
+        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 1, lat, lng, debug, secret, provider)
+    return await handle_plane_endpoint(request, 1, lat, lng, debug, secret, provider, country)
 
 @app.get("/plane/2")
 async def plane_2_endpoint(
@@ -1245,6 +1250,7 @@ async def plane_2_endpoint(
     tts: str = None,
     secret: str = None,
     provider: str = None,
+    country: str = None,
 ):
     """Get MP3 for the second closest aircraft
 
@@ -1254,9 +1260,10 @@ async def plane_2_endpoint(
         debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
         provider: Aircraft data provider override (requires secret)
+        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 2, lat, lng, debug, secret, provider)
+    return await handle_plane_endpoint(request, 2, lat, lng, debug, secret, provider, country)
 
 @app.get("/plane/3")
 async def plane_3_endpoint(
@@ -1267,6 +1274,7 @@ async def plane_3_endpoint(
     tts: str = None,
     secret: str = None,
     provider: str = None,
+    country: str = None,
 ):
     """Get MP3 for the third closest aircraft
 
@@ -1276,9 +1284,10 @@ async def plane_3_endpoint(
         debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
         provider: Aircraft data provider override (requires secret)
+        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 3, lat, lng, debug, secret, provider)
+    return await handle_plane_endpoint(request, 3, lat, lng, debug, secret, provider, country)
 
 @app.options("/plane/1")
 async def plane_1_options():
