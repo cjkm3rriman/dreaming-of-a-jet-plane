@@ -376,7 +376,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     if is_private_jet:
         flight_number_tts = "private jet"
     else:
-        flight_number_tts = format_flight_number_for_tts(flight_number)
+        flight_number_tts = f"flight {format_flight_number_for_tts(flight_number)}"
 
     if (origin_city == "an unknown origin" or origin_location == "an unknown country") and (destination_city == "an unknown destination" or destination_location == "an unknown country"):
         flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to somewhere exciting, It is not quite clear'."
