@@ -35,8 +35,8 @@ def register_test_gemini_tts_routes(app: FastAPI):
             logger.warning("Google API key not configured")
             return {"error": "GOOGLE_API_KEY environment variable not set"}
 
-        text = "Great job my old chum! We spotted some absolutely delightful jet planes. Start up your Yoto jet plane scanner again soon, becuase you never know what celestial surprises we might find up there. Hugo out for now..."
-
+        # text = "Great job my old chum! We spotted some absolutely delightful jet planes. Start up your Yoto jet plane scanner again soon, becuase you never know what celestial surprises we might find up there. Hugo out for now..."
+        text = "Salutations! It is I, Air Traffic Controller Hugo, who shall be manning the jet plane scanner today. I am standing in for Hamish, who has, rather wisely, taken himself off to the Maldivian archipelago for a brief respite. Lets spot some jet planes shall we?"
         try:
             # Import Google GenAI SDK
             from google import genai
@@ -50,7 +50,7 @@ def register_test_gemini_tts_routes(app: FastAPI):
             # Gemini TTS configuration
             MODEL_ID = "gemini-2.5-flash-preview-tts"
             VOICE_NAME = "Sadachbia"
-            VOICE_PROMPT = "Read the text in a posh British male voice, with a deep, rich baritone tone. Use precise articulation and a refined, formal delivery with minimal inflection and a very even pitch."
+            VOICE_PROMPT = "Read the text in a posh British male voice, rich baritone with a low pitch. Use precise articulation and a refined, formal delivery with minimal inflection."
 
             logger.info(f"Gemini TTS Test Request: Model={MODEL_ID}, Voice={VOICE_NAME}, Text='{text[:50]}...'")
 
@@ -91,9 +91,9 @@ def register_test_gemini_tts_routes(app: FastAPI):
                     '-ar', '24000',  # 24kHz sample rate
                     '-ac', '1',  # mono
                     '-i', 'pipe:0',  # input from stdin
-                    '-af', 'asetrate=24000*0.97,aresample=24000,atempo=1.2',  # Lower pitch 3% + speed up 20%
+                    '-af', 'asetrate=24000*0.94,aresample=24000,atempo=1.1',  # Lower pitch 3% + speed up 20%
                     '-c:a', 'libmp3lame',  # MP3 codec
-                    '-b:a', '64k',  # bitrate
+                    '-b:a', '128k',  # bitrate
                     '-f', 'mp3',  # MP3 format
                     'pipe:1'  # output to stdout
                 ],
