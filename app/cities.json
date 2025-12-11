@@ -4376,5 +4376,135 @@
             "Hebron is perfectly located in the Tri-State area where Ohio, Kentucky, and Indiana all meet - you can visit three states in one day!",
             "Hebron has grown so much in recent years that new neighborhoods pop up like mushrooms after rain, welcoming families from all over!"
         ]
+    },
+    "Kelowna": {
+        "city": "Kelowna",
+        "state": "British Columbia",
+        "country": "Canada",
+        "population": 165907,
+        "fun_facts": [
+            "Kelowna sits on beautiful Okanagan Lake where a legendary lake monster called Ogopogo lives - over 300 people claim to have spotted the 80-foot sea serpent!",
+            "Kelowna's name comes from a word meaning 'grizzly bear' in the Okanagan language - imagine bears roaming these mountains long ago!",
+            "Kelowna has a whimsical Ogopogo statue in the waterfront park where you can take photos with the friendly lake monster!",
+            "Kelowna is Canada's third-largest city in British Columbia and welcomes over 2 million visitors every year who come to explore its beautiful parks and beaches!",
+            "Kelowna sits in the heart of famous wine country with over 40 wineries within a 20-minute drive - that's a lot of grape juice being made!"
+        ]
+    },
+    "Kahului": {
+        "city": "Kahului",
+        "state": "Hawaii",
+        "country": "the United States",
+        "population": 27457,
+        "fun_facts": [
+            "Kahului is the biggest town on the beautiful tropical island of Maui and sits right on the shores of sparkling Kahului Bay!",
+            "Kahului has amazing weather year-round - even in the coolest month it's still a warm 72 degrees Fahrenheit, perfect for beach days!",
+            "Kahului is home to the Kanaha Pond State Wildlife Sanctuary where you can see rare Hawaiian birds and other amazing animals!",
+            "Kahului has super strong trade winds that blow through the town at an average of 13.7 miles per hour - perfect for flying kites!",
+            "Kahului is the main shopping center for all of Maui with big malls like the Queen Kaahumanu Center where families love to visit!"
+        ]
+    },
+    "Santa Barbara": {
+        "city": "Santa Barbara",
+        "state": "California",
+        "country": "the United States",
+        "population": 87442,
+        "fun_facts": [
+            "Santa Barbara is called 'The American Riviera' because its beautiful Mediterranean climate and stunning coastline look just like fancy vacation spots in Europe!",
+            "Santa Barbara's buildings follow the beautiful Spanish Colonial style with white walls and red tile roofs after the 1925 earthquake gave the city a fresh start!",
+            "Santa Barbara is home to the University of California, Santa Barbara where students study right next to gorgeous beaches and the Pacific Ocean!",
+            "Santa Barbara witnessed a major oil spill in 1969 that helped start the modern environmental movement - now the city works hard to protect nature!",
+            "Santa Barbara sits just 20 miles from the Channel Islands National Park where you can see seals, sea lions, and incredible ocean wildlife!"
+        ]
+    },
+    "Grand Rapids": {
+        "city": "Grand Rapids",
+        "state": "Michigan",
+        "country": "the United States",
+        "population": 201981,
+        "fun_facts": [
+            "Grand Rapids got its name from the French words meaning 'the great swiftness' because of the fast-flowing rapids on the Grand River!",
+            "Grand Rapids hosts ArtPrize, the world's largest art competition decided by public votes, where thousands of artists compete every year!",
+            "Grand Rapids is home to John Ball Zoo with over 2,200 amazing animals from five continents including giraffes, tigers, and adorable red pandas!",
+            "Grand Rapids has Millennium Park, one of America's largest urban parks at 1,400 acres with an incredible six-acre beach and splash pad!",
+            "Grand Rapids celebrates the World of Winter festival every year, America's largest winter festival that fills downtown with outdoor art and snow activities!"
+        ]
+    },
+    "Rockland": {
+        "city": "Rockland",
+        "state": "Maine",
+        "country": "the United States",
+        "population": 7087,
+        "fun_facts": [
+            "Rockland hosts the famous Maine Lobster Festival every August where thousands of people come from around the world to celebrate delicious lobster!",
+            "Rockland is home to the Farnsworth Art Museum, a world-famous museum with incredible paintings by Andrew Wyeth and other talented New England artists!",
+            "Rockland got its name from the city's prominent limestone cliffs that tower over the beautiful Maine coastline!",
+            "Rockland is a designated U.S. Coast Guard City since 2008, honoring its important role in maritime history and ocean rescue!",
+            "Rockland has the largest concentration of manufacturers in all of Maine - this little city makes so many things!"
+        ]
+    },
+    "Aberdeen": {
+        "city": "Aberdeen",
+        "state": null,
+        "country": "the United Kingdom",
+        "population": 214618,
+        "fun_facts": [
+            "Aberdeen is called the 'Granite City' or 'Silver City by the Sea' because its beautiful buildings are made from sparkling grey granite that shimmers in the sunlight!",
+            "Aberdeen has been called the 'Oil Capital of Europe' since oil was discovered in the North Sea in 1969 - imagine all that treasure under the ocean!",
+            "Aberdeen is home to the University of Aberdeen which was founded way back in 1495, making it one of the oldest universities in the entire English-speaking world!",
+            "Aberdeen hosts the Aberdeen International Youth Festival every August where hundreds of young performing artists from around the world come to sing, dance, and perform!",
+            "Aberdeen has one of the busiest heliports in the world at its airport, with helicopters constantly flying to oil rigs in the North Sea!"
+        ]
+    },
+    "Darwin": {
+        "city": "Darwin",
+        "state": "Northern Territory",
+        "country": "Australia",
+        "population": 152311,
+        "fun_facts": [
+            "Darwin has a harbour that's twice the size of Sydney Harbour - imagine how many boats could fit in there!",
+            "Darwin is closer to cities in Indonesia and Papua New Guinea than to other Australian capitals - it's right at the top of Australia!",
+            "Darwin hosts the famous Beer Can Regatta every August where people race boats made entirely out of beer cans floating on the water!",
+            "Darwin has been rebuilt four times after being damaged by cyclones and World War II bombings - this city never gives up!",
+            "Darwin is home to over 100 Aboriginal languages and dialects, making it one of the most culturally diverse cities in Australia!"
+        ]
+    },
+    "Arrecife": {
+        "city": "Arrecife",
+        "state": "Lanzarote",
+        "country": "Spain",
+        "population": 56834,
+        "fun_facts": [
+            "Arrecife is the capital of Lanzarote, a volcanic island in the Canary Islands with 32 volcanoes created in just six years of eruptions!",
+            "Arrecife sits on an island where the Fire Mountains still emit enough heat from volcanic crevices to fry eggs - imagine cooking breakfast on a volcano!",
+            "Arrecife is near Timanfaya National Park where you can see black volcanic landscapes that look like you're walking on the moon!",
+            "Arrecife is on an island famous for its striking green crater lake filled with seawater that gets its color from unique algae!",
+            "Arrecife's island grows grapes in individual volcanic craters, and the black volcanic soil gives the wine a taste you can't find anywhere else!"
+        ]
+    },
+    "Ontario": {
+        "city": "Ontario",
+        "state": "California",
+        "country": "the United States",
+        "population": 187675,
+        "fun_facts": [
+            "Ontario is home to Ontario International Airport, one of the busiest cargo airports in America where FedEx and UPS planes zoom in and out all day and night!",
+            "Ontario started as a health resort before becoming famous for growing sweet lemons and juicy oranges in huge groves!",
+            "Ontario has the historic Graber Olive House that still produces delicious olives today, just like it did over 100 years ago!",
+            "Ontario is home to the Toyota Arena with 11,000 seats that hosts over 125 exciting events every year including sports games, concerts, and family shows!",
+            "Ontario used to have the Ontario Motor Speedway where super-fast Formula One and NASCAR race cars zoomed around the track before it closed in 1980!"
+        ]
+    },
+    "Burbank": {
+        "city": "Burbank",
+        "state": "California",
+        "country": "the United States",
+        "population": 102663,
+        "fun_facts": [
+            "Burbank is called the 'Media Capital of the World' because Warner Bros., Disney, Nickelodeon, and Cartoon Network all make their movies and shows here!",
+            "Burbank was named after David Burbank who started a sheep ranch here in 1867 - from sheep farm to movie capital!",
+            "Burbank's famous 'Skunk Works' created secret spy planes like the SR-71 Blackbird that could fly three times faster than the speed of sound!",
+            "Burbank's airport was the first in the entire country to require quieter 'Stage 3' jets in 1987, making the skies more peaceful for everyone!",
+            "Burbank opened California's first hydrogen fueling station in 2006, helping cars run on clean energy instead of gasoline!"
+        ]
     }
 }
