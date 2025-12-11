@@ -368,7 +368,7 @@ async def convert_text_to_speech_google(text: str) -> tuple[bytes, str]:
                     '-ar', '24000',  # 24kHz sample rate
                     '-ac', '1',  # mono
                     '-i', 'pipe:0',  # input from stdin
-                    '-af', 'asetrate=24000*0.97,aresample=24000,atempo=1.2,adelay=1000|1000',  # Lower pitch 3% + speed up 20% + add 1s delay
+                    '-af', 'asetrate=24000*0.94,aresample=24000,atempo=1.1,adelay=1000|1000',  # Lower pitch 6% + speed up 10% + add 1s delay
                     '-c:a', 'libmp3lame',  # MP3 codec
                     '-b:a', '128k',  # bitrate (increased from 64k for better MP3 quality)
                     '-f', 'mp3',  # MP3 format
