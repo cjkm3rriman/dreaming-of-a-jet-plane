@@ -66,7 +66,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             # Generate appropriate text for this plane
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
-                sentence = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index)
+                sentence = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index, country_code)
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
                 if plane_index == 2:
@@ -79,7 +79,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                         sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try firing up the scanner again in a few minutes."
             else:
                 # No aircraft found at all
-                sentence = generate_flight_text([], error_message, lat, lng)
+                sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code)
 
             # Create task to generate and cache this plane's audio
             selected_aircraft = aircraft[zero_based_index] if aircraft and len(aircraft) > zero_based_index else None
