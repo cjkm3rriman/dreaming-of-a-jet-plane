@@ -39,7 +39,16 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # Import here to avoid circular imports
         from .main import get_nearby_aircraft, convert_text_to_speech, TTS_PROVIDER
         from .flight_text import generate_flight_text_for_aircraft, generate_flight_text
-        
+        from .location_utils import get_location_from_ip, extract_client_ip
+
+        # Get country code for metric/imperial units
+        # We already have lat/lng, just need country code
+        if request:
+            client_ip = extract_client_ip(request)
+            _, _, country_code = await get_location_from_ip(client_ip, request)
+        else:
+            country_code = "US"  # Default fallback if no request
+
         # Get flight data (this will use cached API data if available, or cache new data)
         aircraft, error_message = await get_nearby_aircraft(lat, lng, limit=3, request=request)
 
