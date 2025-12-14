@@ -631,6 +631,81 @@ def track_audio_generation(request: Request, lat: float, lng: float, plane_index
     except Exception as e:
         logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
 
+def track_aircraft_selection(
+    request: Request,
+    lat: float,
+    lng: float,
+    country_code: str,
+    aircraft_selection_data: List[tuple],  # List of (aircraft_dict, fun_fact_source)
+    provider: str
+):
+    """Track scan:aircraft_selection analytics event with detailed flight routing and fun fact data"""
+    try:
+        import hashlib
+
+        client_ip = extract_client_ip(request)
+        user_agent = extract_user_agent(request)
+        browser_info = parse_user_agent(user_agent)
+
+        # Create consistent session ID
+        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
+        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+
+        # Build base event properties
+        event_props = {
+            "ip": client_ip,
+            "$user_agent": user_agent,
+            "$session_id": session_id,
+            "$insert_id": f"aircraft_selection_{session_id}",
+            "browser": browser_info["browser"],
+            "browser_version": browser_info["browser_version"],
+            "os": browser_info["os"],
+            "os_version": browser_info["os_version"],
+            "device": browser_info["device"],
+            "lat": round(lat, 3),
+            "lng": round(lng, 3),
+            "country_code": country_code,
+            "aircraft_count": len(aircraft_selection_data),
+            "aircraft_provider": provider,
+            "duplicate_destinations": False,
+            "duplicate_destination_count": 0
+        }
+
+        # Track destinations to detect duplicates
+        seen_destinations = set()
+        duplicate_count = 0
+
+        # Add per-plane data
+        for i, (aircraft, fun_fact_source) in enumerate(aircraft_selection_data, start=1):
+            plane_prefix = f"plane{i}"
+
+            # Extract city/country info
+            origin_city = aircraft.get("origin_city", "Unknown")
+            origin_country = aircraft.get("origin_country", "Unknown")
+            destination_city = aircraft.get("destination_city", "Unknown")
+            destination_country = aircraft.get("destination_country", "Unknown")
+
+            # Format as "City, Country"
+            event_props[f"{plane_prefix}_origin"] = f"{origin_city}, {origin_country}"
+            event_props[f"{plane_prefix}_destination"] = f"{destination_city}, {destination_country}"
+
+            # Track fun fact source
+            event_props[f"{plane_prefix}_fun_fact_source"] = fun_fact_source if fun_fact_source else "none"
+            event_props[f"{plane_prefix}_has_fun_fact"] = fun_fact_source is not None
+
+            # Detect duplicates
+            if destination_city != "Unknown":
+                if destination_city in seen_destinations:
+                    event_props["duplicate_destinations"] = True
+                    duplicate_count += 1
+                seen_destinations.add(destination_city)
+
+        event_props["duplicate_destination_count"] = duplicate_count
+
+        analytics.track_event("scan:aircraft_selection", event_props)
+    except Exception as e:
+        logger.error(f"Failed to track scan:aircraft_selection event: {e}", exc_info=True)
+
 def select_diverse_aircraft(
     aircraft_list: List[Dict[str, Any]],
     user_lat: Optional[float] = None,
@@ -967,7 +1042,7 @@ async def handle_plane_endpoint(
         # Generate sentence for debug display
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
+            sentence, _ = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
         elif aircraft and len(aircraft) > 0:
             # Not enough planes, return an appropriate message for this plane index
             if plane_index == 2:
@@ -1117,7 +1192,7 @@ async def handle_plane_endpoint(
     # Check if we have the requested plane
     if aircraft and len(aircraft) > zero_based_index:
         selected_aircraft = aircraft[zero_based_index]
-        sentence = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
+        sentence, _ = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
         
     elif aircraft and len(aircraft) > 0:
         # Not enough planes, return an appropriate message for this plane index

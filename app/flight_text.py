@@ -128,7 +128,7 @@ def format_speed(speed_kmh: float, use_metric: bool) -> tuple[int, str]:
         return int(round(speed_mph)), "miles per hour"
 
 
-def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None, plane_index: int = 1, country_code: str = "US", used_destinations: set = None) -> str:
+def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None, plane_index: int = 1, country_code: str = "US", used_destinations: set = None) -> tuple[str, Optional[str]]:
     """Generate descriptive text for a specific aircraft
 
     Args:
@@ -140,7 +140,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         used_destinations: Optional set of destination cities already used (for diversity)
 
     Returns:
-        str: Human-readable sentence describing the flight
+        tuple: (sentence, fun_fact_source)
+            - sentence: Human-readable sentence describing the flight
+            - fun_fact_source: "destination", "origin", or None (if no fun fact included)
     """
     # Ensure fresh random state for each text generation
     random.seed(time.time_ns())
@@ -394,6 +396,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     # Add random fun fact about destination city if available
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
+    fun_fact_source = None  # Track which city we used for fun facts
 
     if destination_city and destination_city != "an unknown destination":
         # Check for duplicate destinations - use origin city for fun facts if duplicate
@@ -401,6 +404,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         location_for_facts = destination_location
         country_for_facts = destination_country
         airport_code_for_facts = aircraft.get("destination_airport")
+        fun_fact_source = "destination"  # Default to destination
 
         if used_destinations is not None and destination_city in used_destinations:
             # Duplicate destination - use origin instead if available
@@ -409,6 +413,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
                 location_for_facts = origin_location
                 country_for_facts = origin_country
                 airport_code_for_facts = aircraft.get("origin_airport")
+                fun_fact_source = "origin"  # Override to origin for duplicates
             # If origin unavailable, fall back to destination (will be duplicate but no choice)
 
         # Add destination to tracking set (even if we're using origin for facts)
@@ -438,14 +443,17 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
             fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
             fun_fact_opening = random.choice(fun_fact_openings)
             full_response += f" {fun_fact_opening} {random_fact}."
-    
+        else:
+            # No fun facts available for this city
+            fun_fact_source = None
+
     # Add closing prompt for plane index 1 and 2
     if plane_index == 1:
         full_response += " Should we find another jet plane?"
     elif plane_index == 2:
         full_response += " Let's find one more jet plane shall we?"
-    
-    return full_response
+
+    return full_response, fun_fact_source
 
 
 def make_error_message_friendly(error_message: str) -> str:
@@ -504,12 +512,14 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
     if aircraft and len(aircraft) > plane_index:
         selected_aircraft = aircraft[plane_index]
         # Convert 0-based index to 1-based for plane_index parameter
-        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index + 1, country_code)
+        sentence, _ = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index + 1, country_code)
+        return sentence
     elif aircraft and len(aircraft) > 0:
         # Fallback to first aircraft if plane_index is out of bounds
         selected_aircraft = aircraft[0]
         # Use plane index 1 for fallback
-        return generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, 1, country_code)
+        sentence, _ = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, 1, country_code)
+        return sentence
     else:
         # Handle error cases with friendly error messages
         if error_message:

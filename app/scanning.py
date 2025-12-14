@@ -62,6 +62,9 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # Track destination cities across all 3 planes for diversity
         used_destinations = set()
 
+        # Track aircraft selection data for analytics
+        aircraft_selection_data = []  # List of (aircraft_dict, fun_fact_source)
+
         # Pre-generate audio for up to 3 planes
         tasks = []
         for plane_index in range(1, 4):  # 1, 2, 3
@@ -72,13 +75,19 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             cached_audio = await s3_cache.get(plane_cache_key)
 
             if cached_audio:
+                # Still track aircraft data for analytics even if cached
+                if aircraft and len(aircraft) > zero_based_index:
+                    aircraft_selection_data.append((aircraft[zero_based_index], None))  # No fun_fact_source for cached
                 continue
 
 
             # Generate appropriate text for this plane
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
-                sentence = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index, country_code, used_destinations)
+                sentence, fun_fact_source = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index, country_code, used_destinations)
+
+                # Track aircraft selection data for analytics
+                aircraft_selection_data.append((selected_aircraft, fun_fact_source))
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
                 if plane_index == 2:
@@ -106,7 +115,19 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             successes = sum(1 for r in results if r is True)
         else:
             pass
-            
+
+        # Track aircraft selection analytics
+        if request and aircraft_selection_data:
+            from .main import track_aircraft_selection, LIVE_AIRCRAFT_PROVIDER
+            track_aircraft_selection(
+                request,
+                lat,
+                lng,
+                country_code,
+                aircraft_selection_data,
+                LIVE_AIRCRAFT_PROVIDER
+            )
+
     except Exception as e:
         logger.error(f"Error in MP3 pre-generation: {e}")
 
