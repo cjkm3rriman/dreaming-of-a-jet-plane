@@ -5,6 +5,7 @@ Shared flight text generation for consistent messaging across endpoints
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import random
+import time
 import re
 from .cities_database import get_fun_facts
 from .airport_database import get_airport_by_iata
@@ -140,6 +141,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     Returns:
         str: Human-readable sentence describing the flight
     """
+    # Ensure fresh random state for each text generation
+    random.seed(time.time_ns())
+
     # Determine if user's country uses metric system
     use_metric = uses_metric_system(country_code)
 
@@ -183,7 +187,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     
     # Build the descriptive sentences with different opening words based on plane index
-    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Golly!"]
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
     base_opening_word = random.choice(opening_words)
 
     # Format distance with appropriate units
