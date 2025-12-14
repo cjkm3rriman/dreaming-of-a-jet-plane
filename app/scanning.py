@@ -59,6 +59,9 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         from .main import get_audio_format_for_provider
         file_ext, mime_type = get_audio_format_for_provider(effective_provider)
 
+        # Track destination cities across all 3 planes for diversity
+        used_destinations = set()
+
         # Pre-generate audio for up to 3 planes
         tasks = []
         for plane_index in range(1, 4):  # 1, 2, 3
@@ -75,7 +78,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             # Generate appropriate text for this plane
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
-                sentence = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index, country_code)
+                sentence = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index, country_code, used_destinations)
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
                 if plane_index == 2:

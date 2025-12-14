@@ -128,7 +128,7 @@ def format_speed(speed_kmh: float, use_metric: bool) -> tuple[int, str]:
         return int(round(speed_mph)), "miles per hour"
 
 
-def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None, plane_index: int = 1, country_code: str = "US") -> str:
+def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None, plane_index: int = 1, country_code: str = "US", used_destinations: set = None) -> str:
     """Generate descriptive text for a specific aircraft
 
     Args:
@@ -137,6 +137,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         user_lng: User's longitude (for determining US location)
         plane_index: 1-based plane index (1, 2, 3) to determine opening words
         country_code: ISO 3166-1 alpha-2 country code for unit localization (default: "US")
+        used_destinations: Optional set of destination cities already used (for diversity)
 
     Returns:
         str: Human-readable sentence describing the flight
@@ -197,9 +198,9 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         distance_str = "an unknown distance"
 
     if plane_index == 2:
-        detection_sentence = f"{base_opening_word} We've detected another jet plane, flying high {distance_str} from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've found another jet plane, flying high {distance_str} from this Yoto!"
     elif plane_index == 3:
-        detection_sentence = f"{base_opening_word} We've detected one more jet plane up there, {distance_str} from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've identified one more jet plane up there, {distance_str} from this Yoto!"
     else:
         # Default for plane 1 or any other index
         detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_str} from this Yoto!"
@@ -230,7 +231,7 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     # Build scanner sentence with random selection of available data
     aircraft_descriptors = ["big, shiny", "mega, massive", "super powered", "humongous", "gigantic", "enormous"]
-    small_aircraft_descriptors = ["shiny", "beautiful", "swanky"]
+    small_aircraft_descriptors = ["shiny", "beautiful", "swanky", "svelte", "sleek", "elegant"]
     descriptor_pool = aircraft_descriptors
     if passenger_capacity and passenger_capacity <= 50:
         descriptor_pool = small_aircraft_descriptors
@@ -393,27 +394,45 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     # Add random fun fact about destination city if available
     full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
-    
+
     if destination_city and destination_city != "an unknown destination":
-        # For US destinations, pass state information to help with city disambiguation
-        if destination_country == "the United States" and destination_location != "an unknown country":
-            # Use the actual state name if we have it, otherwise use destination_location
-            destination_state = aircraft.get("destination_airport")
-            if destination_state:
-                airport_data = get_airport_by_iata(destination_state)
+        # Check for duplicate destinations - use origin city for fun facts if duplicate
+        city_for_facts = destination_city
+        location_for_facts = destination_location
+        country_for_facts = destination_country
+        airport_code_for_facts = aircraft.get("destination_airport")
+
+        if used_destinations is not None and destination_city in used_destinations:
+            # Duplicate destination - use origin instead if available
+            if origin_city and origin_city != "an unknown origin":
+                city_for_facts = origin_city
+                location_for_facts = origin_location
+                country_for_facts = origin_country
+                airport_code_for_facts = aircraft.get("origin_airport")
+            # If origin unavailable, fall back to destination (will be duplicate but no choice)
+
+        # Add destination to tracking set (even if we're using origin for facts)
+        if used_destinations is not None:
+            used_destinations.add(destination_city)
+
+        # Get fun facts for the chosen city (using same logic as before)
+        if country_for_facts == "the United States" and location_for_facts != "an unknown country":
+            # Use the actual state name if we have it, otherwise use location_for_facts
+            if airport_code_for_facts:
+                airport_data = get_airport_by_iata(airport_code_for_facts)
                 if airport_data and airport_data.get("country") == "US":
                     state = airport_data.get("state")
                     if state:
-                        fun_facts = get_fun_facts(destination_city, state, "United States")
+                        fun_facts = get_fun_facts(city_for_facts, state, "United States")
                     else:
-                        fun_facts = get_fun_facts(destination_city, destination_location, "United States")
+                        fun_facts = get_fun_facts(city_for_facts, location_for_facts, "United States")
                 else:
-                    fun_facts = get_fun_facts(destination_city, destination_location, "United States")
+                    fun_facts = get_fun_facts(city_for_facts, location_for_facts, "United States")
             else:
-                fun_facts = get_fun_facts(destination_city, destination_location, "United States")
+                fun_facts = get_fun_facts(city_for_facts, location_for_facts, "United States")
         else:
-            fun_facts = get_fun_facts(destination_city)
-            
+            fun_facts = get_fun_facts(city_for_facts)
+
         if fun_facts:
             random_fact = random.choice(fun_facts)
             fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
