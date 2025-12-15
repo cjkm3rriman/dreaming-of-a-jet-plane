@@ -218,3 +218,56 @@ See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. E
 - `app/analytics.py` - Analytics tracking
 - `app/location_utils.py` - IP geolocation
 - `app/s3_cache.py` - S3 caching operations
+
+
+## TODO: Add Sentry Error Monitoring
+
+**Problem**: Need real-time notifications when external API calls fail in production (Railway environment).
+
+**Solution**: Integrate Sentry for comprehensive error tracking and alerting.
+
+**Implementation Steps**:
+1. Sign up for Sentry account at https://sentry.io (free tier: 5,000 errors/month)
+2. Create new Python project and get DSN
+3. Add environment variables to Railway:
+   - `SENTRY_DSN` - Sentry Data Source Name
+   - `SENTRY_ENVIRONMENT=production`
+4. Install Sentry SDK: `uv add sentry-sdk[fastapi]`
+5. Initialize Sentry in `app/main.py`:
+   ```python
+   import sentry_sdk
+   from sentry_sdk.integrations.fastapi import FastApiIntegration
+
+   if os.getenv("SENTRY_DSN"):
+       sentry_sdk.init(
+           dsn=os.getenv("SENTRY_DSN"),
+           environment=os.getenv("SENTRY_ENVIRONMENT", "development"),
+           traces_sample_rate=0.1,
+           integrations=[FastApiIntegration()],
+       )
+   ```
+6. Configure alerts in Sentry dashboard (email/Slack/Discord)
+7. Optional: Add manual context for external API calls
+
+**Benefits**:
+- Automatic capture of all unhandled exceptions
+- Real-time notifications for critical errors
+- Stack traces with full context
+- Error grouping and frequency tracking
+- Performance monitoring
+- Request context (IP, headers, etc.)
+
+**Monitored Services**:
+- FlightRadar24 API
+- Airlabs API
+- ElevenLabs TTS
+- Google Gemini TTS
+- AWS Polly TTS
+- IP Geolocation (ipapi.co)
+- S3 cache operations
+- Mixpanel analytics
+
+**Files to modify**:
+- `app/main.py` - Initialize Sentry
+- `pyproject.toml` - Add sentry-sdk dependency
+- Railway environment variables
