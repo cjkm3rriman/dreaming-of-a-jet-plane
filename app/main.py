@@ -1001,7 +1001,6 @@ async def handle_plane_endpoint(
     plane_index: int,
     lat: float = None,
     lng: float = None,
-    debug: int = 0,
     secret: Optional[str] = None,
     provider: Optional[str] = None,
     country: Optional[str] = None,
@@ -1013,7 +1012,8 @@ async def handle_plane_endpoint(
         plane_index: 1-based plane index (1, 2, 3)
         lat: Optional latitude override
         lng: Optional longitude override
-        debug: Debug mode flag
+        secret: Secret key for provider overrides
+        provider: Aircraft data provider override (requires secret)
         country: Optional country code override (e.g., "FR", "GB", "US") for testing metric/imperial units
     """
     logger.info(f"Request to /plane/{plane_index}")
@@ -1033,120 +1033,6 @@ async def handle_plane_endpoint(
 
     # Convert to 0-based index
     zero_based_index = plane_index - 1
-    
-    # Debug mode: skip cache and return text only without TTS
-    if debug == 1:
-        # Get aircraft data for debug display
-        aircraft, error_message = await get_nearby_aircraft(user_lat, user_lng, limit=max(3, plane_index), request=request)
-        
-        # Generate sentence for debug display
-        if aircraft and len(aircraft) > zero_based_index:
-            selected_aircraft = aircraft[zero_based_index]
-            sentence, _ = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
-        elif aircraft and len(aircraft) > 0:
-            # Not enough planes, return an appropriate message for this plane index
-            if plane_index == 2:
-                sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
-            elif plane_index == 3:
-                plane_count = len(aircraft)
-                if plane_count == 1:
-                    sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
-                else:
-                    sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
-        else:
-            # No aircraft found at all
-            sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code)
-            
-        logger.info(f"Debug mode: returning HTML without TTS for plane {plane_index}: {sentence[:50]}...")
-        
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Dreaming of a Jet Plane - Plane {plane_index} Debug</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }}
-                .container {{ background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-                h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
-                h2 {{ color: #34495e; margin-top: 25px; }}
-                table {{ border-collapse: collapse; width: 100%; margin-top: 15px; }}
-                th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
-                th {{ background-color: #f8f9fa; font-weight: bold; }}
-                tr:nth-child(even) {{ background-color: #f8f9fa; }}
-                .sentence {{ background-color: #e8f4fd; padding: 20px; border-radius: 5px; margin: 20px 0; font-size: 16px; line-height: 1.5; }}
-                .message {{ background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>✈️ Plane {plane_index} Debug Mode</h1>
-                <div class="sentence">
-                    <strong>Generated Text:</strong><br>
-                    {sentence}
-                </div>
-                
-                <h2>📍 Location Details</h2>
-                <table>
-                    <tr><th>Property</th><th>Value</th></tr>
-                    <tr><td>User Latitude</td><td>{user_lat}</td></tr>
-                    <tr><td>User Longitude</td><td>{user_lng}</td></tr>
-                    <tr><td>Plane Index</td><td>{plane_index}</td></tr>
-                    <tr><td>Aircraft Found</td><td>{len(aircraft) if aircraft else 0}</td></tr>
-        """
-        
-        if error_message:
-            html_content += f"""
-                    <tr><td>Error Message</td><td>{error_message}</td></tr>
-            """
-        
-        html_content += """
-                </table>
-        """
-        
-        # Add aircraft details if found
-        if aircraft and len(aircraft) > zero_based_index:
-            selected_aircraft = aircraft[zero_based_index]
-            
-            # Get aircraft coordinates for Google Maps link
-            aircraft_lat = selected_aircraft.get('latitude')
-            aircraft_lng = selected_aircraft.get('longitude')
-            
-            html_content += f"""
-                <h2>🛫 Plane {plane_index} Details</h2>
-                <table>
-                    <tr><th>Property</th><th>Value</th></tr>
-            """
-            
-            for key, value in selected_aircraft.items():
-                if value is not None and value != "":
-                    html_content += f"<tr><td>{key.replace('_', ' ').title()}</td><td>{value}</td></tr>"
-            
-            html_content += "</table>"
-            
-            # Add Google Maps directions link if we have aircraft coordinates
-            if aircraft_lat and aircraft_lng:
-                maps_url = f"https://www.google.com/maps/dir/?api=1&origin={user_lat},{user_lng}&destination={aircraft_lat},{aircraft_lng}&travelmode=driving"
-                html_content += f"""
-                <h2>🗺️ Google Maps</h2>
-                <div class="message">
-                    <a href="{maps_url}" target="_blank" style="color: #3498db; text-decoration: none; font-weight: bold;">
-                        📍 View Directions from Your Location to Plane {plane_index} Position
-                    </a>
-                    <br><br>
-                    <small style="color: #666;">
-                        Your Location: {user_lat}, {user_lng}<br>
-                        Plane {plane_index} Location: {aircraft_lat}, {aircraft_lng}
-                    </small>
-                </div>
-                """
-        
-        html_content += """
-            </div>
-        </body>
-        </html>
-        """
-        
-        return HTMLResponse(content=html_content)
 
     # Get audio format for the effective provider
     file_ext, mime_type = get_audio_format_for_provider(effective_provider)
@@ -1297,7 +1183,6 @@ async def plane_1_endpoint(
     request: Request,
     lat: float = None,
     lng: float = None,
-    debug: int = 0,
     tts: str = None,
     secret: str = None,
     provider: str = None,
@@ -1308,20 +1193,18 @@ async def plane_1_endpoint(
     Query Parameters:
         lat: Optional latitude override (requires secret)
         lng: Optional longitude override (requires secret)
-        debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
         provider: Aircraft data provider override (requires secret)
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 1, lat, lng, debug, secret, provider, country)
+    return await handle_plane_endpoint(request, 1, lat, lng, secret, provider, country)
 
 @app.get("/plane/2")
 async def plane_2_endpoint(
     request: Request,
     lat: float = None,
     lng: float = None,
-    debug: int = 0,
     tts: str = None,
     secret: str = None,
     provider: str = None,
@@ -1332,20 +1215,18 @@ async def plane_2_endpoint(
     Query Parameters:
         lat: Optional latitude override (requires secret)
         lng: Optional longitude override (requires secret)
-        debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
         provider: Aircraft data provider override (requires secret)
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 2, lat, lng, debug, secret, provider, country)
+    return await handle_plane_endpoint(request, 2, lat, lng, secret, provider, country)
 
 @app.get("/plane/3")
 async def plane_3_endpoint(
     request: Request,
     lat: float = None,
     lng: float = None,
-    debug: int = 0,
     tts: str = None,
     secret: str = None,
     provider: str = None,
@@ -1356,13 +1237,12 @@ async def plane_3_endpoint(
     Query Parameters:
         lat: Optional latitude override (requires secret)
         lng: Optional longitude override (requires secret)
-        debug: Debug mode (1 = return HTML, 0 = return audio)
         tts: TTS provider override (requires secret)
         provider: Aircraft data provider override (requires secret)
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 3, lat, lng, debug, secret, provider, country)
+    return await handle_plane_endpoint(request, 3, lat, lng, secret, provider, country)
 
 @app.options("/plane/1")
 async def plane_1_options():
