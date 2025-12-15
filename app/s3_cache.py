@@ -4,7 +4,7 @@ S3-based MP3 caching system for flight audio data
 
 import hashlib
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional, Union, Dict, Any
 import httpx
 import os
@@ -123,13 +123,13 @@ class S3MP3Cache:
         """Create AWS Signature Version 4 headers for S3 request"""
         from urllib.parse import urlparse
         import datetime
-        
+
         parsed_url = urlparse(url)
         host = parsed_url.netloc
         path = parsed_url.path
-        
+
         # Create timestamp
-        t = datetime.datetime.utcnow()
+        t = datetime.datetime.now(datetime.UTC)
         amzdate = t.strftime('%Y%m%dT%H%M%SZ')
         datestamp = t.strftime('%Y%m%d')
         
@@ -293,7 +293,7 @@ class S3MP3Cache:
                 "Content-Type": content_type_header,
                 "Content-Length": str(len(data_bytes)),
                 # Add metadata for TTL tracking
-                "x-amz-meta-cached-at": datetime.utcnow().isoformat(),
+                "x-amz-meta-cached-at": datetime.now(UTC).isoformat(),
                 "x-amz-meta-ttl-minutes": str(ttl_minutes),
                 "x-amz-meta-content-type": content_type
             }
