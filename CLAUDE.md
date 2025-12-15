@@ -43,6 +43,105 @@ railway up    # Deploy to Railway (if Railway CLI is installed)
 
 **IMPORTANT**: When the user asks to "deploy", this means commit all changes to GitHub which automatically triggers Railway deployment. Use git add, commit, and push to deploy the application.
 
+## Testing
+
+The project has a comprehensive test suite covering aircraft selection, text generation, duplicate destination handling, and end-to-end workflows.
+
+### Running Tests
+
+**Basic test runs:**
+```bash
+# Run all tests (unit tests only, integration tests skip without API keys)
+uv run pytest -v
+
+# Run all tests with Railway environment variables (runs integration tests too)
+railway run uv run pytest -v
+
+# Run with verbose output showing print statements
+railway run uv run pytest -v -s
+
+# Run specific test file
+railway run uv run pytest tests/test_text_generation.py -v
+
+# Run tests matching a pattern
+railway run uv run pytest -k "duplicate" -v
+```
+
+**Test categories:**
+```bash
+# Unit tests (no external APIs required)
+railway run uv run pytest -m unit -v
+
+# Integration tests (require API keys)
+railway run uv run pytest -m integration -v
+
+# Run tests by file:
+railway run uv run pytest tests/test_aircraft_selection.py -v    # Aircraft diversity and selection
+railway run uv run pytest tests/test_text_generation.py -v       # Text formatting and units
+railway run uv run pytest tests/test_duplicate_destinations.py -v # Duplicate detection logic
+railway run uv run pytest tests/test_end_to_end.py -v            # Full workflows
+```
+
+### Detailed Output Tests
+
+The test suite includes detailed output tests for debugging and verification. These show:
+- Aircraft type, airline, flight number
+- Origin and destination cities
+- Distance from location
+- Fun fact source (destination/origin/none)
+- Complete generated flight text
+- Duplicate destination detection
+
+**Available locations:**
+```bash
+# Run all detailed output tests
+railway run uv run pytest tests/test_end_to_end.py -k "detailed_output" -v -s
+
+# Run specific locations
+railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_nyc -v -s
+railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_london -v -s
+railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_sydney -v -s
+railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_dublin -v -s
+railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_los_angeles -v -s
+railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_weston_ct -v -s
+```
+
+### What to Run After Making Changes
+
+**After making local changes, run these tests before committing:**
+
+1. **Quick validation** (runs in <1 second):
+   ```bash
+   uv run pytest -v
+   ```
+   This runs unit tests that don't require API keys. Good for rapid iteration.
+
+2. **Full integration test** (runs in ~10 seconds):
+   ```bash
+   railway run uv run pytest -v
+   ```
+   This runs all 42 tests including integration tests with real API data.
+
+3. **Detailed verification** (for text generation changes):
+   ```bash
+   railway run uv run pytest tests/test_end_to_end.py -k "detailed_output" -v -s
+   ```
+   This shows the actual generated text for multiple locations to verify quality.
+
+**Expected results:**
+- ✅ 42 tests passing (with Railway env vars)
+- ✅ 28 tests passing, 8 skipped (without API keys locally)
+- ❌ 0 failures
+- ⚠️ 0 warnings
+
+### Test Coverage
+
+The test suite covers:
+- **Aircraft selection** (8 tests): Diversity, sorting, field validation
+- **Text generation** (14 tests): Imperial/metric units, content structure, private jets
+- **Duplicate destinations** (7 tests): Origin vs destination fun facts logic
+- **End-to-end workflows** (13 tests): Full scan flow, detailed output for 6 locations
+
 ## Environment Variables
 
 **IMPORTANT**: This project uses **Railway environment variables**, NOT local `.env` files. All environment variables are configured in the Railway dashboard at:
