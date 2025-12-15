@@ -198,3 +198,447 @@ async def test_aircraft_sorted_by_distance(nyc_location):
 
     # Should be sorted (closest first)
     assert distances == sorted(distances), f"Aircraft should be sorted by distance, got: {distances}"
+
+
+@pytest.mark.asyncio
+async def test_detailed_output_nyc():
+    """Output detailed information about aircraft selection and text generation for NYC"""
+    lat, lng = 40.7128, -74.0060
+    country_code = "US"
+
+    print("\n" + "="*80)
+    print("DETAILED TEST OUTPUT - NYC Location")
+    print("="*80)
+    print(f"Location: {lat}, {lng} (New York City, USA)")
+    print(f"Country Code: {country_code}")
+    print()
+
+    # Get aircraft
+    aircraft, error = await get_nearby_aircraft(lat, lng, limit=3)
+
+    if error and "not configured" in error.lower():
+        pytest.skip(f"API not configured: {error}")
+
+    if len(aircraft) == 0:
+        pytest.skip("No aircraft found near NYC at this time")
+
+    print(f"Total aircraft found: {len(aircraft)}")
+    print()
+
+    # Track destinations for duplicate detection
+    used_destinations = set()
+
+    # Process each plane
+    for i, plane in enumerate(aircraft[:3], start=1):
+        print("-" * 80)
+        print(f"PLANE {i}")
+        print("-" * 80)
+
+        # Show aircraft details
+        print(f"Aircraft Type: {plane.get('aircraft', 'Unknown')}")
+        print(f"Airline: {plane.get('airline_name', 'Unknown')}")
+        print(f"Flight Number: {plane.get('flight_number', 'Unknown')}")
+        print(f"Origin: {plane.get('origin_city', 'Unknown')}, {plane.get('origin_country', 'Unknown')}")
+        print(f"Destination: {plane.get('destination_city', 'Unknown')}, {plane.get('destination_country', 'Unknown')}")
+        print(f"Distance: {plane.get('distance_km', 0):.1f} km")
+
+        if plane.get('is_private_operator'):
+            print(f"Type: Private Jet")
+
+        if plane.get('is_cargo'):
+            print(f"Type: Cargo Flight")
+
+        print()
+
+        # Check if destination is duplicate BEFORE generating text
+        is_duplicate = plane.get('destination_city') in used_destinations
+
+        # Generate text
+        sentence, fun_fact_source = generate_flight_text_for_aircraft(
+            plane, lat, lng, i, country_code, used_destinations
+        )
+
+        print(f"Fun Fact Source: {fun_fact_source or 'None'}")
+        if is_duplicate:
+            print(f"Note: Duplicate destination - used origin city fun facts instead")
+        print()
+        print("GENERATED TEXT:")
+        print("-" * 80)
+        print(sentence)
+        print("-" * 80)
+        print()
+
+    print("="*80)
+    print(f"Destinations tracked: {used_destinations}")
+    print("="*80)
+    print()
+
+
+@pytest.mark.asyncio
+async def test_detailed_output_london():
+    """Output detailed information about aircraft selection and text generation for London"""
+    lat, lng = 51.5074, -0.1278
+    country_code = "GB"
+
+    print("\n" + "="*80)
+    print("DETAILED TEST OUTPUT - London Location")
+    print("="*80)
+    print(f"Location: {lat}, {lng} (London, United Kingdom)")
+    print(f"Country Code: {country_code}")
+    print()
+
+    # Get aircraft
+    aircraft, error = await get_nearby_aircraft(lat, lng, limit=3)
+
+    if error and "not configured" in error.lower():
+        pytest.skip(f"API not configured: {error}")
+
+    if len(aircraft) == 0:
+        pytest.skip("No aircraft found near London at this time")
+
+    print(f"Total aircraft found: {len(aircraft)}")
+    print()
+
+    # Track destinations for duplicate detection
+    used_destinations = set()
+
+    # Process each plane
+    for i, plane in enumerate(aircraft[:3], start=1):
+        print("-" * 80)
+        print(f"PLANE {i}")
+        print("-" * 80)
+
+        # Show aircraft details
+        print(f"Aircraft Type: {plane.get('aircraft', 'Unknown')}")
+        print(f"Airline: {plane.get('airline_name', 'Unknown')}")
+        print(f"Flight Number: {plane.get('flight_number', 'Unknown')}")
+        print(f"Origin: {plane.get('origin_city', 'Unknown')}, {plane.get('origin_country', 'Unknown')}")
+        print(f"Destination: {plane.get('destination_city', 'Unknown')}, {plane.get('destination_country', 'Unknown')}")
+        print(f"Distance: {plane.get('distance_km', 0):.1f} km")
+
+        if plane.get('is_private_operator'):
+            print(f"Type: Private Jet")
+
+        if plane.get('is_cargo'):
+            print(f"Type: Cargo Flight")
+
+        print()
+
+        # Check if destination is duplicate BEFORE generating text
+        is_duplicate = plane.get('destination_city') in used_destinations
+
+        # Generate text
+        sentence, fun_fact_source = generate_flight_text_for_aircraft(
+            plane, lat, lng, i, country_code, used_destinations
+        )
+
+        print(f"Fun Fact Source: {fun_fact_source or 'None'}")
+        if is_duplicate:
+            print(f"Note: Duplicate destination - used origin city fun facts instead")
+        print()
+        print("GENERATED TEXT:")
+        print("-" * 80)
+        print(sentence)
+        print("-" * 80)
+        print()
+
+    print("="*80)
+    print(f"Destinations tracked: {used_destinations}")
+    print("="*80)
+    print()
+
+
+@pytest.mark.asyncio
+async def test_detailed_output_sydney():
+    """Output detailed information about aircraft selection and text generation for Sydney"""
+    lat, lng = -33.8688, 151.2093
+    country_code = "AU"
+
+    print("\n" + "="*80)
+    print("DETAILED TEST OUTPUT - Sydney Location")
+    print("="*80)
+    print(f"Location: {lat}, {lng} (Sydney, Australia)")
+    print(f"Country Code: {country_code}")
+    print()
+
+    # Get aircraft
+    aircraft, error = await get_nearby_aircraft(lat, lng, limit=3)
+
+    if error and "not configured" in error.lower():
+        pytest.skip(f"API not configured: {error}")
+
+    if len(aircraft) == 0:
+        pytest.skip("No aircraft found near Sydney at this time")
+
+    print(f"Total aircraft found: {len(aircraft)}")
+    print()
+
+    # Track destinations for duplicate detection
+    used_destinations = set()
+
+    # Process each plane
+    for i, plane in enumerate(aircraft[:3], start=1):
+        print("-" * 80)
+        print(f"PLANE {i}")
+        print("-" * 80)
+
+        # Show aircraft details
+        print(f"Aircraft Type: {plane.get('aircraft', 'Unknown')}")
+        print(f"Airline: {plane.get('airline_name', 'Unknown')}")
+        print(f"Flight Number: {plane.get('flight_number', 'Unknown')}")
+        print(f"Origin: {plane.get('origin_city', 'Unknown')}, {plane.get('origin_country', 'Unknown')}")
+        print(f"Destination: {plane.get('destination_city', 'Unknown')}, {plane.get('destination_country', 'Unknown')}")
+        print(f"Distance: {plane.get('distance_km', 0):.1f} km")
+
+        if plane.get('is_private_operator'):
+            print(f"Type: Private Jet")
+
+        if plane.get('is_cargo'):
+            print(f"Type: Cargo Flight")
+
+        print()
+
+        # Check if destination is duplicate BEFORE generating text
+        is_duplicate = plane.get('destination_city') in used_destinations
+
+        # Generate text
+        sentence, fun_fact_source = generate_flight_text_for_aircraft(
+            plane, lat, lng, i, country_code, used_destinations
+        )
+
+        print(f"Fun Fact Source: {fun_fact_source or 'None'}")
+        if is_duplicate:
+            print(f"Note: Duplicate destination - used origin city fun facts instead")
+        print()
+        print("GENERATED TEXT:")
+        print("-" * 80)
+        print(sentence)
+        print("-" * 80)
+        print()
+
+    print("="*80)
+    print(f"Destinations tracked: {used_destinations}")
+    print("="*80)
+    print()
+
+
+@pytest.mark.asyncio
+async def test_detailed_output_dublin():
+    """Output detailed information about aircraft selection and text generation for Dublin"""
+    lat, lng = 53.3498, -6.2603
+    country_code = "IE"
+
+    print("\n" + "="*80)
+    print("DETAILED TEST OUTPUT - Dublin Location")
+    print("="*80)
+    print(f"Location: {lat}, {lng} (Dublin, Ireland)")
+    print(f"Country Code: {country_code}")
+    print()
+
+    # Get aircraft
+    aircraft, error = await get_nearby_aircraft(lat, lng, limit=3)
+
+    if error and "not configured" in error.lower():
+        pytest.skip(f"API not configured: {error}")
+
+    if len(aircraft) == 0:
+        pytest.skip("No aircraft found near Dublin at this time")
+
+    print(f"Total aircraft found: {len(aircraft)}")
+    print()
+
+    # Track destinations for duplicate detection
+    used_destinations = set()
+
+    # Process each plane
+    for i, plane in enumerate(aircraft[:3], start=1):
+        print("-" * 80)
+        print(f"PLANE {i}")
+        print("-" * 80)
+
+        # Show aircraft details
+        print(f"Aircraft Type: {plane.get('aircraft', 'Unknown')}")
+        print(f"Airline: {plane.get('airline_name', 'Unknown')}")
+        print(f"Flight Number: {plane.get('flight_number', 'Unknown')}")
+        print(f"Origin: {plane.get('origin_city', 'Unknown')}, {plane.get('origin_country', 'Unknown')}")
+        print(f"Destination: {plane.get('destination_city', 'Unknown')}, {plane.get('destination_country', 'Unknown')}")
+        print(f"Distance: {plane.get('distance_km', 0):.1f} km")
+
+        if plane.get('is_private_operator'):
+            print(f"Type: Private Jet")
+
+        if plane.get('is_cargo'):
+            print(f"Type: Cargo Flight")
+
+        print()
+
+        # Check if destination is duplicate BEFORE generating text
+        is_duplicate = plane.get('destination_city') in used_destinations
+
+        # Generate text
+        sentence, fun_fact_source = generate_flight_text_for_aircraft(
+            plane, lat, lng, i, country_code, used_destinations
+        )
+
+        print(f"Fun Fact Source: {fun_fact_source or 'None'}")
+        if is_duplicate:
+            print(f"Note: Duplicate destination - used origin city fun facts instead")
+        print()
+        print("GENERATED TEXT:")
+        print("-" * 80)
+        print(sentence)
+        print("-" * 80)
+        print()
+
+    print("="*80)
+    print(f"Destinations tracked: {used_destinations}")
+    print("="*80)
+    print()
+
+
+@pytest.mark.asyncio
+async def test_detailed_output_los_angeles():
+    """Output detailed information about aircraft selection and text generation for Los Angeles"""
+    lat, lng = 34.0522, -118.2437
+    country_code = "US"
+
+    print("\n" + "="*80)
+    print("DETAILED TEST OUTPUT - Los Angeles Location")
+    print("="*80)
+    print(f"Location: {lat}, {lng} (Los Angeles, USA)")
+    print(f"Country Code: {country_code}")
+    print()
+
+    # Get aircraft
+    aircraft, error = await get_nearby_aircraft(lat, lng, limit=3)
+
+    if error and "not configured" in error.lower():
+        pytest.skip(f"API not configured: {error}")
+
+    if len(aircraft) == 0:
+        pytest.skip("No aircraft found near Los Angeles at this time")
+
+    print(f"Total aircraft found: {len(aircraft)}")
+    print()
+
+    # Track destinations for duplicate detection
+    used_destinations = set()
+
+    # Process each plane
+    for i, plane in enumerate(aircraft[:3], start=1):
+        print("-" * 80)
+        print(f"PLANE {i}")
+        print("-" * 80)
+
+        # Show aircraft details
+        print(f"Aircraft Type: {plane.get('aircraft', 'Unknown')}")
+        print(f"Airline: {plane.get('airline_name', 'Unknown')}")
+        print(f"Flight Number: {plane.get('flight_number', 'Unknown')}")
+        print(f"Origin: {plane.get('origin_city', 'Unknown')}, {plane.get('origin_country', 'Unknown')}")
+        print(f"Destination: {plane.get('destination_city', 'Unknown')}, {plane.get('destination_country', 'Unknown')}")
+        print(f"Distance: {plane.get('distance_km', 0):.1f} km")
+
+        if plane.get('is_private_operator'):
+            print(f"Type: Private Jet")
+
+        if plane.get('is_cargo'):
+            print(f"Type: Cargo Flight")
+
+        print()
+
+        # Check if destination is duplicate BEFORE generating text
+        is_duplicate = plane.get('destination_city') in used_destinations
+
+        # Generate text
+        sentence, fun_fact_source = generate_flight_text_for_aircraft(
+            plane, lat, lng, i, country_code, used_destinations
+        )
+
+        print(f"Fun Fact Source: {fun_fact_source or 'None'}")
+        if is_duplicate:
+            print(f"Note: Duplicate destination - used origin city fun facts instead")
+        print()
+        print("GENERATED TEXT:")
+        print("-" * 80)
+        print(sentence)
+        print("-" * 80)
+        print()
+
+    print("="*80)
+    print(f"Destinations tracked: {used_destinations}")
+    print("="*80)
+    print()
+
+
+@pytest.mark.asyncio
+async def test_detailed_output_weston_ct():
+    """Output detailed information about aircraft selection and text generation for Weston CT"""
+    lat, lng = 41.2023, -73.3815
+    country_code = "US"
+
+    print("\n" + "="*80)
+    print("DETAILED TEST OUTPUT - Weston CT Location")
+    print("="*80)
+    print(f"Location: {lat}, {lng} (Weston, Connecticut, USA)")
+    print(f"Country Code: {country_code}")
+    print()
+
+    # Get aircraft
+    aircraft, error = await get_nearby_aircraft(lat, lng, limit=3)
+
+    if error and "not configured" in error.lower():
+        pytest.skip(f"API not configured: {error}")
+
+    if len(aircraft) == 0:
+        pytest.skip("No aircraft found near Weston CT at this time")
+
+    print(f"Total aircraft found: {len(aircraft)}")
+    print()
+
+    # Track destinations for duplicate detection
+    used_destinations = set()
+
+    # Process each plane
+    for i, plane in enumerate(aircraft[:3], start=1):
+        print("-" * 80)
+        print(f"PLANE {i}")
+        print("-" * 80)
+
+        # Show aircraft details
+        print(f"Aircraft Type: {plane.get('aircraft', 'Unknown')}")
+        print(f"Airline: {plane.get('airline_name', 'Unknown')}")
+        print(f"Flight Number: {plane.get('flight_number', 'Unknown')}")
+        print(f"Origin: {plane.get('origin_city', 'Unknown')}, {plane.get('origin_country', 'Unknown')}")
+        print(f"Destination: {plane.get('destination_city', 'Unknown')}, {plane.get('destination_country', 'Unknown')}")
+        print(f"Distance: {plane.get('distance_km', 0):.1f} km")
+
+        if plane.get('is_private_operator'):
+            print(f"Type: Private Jet")
+
+        if plane.get('is_cargo'):
+            print(f"Type: Cargo Flight")
+
+        print()
+
+        # Check if destination is duplicate BEFORE generating text
+        is_duplicate = plane.get('destination_city') in used_destinations
+
+        # Generate text
+        sentence, fun_fact_source = generate_flight_text_for_aircraft(
+            plane, lat, lng, i, country_code, used_destinations
+        )
+
+        print(f"Fun Fact Source: {fun_fact_source or 'None'}")
+        if is_duplicate:
+            print(f"Note: Duplicate destination - used origin city fun facts instead")
+        print()
+        print("GENERATED TEXT:")
+        print("-" * 80)
+        print(sentence)
+        print("-" * 80)
+        print()
+
+    print("="*80)
+    print(f"Destinations tracked: {used_destinations}")
+    print("="*80)
+    print()
