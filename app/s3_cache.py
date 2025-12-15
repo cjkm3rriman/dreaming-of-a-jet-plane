@@ -11,6 +11,8 @@ import os
 import hmac
 import urllib.parse
 import json
+import asyncio
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +83,42 @@ class S3MP3Cache:
 
         full_key = f"{self.cache_prefix}{filename}"
         return full_key
-    
+
+    async def _retry_with_backoff(self, operation, max_retries: int = 3):
+        """Retry an async operation with exponential backoff for S3 rate limiting
+
+        Args:
+            operation: Async callable to retry
+            max_retries: Maximum number of retry attempts
+
+        Returns:
+            Result from operation if successful
+
+        Raises:
+            Exception from last retry attempt if all retries fail
+        """
+        for attempt in range(max_retries):
+            try:
+                return await operation()
+            except httpx.HTTPStatusError as e:
+                # Check if it's a rate limiting error (503 SlowDown)
+                if e.response.status_code == 503:
+                    if attempt < max_retries - 1:
+                        # Exponential backoff with jitter: 2^attempt * 100ms + random(0-100ms)
+                        backoff = (2 ** attempt) * 0.1 + random.uniform(0, 0.1)
+                        logger.warning(f"S3 rate limit hit, retrying in {backoff:.2f}s (attempt {attempt + 1}/{max_retries})")
+                        await asyncio.sleep(backoff)
+                        continue
+                    else:
+                        logger.error(f"S3 rate limit exceeded after {max_retries} retries")
+                        raise
+                else:
+                    # Not a rate limit error, don't retry
+                    raise
+            except Exception as e:
+                # For other exceptions, don't retry
+                raise
+
     def _create_aws_signature(self, method: str, url: str, headers: dict, payload: bytes) -> dict:
         """Create AWS Signature Version 4 headers for S3 request"""
         from urllib.parse import urlparse
@@ -262,21 +299,26 @@ class S3MP3Cache:
             }
             
             logger.info(f"Uploading to S3 cache: {cache_key} ({len(data_bytes)} bytes, type={content_type})")
-            
+
             # Add AWS signature headers
             aws_headers = self._create_aws_signature('PUT', s3_url, headers, data_bytes)
             headers.update(aws_headers)
-            
-            # Perform actual S3 upload
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.put(s3_url, content=data_bytes, headers=headers)
-                
-                if response.status_code == 200:
-                    logger.info(f"Successfully uploaded to S3: {cache_key} ({len(data_bytes)} bytes, type={content_type})")
-                    return True
-                else:
-                    logger.error(f"S3 upload failed: {response.status_code} - {response.text[:200]}")
-                    return False
+
+            # Perform actual S3 upload with retry logic for rate limiting
+            async def upload_operation():
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.put(s3_url, content=data_bytes, headers=headers)
+                    response.raise_for_status()  # Raises HTTPStatusError for 4xx/5xx
+                    return response
+
+            response = await self._retry_with_backoff(upload_operation)
+
+            if response.status_code == 200:
+                logger.info(f"Successfully uploaded to S3: {cache_key} ({len(data_bytes)} bytes, type={content_type})")
+                return True
+            else:
+                logger.error(f"S3 upload failed: {response.status_code} - {response.text[:200]}")
+                return False
             
         except Exception as e:
             logger.error(f"S3 cache set error for key {cache_key}: {e}")
