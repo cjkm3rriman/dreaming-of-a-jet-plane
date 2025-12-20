@@ -41,16 +41,23 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         from .flight_text import generate_flight_text_for_aircraft, generate_flight_text
         from .location_utils import get_location_from_ip, extract_client_ip
 
-        # Get country code for metric/imperial units
-        # We already have lat/lng, just need country code
+        # Get country code and city for metric/imperial units and analytics
+        # We already have lat/lng
         if request:
             client_ip = extract_client_ip(request)
-            _, _, country_code = await get_location_from_ip(client_ip, request)
+            _, _, country_code, city = await get_location_from_ip(client_ip, request)
         else:
             country_code = "US"  # Default fallback if no request
+            city = "Unknown"
 
         # Get flight data (this will use cached API data if available, or cache new data)
-        aircraft, error_message = await get_nearby_aircraft(lat, lng, limit=3, request=request)
+        aircraft, error_message = await get_nearby_aircraft(
+            lat,
+            lng,
+            limit=3,
+            request=request,
+            user_city=city,
+        )
 
         # Determine effective TTS provider
         effective_provider = tts_override if tts_override else TTS_PROVIDER
@@ -105,7 +112,17 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             # Create task to generate and cache this plane's audio
             selected_aircraft = aircraft[zero_based_index] if aircraft and len(aircraft) > zero_based_index else None
             task = asyncio.create_task(
-                _generate_and_cache_plane_audio(plane_index, plane_cache_key, sentence, lat, lng, request, selected_aircraft, tts_override)
+                _generate_and_cache_plane_audio(
+                    plane_index,
+                    plane_cache_key,
+                    sentence,
+                    lat,
+                    lng,
+                    city,
+                    request,
+                    selected_aircraft,
+                    tts_override,
+                )
             )
             tasks.append(task)
         
@@ -123,6 +140,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                 request,
                 lat,
                 lng,
+                city,
                 country_code,
                 aircraft_selection_data,
                 LIVE_AIRCRAFT_PROVIDER
@@ -132,7 +150,17 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         logger.error(f"Error in MP3 pre-generation: {e}")
 
 
-async def _generate_and_cache_plane_audio(plane_index: int, cache_key: str, sentence: str, lat: float, lng: float, request: Request = None, aircraft: dict = None, tts_override: str = None) -> bool:
+async def _generate_and_cache_plane_audio(
+    plane_index: int,
+    cache_key: str,
+    sentence: str,
+    lat: float,
+    lng: float,
+    city: str,
+    request: Request = None,
+    aircraft: dict = None,
+    tts_override: str = None,
+) -> bool:
     """Helper function to generate and cache audio for a specific plane
 
     Args:
@@ -141,6 +169,7 @@ async def _generate_and_cache_plane_audio(plane_index: int, cache_key: str, sent
         sentence: Text to convert to speech
         lat: Latitude
         lng: Longitude
+        city: City associated with the user request
         request: Optional FastAPI Request object
         aircraft: Optional aircraft data dict
         tts_override: Optional TTS provider override
@@ -165,7 +194,7 @@ async def _generate_and_cache_plane_audio(plane_index: int, cache_key: str, sent
 
                 # Track audio generation analytics if we have request and aircraft data
                 if request and aircraft:
-                    track_audio_generation(request, lat, lng, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext)
+                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext)
 
                 return True
             else:
@@ -246,7 +275,8 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     """Stream scanning MP3 file from S3 and trigger audio pre-generation"""
 
     # Get user location using shared function
-    user_lat, user_lng, country_code = await get_user_location(request, lat, lng)
+    user_lat, user_lng, user_country_code, user_city = await get_user_location(request, lat, lng)
+    country_code = user_country_code  # Keep for backwards compatibility
 
     # Get TTS provider override from query parameters
     from .main import get_tts_provider_override
@@ -285,8 +315,9 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
             "os": browser_info["os"],
             "os_version": browser_info["os_version"],
             "device": browser_info["device"],
-            "lat": round(user_lat, 3),
-            "lng": round(user_lng, 3),
+            "user_lat": round(user_lat, 2),
+            "user_lng": round(user_lng, 2),
+            "user_city": user_city,
             "location_source": "params" if (lat is not None and lng is not None) else "ip"
         })
     except Exception as e:
@@ -295,8 +326,8 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
         # Still try to track without session data
         try:
             analytics.track_event("scan:start", {
-                "lat": round(user_lat, 3),
-                "lng": round(user_lng, 3),
+                "lat": round(user_lat, 2),
+                "lng": round(user_lng, 2),
                 "location_source": "params" if (lat is not None and lng is not None) else "ip"
             })
         except:

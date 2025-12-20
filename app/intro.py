@@ -14,7 +14,7 @@ from .analytics import analytics
 async def stream_intro(request: Request, lat: float = None, lng: float = None):
     """Stream MP3 file from S3 with proper headers for browser playback"""
     # Get user location using shared function
-    user_lat, user_lng = await get_user_location(request, lat, lng)
+    user_lat, user_lng, user_country_code, user_city = await get_user_location(request, lat, lng)
 
     # Import here to avoid circular imports
     from .main import get_voice_specific_s3_url, get_tts_provider_override
@@ -89,8 +89,9 @@ async def stream_intro(request: Request, lat: float = None, lng: float = None):
                         "os": browser_info["os"],
                         "os_version": browser_info["os_version"],
                         "device": browser_info["device"],
-                        "lat": round(user_lat, 3),
-                        "lng": round(user_lng, 3),
+                        "user_lat": round(user_lat, 2),
+                        "user_lng": round(user_lng, 2),
+                        "user_city": user_city,
                         "location_source": "params" if (lat is not None and lng is not None) else "ip"
                     })
                 except Exception as e:
@@ -100,8 +101,8 @@ async def stream_intro(request: Request, lat: float = None, lng: float = None):
                     # Still try to track without session data
                     try:
                         analytics.track_event("intro", {
-                            "lat": round(user_lat, 3),
-                            "lng": round(user_lng, 3),
+                            "lat": round(user_lat, 2),
+                            "lng": round(user_lng, 2),
                             "location_source": "params" if (lat is not None and lng is not None) else "ip"
                         })
                     except:

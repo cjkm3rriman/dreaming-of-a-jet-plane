@@ -8,15 +8,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 
 AircraftListResult = Tuple[List[Dict[str, Any]], str]
-AircraftListFetcher = Callable[[float, float, float, int, Optional[Request], Optional[str]], Awaitable[AircraftListResult]]
-SelectDiverseAircraftFn = Callable[[List[Dict[str, Any]], Optional[float], Optional[float]], List[Dict[str, Any]]]
+AircraftListFetcher = Callable[[float, float, float, int, Optional[Request], Optional[str], Optional[str]], Awaitable[AircraftListResult]]
+SelectDiverseAircraftFn = Callable[[List[Dict[str, Any]], Optional[float], Optional[float], Optional[str]], List[Dict[str, Any]]]
 CalculateMinDistanceToRouteFn = Callable[[float, float, float, float, float, float], float]
 
 
 def register_test_live_aircraft_routes(
     app: FastAPI,
     *,
-    get_user_location_fn: Callable[[Request, Optional[float], Optional[float], Optional[str]], Awaitable[Tuple[float, float, str]]],
+    get_user_location_fn: Callable[[Request, Optional[float], Optional[float], Optional[str]], Awaitable[Tuple[float, float, str, str]]],
     get_nearby_aircraft_fn: AircraftListFetcher,
     get_provider_definition_fn: Callable[[str], Optional[Dict[str, Any]]],
     provider_override_secret_getter: Callable[[], Optional[str]],
@@ -42,7 +42,7 @@ def register_test_live_aircraft_routes(
         if secret != secret_value:
             return HTMLResponse("<h1>Invalid secret.</h1>", status_code=403)
 
-        user_lat, user_lng, country_code = await get_user_location_fn(request, lat, lng, country)
+        user_lat, user_lng, country_code, user_city = await get_user_location_fn(request, lat, lng, country)
 
         selected_provider = provider or request.query_params.get("aircraft_provider")
         selected_provider = selected_provider.lower() if selected_provider else None
@@ -97,7 +97,7 @@ def register_test_live_aircraft_routes(
         # Apply diversity selection to see what would be chosen
         selected_aircraft = []
         if aircraft:
-            selected_aircraft = select_diverse_aircraft_fn(aircraft.copy(), user_lat, user_lng)
+            selected_aircraft = select_diverse_aircraft_fn(aircraft.copy(), user_lat, user_lng, user_city)
 
         # Calculate minimum route distance for each aircraft
         for plane in aircraft:

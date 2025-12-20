@@ -1,6 +1,26 @@
 {
   "hooks": {
-    "session_start": "uv run fastapi dev app/main.py --host 0.0.0.0 --port 8000 &",
-    "session_end": "pkill -f 'fastapi dev'"
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run fastapi dev app/main.py --host 0.0.0.0 --port 8000 &"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pkill -f 'fastapi dev'"
+          }
+        ]
+      }
+    ]
   }
 }

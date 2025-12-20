@@ -24,6 +24,35 @@ AIRLINE_OVERRIDES = {
     "QXE": {"airline_icao": "ASA", "airline_iata": "AS"},
 }
 
+# Republic Airways (RPA/YX) specific flight overrides
+# For flights that fall outside the standard ranges but are known to be operated for specific brands
+REPUBLIC_AIRWAYS_SPECIFIC_FLIGHTS = {
+    4355: {"airline_icao": "AAL", "airline_iata": "AA"},  # YX4355 -> American Eagle
+}
+
+# Republic Airways (RPA/YX) flight number ranges mapped to branded partners
+# Republic operates flights under American Eagle, United Express, and Delta Connection brands
+REPUBLIC_AIRWAYS_FLIGHT_RANGES = {
+    "AA": {  # American Eagle
+        "airline_icao": "AAL",
+        "airline_iata": "AA",
+        "ranges": [(4400, 4749), (5600, 5660)],
+        "hubs": ["DCA", "PHL", "CLT", "ORD"],
+    },
+    "UA": {  # United Express
+        "airline_icao": "UAL",
+        "airline_iata": "UA",
+        "ranges": [(3400, 3699)],
+        "hubs": ["EWR", "ORD", "IAH", "IAD"],
+    },
+    "DL": {  # Delta Connection
+        "airline_icao": "DAL",
+        "airline_iata": "DL",
+        "ranges": [(5670, 5899)],
+        "hubs": ["LGA", "JFK", "BOS", "DTW"],
+    },
+}
+
 DISPLAY_NAME = "Airlabs"
 
 logger = logging.getLogger(__name__)
@@ -45,6 +74,69 @@ def _estimate_eta(distance_km: float) -> Optional[str]:
 
     eta_datetime = datetime.now(timezone.utc) + timedelta(hours=travel_hours)
     return eta_datetime.isoformat().replace("+00:00", "Z")
+
+
+def get_branded_airline_from_flight_number(
+    airline_icao: str,
+    flight_number: Optional[str]
+) -> Optional[Dict[str, str]]:
+    """
+    Map Republic Airways flight numbers to their branded airline partners.
+
+    Republic Airways (RPA/YX) operates flights under multiple brands:
+    - American Eagle (AA)
+    - United Express (UA)
+    - Delta Connection (DL)
+
+    Uses flight number ranges to determine the actual marketed airline.
+
+    Args:
+        airline_icao: The operator airline ICAO code
+        flight_number: The flight number (may include airline prefix like "YX4523")
+
+    Returns:
+        Dict with airline_icao and airline_iata if mapping found, None otherwise
+    """
+    # Only process Republic Airways flights
+    if not airline_icao or airline_icao.strip().upper() not in ["RPA", "YX"]:
+        return None
+
+    if not flight_number:
+        return None
+
+    # Extract numeric part from flight number
+    # Handle formats like "YX4523", "4523", "AA4523", etc.
+    numeric_part = ''.join(c for c in flight_number if c.isdigit())
+
+    if not numeric_part:
+        logger.debug(f"No numeric part in flight number: {flight_number}")
+        return None
+
+    try:
+        flight_num = int(numeric_part)
+    except ValueError:
+        logger.debug(f"Could not parse flight number: {flight_number}")
+        return None
+
+    # Check specific flight overrides first (edge cases that fall outside standard ranges)
+    if flight_num in REPUBLIC_AIRWAYS_SPECIFIC_FLIGHTS:
+        return REPUBLIC_AIRWAYS_SPECIFIC_FLIGHTS[flight_num]
+
+    # Check each branded partner's ranges
+    for partner_data in REPUBLIC_AIRWAYS_FLIGHT_RANGES.values():
+        for range_start, range_end in partner_data["ranges"]:
+            if range_start <= flight_num <= range_end:
+                return {
+                    "airline_icao": partner_data["airline_icao"],
+                    "airline_iata": partner_data["airline_iata"],
+                }
+
+    # Flight number doesn't match any known range - keep as Republic
+    logger.info(
+        f"Republic Airways flight {flight_number} ({flight_num}) "
+        f"doesn't match any branded partner range - keeping as Republic"
+    )
+    return None
 
 
 def is_configured() -> Tuple[bool, Optional[str]]:
@@ -178,11 +270,22 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
 
             airline_icao = flight.get("airline_icao") or flight.get("airline_code")
             airline_iata = flight.get("airline_iata")
+            raw_flight_number = flight.get("flight_number")
+
+            # Apply simple airline overrides (e.g., Endeavor Air → Delta)
             if airline_icao:
                 override = AIRLINE_OVERRIDES.get(airline_icao.strip().upper())
                 if override:
                     airline_icao = override.get("airline_icao", airline_icao)
                     airline_iata = override.get("airline_iata", airline_iata)
+
+            # Apply Republic Airways flight number range mapping
+            # This maps YX/RPA flights to their branded partners (AA, UA, DL) based on flight number
+            republic_override = get_branded_airline_from_flight_number(airline_icao, raw_flight_number)
+            if republic_override:
+                airline_icao = republic_override.get("airline_icao", airline_icao)
+                airline_iata = republic_override.get("airline_iata", airline_iata)
+
             if airline_icao and airline_icao.upper() in IGNORE_AIRLINES_ICAO:
                 continue
             airline_name = get_airline_name(airline_icao) if airline_icao else None
@@ -190,7 +293,6 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
             is_private = is_private_airline(airline_icao) if airline_icao else False
 
             flight_iata = flight.get("flight_iata")
-            raw_flight_number = flight.get("flight_number")
             if flight_iata:
                 formatted_flight_number = flight_iata
             elif airline_iata and raw_flight_number:

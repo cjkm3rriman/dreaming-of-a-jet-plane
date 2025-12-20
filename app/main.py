@@ -5,8 +5,6 @@ import os
 import sys
 import asyncio
 import logging
-import boto3
-from botocore.exceptions import BotoCoreError, ClientError
 from typing import List, Dict, Any, Optional
 
 # Configure logging with explicit format and stream
@@ -46,6 +44,12 @@ from .website_home import register_website_home_routes
 from .test_gemini_tts import register_test_gemini_tts_routes
 from .test_live_aircraft import register_test_live_aircraft_routes
 from .aircraft_providers import get_provider_definition, get_provider_names
+from .tts_providers import (
+    TTS_PROVIDERS,
+    get_provider_definition as get_tts_provider_definition,
+    get_audio_format as get_tts_audio_format,
+    get_voice_folder as get_tts_voice_folder,
+)
 
 app = FastAPI()
 
@@ -62,19 +66,6 @@ PROVIDER_OVERRIDE_SECRET = os.getenv("PROVIDER_OVERRIDE_SECRET")
 
 # TTS Configuration
 TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "polly", "google", "fallback"
-
-# ElevenLabs API configuration
-ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_TEXT_TO_VOICE_API_KEY")
-ELEVENLABS_BASE_URL = "https://api.elevenlabs.io/v1"
-DEFAULT_VOICE_ID = "goT3UYdM9bhm0n2lmKQx"  # Edward voice - British, Dark, Seductive, Low
-
-# AWS Polly configuration
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_POLLY_REGION = os.getenv("AWS_POLLY_REGION", "us-east-1")
-
-# Google Gemini TTS configuration
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 def get_tts_provider_override(request: Request) -> Optional[str]:
     """Extract and validate TTS provider override from query parameters
@@ -202,12 +193,7 @@ def get_audio_format_for_provider(provider: str) -> tuple[str, str]:
         - file_extension: "mp3" or "ogg"
         - mime_type: "audio/mpeg" or "audio/ogg"
     """
-    format_map = {
-        "elevenlabs": ("mp3", "audio/mpeg"),
-        "polly": ("mp3", "audio/mpeg"),
-        "google": ("mp3", "audio/mpeg"),  # TODO: Switch back to OGG later
-    }
-    return format_map.get(provider.lower(), ("mp3", "audio/mpeg"))
+    return get_tts_audio_format(provider)
 
 def get_voice_folder(tts_override: Optional[str] = None) -> str:
     """Get the voice folder name based on TTS provider configuration
@@ -219,15 +205,10 @@ def get_voice_folder(tts_override: Optional[str] = None) -> str:
         str: "edward" for ElevenLabs, "amy" for AWS Polly, "sadachbia" for Google TTS
     """
     provider = (tts_override or TTS_PROVIDER).lower()
-    if provider in ["elevenlabs", "fallback"]:
-        return "edward"
-    elif provider == "polly":
-        return "amy"
-    elif provider == "google":
-        return "sadachbia"
-    else:
-        # Default to edward for unknown providers
-        return "edward"
+    # Handle "fallback" by defaulting to elevenlabs folder
+    if provider == "fallback":
+        provider = "elevenlabs"
+    return get_tts_voice_folder(provider)
 
 def get_voice_specific_s3_url(filename: str, tts_override: Optional[str] = None) -> str:
     """Generate voice-specific S3 URL for static MP3 files
@@ -241,211 +222,6 @@ def get_voice_specific_s3_url(filename: str, tts_override: Optional[str] = None)
     """
     voice_folder = get_voice_folder(tts_override)
     return f"https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/{voice_folder}/{filename}"
-
-
-async def convert_text_to_speech_polly(text: str) -> tuple[bytes, str]:
-    """Convert text to speech using AWS Polly with Arthur voice
-    
-    Returns:
-        tuple: (audio_content, error_message)
-        - audio_content: MP3 audio bytes if successful, empty bytes if failed
-        - error_message: Empty string if successful, error description if failed
-    """
-    if not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
-        logger.warning("AWS credentials not configured for Polly")
-        return b"", "AWS credentials not configured"
-    
-    try:
-        # Create Polly client
-        polly_client = boto3.client(
-            'polly',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            region_name=AWS_POLLY_REGION
-        )
-        
-        # Wrap text in SSML with prosody for medium rate and 1 second pause
-        ssml_text = f'<speak><break time="1s"/><prosody rate="medium">{text}</prosody></speak>'
-        
-        logger.info(f"AWS Polly Request: Voice=Amy, Engine=neural")
-        
-        # Synthesize speech
-        response = polly_client.synthesize_speech(
-            Text=ssml_text,
-            TextType='ssml',
-            OutputFormat='mp3',
-            VoiceId='Amy',
-            Engine='neural',
-            SampleRate='24000'
-        )
-        
-        # Read audio stream
-        audio_content = response['AudioStream'].read()
-        
-        logger.info(f"AWS Polly Response: Success, {len(audio_content)} bytes")
-        return audio_content, ""
-        
-    except ClientError as e:
-        error_code = e.response['Error']['Code']
-        error_msg = e.response['Error']['Message']
-        logger.error(f"AWS Polly ClientError: {error_code} - {error_msg}")
-        return b"", f"AWS Polly error: {error_code} - {error_msg}"
-    except BotoCoreError as e:
-        logger.error(f"AWS Polly BotoCoreError: {str(e)}")
-        return b"", f"AWS Polly connection error: {str(e)}"
-    except Exception as e:
-        logger.error(f"AWS Polly Unexpected Error: {str(e)}")
-        return b"", f"AWS Polly unexpected error: {str(e)}"
-
-async def convert_text_to_speech_google(text: str) -> tuple[bytes, str]:
-    """Convert text to speech using Google Gemini 2.5 Flash Preview TTS
-
-    Returns:
-        tuple: (audio_content, error_message)
-        - audio_content: OGG Opus audio bytes if successful, empty bytes if failed
-        - error_message: Empty string if successful, error description if failed
-    """
-    if not GOOGLE_API_KEY:
-        logger.warning("Google API key not configured")
-        return b"", "Google API key not configured"
-
-    try:
-        # Import Google GenAI SDK
-        from google import genai
-        from google.genai import types
-        import subprocess
-        import time
-
-        # Initialize Gemini client
-        client = genai.Client(api_key=GOOGLE_API_KEY)
-
-        # Gemini TTS configuration
-        MODEL_ID = "gemini-2.5-flash-preview-tts"
-        VOICE_NAME = "Sadachbia"
-        VOICE_PROMPT = "Read the text in a posh British male voice, with a deep, rich baritone tone. Use precise articulation and a refined, formal delivery with minimal inflection and a very even pitch."
-
-        logger.info(f"Gemini TTS Request: Model={MODEL_ID}, Voice={VOICE_NAME}, Text='{text[:50]}...'")
-
-        # Start timing
-        start_time = time.time()
-
-        # Prepend voice prompt to the text content with colon separator
-        prompt_with_text = f"{VOICE_PROMPT}: {text}"
-
-        # Generate audio using Gemini (run in thread pool to avoid blocking event loop)
-        def _generate_gemini_audio():
-            return client.models.generate_content(
-                model=MODEL_ID,
-                contents=prompt_with_text,
-                config=types.GenerateContentConfig(
-                    temperature=1.1,
-                    response_modalities=["AUDIO"],
-                    speech_config=types.SpeechConfig(
-                        language_code="en-GB",
-                        voice_config=types.VoiceConfig(
-                            prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                                voice_name=VOICE_NAME
-                            )
-                        )
-                    )
-                )
-            )
-
-        response = await asyncio.to_thread(_generate_gemini_audio)
-
-        # Extract PCM data from response
-        pcm_data = response.candidates[0].content.parts[0].inline_data.data
-        api_time = time.time() - start_time
-        logger.info(f"Gemini API complete: {len(pcm_data)} bytes PCM in {api_time:.2f}s")
-
-        # Convert PCM to MP3 using ffmpeg (run in thread pool to avoid blocking event loop)
-        # Adds 1 second of silence at the start for Yoto player compatibility
-        def _convert_pcm_to_mp3():
-            ffmpeg_process = subprocess.Popen(
-                [
-                    'ffmpeg',
-                    '-f', 's16le',  # 16-bit little-endian PCM
-                    '-ar', '24000',  # 24kHz sample rate
-                    '-ac', '1',  # mono
-                    '-i', 'pipe:0',  # input from stdin
-                    '-af', 'asetrate=24000*0.94,aresample=24000,atempo=1.1,adelay=1000|1000',  # Lower pitch 6% + speed up 10% + add 1s delay
-                    '-c:a', 'libmp3lame',  # MP3 codec
-                    '-b:a', '128k',  # bitrate (increased from 64k for better MP3 quality)
-                    '-f', 'mp3',  # MP3 format
-                    'pipe:1'  # output to stdout
-                ],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            return ffmpeg_process.communicate(input=pcm_data)
-
-        mp3_data, ffmpeg_error = await asyncio.to_thread(_convert_pcm_to_mp3)
-
-        total_time = time.time() - start_time
-        logger.info(f"Conversion complete: {len(mp3_data)} bytes MP3 in {total_time:.2f}s total")
-
-        return mp3_data, ""
-
-    except ImportError as e:
-        logger.error(f"Gemini TTS ImportError: {str(e)}")
-        return b"", f"Gemini TTS import error: {str(e)}"
-    except Exception as e:
-        logger.error(f"Gemini TTS Error: {str(e)}")
-        return b"", f"Gemini TTS unexpected error: {str(e)}"
-
-async def convert_text_to_speech_elevenlabs(text: str) -> tuple[bytes, str]:
-    """Convert text to speech using ElevenLabs API
-    
-    Returns:
-        tuple: (audio_content, error_message)
-        - audio_content: MP3 audio bytes if successful, empty bytes if failed
-        - error_message: Empty string if successful, error description if failed
-    """
-    if not ELEVENLABS_API_KEY:
-        logger.warning("ElevenLabs API key not configured")
-        return b"", "ElevenLabs API key not configured"
-    
-    try:
-        # Add 1 second pause at the start of the text
-        text_with_pause = '<break time="1s"/>' + text
-        
-        # Prepare the request to ElevenLabs API
-        url = f"{ELEVENLABS_BASE_URL}/text-to-speech/{DEFAULT_VOICE_ID}"
-        
-        headers = {
-            "xi-api-key": ELEVENLABS_API_KEY,
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "text": text_with_pause,
-            "model_id": "eleven_turbo_v2",
-            "voice_settings": {
-                "stability": 0.6,
-                "similarity_boost": 0.5
-            }
-        }
-        
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, json=payload, headers=headers)
-            
-            if response.status_code == 200:
-                return response.content, ""
-            else:
-                logger.error(f"ElevenLabs API error: {response.status_code}")
-                
-                return b"", f"ElevenLabs API returned status {response.status_code}"
-                
-    except httpx.TimeoutException:
-        logger.error("ElevenLabs API timeout")
-        return b"", "ElevenLabs API timeout (30 seconds exceeded)"
-    except httpx.RequestError as e:
-        logger.error(f"ElevenLabs API connection error: {str(e)}")
-        return b"", f"ElevenLabs API connection error: {str(e)}"
-    except Exception as e:
-        logger.error(f"ElevenLabs API error: {str(e)}")
-        return b"", f"ElevenLabs API unexpected error: {str(e)}"
 
 async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) -> tuple[bytes, str, str, str, str]:
     """Convert text to speech using configured or overridden TTS provider
@@ -474,29 +250,33 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
     error = ""
     provider_used = ""
 
-    if provider == "elevenlabs":
-        audio_content, error = await convert_text_to_speech_elevenlabs(text)
-        provider_used = "elevenlabs"
-    elif provider == "polly":
-        audio_content, error = await convert_text_to_speech_polly(text)
-        provider_used = "polly"
-    elif provider == "google":
-        audio_content, error = await convert_text_to_speech_google(text)
-        provider_used = "google"
-    elif provider == "fallback":
+    if provider == "fallback":
         # Try ElevenLabs first, fallback to Polly on error
         logger.info("Using fallback strategy: trying ElevenLabs first")
-        audio_content, error = await convert_text_to_speech_elevenlabs(text)
-        if audio_content and not error:
-            provider_used = "elevenlabs"
-        else:
-            logger.info(f"ElevenLabs failed ({error}), falling back to AWS Polly")
-            audio_content, error = await convert_text_to_speech_polly(text)
-            provider_used = "polly"
+        elevenlabs_def = get_tts_provider_definition("elevenlabs")
+        if elevenlabs_def:
+            audio_content, error = await elevenlabs_def["generate_audio"](text)
+            if audio_content and not error:
+                provider_used = "elevenlabs"
+            else:
+                logger.info(f"ElevenLabs failed ({error}), falling back to AWS Polly")
+                polly_def = get_tts_provider_definition("polly")
+                if polly_def:
+                    audio_content, error = await polly_def["generate_audio"](text)
+                    provider_used = "polly"
+        if not provider_used:
+            error = "Fallback providers not available"
+            provider_used = "fallback"
     else:
-        error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', 'google', or 'fallback'"
-        logger.error(error_msg)
-        return b"", error_msg, "unknown", "mp3", "audio/mpeg"
+        # Use specific provider
+        provider_def = get_tts_provider_definition(provider)
+        if provider_def:
+            audio_content, error = await provider_def["generate_audio"](text)
+            provider_used = provider
+        else:
+            error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', 'google', or 'fallback'"
+            logger.error(error_msg)
+            return b"", error_msg, "unknown", "mp3", "audio/mpeg"
 
     # Get format info for the provider that was used
     file_ext, mime_type = get_audio_format_for_provider(provider_used)
@@ -506,6 +286,7 @@ def track_scan_complete(
     request: Request,
     lat: float,
     lng: float,
+    city: str,
     from_cache: bool,
     nearby_aircraft: int,
     provider: str,
@@ -513,15 +294,15 @@ def track_scan_complete(
     """Track scan:complete analytics event with flight data results"""
     try:
         import hashlib
-        
+
         client_ip = extract_client_ip(request)
         user_agent = extract_user_agent(request)
         browser_info = parse_user_agent(user_agent)
-        
+
         # Create consistent session ID
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
         session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
-        
+
         analytics.track_event("scan:complete", {
             "ip": client_ip,
             "$user_agent": user_agent,
@@ -532,8 +313,9 @@ def track_scan_complete(
             "os": browser_info["os"],
             "os_version": browser_info["os_version"],
             "device": browser_info["device"],
-            "lat": round(lat, 3),
-            "lng": round(lng, 3),
+            "user_lat": round(lat, 2),
+            "user_lng": round(lng, 2),
+            "user_city": city,
             "from_cache": from_cache,
             "nearby_aircraft": nearby_aircraft,
             "aircraft_provider": provider
@@ -541,19 +323,19 @@ def track_scan_complete(
     except Exception as e:
         logger.error(f"Failed to track scan:complete event: {e}", exc_info=True)
 
-def track_plane_request(request: Request, lat: float, lng: float, plane_index: int, from_cache: bool):
+def track_plane_request(request: Request, lat: float, lng: float, city: str, plane_index: int, from_cache: bool):
     """Track plane:request analytics event for plane endpoint requests"""
     try:
         import hashlib
-        
+
         client_ip = extract_client_ip(request)
         user_agent = extract_user_agent(request)
         browser_info = parse_user_agent(user_agent)
-        
+
         # Create consistent session ID
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
         session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
-        
+
         analytics.track_event("plane:request", {
             "ip": client_ip,
             "$user_agent": user_agent,
@@ -564,15 +346,16 @@ def track_plane_request(request: Request, lat: float, lng: float, plane_index: i
             "os": browser_info["os"],
             "os_version": browser_info["os_version"],
             "device": browser_info["device"],
-            "lat": round(lat, 3),
-            "lng": round(lng, 3),
+            "user_lat": round(lat, 2),
+            "user_lng": round(lng, 2),
+            "user_city": city,
             "plane_index": plane_index,
             "from_cache": from_cache
         })
     except Exception as e:
         logger.error(f"Failed to track plane:request event: {e}", exc_info=True)
 
-def track_audio_generation(request: Request, lat: float, lng: float, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3"):
+def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3"):
     """Track generate:audio analytics event with flight and audio details"""
     try:
         import hashlib
@@ -613,8 +396,9 @@ def track_audio_generation(request: Request, lat: float, lng: float, plane_index
             "os": browser_info["os"],
             "os_version": browser_info["os_version"],
             "device": browser_info["device"],
-            "lat": round(lat, 3),
-            "lng": round(lng, 3),
+            "user_lat": round(lat, 2),
+            "user_lng": round(lng, 2),
+            "user_city": city,
             "plane_index": plane_index,
             "aircraft_name": aircraft_name,
             "destination_city": destination_city,
@@ -635,6 +419,7 @@ def track_aircraft_selection(
     request: Request,
     lat: float,
     lng: float,
+    city: str,
     country_code: str,
     aircraft_selection_data: List[tuple],  # List of (aircraft_dict, fun_fact_source)
     provider: str
@@ -662,9 +447,10 @@ def track_aircraft_selection(
             "os": browser_info["os"],
             "os_version": browser_info["os_version"],
             "device": browser_info["device"],
-            "lat": round(lat, 3),
-            "lng": round(lng, 3),
-            "country_code": country_code,
+            "user_lat": round(lat, 2),
+            "user_lng": round(lng, 2),
+            "user_city": city,
+            "user_country_code": country_code,
             "aircraft_count": len(aircraft_selection_data),
             "aircraft_provider": provider,
             "duplicate_destinations": False,
@@ -709,7 +495,8 @@ def track_aircraft_selection(
 def select_diverse_aircraft(
     aircraft_list: List[Dict[str, Any]],
     user_lat: Optional[float] = None,
-    user_lng: Optional[float] = None
+    user_lng: Optional[float] = None,
+    user_city: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Select diverse aircraft using multiple strategies for educational value and interest
 
@@ -722,6 +509,7 @@ def select_diverse_aircraft(
         aircraft_list: List of aircraft data with destination information
         user_lat: Optional user latitude for destination distance filtering
         user_lng: Optional user longitude for destination distance filtering
+        user_city: Optional city name for logging/analytics context
 
     Returns:
         List of up to 3 aircraft selected for maximum diversity and educational value
@@ -784,7 +572,16 @@ def select_diverse_aircraft(
             # No passenger flights: use up to 3 cargo/private
             selected = cargo_private[:3]
 
-    return selected[:3]
+    final_selection = selected[:3]
+    dest_iatas = [plane.get("destination_airport") or "UNK" for plane in final_selection]
+    display_city = user_city or "Unknown"
+    logger.info(
+        "Diversity selection complete for city=%s; destination IATAs=%s",
+        display_city,
+        ", ".join(dest_iatas) if dest_iatas else "none",
+    )
+
+    return final_selection
 
 
 def _add_destination_distance_from_user(aircraft_list: List[Dict[str, Any]], user_lat: Optional[float], user_lng: Optional[float]) -> None:
@@ -874,6 +671,7 @@ async def get_nearby_aircraft(
     limit: int = 3,
     request: Optional[Request] = None,
     provider_override: Optional[str] = None,
+    user_city: Optional[str] = None,
 ) -> tuple[List[Dict[str, Any]], str]:
     """Get aircraft near the given coordinates using configured providers with caching"""
 
@@ -881,7 +679,7 @@ async def get_nearby_aircraft(
     if not provider_sequence:
         logger.error("No aircraft providers are configured")
         if request:
-            track_scan_complete(request, lat, lng, from_cache=False, nearby_aircraft=0, provider="unknown")
+            track_scan_complete(request, lat, lng, "Unknown", from_cache=False, nearby_aircraft=0, provider="unknown")
         return [], "No aircraft providers configured"
 
     provider_errors: List[str] = []
@@ -919,6 +717,7 @@ async def get_nearby_aircraft(
                         request,
                         lat,
                         lng,
+                        "Unknown",
                         from_cache=True,
                         nearby_aircraft=len(full_aircraft_list),
                         provider=provider_name,
@@ -942,7 +741,12 @@ async def get_nearby_aircraft(
 
         if aircraft_list:
             aircraft_list.sort(key=lambda x: x.get("distance_km", float("inf")))
-            aircraft_list = select_diverse_aircraft(aircraft_list, user_lat=lat, user_lng=lng)
+            aircraft_list = select_diverse_aircraft(
+                aircraft_list,
+                user_lat=lat,
+                user_lng=lng,
+                user_city=user_city,
+            )
 
             cache_data = {"provider": provider_name, "aircraft": aircraft_list}
             asyncio.create_task(s3_cache.set(cache_key, cache_data, content_type="json"))
@@ -955,6 +759,7 @@ async def get_nearby_aircraft(
                     request,
                     lat,
                     lng,
+                    "Unknown",
                     from_cache=False,
                     nearby_aircraft=len(aircraft_list),
                     provider=provider_name,
@@ -976,6 +781,7 @@ async def get_nearby_aircraft(
             request,
             lat,
             lng,
+            "Unknown",
             from_cache=False,
             nearby_aircraft=0,
             provider=fallback_provider,
@@ -1025,7 +831,8 @@ async def handle_plane_endpoint(
         forced_provider = provider.lower()
 
     # Get user location using shared function
-    user_lat, user_lng, country_code = await get_user_location(request, lat, lng, country)
+    user_lat, user_lng, user_country_code, user_city = await get_user_location(request, lat, lng, country)
+    country_code = user_country_code  # Keep for backwards compatibility
 
     # Get TTS provider override from query parameters
     tts_override = get_tts_provider_override(request)
@@ -1045,7 +852,7 @@ async def handle_plane_endpoint(
         logger.info(f"Serving cached audio for plane {plane_index} at location: lat={user_lat}, lng={user_lng}, format={file_ext}")
 
         # Track plane request analytics for cache hit
-        track_plane_request(request, user_lat, user_lng, plane_index, from_cache=True)
+        track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=True)
 
         response_headers = {
             "Content-Type": mime_type,
@@ -1072,6 +879,7 @@ async def handle_plane_endpoint(
         limit=max(3, plane_index),
         request=request,
         provider_override=forced_provider,
+        user_city=user_city,
     )
     
     
@@ -1107,10 +915,10 @@ async def handle_plane_endpoint(
         # Track audio generation analytics if we have aircraft data
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            track_audio_generation(request, user_lat, user_lng, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext)
+            track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext)
 
         # Track plane request analytics for cache miss
-        track_plane_request(request, user_lat, user_lng, plane_index, from_cache=False)
+        track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=False)
 
         # Return audio with correct format
         response_headers = {
