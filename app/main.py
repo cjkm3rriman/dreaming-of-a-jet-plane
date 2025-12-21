@@ -360,25 +360,24 @@ def track_plane_request(request: Request, lat: float, lng: float, city: str, pla
     except Exception as e:
         logger.error(f"Failed to track plane:request event: {e}", exc_info=True)
 
-def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3"):
+def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None):
     """Track generate:audio analytics event with flight and audio details"""
     try:
         import hashlib
-        
+
         client_ip = extract_client_ip(request)
         user_agent = extract_user_agent(request)
         browser_info = parse_user_agent(user_agent)
-        
+
         # Create consistent session ID
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
         session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
-        
-        # Extract flight information
-        aircraft_name = aircraft.get("aircraft", "unknown")
+
+        # Extract destination information
         destination_city = aircraft.get("destination_city", "unknown")
         destination_country = aircraft.get("destination_country", "unknown")
         destination_state = None
-        
+
         # For US destinations, try to get state information
         if destination_country == "the United States":
             destination_airport = aircraft.get("destination_airport")
@@ -386,11 +385,27 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
                 airport_data = get_airport_by_iata(destination_airport)
                 if airport_data and airport_data.get("country") == "US":
                     destination_state = airport_data.get("state")
-        
+
+        # Extract origin information
+        origin_city = aircraft.get("origin_city", "unknown")
+        origin_country = aircraft.get("origin_country", "unknown")
+        origin_state = None
+
+        # For US origins, try to get state information
+        if origin_country == "the United States":
+            origin_airport = aircraft.get("origin_airport")
+            if origin_airport:
+                airport_data = get_airport_by_iata(origin_airport)
+                if airport_data and airport_data.get("country") == "US":
+                    origin_state = airport_data.get("state")
+
+        # Extract other flight information
+        aircraft_name = aircraft.get("aircraft", "unknown")
+
         # Check if fun fact was included (look for fun fact openings in the sentence)
         fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
         has_fun_fact = any(opening in sentence for opening in fun_fact_openings)
-        
+
         analytics.track_event("generate:audio", {
             "ip": client_ip,
             "$user_agent": user_agent,
@@ -406,9 +421,13 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "user_city": city,
             "plane_index": plane_index,
             "aircraft_name": aircraft_name,
+            "origin_city": origin_city,
+            "origin_state": origin_state,
+            "origin_country": origin_country,
             "destination_city": destination_city,
             "destination_state": destination_state,
             "destination_country": destination_country,
+            "fun_fact_source": fun_fact_source if fun_fact_source else "none",
             "has_fun_fact": has_fun_fact,
             "generation_time_ms": generation_time_ms,
             "audio_size_bytes": audio_size_bytes,
@@ -419,83 +438,6 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
         })
     except Exception as e:
         logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
-
-def track_aircraft_selection(
-    request: Request,
-    lat: float,
-    lng: float,
-    city: str,
-    country_code: str,
-    aircraft_selection_data: List[tuple],  # List of (aircraft_dict, fun_fact_source)
-    provider: str
-):
-    """Track scan:aircraft_selection analytics event with detailed flight routing and fun fact data"""
-    try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-
-        # Create consistent session ID
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
-
-        # Build base event properties
-        event_props = {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
-            "$insert_id": f"aircraft_selection_{session_id}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
-            "user_lat": round(lat, 2),
-            "user_lng": round(lng, 2),
-            "user_city": city,
-            "user_country_code": country_code,
-            "aircraft_count": len(aircraft_selection_data),
-            "aircraft_provider": provider,
-            "duplicate_destinations": False,
-            "duplicate_destination_count": 0
-        }
-
-        # Track destinations to detect duplicates
-        seen_destinations = set()
-        duplicate_count = 0
-
-        # Add per-plane data
-        for i, (aircraft, fun_fact_source) in enumerate(aircraft_selection_data, start=1):
-            plane_prefix = f"plane{i}"
-
-            # Extract city/country info
-            origin_city = aircraft.get("origin_city", "Unknown")
-            origin_country = aircraft.get("origin_country", "Unknown")
-            destination_city = aircraft.get("destination_city", "Unknown")
-            destination_country = aircraft.get("destination_country", "Unknown")
-
-            # Format as "City, Country"
-            event_props[f"{plane_prefix}_origin"] = f"{origin_city}, {origin_country}"
-            event_props[f"{plane_prefix}_destination"] = f"{destination_city}, {destination_country}"
-
-            # Track fun fact source
-            event_props[f"{plane_prefix}_fun_fact_source"] = fun_fact_source if fun_fact_source else "none"
-            event_props[f"{plane_prefix}_has_fun_fact"] = fun_fact_source is not None
-
-            # Detect duplicates
-            if destination_city != "Unknown":
-                if destination_city in seen_destinations:
-                    event_props["duplicate_destinations"] = True
-                    duplicate_count += 1
-                seen_destinations.add(destination_city)
-
-        event_props["duplicate_destination_count"] = duplicate_count
-
-        analytics.track_event("scan:aircraft_selection", event_props)
-    except Exception as e:
-        logger.error(f"Failed to track scan:aircraft_selection event: {e}", exc_info=True)
 
 def select_diverse_aircraft(
     aircraft_list: List[Dict[str, Any]],
@@ -889,10 +831,12 @@ async def handle_plane_endpoint(
     
     
     # Check if we have the requested plane
+    fun_fact_source = None  # Initialize for all cases
+
     if aircraft and len(aircraft) > zero_based_index:
         selected_aircraft = aircraft[zero_based_index]
-        sentence, _ = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
-        
+        sentence, fun_fact_source = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
+
     elif aircraft and len(aircraft) > 0:
         # Not enough planes, return an appropriate message for this plane index
         if plane_index == 2:
@@ -924,7 +868,7 @@ async def handle_plane_endpoint(
         # Track audio generation analytics if we have aircraft data
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext)
+            track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext, fun_fact_source)
 
         # Track plane request analytics for cache miss
         track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=False)

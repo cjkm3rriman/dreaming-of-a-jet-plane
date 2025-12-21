@@ -69,9 +69,6 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # Track destination cities across all 3 planes for diversity
         used_destinations = set()
 
-        # Track aircraft selection data for analytics
-        aircraft_selection_data = []  # List of (aircraft_dict, fun_fact_source)
-
         # Pre-generate audio for up to 3 planes
         tasks = []
         for plane_index in range(1, 4):  # 1, 2, 3
@@ -82,19 +79,15 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             cached_audio = await s3_cache.get(plane_cache_key)
 
             if cached_audio:
-                # Still track aircraft data for analytics even if cached
-                if aircraft and len(aircraft) > zero_based_index:
-                    aircraft_selection_data.append((aircraft[zero_based_index], None))  # No fun_fact_source for cached
+                # Skip if already cached
                 continue
 
 
             # Generate appropriate text for this plane
+            current_fun_fact_source = None
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
-                sentence, fun_fact_source = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index, country_code, used_destinations)
-
-                # Track aircraft selection data for analytics
-                aircraft_selection_data.append((selected_aircraft, fun_fact_source))
+                sentence, current_fun_fact_source = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index, country_code, used_destinations)
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
                 if plane_index == 2:
@@ -126,6 +119,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                     request,
                     selected_aircraft,
                     tts_override,
+                    current_fun_fact_source,
                 )
             )
             tasks.append(task)
@@ -136,19 +130,6 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             successes = sum(1 for r in results if r is True)
         else:
             pass
-
-        # Track aircraft selection analytics
-        if request and aircraft_selection_data:
-            from .main import track_aircraft_selection, LIVE_AIRCRAFT_PROVIDER
-            track_aircraft_selection(
-                request,
-                lat,
-                lng,
-                city,
-                country_code,
-                aircraft_selection_data,
-                LIVE_AIRCRAFT_PROVIDER
-            )
 
     except Exception as e:
         logger.error(f"Error in MP3 pre-generation: {e}")
@@ -164,6 +145,7 @@ async def _generate_and_cache_plane_audio(
     request: Request = None,
     aircraft: dict = None,
     tts_override: str = None,
+    fun_fact_source: str = None,
 ) -> bool:
     """Helper function to generate and cache audio for a specific plane
 
@@ -177,6 +159,7 @@ async def _generate_and_cache_plane_audio(
         request: Optional FastAPI Request object
         aircraft: Optional aircraft data dict
         tts_override: Optional TTS provider override
+        fun_fact_source: Optional fun fact source ("destination", "origin", or None)
 
     Returns:
         bool: True if successful, False otherwise
@@ -198,7 +181,7 @@ async def _generate_and_cache_plane_audio(
 
                 # Track audio generation analytics if we have request and aircraft data
                 if request and aircraft:
-                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext)
+                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext, fun_fact_source)
 
                 return True
             else:
