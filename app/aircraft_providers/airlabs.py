@@ -27,6 +27,7 @@ AIRLINE_OVERRIDES = {
 # Republic Airways (RPA/YX) specific flight overrides
 # For flights that fall outside the standard ranges but are known to be operated for specific brands
 REPUBLIC_AIRWAYS_SPECIFIC_FLIGHTS = {
+    3712: {"airline_icao": "UAL", "airline_iata": "UA"},  # YX3712 -> United Express
     4355: {"airline_icao": "AAL", "airline_iata": "AA"},  # YX4355 -> American Eagle
 }
 
