@@ -4506,5 +4506,135 @@
             "Burbank's airport was the first in the entire country to allow only quieter 'Stage 3' jets in 1987, making the skies more peaceful for everyone!",
             "Burbank opened California's first hydrogen fueling station in 2006, helping cars run on clean energy instead of gasoline!"
         ]
+    },
+    "San Juan": {
+        "city": "San Juan",
+        "state": null,
+        "country": "Puerto Rico",
+        "population": 560819,
+        "fun_facts": [
+            "San Juan is the oldest city in all U.S. lands - it was founded way back in 1521 by Spanish explorers!",
+            "San Juan has two massive forts, El Morro and San Cristóbal, with walls so thick and tall they protected the city from pirates and invaders for hundreds of years!",
+            "San Juan's colorful Old Town has buildings painted in rainbow colors like pink, yellow, and blue with beautiful balconies covered in flowers!",
+            "San Juan has beaches right in the city where you can splash in the warm Atlantic Ocean and build sandcastles while looking at historic forts!",
+            "San Juan is home to La Fortaleza, the oldest executive mansion still being used in all of the Americas - it's been a governor's home since 1540!"
+        ]
+    },
+    "Liberia": {
+        "city": "Liberia",
+        "state": null,
+        "country": "Costa Rica",
+        "population": 56899,
+        "fun_facts": [
+            "Liberia is called 'La Ciudad Blanca' which means 'The White City' because its roads were made with white gravel and houses were painted bright white long ago!",
+            "Liberia is named after the huge guanacaste trees that grow there - they're so massive their branches create giant shady umbrellas perfect for people and animals!",
+            "Liberia hosts an amazing festival with children wearing colorful masks and costumes, traditional marimba music, parades, and yummy local food!",
+            "Liberia is the gateway to incredible volcanoes - nearby Rincón de la Vieja has bubbling mud pots, steaming hot springs, and beautiful waterfalls!",
+            "Liberia is close to gorgeous Pacific beaches like Tamarindo where you can see sea turtles laying their eggs in the sand!"
+        ]
+    },
+    "Hamilton": {
+        "city": "Hamilton",
+        "state": null,
+        "country": "Bermuda",
+        "population": 854,
+        "fun_facts": [
+            "Hamilton is one of the tiniest capital cities in the whole world with only 854 people living there permanently!",
+            "Hamilton transforms like magic every weekday when 13,340 workers come into the tiny city - that's more than 15 times the number of residents!",
+            "Hamilton became the capital of Bermuda in 1815, taking over from the older city of St. George's!",
+            "Hamilton had a famous local hero named Johnny Barnes who waved cheerfully at every car driving into the city for over 30 years, making everyone smile!",
+            "Hamilton is surrounded by pink sand beaches and turquoise waters that make Bermuda look like a tropical paradise!"
+        ]
+    },
+    "Castletown": {
+        "city": "Castletown",
+        "state": null,
+        "country": "the Isle of Man",
+        "population": 3097,
+        "fun_facts": [
+            "Castletown was the capital of the Isle of Man for hundreds of years until 1869 when the capital moved to Douglas!",
+            "Castletown sits right on top of an ancient volcano that erupted millions of years ago and is now completely extinct!",
+            "Castletown has a magnificent medieval Castle Rushen built for a Viking king that has served as a fortress, a royal palace, a mint for making coins, and even a prison!",
+            "Castletown has over 70 tiny magical 'fairy doors' hidden around town that visitors can hunt for like a treasure trail!",
+            "Castletown has secret tunnels under the town square that were discovered in 1938 by a baker and lead all the way to the castle!"
+        ]
+    },
+    "Juneau": {
+        "city": "Juneau",
+        "state": "Alaska",
+        "country": "the United States",
+        "population": 31572,
+        "fun_facts": [
+            "Juneau is the biggest capital city in America by land area but you can't drive there - you can only reach it by boat or plane!",
+            "Juneau is home to between 1,500 and 1,800 black bears and has one of the highest concentrations of bald eagles in all of North America with up to 30,000 eagles!",
+            "Juneau has the massive Mendenhall Glacier, part of one of the largest icefields in the Western Hemisphere with 38 huge glaciers!",
+            "Juneau has over 250 miles of hiking trails winding through forests, mountains, and along glaciers - that's like walking from New York to Boston!",
+            "Juneau's State Capitol building was built in 1931 and unlike most capitol buildings, it doesn't have a dome on top!"
+        ]
+    },
+    "Wagga Wagga": {
+        "city": "Wagga Wagga",
+        "state": null,
+        "country": "Australia",
+        "population": 68716,
+        "fun_facts": [
+            "Wagga Wagga has the most fun name to say and it means 'place of many crows' in the Wiradjuri language - the city even has crows on its coat of arms!",
+            "Wagga Wagga is called the 'City of Good Sports' because so many of Australia's famous sporting heroes grew up there!",
+            "Wagga Wagga sits on the beautiful Murrumbidgee River and in 1974 the river flooded to a record-breaking 10.74 metres high!",
+            "Wagga Wagga has hot summers that can reach 40°C (104°F) - hot enough to fry an egg on the sidewalk!",
+            "Wagga Wagga is famous for producing wheat, wine, and livestock on its huge farms that stretch across the countryside!"
+        ]
+    },
+    "Montego Bay": {
+        "city": "Montego Bay",
+        "state": null,
+        "country": "Jamaica",
+        "population": 110100,
+        "fun_facts": [
+            "Montego Bay's name comes from the Spanish word 'manteca' meaning lard because it was once the port where Spanish traders exported lard, leather, and beef!",
+            "Montego Bay was visited by Christopher Columbus himself way back in 1494 when he explored the Caribbean!",
+            "Montego Bay hosts the famous Reggae Sumfest every July where you can hear Jamaica's incredible reggae music and see famous artists perform!",
+            "Montego Bay has delicious jerk chicken cooked with spicy seasoning over smoky wood fires and sweet festival dough balls that taste amazing!",
+            "Montego Bay has a Marine Park that protects colorful coral reefs filled with parrotfish, clownfish, and other tropical fish swimming in crystal-clear water!"
+        ]
+    },
+    "Dunedin": {
+        "city": "Dunedin",
+        "state": null,
+        "country": "New Zealand",
+        "population": 136000,
+        "fun_facts": [
+            "Dunedin has Baldwin Street, officially the steepest street in the entire world - it's so steep it feels like climbing a mountain!",
+            "Dunedin sits on an extinct volcano that last erupted over ten million years ago, and the harbor and hills are what's left of the giant volcano!",
+            "Dunedin is home to New Zealand's oldest university, the University of Otago, with over 20,000 students who are nicknamed 'Scarfies'!",
+            "Dunedin's name comes from the Scottish Gaelic name for Edinburgh because Scottish settlers founded the city and brought their culture with them!",
+            "Dunedin was named a UNESCO City of Literature in 2014 and invented the famous 'Dunedin sound' music style in the 1980s!"
+        ]
+    },
+    "Providenciales": {
+        "city": "Providenciales",
+        "state": null,
+        "country": "Turks and Caicos Islands",
+        "population": 25000,
+        "fun_facts": [
+            "Providenciales had no cars, roads, water, phones, or electricity until 1964 - imagine living without any of those things!",
+            "Providenciales is nicknamed 'Provo' and has about 350 sunny days every year - that's almost every single day!",
+            "Providenciales has the stunning Chalk Sound National Park with bright turquoise water and hundreds of tiny mushroom-shaped islands!",
+            "Providenciales is surrounded by one of the longest coral reefs in the world and has the only conch farm anywhere!",
+            "Providenciales has been home to famous Hollywood stars like Dick Clark and Bruce Willis who built beautiful houses there!"
+        ]
+    },
+    "Nantes": {
+        "city": "Nantes",
+        "state": null,
+        "country": "France",
+        "population": 711464,
+        "fun_facts": [
+            "Nantes has an incredible 12-meter (39-foot) tall mechanical elephant that actually walks and sprays water - it's like a giant robot from the future!",
+            "Nantes is the birthplace of famous author Jules Verne who wrote '20,000 Leagues Under the Sea' and has a whole museum dedicated to him!",
+            "Nantes has one of the biggest Natural History Museums in all of France with over 1.6 million animal specimens!",
+            "Nantes sits where the Loire River meets the Erdre and Sèvre rivers, making it a city surrounded by sparkling water on three sides!",
+            "Nantes has been making the famous Petit-Beurre biscuits since 1886 - that's almost 140 years of delicious cookies!"
+        ]
     }
 }
