@@ -12,6 +12,21 @@ from .airport_database import get_airport_by_iata
 from .location_utils import uses_metric_system
 
 
+# Mapping for converting digits to English words for TTS
+DIGIT_TO_WORD = {
+    '0': 'zero',
+    '1': 'one',
+    '2': 'two',
+    '3': 'three',
+    '4': 'four',
+    '5': 'five',
+    '6': 'six',
+    '7': 'seven',
+    '8': 'eight',
+    '9': 'nine'
+}
+
+
 SPECIAL_PLANE3_TEXT = (
     "Incredible! My radar just picked up something truly extraordinary, gliding silently through the clouds! "
     "It's not a jet, and it's not a bird - it's a wooden sleigh being pulled by a team of eight... no, wait... "
@@ -35,21 +50,21 @@ def get_plane_sentence_override(plane_index: int) -> Optional[str]:
 
 
 def convert_aircraft_name_digits(aircraft_name: str) -> str:
-    """Convert numbers in aircraft names to individual digits separated by spaces
+    """Convert numbers in aircraft names to individual words separated by spaces
 
     Args:
         aircraft_name: Aircraft name that may contain numbers
 
     Returns:
-        str: Aircraft name with numbers converted to individual digits
+        str: Aircraft name with numbers converted to individual words
 
     Examples:
-        "Boeing 737" -> "Boeing 7 3 7"
-        "Airbus A320" -> "Airbus A 3 2 0"
+        "Boeing 737" -> "Boeing seven three seven"
+        "Airbus A320" -> "Airbus A three two zero"
     """
     def replace_number(match):
         number_str = match.group(0)
-        return ' '.join(number_str)
+        return ' '.join(DIGIT_TO_WORD[digit] for digit in number_str)
 
     # Match sequences of digits
     pattern = r'\d+'
@@ -59,25 +74,31 @@ def convert_aircraft_name_digits(aircraft_name: str) -> str:
 
 
 def format_flight_number_for_tts(flight_number: str) -> str:
-    """Format flight number with spaces between letters and numbers for TTS
+    """Format flight number with spaces between letters and words for numbers for TTS
 
     Args:
         flight_number: Flight number like "BA123" or "AA4567"
 
     Returns:
-        str: Flight number with spaces between letters and numbers
+        str: Flight number with spaces between letters and words for numbers
 
     Examples:
-        "BA123" -> "B A 1 2 3"
-        "AA4567" -> "A A 4 5 6 7"
+        "BA123" -> "B A one two three"
+        "AA4567" -> "A A four five six seven"
         "unknown flight" -> "unknown flight" (unchanged if not alphanumeric)
     """
     if not flight_number or flight_number == "unknown flight":
         return flight_number
 
-    # Add spaces between all characters for flight numbers
-    result = ' '.join(flight_number)
-    return result
+    # Convert each character individually, using words for digits
+    result_parts = []
+    for char in flight_number:
+        if char.isdigit():
+            result_parts.append(DIGIT_TO_WORD[char])
+        else:
+            result_parts.append(char)
+
+    return ' '.join(result_parts)
 
 
 def is_location_in_us(lat: float, lng: float) -> bool:

@@ -50,13 +50,13 @@ def test_text_generation_japanese_metric(sample_aircraft):
 
 
 def test_text_includes_aircraft_name(sample_aircraft):
-    """Test that generated text includes aircraft name with digit spacing"""
+    """Test that generated text includes aircraft name with digits as words"""
     sentence, _ = generate_flight_text_for_aircraft(
         sample_aircraft, 40.0, -74.0, plane_index=1, country_code="US"
     )
 
-    # Boeing 737 should become "Boeing 7 3 7"
-    assert "Boeing 7 3 7" in sentence, "Should spell out aircraft number digits"
+    # Boeing 737 should become "Boeing seven three seven"
+    assert "Boeing seven three seven" in sentence, "Should spell out aircraft number digits as words"
 
 
 def test_text_includes_origin_and_destination(sample_aircraft):
