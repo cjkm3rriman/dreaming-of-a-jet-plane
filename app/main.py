@@ -37,7 +37,11 @@ from .overandout import stream_overandout, overandout_options
 from .scanning_again import stream_scanning_again, scanning_again_options
 from .scanning import stream_scanning, scanning_options
 from .s3_cache import s3_cache
-from .flight_text import generate_flight_text, generate_flight_text_for_aircraft
+from .flight_text import (
+    generate_flight_text,
+    generate_flight_text_for_aircraft,
+    get_plane_sentence_override,
+)
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
 from .website_home import register_website_home_routes
@@ -96,7 +100,7 @@ def get_tts_provider_override(request: Request) -> Optional[str]:
         return None
 
     # Validate provider is supported
-    valid_providers = ["elevenlabs", "polly", "google", "fallback"]
+    valid_providers = ["elevenlabs", "polly", "google", "inworld", "fallback"]
     if tts_param.lower() not in valid_providers:
         logger.warning(f"Invalid TTS provider override: {tts_param}")
         return None
@@ -230,6 +234,7 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
     - "elevenlabs": Use ElevenLabs (default)
     - "polly": Use AWS Polly
     - "google": Use Google Gemini Flash TTS
+    - "inworld": Use Inworld's TTS API
     - "fallback": Try ElevenLabs first, fallback to Polly on error
 
     Args:
@@ -274,7 +279,7 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
             audio_content, error = await provider_def["generate_audio"](text)
             provider_used = provider
         else:
-            error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', 'google', or 'fallback'"
+            error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', 'google', 'inworld', or 'fallback'"
             logger.error(error_msg)
             return b"", error_msg, "unknown", "mp3", "audio/mpeg"
 
@@ -901,6 +906,10 @@ async def handle_plane_endpoint(
     else:
         # No aircraft found at all
         sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code)
+
+    override_sentence = get_plane_sentence_override(plane_index)
+    if override_sentence:
+        sentence = override_sentence
     
     # Generate TTS for the sentence
     import time

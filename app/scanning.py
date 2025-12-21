@@ -11,7 +11,7 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
 from .s3_cache import s3_cache
-from .flight_text import generate_flight_text
+from .flight_text import generate_flight_text, get_plane_sentence_override
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
 
@@ -108,6 +108,10 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             else:
                 # No aircraft found at all
                 sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code)
+
+            override_sentence = get_plane_sentence_override(plane_index)
+            if override_sentence:
+                sentence = override_sentence
 
             # Create task to generate and cache this plane's audio
             selected_aircraft = aircraft[zero_based_index] if aircraft and len(aircraft) > zero_based_index else None

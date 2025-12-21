@@ -17,6 +17,11 @@ from .google import (
     is_configured as google_is_configured,
     DISPLAY_NAME as GOOGLE_DISPLAY_NAME,
 )
+from .inworld import (
+    generate_audio as generate_inworld_audio,
+    is_configured as inworld_is_configured,
+    DISPLAY_NAME as INWORLD_DISPLAY_NAME,
+)
 
 AudioResult = Tuple[bytes, str]
 AudioGenerator = Callable[[str], Awaitable[AudioResult]]
@@ -51,6 +56,14 @@ TTS_PROVIDERS: Dict[str, ProviderDefinition] = {
         "file_extension": "mp3",
         "mime_type": "audio/mpeg",
         "voice_folder": "sadachbia",
+    },
+    "inworld": {
+        "display_name": INWORLD_DISPLAY_NAME,
+        "generate_audio": generate_inworld_audio,
+        "is_configured": inworld_is_configured,
+        "file_extension": "mp3",
+        "mime_type": "audio/mpeg",
+        "voice_folder": "hamish",
     },
 }
 
