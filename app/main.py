@@ -909,7 +909,6 @@ async def intro_options_endpoint():
 @app.get("/overandout.mp3")
 async def overandout_endpoint(request: Request, lat: float = None, lng: float = None):
     """Stream MP3 file from S3"""
-    logger.info(f"Request to /overandout.mp3 - Headers: {dict(request.headers)}")
     return await stream_overandout(request, lat, lng)
 
 @app.options("/overandout.mp3") 
