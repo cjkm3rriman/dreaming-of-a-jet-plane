@@ -4636,5 +4636,135 @@
             "Nantes sits where the Loire River meets the Erdre and Sèvre rivers, making it a city surrounded by sparkling water on three sides!",
             "Nantes has been making the famous Petit-Beurre biscuits since 1886 - that's almost 140 years of delicious cookies!"
         ]
+    },
+    "Guatemala City": {
+        "city": "Guatemala City",
+        "state": null,
+        "country": "Guatemala",
+        "population": 3229740,
+        "fun_facts": [
+            "Guatemala City means 'place of many trees' in indigenous languages, and the country has 37 volcanoes with three that are still active!",
+            "Guatemala City is home to ancient Maya palaces and houses from 650-800 AD when up to 11 million Maya people lived in the area!",
+            "Guatemala City sits near Tajumulco volcano, the tallest volcano in all of Central America reaching high into the clouds!",
+            "Guatemala City is in one of only seventeen megadiverse countries in the world, meaning it has incredible varieties of plants and animals!",
+            "Guatemala City celebrates its independence from Spain every September 15th with colorful parades and traditional music throughout the streets!"
+        ]
+    },
+    "Queenstown": {
+        "city": "Queenstown",
+        "state": null,
+        "country": "New Zealand",
+        "population": 29000,
+        "fun_facts": [
+            "Queenstown sits on beautiful Lake Wakatipu, a long S-shaped lake carved by ancient glaciers with crystal-clear water!",
+            "Queenstown is called the 'Adventure Capital of the World' with thrilling activities like bungee jumping, jet boating, and skiing!",
+            "Queenstown has The Remarkables mountain range that runs north to south - only one other mountain range in the entire world does this!",
+            "Queenstown has a historic steamship called the TSS Earnslaw that was first launched in 1912, the same year as the famous Titanic!",
+            "Queenstown welcomes over 3.3 million visitors every year - that's more than 100 times the number of people who actually live there!"
+        ]
+    },
+    "Quebec City": {
+        "city": "Quebec City",
+        "state": "Quebec",
+        "country": "Canada",
+        "population": 549459,
+        "fun_facts": [
+            "Quebec City is the only walled city north of Mexico with 4.6 kilometres of thick stone walls surrounding the old town!",
+            "Quebec City was founded by explorer Samuel de Champlain way back in 1608, making it one of the oldest cities in North America!",
+            "Quebec City is divided into Upper Town and Lower Town - the Upper Town sits on a high cliff and you can ride special elevators to get between them!",
+            "Quebec City looks so much like a French town that 94.6% of people speak French as their first language - Bonjour!",
+            "Quebec City's historic old walls and buildings were named a UNESCO World Heritage site in 1985 for being so beautifully preserved!"
+        ]
+    },
+    "Santa Clara": {
+        "city": "Santa Clara",
+        "state": null,
+        "country": "Cuba",
+        "population": 245959,
+        "fun_facts": [
+            "Santa Clara was founded on July 15, 1689 by 175 brave families who were escaping from pirates attacking the coast!",
+            "Santa Clara is famous because revolutionary hero Che Guevara is buried there, and the city has a huge monument and museum dedicated to him!",
+            "Santa Clara is the fifth largest city in Cuba and is centrally located right in the middle of the island!",
+            "Santa Clara had a kind woman named Marta Abreu who used money from her theater to build two free schools for poor children!",
+            "Santa Clara is home to Cuba's second-largest university where thousands of students study every year!"
+        ]
+    },
+    "Haikou": {
+        "city": "Haikou",
+        "state": null,
+        "country": "China",
+        "population": 2870000,
+        "fun_facts": [
+            "Haikou is called 'the Hawaii of China' because it sits on tropical Hainan Island with palm trees, warm weather, and beautiful beaches!",
+            "Haikou has an average temperature of 24°C (75°F) all year round - it's like living in permanent summer!",
+            "Haikou is famous for growing sweet coconuts and delicious tropical fruits like pineapples that taste like sunshine!",
+            "Haikou is home to the super rare Hainan gibbon - one of the world's rarest primates that swings through the tropical forests!",
+            "Haikou celebrates the International Coconut Festival every June with parades, performances, and yummy coconut treats!"
+        ]
+    },
+    "Oranjestad": {
+        "city": "Oranjestad",
+        "state": null,
+        "country": "Aruba",
+        "population": 31473,
+        "fun_facts": [
+            "Oranjestad means 'orange town' in Dutch and was named after King Willem van Oranje-Nassau - everything is bright and colorful there!",
+            "Oranjestad was originally called Bay of Horses because settlers used to capture wild horses on the island and sell them!",
+            "Oranjestad has Fort Zoutman, Aruba's oldest building built in 1798 to protect the town from scary pirates on the sea!",
+            "Oranjestad stays warm all year with temperatures between 27°C and 29.6°C (80°F to 85°F) - perfect beach weather every single day!",
+            "Oranjestad has people from over 90 different countries living together, and they speak Dutch and a special language called Papiamento!"
+        ]
+    },
+    "Nelson": {
+        "city": "Nelson",
+        "state": null,
+        "country": "New Zealand",
+        "population": 52584,
+        "fun_facts": [
+            "Nelson is called 'Sunny Nelson' because it gets over 2,400 hours of sunshine every year - more than almost any other New Zealand city!",
+            "Nelson is the oldest city in New Zealand's South Island, founded way back in 1841 and named after famous Admiral Horatio Nelson!",
+            "Nelson has Jens Hansen Goldsmiths where 'The One Ring' from The Lord of the Rings movies was designed and created!",
+            "Nelson has the Theatre Royal built in 1878, the oldest wooden theatre still working in the entire Southern Hemisphere!",
+            "Nelson has a monument on Botanical Hill that marks the 'Centre of New Zealand' - you're standing right in the middle of the country!"
+        ]
+    },
+    "Regina": {
+        "city": "Regina",
+        "state": "Saskatchewan",
+        "country": "Canada",
+        "population": 226404,
+        "fun_facts": [
+            "Regina used to be called 'Pile O'Bones' because of the huge heaps of buffalo bones left by hunters before settlers renamed it!",
+            "Regina is built on a completely flat plain with no natural trees - all 300,000 trees, shrubs, and plants were planted by hand!",
+            "Regina is the nearest city to the geographic centre of North America - right in the middle of the continent!",
+            "Regina is home to the Royal Canadian Mounted Police training depot where every single Mountie officer in Canada learns to be a police officer!",
+            "Regina has Canada's oldest continuously performing orchestra, the Regina Symphony Orchestra, that has been making music for over 100 years!"
+        ]
+    },
+    "Guayaquil": {
+        "city": "Guayaquil",
+        "state": null,
+        "country": "Ecuador",
+        "population": 2700000,
+        "fun_facts": [
+            "Guayaquil is Ecuador's largest city and main port where about 70% of the country's exports leave by ship to travel around the world!",
+            "Guayaquil was founded in 1537 by Spanish explorer Francisco de Orellana and sits on the beautiful Guayas River!",
+            "Guayaquil has Seminary Park that's famous for its wild iguanas that roam free like friendly neighborhood dinosaurs!",
+            "Guayaquil's historic Las Peñas neighborhood has colorful colonial buildings stacked on a hillside like a rainbow climbing to the sky!",
+            "Guayaquil serves delicious local food like 'encebollado' (a yummy fish stew) and 'empanadas' (tasty stuffed pastries)!"
+        ]
+    },
+    "Tauranga": {
+        "city": "Tauranga",
+        "state": null,
+        "country": "New Zealand",
+        "population": 161000,
+        "fun_facts": [
+            "Tauranga means 'a resting place' in the Māori language and it's one of New Zealand's fastest-growing cities!",
+            "Tauranga has Mount Maunganui, a cone-shaped mountain perfect for hiking with breathtaking views of the sparkling ocean and beaches!",
+            "Tauranga is super sunny with over 2,500 hours of sunshine every year - perfect for playing at the beach and swimming!",
+            "Tauranga has New Zealand's largest and most efficient port where huge ships load and unload goods from all around the world!",
+            "Tauranga's surrounding areas grow delicious kiwifruit and avocados that are shipped to people in countries far away!"
+        ]
     }
 }
