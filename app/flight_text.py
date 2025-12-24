@@ -42,10 +42,12 @@ SPECIAL_PLANE3_TEXT = (
 
 
 def get_plane_sentence_override(plane_index: int) -> Optional[str]:
-    """Return special holiday copy when applicable"""
+    """Return special holiday copy when applicable (7am GMT Dec 24 to 7am GMT Dec 25)"""
     now_utc = datetime.now(timezone.utc)
-    if plane_index == 3 and now_utc.month == 12 and now_utc.day == 24:
-        return SPECIAL_PLANE3_TEXT
+    if plane_index == 3 and now_utc.month == 12:
+        # Active from 7am GMT Dec 24 to 7am GMT Dec 25
+        if (now_utc.day == 24 and now_utc.hour >= 7) or (now_utc.day == 25 and now_utc.hour < 7):
+            return SPECIAL_PLANE3_TEXT
     return None
 
 
