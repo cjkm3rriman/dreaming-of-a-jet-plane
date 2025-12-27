@@ -3,6 +3,7 @@ Shared location detection utilities for consistent location handling across endp
 """
 
 import logging
+import os
 from fastapi import Request
 import httpx
 from ua_parser import user_agent_parser
@@ -82,7 +83,13 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
     # Cache miss or expired - fetch from API
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(f"https://ipapi.co/{ip}/json/")
+             # Build URL with optional API key
+            url = f"https://ipapi.co/{ip}/json/"
+            api_key = os.getenv("IPAPI_API_KEY")
+            if api_key:
+                url += f"?key={api_key}"
+
+            response = await client.get(url)
             if response.status_code == 200:
                 data = response.json()
                 
