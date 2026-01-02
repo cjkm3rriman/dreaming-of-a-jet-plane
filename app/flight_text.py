@@ -10,6 +10,7 @@ import re
 from .cities_database import get_fun_facts
 from .airport_database import get_airport_by_iata
 from .location_utils import uses_metric_system
+from .aircraft_database import get_phonetic_name
 
 
 # Mapping for converting digits to English words for TTS
@@ -254,8 +255,16 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     
     # Add aircraft type, capacity, speed, and altitude information
     aircraft_name = aircraft.get("aircraft") or "unknown aircraft type"
-    # Convert numbers in aircraft name to individual digits for TTS
-    aircraft_name_with_digits = convert_aircraft_name_digits(aircraft_name)
+    aircraft_icao = aircraft.get("aircraft_icao")
+
+    # Check if we have a phonetic name for this aircraft
+    # If yes, use it; otherwise fall back to digit conversion algorithm
+    phonetic_name = get_phonetic_name(aircraft_icao) if aircraft_icao else None
+    if phonetic_name:
+        aircraft_name_with_digits = phonetic_name
+    else:
+        # Convert numbers in aircraft name to individual digits for TTS
+        aircraft_name_with_digits = convert_aircraft_name_digits(aircraft_name)
     passenger_capacity = aircraft.get("passenger_capacity", 0)
     velocity_knots = aircraft.get("velocity", 0)
     velocity_kmh = round(velocity_knots * 1.852) if velocity_knots else 0  # Convert knots to km/h

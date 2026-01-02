@@ -8,13 +8,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
-from ..aircraft_database import get_aircraft_name, get_passenger_capacity
+from ..aircraft_database import get_aircraft_name, get_passenger_capacity, get_cruise_speed
 from ..airport_database import get_city_country, get_airport_by_iata
 from ..airline_database import get_airline_name, is_cargo_airline, is_private_airline
 from ..location_utils import calculate_distance, is_point_near_route
 
-ESTIMATED_SPEED_KMH = 400 * 1.60934  # Assume constant cruise speed
-LANDING_BUFFER_MINUTES = 30
+DEFAULT_CRUISE_SPEED_KMH = 840  # Typical narrow-body (A320/737)
+LANDING_BUFFER_MINUTES = 25
 AIRLINE_OVERRIDES = {
     "EDV": {"airline_icao": "DAL", "airline_iata": "DL"},
     "PDT": {"airline_icao": "EGF", "airline_iata": "MQ"},
@@ -62,15 +62,18 @@ AIRLABS_API_KEY = os.getenv("AIRLABS_API_KEY")
 AIRLABS_BASE_URL = os.getenv("AIRLABS_BASE_URL", "https://airlabs.co/api/v9")
 
 
-def _estimate_eta(distance_km: float) -> Optional[str]:
-    """Estimate ETA using a fixed cruise speed plus landing buffer"""
+def _estimate_eta(distance_km: float, aircraft_icao: Optional[str] = None) -> Optional[str]:
+    """Estimate ETA using aircraft-specific cruise speed plus landing buffer"""
     if distance_km is None or distance_km <= 0:
         return None
 
-    if ESTIMATED_SPEED_KMH <= 0:
-        return None
+    # Get aircraft-specific cruise speed, or use default
+    cruise_speed_kmh = get_cruise_speed(aircraft_icao) if aircraft_icao else DEFAULT_CRUISE_SPEED_KMH
 
-    travel_hours = distance_km / ESTIMATED_SPEED_KMH
+    if cruise_speed_kmh <= 0:
+        cruise_speed_kmh = DEFAULT_CRUISE_SPEED_KMH
+
+    travel_hours = distance_km / cruise_speed_kmh
     travel_hours += LANDING_BUFFER_MINUTES / 60
 
     eta_datetime = datetime.now(timezone.utc) + timedelta(hours=travel_hours)
@@ -261,7 +264,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                             distance_to_dest = calculate_distance(
                                 aircraft_lat, aircraft_lon, dest_lat, dest_lon
                             )
-                            eta_estimate = _estimate_eta(distance_to_dest)
+                            eta_estimate = _estimate_eta(distance_to_dest, aircraft_type)
                         except Exception as exc:
                             logger.debug(
                                 "Failed to estimate ETA for Airlabs flight %s: %s",

@@ -18,17 +18,23 @@
   "A19N": {
     "technical_name": "Airbus A319neo",
     "simple_name": "Airbus A319",
-    "passenger_capacity": 156
+    "passenger_capacity": 156,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A three nineteen"
   },
   "A20N": {
     "technical_name": "Airbus A320neo",
     "simple_name": "Airbus A320",
-    "passenger_capacity": 180
+    "passenger_capacity": 180,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A three twenty"
   },
   "A21N": {
     "technical_name": "Airbus A321neo",
     "simple_name": "Airbus A321",
-    "passenger_capacity": 220
+    "passenger_capacity": 220,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A three twenty one"
   },
   "A225": {
     "technical_name": "Antonov An-225 Mriya",
@@ -37,107 +43,143 @@
   "A306": {
     "technical_name": "Airbus A300-600 Freighter",
     "simple_name": "Airbus A300",
-    "passenger_capacity": 0
+    "passenger_capacity": 0,
+    "phonetic_name": "Airbus A three hundred"
   },
   "A30B": {
     "technical_name": "Airbus A300B2, A300B4 and A300C4",
     "simple_name": "Airbus A300",
-    "passenger_capacity": 266
+    "passenger_capacity": 266,
+    "phonetic_name": "Airbus A three hundred"
   },
   "A310": {
     "technical_name": "Airbus A310-300",
     "simple_name": "Airbus A310",
-    "passenger_capacity": 220
+    "passenger_capacity": 220,
+    "phonetic_name": "Airbus A three ten"
   },
   "A318": {
     "technical_name": "Airbus A318 (sharklets)",
     "simple_name": "Airbus A318",
-    "passenger_capacity": 132
+    "passenger_capacity": 132,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A three eighteen"
   },
   "A319": {
     "technical_name": "Airbus A319 (sharklets)",
     "simple_name": "Airbus A319",
-    "passenger_capacity": 156
+    "passenger_capacity": 156,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A three nineteen"
   },
   "A320": {
     "technical_name": "Airbus A320 (sharklets)",
     "simple_name": "Airbus A320",
-    "passenger_capacity": 180
+    "passenger_capacity": 180,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A three twenty"
   },
   "A321": {
     "technical_name": "Airbus A321 (sharklets)",
     "simple_name": "Airbus A321",
-    "passenger_capacity": 220
+    "passenger_capacity": 220,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A three twenty one"
   },
   "A332": {
     "technical_name": "Airbus A330-200 Freighter",
     "simple_name": "Airbus A330",
-    "passenger_capacity": 301
+    "passenger_capacity": 301,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three thirty"
   },
   "A333": {
     "technical_name": "Airbus A330-300 Freighter",
     "simple_name": "Airbus A330",
-    "passenger_capacity": 335
+    "passenger_capacity": 335,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three thirty"
   },
   "A337": {
     "technical_name": "Airbus A330-700 BelugaXL",
     "simple_name": "Airbus A330",
-    "passenger_capacity": 332
+    "passenger_capacity": 332,
+    "phonetic_name": "Airbus A three thirty"
   },
   "A338": {
     "technical_name": "Airbus A330-800",
     "simple_name": "Airbus A330",
-    "passenger_capacity": 257
+    "passenger_capacity": 257,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three thirty"
   },
   "A339": {
     "technical_name": "Airbus A330-900",
     "simple_name": "Airbus A330",
-    "passenger_capacity": 287
+    "passenger_capacity": 287,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three thirty"
   },
   "A342": {
     "technical_name": "Airbus A340-200",
     "simple_name": "Airbus A340",
-    "passenger_capacity": 263
+    "passenger_capacity": 263,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three forty"
   },
   "A343": {
     "technical_name": "Airbus A340-300",
     "simple_name": "Airbus A340",
-    "passenger_capacity": 303
+    "passenger_capacity": 303,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three forty"
   },
   "A345": {
     "technical_name": "Airbus A340-500",
     "simple_name": "Airbus A340",
-    "passenger_capacity": 316
+    "passenger_capacity": 316,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three forty"
   },
   "A346": {
     "technical_name": "Airbus A340-600",
     "simple_name": "Airbus A340",
-    "passenger_capacity": 372
+    "passenger_capacity": 372,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three forty"
   },
   "A359": {
     "technical_name": "Airbus A350-900",
     "simple_name": "Airbus A350",
-    "passenger_capacity": 325
+    "passenger_capacity": 325,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three fifty"
   },
   "A35K": {
     "technical_name": "Airbus A350-1000",
     "simple_name": "Airbus A350",
-    "passenger_capacity": 385
+    "passenger_capacity": 385,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three fifty"
   },
   "A388": {
     "technical_name": "Airbus A380-800",
     "simple_name": "Airbus A380 Super Jumbo",
-    "passenger_capacity": 525
+    "passenger_capacity": 525,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Airbus A three eighty Super Jumbo"
   },
   "A3ST": {
     "technical_name": "Airbus A300-600ST \"Super Transporter\" / \"Beluga\"",
     "simple_name": "Airbus A300",
-    "passenger_capacity": 0
+    "passenger_capacity": 0,
+    "phonetic_name": "Airbus A three hundred"
   },
   "A400": {
     "technical_name": "Airbus A400M Atlas",
     "simple_name": "Airbus A400M Atlas",
-    "passenger_capacity": 0
+    "passenger_capacity": 0,
+    "phonetic_name": "Airbus A four hundred M Atlas"
   },
   "A748": {
     "technical_name": "Hawker Siddeley HS 748",
@@ -181,11 +223,13 @@
   },
   "AT43": {
     "technical_name": "Aerospatiale/Alenia ATR 42-300 / 320",
-    "simple_name": "ATR 42"
+    "simple_name": "ATR 42",
+    "cruise_speed_kmh": 550
   },
   "AT45": {
     "technical_name": "Aerospatiale/Alenia ATR 42-500",
-    "simple_name": "ATR 42"
+    "simple_name": "ATR 42",
+    "cruise_speed_kmh": 550
   },
   "AT46": {
     "technical_name": "Aerospatiale/Alenia ATR 42-600",
@@ -193,19 +237,23 @@
   },
   "AT72": {
     "technical_name": "Aerospatiale/Alenia ATR 72-201/-202",
-    "simple_name": "ATR 72"
+    "simple_name": "ATR 72",
+    "cruise_speed_kmh": 550
   },
   "AT73": {
     "technical_name": "Aerospatiale/Alenia ATR 72-211/-212",
-    "simple_name": "ATR 72"
+    "simple_name": "ATR 72",
+    "cruise_speed_kmh": 550
   },
   "AT75": {
     "technical_name": "Aerospatiale/Alenia ATR 72-212A (500)",
-    "simple_name": "ATR 72"
+    "simple_name": "ATR 72",
+    "cruise_speed_kmh": 550
   },
   "AT76": {
     "technical_name": "Aerospatiale/Alenia ATR 72-212A (600)",
-    "simple_name": "ATR 72"
+    "simple_name": "ATR 72",
+    "cruise_speed_kmh": 550
   },
   "ATP": {
     "technical_name": "British Aerospace ATP",
@@ -218,22 +266,30 @@
   "B37M": {
     "technical_name": "Boeing 737 MAX 7",
     "simple_name": "Boeing 737 MAX",
-    "passenger_capacity": 172
+    "passenger_capacity": 172,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B38M": {
     "technical_name": "Boeing 737 MAX 8",
     "simple_name": "Boeing 737 MAX",
-    "passenger_capacity": 189
+    "passenger_capacity": 189,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B39M": {
     "technical_name": "Boeing 737 MAX 9",
     "simple_name": "Boeing 737 MAX",
-    "passenger_capacity": 193
+    "passenger_capacity": 193,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B3XM": {
     "technical_name": "Boeing 737 MAX 10",
     "simple_name": "Boeing 737 MAX",
-    "passenger_capacity": 204
+    "passenger_capacity": 204,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B461": {
     "technical_name": "BAe 146-100",
@@ -255,172 +311,232 @@
   "B703": {
     "technical_name": "Boeing 707",
     "simple_name": "Boeing 707",
-    "passenger_capacity": 189
+    "passenger_capacity": 189,
+    "phonetic_name": "Boeing seven zero seven"
   },
   "B712": {
     "technical_name": "Boeing 717",
     "simple_name": "Boeing 717",
-    "passenger_capacity": 134
+    "passenger_capacity": 134,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven one seven"
   },
   "B720": {
     "technical_name": "Boeing 720B",
     "simple_name": "Boeing 720B",
-    "passenger_capacity": 165
+    "passenger_capacity": 165,
+    "phonetic_name": "Boeing seven twenty"
   },
   "B721": {
     "technical_name": "Boeing 727-100",
     "simple_name": "Boeing 727-100",
-    "passenger_capacity": 131
+    "passenger_capacity": 131,
+    "phonetic_name": "Boeing seven two seven"
   },
   "B722": {
     "technical_name": "Boeing 727-200",
     "simple_name": "Boeing 727-200",
-    "passenger_capacity": 189
+    "passenger_capacity": 189,
+    "phonetic_name": "Boeing seven two seven"
   },
   "B732": {
     "technical_name": "Boeing 737-200 Combi",
     "simple_name": "Boeing 737",
-    "passenger_capacity": 130
+    "passenger_capacity": 130,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B733": {
     "technical_name": "Boeing 737-300 Freighter",
     "simple_name": "Boeing 737",
-    "passenger_capacity": 149
+    "passenger_capacity": 149,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B734": {
     "technical_name": "Boeing 737-400 Freighter",
     "simple_name": "Boeing 737",
-    "passenger_capacity": 168
+    "passenger_capacity": 168,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B735": {
     "technical_name": "Boeing 737-500 Winglets",
     "simple_name": "Boeing 737",
-    "passenger_capacity": 132
+    "passenger_capacity": 132,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B736": {
     "technical_name": "Boeing 737-600",
     "simple_name": "Boeing 737",
-    "passenger_capacity": 132
+    "passenger_capacity": 132,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B737": {
     "technical_name": "Boeing 737-700 Winglets",
     "simple_name": "Boeing 737",
-    "passenger_capacity": 149
+    "passenger_capacity": 149,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B738": {
     "technical_name": "Boeing 737-800 Freighter",
     "simple_name": "Boeing 737",
-    "passenger_capacity": 175
+    "passenger_capacity": 175,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B739": {
     "technical_name": "Boeing 737-900 Winglets",
     "simple_name": "Boeing 737",
-    "passenger_capacity": 189
+    "passenger_capacity": 189,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven three seven"
   },
   "B741": {
     "technical_name": "Boeing 747-100 Freighter",
     "simple_name": "Boeing 747 Jumbo Jet",
-    "passenger_capacity": 366
+    "passenger_capacity": 366,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven four seven Jumbo Jet"
   },
   "B742": {
     "technical_name": "Boeing 747-200F",
     "simple_name": "Boeing 747 Jumbo Jet",
-    "passenger_capacity": 366
+    "passenger_capacity": 366,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven four seven Jumbo Jet"
   },
   "B743": {
     "technical_name": "Boeing 747-300M",
     "simple_name": "Boeing 747 Jumbo Jet",
-    "passenger_capacity": 366
+    "passenger_capacity": 366,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven four seven Jumbo Jet"
   },
   "B744": {
     "technical_name": "Boeing 747-400F / Boeing 747-400ERF",
     "simple_name": "Boeing 747 Jumbo Jet",
-    "passenger_capacity": 366
+    "passenger_capacity": 366,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven four seven Jumbo Jet"
   },
   "B748": {
     "technical_name": "Boeing 747-8F",
     "simple_name": "Boeing 747 Jumbo Jet",
-    "passenger_capacity": 467
+    "passenger_capacity": 467,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven four seven Jumbo Jet"
   },
   "B74R": {
     "technical_name": "Boeing 747SR Freighter",
     "simple_name": "Boeing 747 Jumbo Jet",
-    "passenger_capacity": 366
+    "passenger_capacity": 366,
+    "phonetic_name": "Boeing seven four seven Jumbo Jet"
   },
   "B74S": {
     "technical_name": "Boeing 747SP",
     "simple_name": "Boeing 747 Jumbo Jet",
-    "passenger_capacity": 366
+    "passenger_capacity": 366,
+    "phonetic_name": "Boeing seven four seven Jumbo Jet"
   },
   "B752": {
     "technical_name": "Boeing 757-200 Winglets",
     "simple_name": "Boeing 757",
-    "passenger_capacity": 200
+    "passenger_capacity": 200,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven five seven"
   },
   "B753": {
     "technical_name": "Boeing 757-300",
     "simple_name": "Boeing 757",
-    "passenger_capacity": 243
+    "passenger_capacity": 243,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Boeing seven five seven"
   },
   "B762": {
     "technical_name": "Boeing 767-200 Freighter / Boeing 767-200ER",
     "simple_name": "Boeing 767",
-    "passenger_capacity": 216
+    "passenger_capacity": 216,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven six seven"
   },
   "B763": {
     "technical_name": "Boeing 767-300 Freighter",
     "simple_name": "Boeing 767",
-    "passenger_capacity": 269
+    "passenger_capacity": 269,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven six seven"
   },
   "B764": {
     "technical_name": "Boeing 767-400ER",
     "simple_name": "Boeing 767",
-    "passenger_capacity": 245
+    "passenger_capacity": 245,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven six seven"
   },
   "B772": {
     "technical_name": "Boeing 777-200 / Boeing 777-200ER",
     "simple_name": "Boeing 777",
-    "passenger_capacity": 305
+    "passenger_capacity": 305,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven seven seven"
   },
   "B773": {
     "technical_name": "Boeing 777-300",
     "simple_name": "Boeing 777",
-    "passenger_capacity": 350
+    "passenger_capacity": 350,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven seven seven"
   },
   "B778": {
     "technical_name": "Boeing 777-8",
     "simple_name": "Boeing 777",
-    "passenger_capacity": 350
+    "passenger_capacity": 350,
+    "phonetic_name": "Boeing seven seven seven"
   },
   "B779": {
     "technical_name": "Boeing 777-9",
     "simple_name": "Boeing 777",
-    "passenger_capacity": 400
+    "passenger_capacity": 400,
+    "phonetic_name": "Boeing seven seven seven"
   },
   "B77L": {
     "technical_name": "Boeing 777-200LR",
     "simple_name": "Boeing 777",
-    "passenger_capacity": 301
+    "passenger_capacity": 301,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven seven seven"
   },
   "B77W": {
     "technical_name": "Boeing 777-300ER",
     "simple_name": "Boeing 777",
-    "passenger_capacity": 350
+    "passenger_capacity": 350,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven seven seven"
   },
   "B788": {
     "technical_name": "Boeing 787-8",
     "simple_name": "Boeing 787 Dreamliner",
-    "passenger_capacity": 234
+    "passenger_capacity": 234,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven eight seven Dreamliner"
   },
   "B789": {
     "technical_name": "Boeing 787-9",
     "simple_name": "Boeing 787 Dreamliner",
-    "passenger_capacity": 290
+    "passenger_capacity": 290,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven eight seven Dreamliner"
   },
   "B78X": {
     "technical_name": "Boeing 787-10",
     "simple_name": "Boeing 787 Dreamliner",
-    "passenger_capacity": 336
+    "passenger_capacity": 336,
+    "cruise_speed_kmh": 905,
+    "phonetic_name": "Boeing seven eight seven Dreamliner"
   },
   "BA11": {
     "technical_name": "British Aerospace (BAC) One Eleven",
@@ -429,11 +545,15 @@
   "BCS1": {
     "technical_name": "Bombardier CSeries CS100 / Airbus A220-100",
     "simple_name": "Airbus A220",
-    "passenger_capacity": 122
+    "passenger_capacity": 122,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A two twenty"
   },
   "BCS3": {
     "technical_name": "Bombardier CSeries CS300 / Airbus A220-300",
-    "simple_name": "Airbus A220"
+    "simple_name": "Airbus A220",
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A two twenty"
   },
   "BE20": {
     "technical_name": "Beechcraft (Super) King Air 200",
@@ -458,7 +578,8 @@
   "BLCF": {
     "technical_name": "Boeing 747-400 LCF Dreamlifter",
     "simple_name": "Boeing 747 Dreamlifter",
-    "passenger_capacity": 2
+    "passenger_capacity": 2,
+    "phonetic_name": "Boeing seven four seven"
   },
   "C130": {
     "technical_name": "Lockheed L-182 / 282 / 382 (L-100) Hercules",
@@ -467,7 +588,8 @@
   "C208": {
     "technical_name": "Cessna 208 Caravan",
     "simple_name": "Cessna 208 Caravan",
-    "passenger_capacity": 9
+    "passenger_capacity": 9,
+    "cruise_speed_kmh": 350
   },
   "C212": {
     "technical_name": "CASA / IPTN 212 Aviocar",
@@ -476,17 +598,20 @@
   "C25A": {
     "technical_name": "Cessna Citation CJ2",
     "simple_name": "Cessna CJ2",
-    "passenger_capacity": 7
+    "passenger_capacity": 7,
+    "cruise_speed_kmh": 850
   },
   "C25B": {
     "technical_name": "Cessna Citation CJ3",
     "simple_name": "Cessna CJ3",
-    "passenger_capacity": 7
+    "passenger_capacity": 7,
+    "cruise_speed_kmh": 850
   },
   "C25C": {
     "technical_name": "Cessna Citation CJ4",
     "simple_name": "Cessna CJ4",
-    "passenger_capacity": 8
+    "passenger_capacity": 8,
+    "cruise_speed_kmh": 850
   },
   "C30J": {
     "technical_name": "Lockheed Martin C-130J Hercules",
@@ -525,7 +650,8 @@
   "C56X": {
     "technical_name": "Cessna Citation Excel",
     "simple_name": "Cessna Citation Excel",
-    "passenger_capacity": 8
+    "passenger_capacity": 8,
+    "cruise_speed_kmh": 850
   },
   "C5M": {
     "technical_name": "Lockheed C-5M Super Galaxy",
@@ -539,17 +665,20 @@
   "C680": {
     "technical_name": "Cessna Citation Sovereign",
     "simple_name": "Cessna Citation Sovereign",
-    "passenger_capacity": 8
+    "passenger_capacity": 8,
+    "cruise_speed_kmh": 850
   },
   "C68A": {
     "technical_name": "Cessna Citation Latitude",
     "simple_name": "Cessna Citation Latitude",
-    "passenger_capacity": 9
+    "passenger_capacity": 9,
+    "cruise_speed_kmh": 850
   },
   "C700": {
     "technical_name": "Cessna Citation Longitude",
     "simple_name": "Cessna Citation Longitude",
-    "passenger_capacity": 9
+    "passenger_capacity": 9,
+    "cruise_speed_kmh": 850
   },
   "C750": {
     "technical_name": "Cessna Citation X",
@@ -566,11 +695,13 @@
   },
   "CL30": {
     "technical_name": "Bombardier BD-100 Challenger 300",
-    "simple_name": "Bombardier Challenger"
+    "simple_name": "Bombardier Challenger",
+    "cruise_speed_kmh": 850
   },
   "CL60": {
     "technical_name": "Canadair Challenger 600",
-    "simple_name": "Canadair Challenger"
+    "simple_name": "Canadair Challenger",
+    "cruise_speed_kmh": 850
   },
   "CN35": {
     "technical_name": "CASA/IPTN CN-235",
@@ -582,19 +713,23 @@
   },
   "CRJ2": {
     "technical_name": "Canadair Regional Jet 200",
-    "simple_name": "Canadair Regional Jet 200"
+    "simple_name": "Canadair Regional Jet 200",
+    "cruise_speed_kmh": 760
   },
   "CRJ7": {
     "technical_name": "Canadair Regional Jet 700 | Regional Jet 550",
-    "simple_name": "Canadair Regional Jet 700"
+    "simple_name": "Canadair Regional Jet 700",
+    "cruise_speed_kmh": 760
   },
   "CRJ9": {
     "technical_name": "Canadair Regional Jet 900",
-    "simple_name": "Canadair Regional Jet 900"
+    "simple_name": "Canadair Regional Jet 900",
+    "cruise_speed_kmh": 760
   },
   "CRJX": {
     "technical_name": "Canadair Regional Jet 1000",
-    "simple_name": "Canadair Regional Jet 1000"
+    "simple_name": "Canadair Regional Jet 1000",
+    "cruise_speed_kmh": 760
   },
   "CVLT": {
     "technical_name": "Convair CV-580, Convair CV-600, Convair CV-640",
@@ -646,19 +781,23 @@
   },
   "DH8A": {
     "technical_name": "De Havilland Canada DHC-8-100 Dash 8 / 8Q",
-    "simple_name": "De Havilland Canada Dash 8"
+    "simple_name": "De Havilland Canada Dash 8",
+    "cruise_speed_kmh": 550
   },
   "DH8B": {
     "technical_name": "De Havilland Canada DHC-8-200 Dash 8 / 8Q",
-    "simple_name": "De Havilland Canada Dash 8"
+    "simple_name": "De Havilland Canada Dash 8",
+    "cruise_speed_kmh": 550
   },
   "DH8C": {
     "technical_name": "De Havilland Canada DHC-8-300 Dash 8 / 8Q",
-    "simple_name": "De Havilland Canada Dash 8"
+    "simple_name": "De Havilland Canada Dash 8",
+    "cruise_speed_kmh": 550
   },
   "DH8D": {
     "technical_name": "De Havilland Canada DHC-8-400 Dash 8Q",
-    "simple_name": "De Havilland Canada Dash 8"
+    "simple_name": "De Havilland Canada Dash 8",
+    "cruise_speed_kmh": 550
   },
   "DHC5": {
     "technical_name": "De Havilland Canada DHC-5 Buffalo",
@@ -686,7 +825,8 @@
   },
   "E145": {
     "technical_name": "Embraer RJ145",
-    "simple_name": "Embraer 145"
+    "simple_name": "Embraer 145",
+    "cruise_speed_kmh": 760
   },
   "E45X": {
     "technical_name": "Embraer ERJ-145XR",
@@ -694,23 +834,28 @@
   },
   "E170": {
     "technical_name": "Embraer 170",
-    "simple_name": "Embraer 170"
+    "simple_name": "Embraer 170",
+    "cruise_speed_kmh": 760
   },
   "E190": {
     "technical_name": "Embraer 190 / Lineage 1000",
-    "simple_name": "Embraer 190"
+    "simple_name": "Embraer 190",
+    "cruise_speed_kmh": 760
   },
   "E195": {
     "technical_name": "Embraer 195",
-    "simple_name": "Embraer 195"
+    "simple_name": "Embraer 195",
+    "cruise_speed_kmh": 760
   },
   "E290": {
     "technical_name": "Embraer E190-E2",
-    "simple_name": "Embraer E190"
+    "simple_name": "Embraer E190",
+    "cruise_speed_kmh": 760
   },
   "E295": {
     "technical_name": "Embraer E195-E2",
-    "simple_name": "Embraer E195-E2"
+    "simple_name": "Embraer E195-E2",
+    "cruise_speed_kmh": 760
   },
   "E35L": {
     "technical_name": "Embraer Legacy 600 / Legacy 650",
@@ -718,7 +863,8 @@
   },
   "E50P": {
     "technical_name": "Embraer Phenom 100",
-    "simple_name": "Embraer Phenom "
+    "simple_name": "Embraer Phenom ",
+    "cruise_speed_kmh": 850
   },
   "E545": {
     "technical_name": "Embraer Legacy 450 / Praetor 500",
@@ -730,15 +876,18 @@
   },
   "E55P": {
     "technical_name": "Embraer Phenom 300",
-    "simple_name": "Embraer Phenom"
+    "simple_name": "Embraer Phenom",
+    "cruise_speed_kmh": 850
   },
   "E75L": {
     "technical_name": "Embraer 175 (long wing)",
-    "simple_name": "Embraer 175"
+    "simple_name": "Embraer 175",
+    "cruise_speed_kmh": 760
   },
   "E75S": {
     "technical_name": "Embraer 175 (short wing)",
-    "simple_name": "Embraer 175 Short Wing"
+    "simple_name": "Embraer 175 Short Wing",
+    "cruise_speed_kmh": 760
   },
   "EA50": {
     "technical_name": "Eclipse 500",
@@ -807,23 +956,28 @@
   },
   "GL5T": {
     "technical_name": "Bombardier BD-700 Global 5000",
-    "simple_name": "Bombardier Global 5000"
+    "simple_name": "Bombardier Global 5000",
+    "cruise_speed_kmh": 850
   },
   "GLEX": {
     "technical_name": "Bombardier Global Express / Raytheon Sentinel",
-    "simple_name": "Raytheon Sentinel"
+    "simple_name": "Raytheon Sentinel",
+    "cruise_speed_kmh": 850
   },
   "GLF4": {
     "technical_name": "Gulfstream IV",
-    "simple_name": "Gulfstream IV"
+    "simple_name": "Gulfstream IV",
+    "cruise_speed_kmh": 850
   },
   "GLF5": {
     "technical_name": "Gulfstream V",
-    "simple_name": "Gulfstream V"
+    "simple_name": "Gulfstream V",
+    "cruise_speed_kmh": 850
   },
   "GLF6": {
     "technical_name": "Gulfstream G650",
-    "simple_name": "Gulfstream G650"
+    "simple_name": "Gulfstream G650",
+    "cruise_speed_kmh": 850
   },
   "H25B": {
     "technical_name": "British Aerospace 125 series / Hawker/Raytheon 700/800/800XP/850/900",
@@ -904,7 +1058,8 @@
   },
   "MD11": {
     "technical_name": "McDonnell Douglas MD-11C",
-    "simple_name": "McDonnell Douglas MD-11C"
+    "simple_name": "McDonnell Douglas MD-11C",
+    "cruise_speed_kmh": 905
   },
   "MD81": {
     "technical_name": "McDonnell Douglas MD-81",
@@ -990,7 +1145,8 @@
   },
   "SF34": {
     "technical_name": "Saab SF340A/B",
-    "simple_name": "Saab 340"
+    "simple_name": "Saab 340",
+    "cruise_speed_kmh": 550
   },
   "SH33": {
     "technical_name": "Shorts SD.330",
