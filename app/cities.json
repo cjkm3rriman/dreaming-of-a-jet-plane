@@ -2203,17 +2203,17 @@
             "Lubbock has the most amazing barbecue with brisket so tender and smoky it melts in your mouth like butter!"
         ]
     },
-    "Luxembourg City": {
-        "city": "Luxembourg City",
+    "Luxembourg": {
+        "city": "Luxembourg",
         "state": null,
         "country": "Luxembourg",
         "population": 136208,
         "fun_facts": [
-            "Luxembourg City has the highest GDP per capita in the entire world, making it the richest city on Earth!",
-            "The city was called the 'Gibraltar of the North' because it had one of the strongest fortresses in Europe for 900 years!",
-            "Over 70% of people living in Luxembourg City are from other countries - it's like a mini United Nations!",
+            "Luxembourg has the highest GDP per capita in the entire world, making it the richest city on Earth!",
+            "Luxembourg was called the 'Gibraltar of the North' because it had one of the strongest fortresses in Europe for 900 years!",
+            "Over 70% of people living in Luxembourg are from other countries - it's like a mini United Nations!",
             "All kids in Luxembourg learn at least 3 languages in school: Luxembourgish, German, and French - they're super smart!",
-            "The historic old city became a UNESCO World Heritage Site because of its amazingly preserved medieval fortifications!"
+            "The historic old city in Luxembourg became a UNESCO World Heritage Site because of its amazingly preserved medieval fortifications!"
         ]
     },
     "Lyon": {
@@ -4765,6 +4765,110 @@
             "Tauranga is super sunny with over 2,500 hours of sunshine every year - perfect for playing at the beach and swimming!",
             "Tauranga has New Zealand's largest and most efficient port where huge ships load and unload goods from all around the world!",
             "Tauranga's surrounding areas grow delicious kiwifruit and avocados that are shipped to people in countries far away!"
+        ]
+    },
+    "Belize City": {
+        "city": "Belize City",
+        "state": null,
+        "country": "Belize",
+        "population": 60000,
+        "fun_facts": [
+            "Belize City is the largest city in the only Central American country where English is the official language!",
+            "Belize City used to be the capital until a huge hurricane hit in 1961, and the government moved to a safer place inland!",
+            "Just off the coast of Belize City lies the Belize Barrier Reef, the world's second largest coral reef where colorful fish swim!",
+            "Belize City is home to jaguars, pumas, and ocelots - some of the coolest big cats in the world!",
+            "The Cockscomb Basin near Belize City is the world's first jaguar preserve where these magnificent spotted cats are protected!"
+        ]
+    },
+    "Georgetown, Cayman Islands": {
+        "city": "Georgetown",
+        "state": null,
+        "country": "Cayman Islands",
+        "population": 40957,
+        "fun_facts": [
+            "Georgetown is named after King George III and is the biggest city in all the British Overseas Territories!",
+            "Georgetown has the famous Seven Mile Beach made of coral sand that sparkles like sugar in the sunshine!",
+            "People from over 100 different countries live in Georgetown, making it like a rainbow of cultures and languages!",
+            "Near Georgetown is Stingray City where you can actually swim with friendly stingrays in crystal-clear water!",
+            "Georgetown has tides that rise and fall up to 10 meters - that's as tall as a three-story building!"
+        ]
+    },
+    "Saint Helier": {
+        "city": "Saint Helier",
+        "state": null,
+        "country": "Jersey",
+        "population": 42166,
+        "fun_facts": [
+            "Saint Helier is named after a brave monk who lived on a tidal island 1,500 years ago until pirates attacked him!",
+            "Saint Helier has a castle called Elizabeth Castle that sits on an island you can walk to when the tide goes out!",
+            "In Saint Helier's town center stands a statue of King George II that's the starting point for measuring all distances on Jersey!",
+            "Saint Helier was built on what used to be wet marshland and sand dunes - imagine a city built on a giant sandbox!",
+            "Saint Helier has a coat of arms showing two golden axes that represent the brave saint's story from long ago!"
+        ]
+    },
+    "Saint Martin": {
+        "city": "Saint Martin",
+        "state": null,
+        "country": "St Martin",
+        "population": 25000,
+        "fun_facts": [
+            "Saint Martin is the smallest island in the world shared by two countries - France and the Netherlands!",
+            "Saint Martin was discovered by Christopher Columbus on November 11, 1493, on St. Martin of Tours' feast day!",
+            "Saint Martin has the highest peak called Pic Paradis at 424 meters, like stacking 140 grown-ups on top of each other!",
+            "More than 100 species of birds live on Saint Martin, including colorful tropical parrots and pelicans!",
+            "Saint Martin is the only place in the world where France and the Netherlands share a border - you can hop between two countries on one island!"
+        ]
+    },
+    "Saint Peter Port": {
+        "city": "Saint Peter Port",
+        "state": null,
+        "country": "Guernsey",
+        "population": 19282,
+        "fun_facts": [
+            "Saint Peter Port has Castle Cornet, an 800-year-old fortress with incredible views of three neighboring islands!",
+            "The famous French writer Victor Hugo lived in Saint Peter Port from 1855 to 1870, and his house is now a museum!",
+            "Saint Peter Port has tides that can rise and fall by 10 meters (33 feet) in just a few hours - like filling and emptying a giant bathtub!",
+            "Saint Peter Port has steep, narrow streets and steps built on hillsides that make it feel like climbing a giant staircase city!",
+            "The Candie Gardens in Saint Peter Port is an award-winning Victorian garden with statues of Queen Victoria and Victor Hugo!"
+        ]
+    },
+    "San Jose, Costa Rica": {
+        "city": "San Jose",
+        "state": null,
+        "country": "Costa Rica",
+        "population": 1502640,
+        "fun_facts": [
+            "San Jose is in the middle of a tropical rainforest where sloths hang from trees and toucans fly overhead!",
+            "Costa Rica has the world's first sanctuary just for sloths, and two of the world's six sloth species live near San Jose!",
+            "San Jose's favorite food is Gallo Pinto - a yummy mixture of fried rice and black beans that sounds like 'spotted rooster'!",
+            "People in San Jose say 'Pura Vida' which means 'pure life' and describes their happy, relaxed way of enjoying every day!",
+            "San Jose has a mysterious mansion called the Winchester Mystery House with stairs that go nowhere and doors that open to walls!"
+        ]
+    },
+    "Santo Domingo": {
+        "city": "Santo Domingo",
+        "state": null,
+        "country": "the Dominican Republic",
+        "population": 3648110,
+        "fun_facts": [
+            "Santo Domingo is the oldest city in the entire Western Hemisphere, founded way back in 1492!",
+            "Santo Domingo's Colonial Zone is so special and historic that UNESCO named it a World Heritage Site!",
+            "Baseball is the most popular sport in Santo Domingo, and the city has two professional baseball teams!",
+            "The Dominican Republic has some of the world's richest deposits of amber - fossilized tree sap that can trap insects from millions of years ago!",
+            "Santo Domingo is where the merengue dance was born in the 1800s, with a unique bouncy rhythm that makes everyone want to dance!"
+        ]
+    },
+    "Varadero": {
+        "city": "Varadero",
+        "state": "Matanzas",
+        "country": "Cuba",
+        "population": 20000,
+        "fun_facts": [
+            "Varadero has a stunning 21-kilometer (13-mile) white sand beach that's been named one of the world's best beaches!",
+            "Varadero is also called 'Playa Azul' which means Blue Beach because the water is such a beautiful bright blue color!",
+            "Varadero sits at the very northern tip of Cuba - it's the island's northernmost point!",
+            "The famous gangster Al Capone used to visit Varadero's beaches back in the old days!",
+            "Varadero has a dolphinarium where you can watch dolphins do amazing tricks and even swim with them!"
         ]
     }
 }
