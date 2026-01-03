@@ -63,7 +63,7 @@ TTS_PROVIDERS: Dict[str, ProviderDefinition] = {
         "is_configured": inworld_is_configured,
         "file_extension": "mp3",
         "mime_type": "audio/mpeg",
-        "voice_folder": "hamish",
+        "voice_folder": "ronald",
     },
 }
 
