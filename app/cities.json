@@ -4870,5 +4870,148 @@
             "The famous gangster Al Capone used to visit Varadero's beaches back in the old days!",
             "Varadero has a dolphinarium where you can watch dolphins do amazing tricks and even swim with them!"
         ]
+    },
+    "Gisborne": {
+        "city": "Gisborne",
+        "state": null,
+        "country": "New Zealand",
+        "population": 38100,
+        "fun_facts": [
+            "Gisborne is the first city in the world to see the sunrise every day because it's so far east!",
+            "Gisborne is called the 'City of Rivers' because three rivers meet there - the Waimata, Taruheru, and Tūranganui!",
+            "Gisborne has an airport where train tracks run right across the runway - it's one of only a few airports in the world with this unique feature!",
+            "Gisborne's Tūranganui River is the shortest river in New Zealand at only 1.2 kilometers long!",
+            "Gisborne is home to Eastwoodhill Arboretum, New Zealand's National Arboretum, which covers over 130 hectares of amazing trees!"
+        ]
+    },
+    "Abbotsford": {
+        "city": "Abbotsford",
+        "state": "British Columbia",
+        "country": "Canada",
+        "population": 178406,
+        "fun_facts": [
+            "Abbotsford is the largest city in British Columbia by land area - it's so big you could fit many cities inside it!",
+            "Abbotsford has the oldest Sikh temple in all of Canada and North America, called the Gur Sikh Temple, which opened in 1911!",
+            "Abbotsford's city flag has a strawberry blossom in the center because the area grows so many delicious berries!",
+            "Abbotsford is so multicultural that Punjabi is the second most common language spoken, with about 22.6% of people speaking it at home!",
+            "Abbotsford was named after a famous railway worker named Henry Braithwaite Abbott and a Scottish writer's home - it's a name with two stories!"
+        ]
+    },
+    "Charlotte Amalie": {
+        "city": "Charlotte Amalie",
+        "state": null,
+        "country": "United States Virgin Islands",
+        "population": 8194,
+        "fun_facts": [
+            "Charlotte Amalie is the capital of the U.S. Virgin Islands and was named after a Danish queen in 1691!",
+            "Charlotte Amalie was once called Taphus, which means 'beer house' in Danish - imagine a whole city named after a place to get drinks!",
+            "Charlotte Amalie has Blackbeard's Castle, a U.S. National Historic Landmark where the famous pirate Blackbeard used to hide!",
+            "Charlotte Amalie is home to the second oldest synagogue in the entire United States!",
+            "Charlotte Amalie has warm tropical weather all year round with temperatures between 77°F and 88°F - it's like endless summer!"
+        ]
+    },
+    "Manama": {
+        "city": "Manama",
+        "state": null,
+        "country": "Bahrain",
+        "population": 759000,
+        "fun_facts": [
+            "Manama is the capital of Bahrain, an island country connected to Saudi Arabia by a super long bridge called the King Fahd Causeway!",
+            "Manama became the capital when Bahrain became independent in 1971, making it a relatively young capital city!",
+            "Manama hosts the famous Bahrain Grand Prix where Formula One race cars zoom around at incredible speeds!",
+            "Manama is home to the Tree of Life, a 400-year-old tree that's 9.75 meters high and grows all alone in the desert with no water nearby - it's a mystery!",
+            "Manama is a diverse city where people from all over the world come to trade, just like they have for hundreds of years!"
+        ]
+    },
+    "Vieux Fort": {
+        "city": "Vieux Fort",
+        "state": null,
+        "country": "Saint Lucia",
+        "population": 4574,
+        "fun_facts": [
+            "Vieux Fort means 'Old Fort' in French and got its name from the very first fort built in Saint Lucia way back in 1605!",
+            "Vieux Fort is home to Saint Lucia's international airport called Hewanorra - that's the old Amerindian name for the whole island!",
+            "Vieux Fort has the biggest fish market in all of Saint Lucia where you can see fishermen bring in their fresh catches!",
+            "Vieux Fort has a secret World War II tunnel that runs from Clark Street to St. Judes Hospital that many locals don't even know about!",
+            "Vieux Fort's Black Bay is named after the famous pirate Blackbeard, who legend says buried his treasure there!"
+        ]
+    },
+    "Port of Spain": {
+        "city": "Port of Spain",
+        "state": null,
+        "country": "Trinidad and Tobago",
+        "population": 49867,
+        "fun_facts": [
+            "Port of Spain is the capital of Trinidad and Tobago and has a quarter of a million people visiting during the day for work and fun!",
+            "Port of Spain is home to the biggest and most successful stock exchange in the entire Caribbean!",
+            "Port of Spain has some of the tallest skyscrapers in the Caribbean that tower over the city!",
+            "Port of Spain's Caroni Swamp is a wetland home to over 160 bird species including the scarlet ibis, which is Trinidad and Tobago's national bird!",
+            "Port of Spain's Saint James neighborhood is called 'The City that never sleeps' because of all its exciting nightlife and activities!"
+        ]
+    },
+    "Wilmington": {
+        "city": "Wilmington",
+        "state": "North Carolina",
+        "country": "United States",
+        "population": 125284,
+        "fun_facts": [
+            "Wilmington is a historic port city on North Carolina's coast that started growing rapidly in the 1990s because of movies and TV shows filmed there!",
+            "Wilmington's International Airport serves over 1.4 million passengers every year, setting new records in 2024!",
+            "Wilmington is connected to the rest of North Carolina by Interstate 40, which helped the city grow into what it is today!",
+            "Wilmington sits right on the Cape Fear River where it meets the Atlantic Ocean, making it perfect for ships and boats!",
+            "Wilmington has beautiful beaches nearby where you can play in the sand and swim in the warm Atlantic waters!"
+        ]
+    },
+    "Grande Prairie": {
+        "city": "Grande Prairie",
+        "state": "Alberta",
+        "country": "Canada",
+        "population": 70385,
+        "fun_facts": [
+            "Grande Prairie is called the 'Swan City' because trumpeter swans migrate and nest nearby in the summer - they're the city's official symbol!",
+            "Grande Prairie is Canada's northernmost city with over 50,000 residents, making it a big city way up north!",
+            "Grande Prairie was once known as Buffalo Plains because huge herds of buffalo used to roam across the large prairie!",
+            "Grande Prairie is a diverse city with people from more than 85 different cultural and ethnic groups living together!",
+            "Grande Prairie has dinosaur fossils found north and west of the city, showing that dinosaurs once walked where the city stands today!"
+        ]
+    },
+    "Huatulco": {
+        "city": "Huatulco",
+        "state": "Oaxaca",
+        "country": "Mexico",
+        "population": 50000,
+        "fun_facts": [
+            "Huatulco has 36 beaches and nine beautiful bays - you could visit a different beach almost every day for over a month!",
+            "Huatulco has 330 days of sunshine per year, making it one of the sunniest places you could ever visit!",
+            "Huatulco was declared a UNESCO Biosphere Reserve in 2006, protecting 70% of the area's special plants and animals!",
+            "Huatulco has only 3 traffic lights in the entire area - quite different from big cities with hundreds of lights!",
+            "Huatulco is connected to ancient Mexican legends about the Toltecs and the feathered serpent god Quetzalcoatl!"
+        ]
+    },
+    "Blenheim": {
+        "city": "Blenheim",
+        "state": null,
+        "country": "New Zealand",
+        "population": 29800,
+        "fun_facts": [
+            "Blenheim is one of the sunniest places in all of New Zealand with warm, dry summers perfect for playing outside!",
+            "Blenheim is the heart of New Zealand's wine country with over 50 vineyards growing grapes in the surrounding areas!",
+            "Blenheim got its name from the Battle of Blenheim in 1704, where the Duke of Marlborough won a famous victory!",
+            "Blenheim's Māori name is Waiharakeke, which means 'flax stream' - imagine a stream surrounded by beautiful flax plants!",
+            "Blenheim hosts the Classic Fighters Marlborough airshow every two years at Omaka Aerodrome with old warplanes from World War One!"
+        ]
+    },
+    "Kerikeri": {
+        "city": "Kerikeri",
+        "state": null,
+        "country": "New Zealand",
+        "population": 8380,
+        "fun_facts": [
+            "Kerikeri is called the 'Cradle of the Nation' because it has New Zealand's first permanent mission station and most historic buildings!",
+            "Kerikeri has the oldest fruit tree in all of New Zealand - a pear tree planted in 1819 that still grows pears today!",
+            "Kerikeri is where the first grape vines in New Zealand were planted way back on September 25, 1819 by Samuel Marsden!",
+            "Kerikeri has the Mission House, the oldest wooden building still standing in New Zealand, and the Stone Store, the oldest stone building!",
+            "Kerikeri was the first place in New Zealand where a plough was used to farm the land on May 3, 1820!"
+        ]
     }
 }

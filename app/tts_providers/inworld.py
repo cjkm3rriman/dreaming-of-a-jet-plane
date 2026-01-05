@@ -2,11 +2,13 @@
 
 import base64
 import binascii
+import io
 import logging
 import os
 from typing import Optional, Tuple
 
 import httpx
+from pydub import AudioSegment
 
 DISPLAY_NAME = "Inworld TTS"
 
@@ -87,10 +89,24 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
                 return b"", "Inworld API response missing audioContent"
 
             try:
-                return base64.b64decode(audio_content), ""
+                audio_bytes = base64.b64decode(audio_content)
+
+                # Prepend 1 second of silence to the audio
+                audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="mp3")
+                silence = AudioSegment.silent(duration=1000)  # 1000ms = 1 second
+                audio_with_pause = silence + audio
+
+                # Export back to bytes
+                output_buffer = io.BytesIO()
+                audio_with_pause.export(output_buffer, format="mp3")
+                return output_buffer.getvalue(), ""
+
             except binascii.Error as exc:
                 logger.error("Failed to decode Inworld audio: %s", exc)
                 return b"", "Failed to decode Inworld audio"
+            except Exception as exc:
+                logger.error("Failed to process Inworld audio with silence: %s", exc)
+                return b"", f"Failed to process Inworld audio: {exc}"
 
     except httpx.TimeoutException:
         logger.error("Inworld API timeout")
