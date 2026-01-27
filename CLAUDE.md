@@ -204,6 +204,43 @@ Procfile                 # Alternative deployment configuration
 
 The application currently has a basic structure with a single endpoint. The main FastAPI app is defined in `app/main.py:3` with a root GET endpoint at `app/main.py:5-7`.
 
+## Plane Endpoint Text Output
+
+The `/plane/1`, `/plane/2`, and `/plane/3` endpoints return MP3 audio generated from descriptive flight text. Understanding the character count is useful for TTS cost estimation and buffer sizing.
+
+### Text Composition
+
+Each flight description includes:
+1. **Opening sentence** (~80-100 chars): Distance detection with random opening word
+2. **Scanner sentence** (~150-200 chars): Aircraft type, captain name, capacity, speed, altitude
+3. **Flight details** (~150-250 chars): Airline, flight number, origin, destination, ETA with kid-friendly comparison
+4. **Fun fact** (~80-150 chars): Random fact about destination city (optional, not all cities have facts)
+5. **Closing prompt** (~30-50 chars): Only for planes 1 and 2
+
+### Character Count Estimates
+
+| Endpoint | Typical Range | Notes |
+|----------|---------------|-------|
+| `/plane/1` | 550-650 chars | Includes closing: "Should we find another jet plane?" |
+| `/plane/2` | 500-650 chars | Includes closing: "Let's find one more jet plane shall we?" |
+| `/plane/3` | 400-550 chars | No closing prompt, sometimes no fun fact |
+| **All 3 planes** | **1,500-1,850 chars** | Total for a full session |
+
+### Variables Affecting Length
+
+- **Aircraft type name**: "Boeing 787 Dreamliner" vs "Saab 340"
+- **City/country names**: Varies significantly by destination
+- **Distance/speed values**: Numbers and word equivalents vary
+- **ETA formatting**: "a few minutes" to "sometime tomorrow"
+- **Fun fact availability**: Not all cities have fun facts in the database
+- **Unit system**: Metric ("kilometers") vs Imperial ("miles")
+
+### Example Output (578 characters)
+
+```
+Marvelous! We've detected a jet plane up in the sky, 9 miles from this Yoto! My scanner tells me that Captain Olsen is piloting this mega, massive Canadair Regional Jet nine zero zero cruising at 2,257 feet. This flight D L four nine nine nine belongs to Delta Air Lines and is sky skimming from New York City in New York all the way to Hebron in Kentucky landing in about 2 hours - that's like watching eight of your favorite tv episodes in a row. Did you know? Hebron is perfectly located in the Tri-State area where Ohio, Kentucky, and Indiana all meet - you can visit three states in one day!. Should we find another jet plane?
+```
+
 ## Adding Cities to the Database
 
 When adding new cities to `app/cities.json`:
