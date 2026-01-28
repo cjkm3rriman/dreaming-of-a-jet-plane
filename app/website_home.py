@@ -385,15 +385,6 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 }
 
                 @media (max-width: 768px) {
-                    .click-to-play {
-                        padding: 0.6rem 1.2rem;
-                        font-size: 0.7rem;
-                        border-radius: 10px;
-                        top: 1rem;
-                        right: 1rem;
-                        box-shadow: 0 2px 0 #b0b0b0, 0 3px 10px rgba(224, 224, 224, 0.3);
-                    }
-
                     .content-grid {
                         grid-template-columns: 1fr;
                         gap: 2rem;
@@ -455,6 +446,22 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 .click-to-play:active {
                     transform: translateY(2px);
                     box-shadow: 0 2px 0 #b0b0b0, 0 4px 15px rgba(224, 224, 224, 0.3);
+                }
+
+                @media (max-width: 768px) {
+                    .click-to-play {
+                        padding: 0.6rem 1.2rem;
+                        font-size: 0.7rem;
+                        border-radius: 10px;
+                        top: 1rem;
+                        right: 1rem;
+                        box-shadow: 0 2px 0 #b0b0b0, 0 3px 10px rgba(224, 224, 224, 0.3);
+                    }
+
+                    .site-logo {
+                        height: 40px;
+                        top: 1rem;
+                    }
                 }
 
                 .hidden {
