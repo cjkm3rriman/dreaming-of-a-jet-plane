@@ -450,17 +450,21 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
                 @media (max-width: 768px) {
                     .click-to-play {
-                        padding: 0.6rem 1.2rem;
-                        font-size: 0.7rem;
+                        padding: 0.3rem 0.6rem;
+                        font-size: 0.55rem;
                         border-radius: 10px;
                         top: 1rem;
                         right: 1rem;
                         box-shadow: 0 2px 0 #b0b0b0, 0 3px 10px rgba(224, 224, 224, 0.3);
                     }
 
+                    .sound-full {
+                        display: none;
+                    }
+
                     .site-logo {
-                        height: 40px;
-                        top: 1rem;
+                        height: 28px;
+                        top: 0.8rem;
                     }
                 }
 
@@ -474,7 +478,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 <div class="video-container">
                     <a href="/"><img src="/assets/img/wordmark.png" alt="Dreaming of a Jet Plane" class="site-logo"></a>
                     <div class="loading" id="loading">Loading video...</div>
-                    <div class="click-to-play hidden" id="playButton">🔊 Turn On Sound</div>
+                    <div class="click-to-play hidden" id="playButton">🔊 <span class="sound-full">Turn On </span>Sound</div>
                     <video
                         id="mainVideo"
                         autoplay
