@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 import httpx
 import os
 import sys
@@ -56,6 +57,9 @@ from .tts_providers import (
 )
 
 app = FastAPI()
+
+# Serve static assets
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 # Register website home routes
 register_website_home_routes(app)
