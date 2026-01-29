@@ -15,7 +15,7 @@ DISPLAY_NAME = "Inworld TTS"
 logger = logging.getLogger(__name__)
 
 INWORLD_API_KEY = os.getenv("INWORLD_API_KEY")
-INWORLD_MODEL_ID = os.getenv("INWORLD_MODEL_ID", "inworld-tts-1-max")
+INWORLD_MODEL_ID = os.getenv("INWORLD_MODEL_ID", "inworld-tts-1.5-max")
 INWORLD_VOICE_ID = os.getenv("INWORLD_VOICE_ID", "Ronald")
 INWORLD_AUDIO_ENCODING = os.getenv("INWORLD_AUDIO_ENCODING", "MP3")
 INWORLD_SPEAKING_RATE = float(os.getenv("INWORLD_SPEAKING_RATE", "0.92"))
