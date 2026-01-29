@@ -34,8 +34,8 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
             <!-- Primary Meta Tags -->
-            <title>Dreaming of a Jet Plane - Interactive Yoto Plane Scanner</title>
-            <meta name="title" content="Dreaming of a Jet Plane - Interactive Yoto Plane Scanner">
+            <title>Dreaming of a Jet Plane - Magical Yoto Jet Plane Scanner</title>
+            <meta name="title" content="Dreaming of a Jet Plane - Magical Yoto Jet Plane Scanner">
             <meta name="description" content="Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.">
             <meta name="keywords" content="Yoto, airplane scanner, jet plane, kids learning, educational app, flight tracker, children audio">
             <meta name="author" content="Callum Merriman">
@@ -44,7 +44,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             <!-- Open Graph / Facebook -->
             <meta property="og:type" content="website">
             <meta property="og:url" content="https://dreamingofajetplane.com/">
-            <meta property="og:title" content="Dreaming of a Jet Plane - Interactive Yoto Plane Scanner">
+            <meta property="og:title" content="Dreaming of a Jet Plane - Magical Yoto Jet Plane Scanner">
             <meta property="og:description" content="Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.">
             <meta property="og:image" content="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-share.jpg">
             <meta property="og:site_name" content="Dreaming of a Jet Plane">
@@ -52,15 +52,15 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             <!-- Twitter -->
             <meta property="twitter:card" content="summary_large_image">
             <meta property="twitter:url" content="https://dreamingofajetplane.com/">
-            <meta property="twitter:title" content="Dreaming of a Jet Plane - Interactive Yoto Plane Scanner">
+            <meta property="twitter:title" content="Dreaming of a Jet Plane - Magical Yoto Jet Plane Scanner">
             <meta property="twitter:description" content="Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.">
             <meta property="twitter:image" content="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-share.jpg">
 
             <!-- Additional SEO -->
             <link rel="canonical" href="https://dreamingofajetplane.com/">
             <meta name="theme-color" content="#f45436">
-            <link rel="icon" type="image/x-icon" href="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/favicon.ico">
-            <link rel="apple-touch-icon" href="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-share.jpg">
+            <link rel="icon" type="image/png" href="/assets/img/icon.png">
+            <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 
             <!-- Fonts -->
             <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -118,12 +118,28 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
                 .site-logo {
                     position: absolute;
-                    top: 1.5rem;
-                    left: 50%;
+                    top: 30%;
+                    left: 25%;
+                    transform: translate(-50%, -50%);
+                    z-index: 15;
+                    height: 100px;
+                    width: auto;
+                }
+
+                .video-tagline {
+                    position: absolute;
+                    top: 42%;
+                    left: 25%;
                     transform: translateX(-50%);
                     z-index: 15;
-                    height: 72px;
-                    width: auto;
+                    color: #FE6601;
+                    font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
+                    font-size: 1.3rem;
+                    font-weight: 600;
+                    line-height: 1.5;
+                    text-align: center;
+                    max-width: 400px;
+                    text-transform: uppercase;
                 }
 
                 .video-container {
@@ -142,7 +158,8 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
                 .content-container {
                     width: 100%;
-                    background: #fff;
+                    background: #fff url('/assets/img/card-bg.png') center top repeat-x;
+                    background-size: 240px auto;
                     color: #000;
                     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                     padding: 2rem;
@@ -235,8 +252,9 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
                 .award-banner {
                     width: 100%;
-                    background: #f45436;
-                    padding: 2rem 2rem;
+                    background: #FE6601 url('/assets/img/dev-bg.png') repeat;
+                    background-size: auto 80px;
+                    padding: 0.6rem 1rem;
                     text-align: center;
                     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                     display: flex;
@@ -253,20 +271,20 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     object-fit: contain;
                     background: #eee;
                     padding: 6px;
-                    border-radius: 5px;
-                    border: 2px solid #d94425;
+                    border-radius: 50%;
+                    border: 2px solid #222;
                 }
 
                 .award-banner p {
-                    color: #fff;
-                    font-size: 1.3rem;
+                    color: #222;
+                    font-size: 1rem;
                     font-weight: 700;
                     margin: 0;
                     letter-spacing: 0.5px;
                 }
 
                 .award-link {
-                    color: #fff;
+                    color: #222;
                     text-decoration: none;
                 }
 
@@ -277,7 +295,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 .testimonials {
                     width: 100%;
                     padding: 2rem;
-                    background: #fff;
+                    background: linear-gradient(to bottom, #fff, #eee);
                     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }
 
@@ -292,6 +310,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     color: #000;
                     margin-bottom: 1rem;
                     font-weight: 400;
+                    text-transform: uppercase;
                 }
 
                 .testimonials-intro {
@@ -332,7 +351,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 .disclaimer {
                     width: 100%;
                     padding: 2rem;
-                    background: #f4f4f4;
+                    background: #333;
                     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }
 
@@ -344,15 +363,16 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 .disclaimer h2 {
                     font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
                     font-size: 1.6rem;
-                    color: #000;
+                    color: #fff;
                     margin-bottom: 1rem;
                     font-weight: 400;
+                    text-transform: uppercase;
                 }
 
                 .disclaimer p {
                     font-size: 1.1rem;
                     line-height: 1.6;
-                    color: #333;
+                    color: #fff;
                     margin-bottom: 0.8rem;
                 }
 
@@ -369,7 +389,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 .disclaimer-list li {
                     font-size: 1.1rem;
                     line-height: 1.6;
-                    color: #333;
+                    color: #fff;
                     margin-bottom: 0.5rem;
                 }
 
@@ -393,6 +413,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
                     .content-container {
                         padding: 1.5rem;
+                        background-size: 140px auto;
                     }
 
                     .footer {
@@ -402,7 +423,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
                 .loading {
                     position: absolute;
-                    top: 50%;
+                    top: 30%;
                     left: 50%;
                     transform: translate(-50%, -50%);
                     color: white;
@@ -463,8 +484,46 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     }
 
                     .site-logo {
-                        height: 28px;
-                        top: 0.8rem;
+                        height: 52px;
+                        top: 30%;
+                        left: 25%;
+                    }
+
+                    .video-tagline {
+                        font-size: 0.55rem;
+                        max-width: 160px;
+                        top: 45%;
+                    }
+
+                    .award-banner p {
+                        font-size: 0.7rem;
+                    }
+
+                    .award-icon {
+                        height: 24px;
+                        padding: 4px;
+                    }
+
+                    .yoto-button {
+                        padding: 0.6rem 1.2rem;
+                        font-size: 0.85rem;
+                    }
+
+                    .testimonials h2,
+                    .disclaimer h2 {
+                        font-size: 1.2rem;
+                    }
+
+                    .testimonials-intro,
+                    .testimonial-quote,
+                    .disclaimer p,
+                    .disclaimer-list li {
+                        font-size: 0.9rem;
+                    }
+
+                    .testimonial-quote p::before,
+                    .testimonial-quote p::after {
+                        font-size: 1.8rem;
                     }
                 }
 
@@ -474,9 +533,15 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             </style>
         </head>
         <body>
+            <section class="award-banner">
+                <img src="/assets/img/happytrophy.png" alt="Trophy" class="award-icon">
+                <p><a href="https://yoto.space/news/post/the-developer-challenge-2025-winners-bbCk0Y8q8fK6JNY" target="_blank" rel="noopener" class="award-link">Yoto 2025 Developer Challenge Winner</a></p>
+            </section>
+
             <header>
                 <div class="video-container">
                     <a href="/"><img src="/assets/img/wordmark.png" alt="Dreaming of a Jet Plane" class="site-logo"></a>
+                    <p class="video-tagline">Magically turn your Yoto into a Jet Plane Scanner that finds planes in the skies around you, then teaches you all about them and the faraway destinations they are headed.</p>
                     <div class="loading" id="loading">Loading video...</div>
                     <div class="click-to-play hidden" id="playButton">🔊 <span class="sound-full">Turn On </span>Sound</div>
                     <video
@@ -486,7 +551,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                         loop
                         playsinline
                         preload="auto">
-                        <source src="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/Dreaming+Of+A+Jet+Plane+-+Yoto.mp4" type="video/mp4">
+                        <source src="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/website-header-compressed.mp4" type="video/mp4">
                         <!-- Fallback to YouTube embed if video file not available -->
                         <div style="position: relative; width: 100%; height: 100%;">
                             <iframe
@@ -501,28 +566,18 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             </header>
 
             <main class="content-container">
-                <div class="content-grid">
-                    <div class="description">
-                        <p>Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.</p>
-                    </div>
-                    <div class="button-column">
-                        <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" rel="noopener" class="yoto-button">
-                            <img src="/assets/img/yoto.png" alt="Yoto app icon" class="button-icon">
-                            Add To Library
-                        </a>
-                    </div>
+                <div class="button-column">
+                    <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" rel="noopener" class="yoto-button">
+                        <img src="/assets/img/yoto.png" alt="Yoto app icon" class="button-icon">
+                        Listen & Add To Your Library
+                    </a>
                 </div>
             </main>
 
-            <section class="award-banner">
-                <img src="/assets/img/happytrophy.png" alt="Trophy" class="award-icon">
-                <p><a href="https://yoto.space/news/post/the-developer-challenge-2025-winners-bbCk0Y8q8fK6JNY" target="_blank" rel="noopener" class="award-link">Yoto 2025 Developer Challenge Winner</a></p>
-            </section>
-
             <section class="testimonials">
                 <div class="testimonials-inner">
-                    <h2>Families Love Dreaming of a Jet Plane</h2>
-                    <p class="testimonials-intro">Thank you to the tens of thousands of families who check out Dreaming of a Jet Plane every week. Here is just some of the awesome feedback we have received.</p>
+                    <h2>Love For Dreaming Of A Jet Plane</h2>
+                    <p class="testimonials-intro">Thank you to the tens of thousands of families who spot jet planes every week with Dreaming of a Jet Plane. Here is just some of the awesome feedback we have received.</p>
                     <blockquote class="testimonial-quote">
                         <p>This is wonderful!! Thank you for making it - we listen every morning at breakfast. We love to pretend our hands are scanning the sky during the cool scanning sounds. Most planes detected for us are coming in and out of our local airport, but occasionally it detects some flying high over us between countries, and that is extra cool!</p>
                     </blockquote>

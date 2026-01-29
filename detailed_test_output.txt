@@ -1,0 +1,403 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-9.0.2, pluggy-1.6.0 -- /Users/callum/Code/dreaming-of-a-jet-plane/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/callum/Code/dreaming-of-a-jet-plane
+configfile: pytest.ini
+plugins: anyio-4.9.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=function
+collecting ... collected 13 items / 7 deselected / 6 selected
+
+tests/test_end_to_end.py::test_detailed_output_nyc 
+================================================================================
+DETAILED TEST OUTPUT - NYC Location
+================================================================================
+Location: 40.7128, -74.006 (New York City, USA)
+Country Code: US
+
+Total aircraft found: 3
+
+--------------------------------------------------------------------------------
+PLANE 1
+--------------------------------------------------------------------------------
+Aircraft Type: Canadair Regional Jet 900
+Airline: Delta Air Lines
+Flight Number: DL4999
+Origin: New York City, the United States
+Destination: Hebron, the United States
+Distance: 14.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Marvelous! We've detected a jet plane up in the sky, 9 miles from this Yoto! My scanner tells me that Captain Olsen is piloting this mega, massive Canadair Regional Jet nine zero zero cruising at 2,257 feet. This flight D L four nine nine nine belongs to Delta Air Lines and is sky skimming from New York City in New York all the way to Hebron in Kentucky landing in about 2 hours - that's like watching eight of your favorite tv episodes in a row. Did you know? Hebron is perfectly located in the Tri-State area where Ohio, Kentucky, and Indiana all meet - you can visit three states in one day!. Should we find another jet plane?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 2
+--------------------------------------------------------------------------------
+Aircraft Type: Bombardier Challenger
+Airline: NetJets
+Flight Number: 1I773
+Origin: Charlotte, the United States
+Destination: Boston, the United States
+Distance: 51.0 km
+Type: Private Jet
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Splendid! We've found another jet plane, flying high 32 miles from this Yoto! My scanner tells me that Captain Nkosi is piloting this gigantic Bombardier Challenger cruising at 35,138 feet. This private jet belongs to NetJets and is cloud hopping from Charlotte in North Carolina all the way to Boston in Massachusetts landing in about an hour - that's about the time it takes to do bath and bed time. A tidbit for you. Fenway Park is one of America's oldest baseball stadiums with a giant green wall called the Green Monster!. Let's find one more jet plane shall we?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 3
+--------------------------------------------------------------------------------
+Aircraft Type: Airbus A321
+Airline: Iberia Airlines
+Flight Number: IB212
+Origin: New York City, the United States
+Destination: Madrid, Spain
+Distance: 15.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Wow! We've identified one more jet plane up there, 9 miles from this Yoto! My scanner tells me that Captain Al-Saud is piloting this mega, massive Airbus A three twenty one carrying 220 passengers. This flight I B two one two belongs to Iberia Airlines and is zooming from New York City in New York all the way to Madrid in Spain landing in about 12 hours - that's like from breakfast to bedtime. Fun fact. People in Madrid eat dinner very late, sometimes at 10 PM, and stay up late talking with friends and family!.
+--------------------------------------------------------------------------------
+
+================================================================================
+Destinations tracked: {'Madrid', 'Boston', 'Hebron'}
+================================================================================
+
+PASSED
+tests/test_end_to_end.py::test_detailed_output_london 
+================================================================================
+DETAILED TEST OUTPUT - London Location
+================================================================================
+Location: 51.5074, -0.1278 (London, United Kingdom)
+Country Code: GB
+
+Total aircraft found: 3
+
+--------------------------------------------------------------------------------
+PLANE 1
+--------------------------------------------------------------------------------
+Aircraft Type: Boeing 787 Dreamliner
+Airline: Air India Limited
+Flight Number: AI132
+Origin: London, the United Kingdom
+Destination: Bangalore, India
+Distance: 19.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Marvelous! We've detected a jet plane up in the sky, 12 miles from this Yoto! My scanner tells me that Captain Smith is piloting this big, shiny Boeing seven eight seven Dreamliner travelling at an astounding 413 miles per hour. This flight A I one three two belongs to Air India Limited and is speeding from London in the United Kingdom all the way to Bangalore in India landing in about 12 hours - that's like a full night's sleep. A tidbit for you. Bangalore has a palace made entirely of wood called Tipu Sultan's Summer Palace that was built without using a single nail!. Should we find another jet plane?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 2
+--------------------------------------------------------------------------------
+Aircraft Type: Airbus A350
+Airline: China Southern Airlines
+Flight Number: CZ674
+Origin: London, the United Kingdom
+Destination: Beijing, China
+Distance: 27.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Wow! We've found another jet plane, flying high 17 miles from this Yoto! My scanner tells me that Captain Parker is piloting this gigantic Airbus A three fifty carrying 325 passengers. This flight C Z six seven four belongs to China Southern Airlines and is zoom zooming from London in the United Kingdom all the way to Beijing in China landing in about 12 hours - that's like a full night's sleep. Did you know? Beijing has green bean-flavored ice pops for sale, that's one way to get your vegetables!. Let's find one more jet plane shall we?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 3
+--------------------------------------------------------------------------------
+Aircraft Type: Airbus A320
+Airline: easyJet UK
+Flight Number: U22776
+Origin: Paris, France
+Destination: Bristol, the United Kingdom
+Distance: 27.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+What Luck! We've identified one more jet plane up there, 17 miles from this Yoto! My scanner tells me that Captain Lindberg is piloting this enormous Airbus A three twenty travelling at a super fast 352 miles per hour. This flight U two two seven seven six belongs to easyJet UK and is zoom zooming from Paris in France all the way to Bristol in the United Kingdom landing in about 45 minutes - that's about the time it takes for grown ups to cook dinner. Fun fact. Bristol has the oldest working theatre in England called Theatre Royal, where actors have been performing plays for hundreds of years!.
+--------------------------------------------------------------------------------
+
+================================================================================
+Destinations tracked: {'Bristol', 'Bangalore', 'Beijing'}
+================================================================================
+
+PASSED
+tests/test_end_to_end.py::test_detailed_output_sydney 
+================================================================================
+DETAILED TEST OUTPUT - Sydney Location
+================================================================================
+Location: -33.8688, 151.2093 (Sydney, Australia)
+Country Code: AU
+
+Total aircraft found: 3
+
+--------------------------------------------------------------------------------
+PLANE 1
+--------------------------------------------------------------------------------
+Aircraft Type: Boeing 737
+Airline: Qantas
+Flight Number: QF425
+Origin: Sydney, Australia
+Destination: Melbourne, Australia
+Distance: 21.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Marvelous! We've detected a jet plane up in the sky, 21 kilometers from this Yoto! My scanner tells me that Captain Cooper is piloting this super powered Boeing seven three seven carrying 175 passengers. This flight Q F four two five belongs to Qantas and is zooming from Sydney in Australia all the way to Melbourne in Australia landing in about 2 hours - that's like watching eight of your favorite tv episodes in a row. Fun fact. Melbourne has laneways covered in colorful street art that change every day - it's like walking through a giant outdoor art gallery!. Should we find another jet plane?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 2
+--------------------------------------------------------------------------------
+Aircraft Type: Boeing 737
+Airline: Virgin Australia
+Flight Number: VA815
+Origin: Melbourne, Australia
+Destination: Sydney, Australia
+Distance: 21.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Splendid! We've found another jet plane, flying high 21 kilometers from this Yoto! My scanner tells me that Captain Taylor is piloting this enormous Boeing seven three seven travelling at a speedy 296 kilometers per hour. This flight V A eight one five belongs to Virgin Australia and is cloud hopping from Melbourne in Australia all the way to Sydney in Australia landing in about half an hour - that's about how long it takes to read three bedtime stories. Fun fact. Sydney has beaches with waves so perfect that people come from around the world just to go surfing!. Let's find one more jet plane shall we?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 3
+--------------------------------------------------------------------------------
+Aircraft Type: Saab 340
+Airline: Rex Airlines
+Flight Number: ZL6463
+Origin: Sydney, Australia
+Destination: Griffith, Australia
+Distance: 100.0 km
+
+Fun Fact Source: None
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Splendid! We've identified one more jet plane up there, 100 kilometers from this Yoto! My scanner tells me that Captain Gonzalez is piloting this humongous Saab three four zero travelling at a super fast 437 kilometers per hour. This flight Z L six four six three belongs to Rex Airlines and is whizzing from Sydney in Australia all the way to Griffith in Australia landing in about an hour and a half - that's about how long a fun play date lasts.
+--------------------------------------------------------------------------------
+
+================================================================================
+Destinations tracked: {'Sydney', 'Melbourne', 'Griffith'}
+================================================================================
+
+PASSED
+tests/test_end_to_end.py::test_detailed_output_dublin 
+================================================================================
+DETAILED TEST OUTPUT - Dublin Location
+================================================================================
+Location: 53.3498, -6.2603 (Dublin, Ireland)
+Country Code: IE
+
+Total aircraft found: 3
+
+--------------------------------------------------------------------------------
+PLANE 1
+--------------------------------------------------------------------------------
+Aircraft Type: Boeing 737 MAX
+Airline: Ryanair
+Flight Number: FR1959
+Origin: Nice, France
+Destination: Dublin, Ireland
+Distance: 15.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Good Heavens! We've detected a jet plane up in the sky, 15 kilometers from this Yoto! My scanner tells me that Captain Li is piloting this humongous Boeing seven three seven carrying 189 passengers. This flight F R one nine five nine belongs to Ryanair and is whizzing from Nice in France all the way to Dublin in Ireland landing in about half an hour - that's about the length of a short car journey. A tidbit for you. Dublin Zoo is one of the world's oldest zoos with over 600 animals including giraffes, tigers, and adorable red pandas!. Should we find another jet plane?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 2
+--------------------------------------------------------------------------------
+Aircraft Type: Airbus A320
+Airline: British Airways
+Flight Number: BA839
+Origin: Dublin, Ireland
+Destination: London, the United Kingdom
+Distance: 37.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Wow! We've found another jet plane, flying high 37 kilometers from this Yoto! My scanner tells me that Captain Nkosi is piloting this super powered Airbus A three twenty travelling at a speedy 737 kilometers per hour. This flight B A eight three nine belongs to British Airways and is zooming from Dublin in Ireland all the way to London in the United Kingdom landing in about an hour - that's about the time it takes to do bath and bed time. Guess what? The guards at the Tower of London are called 'Beefeaters' because King Henry VII let them eat all the beef they wanted from his table!. Let's find one more jet plane shall we?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 3
+--------------------------------------------------------------------------------
+Aircraft Type: Boeing 737
+Airline: Jet2.com
+Flight Number: LS126
+Origin: Tenerife, Spain
+Destination: Glasgow, the United Kingdom
+Distance: 56.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Fantastic! We've identified one more jet plane up there, 56 kilometers from this Yoto! My scanner tells me that Captain Mitchell is piloting this humongous Boeing seven three seven soaring at 35,066 feet. This flight L S one two six belongs to Jet2.com and is whizzing from Tenerife in Spain all the way to Glasgow in the United Kingdom landing in about an hour - that's about the time it takes to do bath and bed time. Fun fact. Glasgow is Scotland's biggest city and was once called the 'Second City of the British Empire' because it was so important!.
+--------------------------------------------------------------------------------
+
+================================================================================
+Destinations tracked: {'Glasgow', 'Dublin', 'London'}
+================================================================================
+
+PASSED
+tests/test_end_to_end.py::test_detailed_output_los_angeles 
+================================================================================
+DETAILED TEST OUTPUT - Los Angeles Location
+================================================================================
+Location: 34.0522, -118.2437 (Los Angeles, USA)
+Country Code: US
+
+Total aircraft found: 3
+
+--------------------------------------------------------------------------------
+PLANE 1
+--------------------------------------------------------------------------------
+Aircraft Type: Airbus A220
+Airline: Delta Air Lines
+Flight Number: DL2572
+Origin: San Diego, the United States
+Destination: Seattle, the United States
+Distance: 2.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Fantastic! We've detected a jet plane up in the sky, 1 miles from this Yoto! My scanner tells me that Captain Sullivan is piloting this humongous Airbus A two twenty carrying 122 passengers. This flight D L two five seven two belongs to Delta Air Lines and is speeding from San Diego in California all the way to Seattle in Washington landing in about 3 hours - that's about how long it takes to walk around a big zoo. Fun fact. There are orcas (killer whales) that swim near Seattle and you can take boats to watch them jump out of the water!. Should we find another jet plane?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 2
+--------------------------------------------------------------------------------
+Aircraft Type: Boeing 737
+Airline: Southwest Airlines
+Flight Number: WN3400
+Origin: Los Angeles, the United States
+Destination: Reno, the United States
+Distance: 7.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Fantastic! We've found another jet plane, flying high 4 miles from this Yoto! My scanner tells me that Captain Kovács is piloting this humongous Boeing seven three seven travelling at a whopping 312 miles per hour. This flight W N three four zero zero belongs to Southwest Airlines and is zoom zooming from Los Angeles in California all the way to Reno in Nevada. Did you know? Reno is surrounded by beautiful mountains where you can see snow on the peaks even in summer!. Let's find one more jet plane shall we?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 3
+--------------------------------------------------------------------------------
+Aircraft Type: Airbus A321
+Airline: Volaris
+Flight Number: Y41777
+Origin: Oakland, the United States
+Destination: Guadalajara, Mexico
+Distance: 89.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+What Luck! We've identified one more jet plane up there, 55 miles from this Yoto! My scanner tells me that Captain Gonzalez is piloting this gigantic Airbus A three twenty one travelling at an astounding 519 miles per hour. This flight Y four one seven seven seven belongs to Volaris and is sky skimming from Oakland in California all the way to Guadalajara in Mexico landing in about 4 hours - that's time to watch two Disney movies back to back. A tidbit for you. There are charros (Mexican cowboys) in Guadalajara who do trick riding and rope spinning on horses like real-life superheroes!.
+--------------------------------------------------------------------------------
+
+================================================================================
+Destinations tracked: {'Reno', 'Guadalajara', 'Seattle'}
+================================================================================
+
+PASSED
+tests/test_end_to_end.py::test_detailed_output_weston_ct 
+================================================================================
+DETAILED TEST OUTPUT - Weston CT Location
+================================================================================
+Location: 41.2023, -73.3815 (Weston, Connecticut, USA)
+Country Code: US
+
+Total aircraft found: 3
+
+--------------------------------------------------------------------------------
+PLANE 1
+--------------------------------------------------------------------------------
+Aircraft Type: Boeing 737
+Airline: Southwest Airlines
+Flight Number: WN445
+Origin: Albany, the United States
+Destination: Baltimore, the United States
+Distance: 7.0 km
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Marvelous! We've detected a jet plane up in the sky, 4 miles from this Yoto! My scanner tells me that Captain Cooper is piloting this humongous Boeing seven three seven carrying 149 passengers. This flight W N four four five belongs to Southwest Airlines and is cloud hopping from Albany in New York all the way to Baltimore in Maryland landing in about an hour - that's about how long a short nap lasts. Did you know? Baltimore is famous for blue crabs that are so delicious people crack them open with little hammers at outdoor tables!. Should we find another jet plane?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 2
+--------------------------------------------------------------------------------
+Aircraft Type: Embraer Phenom
+Airline: NetJets
+Flight Number: 1I420
+Origin: Myrtle Beach, the United States
+Destination: Boston, the United States
+Distance: 7.0 km
+Type: Private Jet
+
+Fun Fact Source: destination
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Fantastic! We've found another jet plane, flying high 4 miles from this Yoto! My scanner tells me that Captain Olsen is piloting this mega, massive Embraer Phenom soaring at 2,782 feet. This private jet belongs to NetJets and is zooming from Myrtle Beach in South Carolina all the way to Boston in Massachusetts landing in about 45 minutes - that's about the time it takes for grown ups to cook dinner. Guess what? Boston had the famous Boston Tea Party where patriots disguised themselves as Native Americans and dumped tea into the harbor!. Let's find one more jet plane shall we?
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+PLANE 3
+--------------------------------------------------------------------------------
+Aircraft Type: Airbus A321
+Airline: JetBlue Airways
+Flight Number: B61009
+Origin: New York City, the United States
+Destination: Santo Domingo, the Dominican Republic
+Distance: 73.0 km
+
+Fun Fact Source: None
+
+GENERATED TEXT:
+--------------------------------------------------------------------------------
+Splendid! We've identified one more jet plane up there, 45 miles from this Yoto! My scanner tells me that Captain Kovács is piloting this super powered Airbus A three twenty one cruising at 1,755 feet. This flight B six one zero zero nine belongs to JetBlue Airways and is whizzing from New York City in New York all the way to Santo Domingo in the Dominican Republic landing in about 4 hours - that's about how long a really fun morning at the beach lasts.
+--------------------------------------------------------------------------------
+
+================================================================================
+Destinations tracked: {'Baltimore', 'Boston', 'Santo Domingo'}
+================================================================================
+
+PASSED
+
+======================= 6 passed, 7 deselected in 3.07s ========================

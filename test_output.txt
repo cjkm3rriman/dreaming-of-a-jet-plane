@@ -1,0 +1,95 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-9.0.2, pluggy-1.6.0 -- /Users/callum/Code/dreaming-of-a-jet-plane/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/callum/Code/dreaming-of-a-jet-plane
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.9.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=function
+collecting ... collected 42 items
+
+tests/test_aircraft_selection.py::test_nyc_aircraft_selection PASSED     [  2%]
+tests/test_aircraft_selection.py::test_london_aircraft_selection PASSED  [  4%]
+tests/test_aircraft_selection.py::test_tokyo_aircraft_selection PASSED   [  7%]
+tests/test_aircraft_selection.py::test_weston_ct_aircraft_selection PASSED [  9%]
+tests/test_aircraft_selection.py::test_diversity_selection_prefers_different_destinations PASSED [ 11%]
+tests/test_aircraft_selection.py::test_diversity_selection_returns_limited_results PASSED [ 14%]
+tests/test_aircraft_selection.py::test_diversity_selection_handles_empty_list PASSED [ 16%]
+tests/test_aircraft_selection.py::test_aircraft_required_fields PASSED   [ 19%]
+tests/test_duplicate_destinations.py::test_first_destination_uses_destination_fun_facts PASSED [ 21%]
+tests/test_duplicate_destinations.py::test_duplicate_destination_uses_origin_fun_facts PASSED [ 23%]
+tests/test_duplicate_destinations.py::test_third_different_destination_uses_destination_fun_facts PASSED [ 26%]
+tests/test_duplicate_destinations.py::test_all_same_destination_uses_origin_for_later_planes PASSED [ 28%]
+tests/test_duplicate_destinations.py::test_no_used_destinations_set_means_all_use_destination PASSED [ 30%]
+tests/test_duplicate_destinations.py::test_duplicate_with_unknown_origin_falls_back_to_destination PASSED [ 33%]
+tests/test_duplicate_destinations.py::test_used_destinations_set_is_mutated PASSED [ 35%]
+tests/test_end_to_end.py::test_full_scan_flow_nyc PASSED                 [ 38%]
+tests/test_end_to_end.py::test_full_scan_flow_london PASSED              [ 40%]
+tests/test_end_to_end.py::test_scan_flow_with_duplicate_destinations PASSED [ 42%]
+tests/test_end_to_end.py::test_scan_handles_no_aircraft_gracefully PASSED [ 45%]
+tests/test_end_to_end.py::test_three_plane_sequence_maintains_variety PASSED [ 47%]
+tests/test_end_to_end.py::test_scan_returns_consistent_structure PASSED  [ 50%]
+tests/test_end_to_end.py::test_aircraft_sorted_by_distance FAILED        [ 52%]
+tests/test_end_to_end.py::test_detailed_output_nyc PASSED                [ 54%]
+tests/test_end_to_end.py::test_detailed_output_london PASSED             [ 57%]
+tests/test_end_to_end.py::test_detailed_output_sydney PASSED             [ 59%]
+tests/test_end_to_end.py::test_detailed_output_dublin PASSED             [ 61%]
+tests/test_end_to_end.py::test_detailed_output_los_angeles PASSED        [ 64%]
+tests/test_end_to_end.py::test_detailed_output_weston_ct PASSED          [ 66%]
+tests/test_text_generation.py::test_text_generation_imperial_units PASSED [ 69%]
+tests/test_text_generation.py::test_text_generation_metric_units PASSED  [ 71%]
+tests/test_text_generation.py::test_text_generation_japanese_metric PASSED [ 73%]
+tests/test_text_generation.py::test_text_includes_aircraft_name PASSED   [ 76%]
+tests/test_text_generation.py::test_text_includes_origin_and_destination PASSED [ 78%]
+tests/test_text_generation.py::test_text_has_opening_phrase PASSED       [ 80%]
+tests/test_text_generation.py::test_text_has_closing_prompt_plane1 PASSED [ 83%]
+tests/test_text_generation.py::test_text_has_closing_prompt_plane2 PASSED [ 85%]
+tests/test_text_generation.py::test_text_no_closing_prompt_plane3 PASSED [ 88%]
+tests/test_text_generation.py::test_fun_fact_source_is_tracked PASSED    [ 90%]
+tests/test_text_generation.py::test_private_jet_text PASSED              [ 92%]
+tests/test_text_generation.py::test_error_message_generation PASSED      [ 95%]
+tests/test_text_generation.py::test_text_generation_returns_tuple PASSED [ 97%]
+tests/test_text_generation.py::test_unknown_origin_destination_handling PASSED [100%]
+
+=================================== FAILURES ===================================
+_______________________ test_aircraft_sorted_by_distance _______________________
+tests/test_end_to_end.py:200: in test_aircraft_sorted_by_distance
+    assert distances == sorted(distances), f"Aircraft should be sorted by distance, got: {distances}"
+E   AssertionError: Aircraft should be sorted by distance, got: [5, 34, 32]
+E   assert [5, 34, 32] == [5, 32, 34]
+E     
+E     At index 1 diff: 34 != 32
+E     
+E     Full diff:
+E       [
+E           5,
+E     +     34,
+E           32,
+E     -     34,
+E       ]
+------------------------------ Captured log call -------------------------------
+WARNING  app.aircraft_providers.airlabs:airlabs.py:246 Skipping aircraft with invalid route: 317 at (40.20, -74.22) reports AUS→SEA route, which doesn't pass near user location. This is likely stale/incorrect position data from Airlabs API.
+WARNING  app.aircraft_providers.airlabs:airlabs.py:246 Skipping aircraft with invalid route: 3547 at (40.72, -74.15) reports DSM→ORD route, which doesn't pass near user location. This is likely stale/incorrect position data from Airlabs API.
+WARNING  app.aircraft_providers.airlabs:airlabs.py:246 Skipping aircraft with invalid route: 1775 at (40.77, -73.87) reports FLL→KIN route, which doesn't pass near user location. This is likely stale/incorrect position data from Airlabs API.
+WARNING  app.location_utils:location_utils.py:358 Route validation FAIL: Near endpoint (299km) but > 50% of route distance (26km). Likely false positive.
+WARNING  app.aircraft_providers.airlabs:airlabs.py:246 Skipping aircraft with invalid route: 504 at (40.80, -73.77) reports BED→BOS route, which doesn't pass near user location. This is likely stale/incorrect position data from Airlabs API.
+WARNING  app.location_utils:location_utils.py:358 Route validation FAIL: Near endpoint (112km) but > 50% of route distance (214km). Likely false positive.
+WARNING  app.aircraft_providers.airlabs:airlabs.py:246 Skipping aircraft with invalid route: 202 at (41.04, -75.06) reports ABE→OXC route, which doesn't pass near user location. This is likely stale/incorrect position data from Airlabs API.
+WARNING  app.location_utils:location_utils.py:358 Route validation FAIL: Near endpoint (227km) but > 50% of route distance (233km). Likely false positive.
+WARNING  app.aircraft_providers.airlabs:airlabs.py:246 Skipping aircraft with invalid route: 325 at (41.26, -74.53) reports ALB→BOS route, which doesn't pass near user location. This is likely stale/incorrect position data from Airlabs API.
+WARNING  app.location_utils:location_utils.py:408 Route validation FAIL: Closest distance (862km) is > 50% of route distance (1047km). Likely false positive for short route.
+WARNING  app.aircraft_providers.airlabs:airlabs.py:246 Skipping aircraft with invalid route: 2842 at (40.65, -73.80) reports CLT→MSY route, which doesn't pass near user location. This is likely stale/incorrect position data from Airlabs API.
+=========================== short test summary info ============================
+FAILED tests/test_end_to_end.py::test_aircraft_sorted_by_distance - AssertionError: Aircraft should be sorted by distance, got: [5, 34, 32]
+assert [5, 34, 32] == [5, 32, 34]
+  
+  At index 1 diff: 34 != 32
+  
+  Full diff:
+    [
+        5,
+  +     34,
+        32,
+  -     34,
+    ]
+======================== 1 failed, 41 passed in 10.91s =========================
