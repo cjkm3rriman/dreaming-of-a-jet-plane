@@ -81,16 +81,19 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 "name": "Callum Merriman",
                 "url": "https://www.linkedin.com/in/cjkmerriman/"
               },
-              "url": "https://dreamingofajetplane.com/",
-              "video": {
-                "@type": "VideoObject",
-                "name": "Dreaming of a Jet Plane Demo",
-                "description": "Demo video showing the Yoto Plane Scanner in action",
-                "thumbnailUrl": "https://img.youtube.com/vi/heSlOrH17po/maxresdefault.jpg",
-                "embedUrl": "https://www.youtube.com/embed/heSlOrH17po",
-                "uploadDate": "2025-12-07",
-                "contentUrl": "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/Dreaming+Of+A+Jet+Plane+-+Yoto.mp4"
-              }
+              "url": "https://dreamingofajetplane.com/"
+            }
+            </script>
+            <script type="application/ld+json">
+            {
+              "@context": "https://schema.org",
+              "@type": "VideoObject",
+              "name": "Dreaming of a Jet Plane Demo",
+              "description": "Demo video showing the Yoto Plane Scanner in action",
+              "thumbnailUrl": "https://img.youtube.com/vi/heSlOrH17po/maxresdefault.jpg",
+              "embedUrl": "https://www.youtube.com/embed/heSlOrH17po",
+              "uploadDate": "2025-12-07T00:00:00Z",
+              "contentUrl": "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/Dreaming+Of+A+Jet+Plane+-+Yoto.mp4"
             }
             </script>
             <style>
@@ -134,7 +137,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     z-index: 15;
                     color: #FE6601;
                     font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
-                    font-size: 1.3rem;
+                    font-size: 1.5rem;
                     font-weight: 600;
                     line-height: 1.5;
                     text-align: center;
@@ -490,9 +493,13 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     }
 
                     .video-tagline {
-                        font-size: 0.55rem;
+                        font-size: 0.7rem;
                         max-width: 160px;
                         top: 45%;
+                    }
+
+                    .tagline-extended {
+                        display: none;
                     }
 
                     .award-banner p {
@@ -541,7 +548,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             <header>
                 <div class="video-container">
                     <a href="/"><img src="/assets/img/wordmark.png" alt="Dreaming of a Jet Plane" class="site-logo"></a>
-                    <p class="video-tagline">Magically turn your Yoto into a Jet Plane Scanner that finds planes in the skies around you, then teaches you all about them and the faraway destinations they are headed.</p>
+                    <p class="video-tagline">Magically turn your Yoto into a Jet Plane Scanner that finds planes in the skies around you<span class="tagline-extended">, then teaches you all about them and the faraway destinations they are headed</span>.</p>
                     <div class="loading" id="loading">Loading video...</div>
                     <div class="click-to-play hidden" id="playButton">🔊 <span class="sound-full">Turn On </span>Sound</div>
                     <video
