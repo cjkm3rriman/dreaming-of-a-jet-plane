@@ -18,8 +18,8 @@ INWORLD_API_KEY = os.getenv("INWORLD_API_KEY")
 INWORLD_MODEL_ID = os.getenv("INWORLD_MODEL_ID", "inworld-tts-1.5-max")
 INWORLD_VOICE_ID = os.getenv("INWORLD_VOICE_ID", "Ronald")
 INWORLD_AUDIO_ENCODING = os.getenv("INWORLD_AUDIO_ENCODING", "MP3")
-INWORLD_SPEAKING_RATE = float(os.getenv("INWORLD_SPEAKING_RATE", "0.92"))
-INWORLD_TEMPERATURE = float(os.getenv("INWORLD_TEMPERATURE", "1.2"))
+INWORLD_SPEAKING_RATE = float(os.getenv("INWORLD_SPEAKING_RATE", "1"))
+INWORLD_TEMPERATURE = float(os.getenv("INWORLD_TEMPERATURE", "1.3"))
 INWORLD_BASE_URL = os.getenv("INWORLD_TTS_BASE_URL", "https://api.inworld.ai/tts/v1/voice")
 
 
