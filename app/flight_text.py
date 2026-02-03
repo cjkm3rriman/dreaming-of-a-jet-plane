@@ -174,7 +174,15 @@ def format_speed(speed_kmh: float, use_metric: bool) -> tuple[int, str]:
         return int(round(speed_mph)), "miles per hour"
 
 
-def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float = None, user_lng: float = None, plane_index: int = 1, country_code: str = "US", used_destinations: set = None) -> tuple[str, Optional[str]]:
+def generate_flight_text_for_aircraft(
+    aircraft: Dict[str, Any],
+    user_lat: float = None,
+    user_lng: float = None,
+    plane_index: int = 1,
+    country_code: str = "US",
+    used_destinations: set = None,
+    split_text: bool = False,
+) -> tuple[str, Optional[str]] | tuple[str, str, Optional[str]]:
     """Generate descriptive text for a specific aircraft
 
     Args:
@@ -184,10 +192,15 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
         plane_index: 1-based plane index (1, 2, 3) to determine opening words
         country_code: ISO 3166-1 alpha-2 country code for unit localization (default: "US")
         used_destinations: Optional set of destination cities already used (for diversity)
+        split_text: If True, return (opening, body, fun_fact_source) instead of (full_text, fun_fact_source)
 
     Returns:
-        tuple: (sentence, fun_fact_source)
+        If split_text=False (default): tuple (sentence, fun_fact_source)
             - sentence: Human-readable sentence describing the flight
+            - fun_fact_source: "destination", "origin", or None (if no fun fact included)
+        If split_text=True: tuple (opening_text, body_text, fun_fact_source)
+            - opening_text: Detection sentence with distance (~80-100 chars)
+            - body_text: Everything else - scanner, flight details, fun fact, closing (~400-500 chars)
             - fun_fact_source: "destination", "origin", or None (if no fun fact included)
     """
     # Ensure fresh random state for each text generation
@@ -448,8 +461,8 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
     else:
         flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
     
-    # Add random fun fact about destination city if available
-    full_response = f"{detection_sentence} {scanner_sentence} {flight_sentence}"
+    # Build body text (scanner + flight details + fun fact + closing)
+    body_text = f"{scanner_sentence} {flight_sentence}"
     fun_fact_source = None  # Track which city we used for fun facts
 
     if destination_city and destination_city != "an unknown destination":
@@ -496,18 +509,22 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
             random_fact = random.choice(fun_facts)
             fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
             fun_fact_opening = random.choice(fun_fact_openings)
-            full_response += f" {fun_fact_opening} {random_fact}."
+            body_text += f" {fun_fact_opening} {random_fact}."
         else:
             # No fun facts available for this city
             fun_fact_source = None
 
     # Add closing prompt for plane index 1 and 2
     if plane_index == 1:
-        full_response += " Should we find another jet plane?"
+        body_text += " Should we find another jet plane?"
     elif plane_index == 2:
-        full_response += " Let's find one more jet plane shall we?"
+        body_text += " Let's find one more jet plane shall we?"
 
-    return full_response, fun_fact_source
+    if split_text:
+        return detection_sentence, body_text, fun_fact_source
+    else:
+        full_response = f"{detection_sentence} {body_text}"
+        return full_response, fun_fact_source
 
 
 def make_error_message_friendly(error_message: str) -> str:
@@ -547,6 +564,46 @@ def make_error_message_friendly(error_message: str) -> str:
 
     # Default fallback for any other error
     return "my scanner had a technical hiccup" + ending
+
+
+def generate_generic_opening(plane_index: int) -> str:
+    """Generate distance-free opening for free tier
+
+    Args:
+        plane_index: 1-based plane index (1, 2, 3)
+
+    Returns:
+        str: Generic opening text without distance reference (~80-100 chars)
+    """
+    # Ensure fresh random state
+    random.seed(time.time_ns())
+
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
+    word = random.choice(opening_words)
+
+    if plane_index == 2:
+        return f"{word} We've found another jet plane, flying high up in the sky!"
+    elif plane_index == 3:
+        return f"{word} We've identified one more jet plane up there in the clouds!"
+    else:
+        # Default for plane 1 or any other index
+        return f"{word} We've detected a jet plane up in the sky!"
+
+
+def generate_free_tier_distance_intro(distance_miles: int) -> str:
+    """Generate intro text with distance to the flight for free tier plane 1
+
+    Args:
+        distance_miles: Distance in miles from free user to the flight
+
+    Returns:
+        str: Intro text with distance (~50-60 chars)
+    """
+    return f"We recently spotted a jet plane {distance_miles:,} miles from this Yoto!"
+
+
+# Static intro text for free tier /free/scan endpoint
+FREE_SCAN_INTRO = "Let's tune into some jet planes that have been spotted around the world! Ready? Here we go!"
 
 
 def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional[str] = None, user_lat: float = None, user_lng: float = None, plane_index: int = 0, country_code: str = "US") -> str:

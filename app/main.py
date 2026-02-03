@@ -299,8 +299,20 @@ def track_scan_complete(
     from_cache: bool,
     nearby_aircraft: int,
     provider: str,
+    subscription: str = "yoto-club",
 ):
-    """Track scan:complete analytics event with flight data results"""
+    """Track scan:complete analytics event with flight data results
+
+    Args:
+        request: FastAPI request object
+        lat: User latitude
+        lng: User longitude
+        city: User city name
+        from_cache: Whether data was served from cache
+        nearby_aircraft: Number of aircraft found
+        provider: Aircraft data provider used
+        subscription: "yoto-club" for paid, "free" for free tier
+    """
     try:
         import hashlib
 
@@ -316,7 +328,7 @@ def track_scan_complete(
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
-            "$insert_id": f"scan_complete_{session_id}",  # Prevents duplicates
+            "$insert_id": f"scan_complete_{subscription}_{session_id}",  # Prevents duplicates
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
             "os": browser_info["os"],
@@ -327,13 +339,36 @@ def track_scan_complete(
             "user_city": city,
             "from_cache": from_cache,
             "nearby_aircraft": nearby_aircraft,
-            "aircraft_provider": provider
+            "aircraft_provider": provider,
+            "subscription": subscription,
         })
     except Exception as e:
         logger.error(f"Failed to track scan:complete event: {e}", exc_info=True)
 
-def track_plane_request(request: Request, lat: float, lng: float, city: str, plane_index: int, from_cache: bool):
-    """Track plane:request analytics event for plane endpoint requests"""
+def track_plane_request(
+    request: Request,
+    lat: float,
+    lng: float,
+    city: str,
+    plane_index: int,
+    from_cache: bool,
+    subscription: str = "yoto-club",
+    free_pool_entry_id: str = None,
+    distance_miles: int = None,
+):
+    """Track plane:request analytics event for plane endpoint requests
+
+    Args:
+        request: FastAPI request object
+        lat: User latitude
+        lng: User longitude
+        city: User city name
+        plane_index: 1-based plane index
+        from_cache: Whether audio was served from cache
+        subscription: "yoto-club" for paid, "free" for free tier
+        free_pool_entry_id: Free pool session ID (free tier only)
+        distance_miles: Calculated distance to flight (free tier plane 1 only)
+    """
     try:
         import hashlib
 
@@ -345,11 +380,11 @@ def track_plane_request(request: Request, lat: float, lng: float, city: str, pla
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
         session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
 
-        analytics.track_event("plane:request", {
+        properties = {
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
-            "$insert_id": f"plane_req_{session_id}_{plane_index}",  # Prevents duplicates
+            "$insert_id": f"plane_req_{subscription}_{session_id}_{plane_index}",  # Prevents duplicates
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
             "os": browser_info["os"],
@@ -359,12 +394,54 @@ def track_plane_request(request: Request, lat: float, lng: float, city: str, pla
             "user_lng": round(lng, 2),
             "user_city": city,
             "plane_index": plane_index,
-            "from_cache": from_cache
-        })
+            "from_cache": from_cache,
+            "subscription": subscription,
+        }
+
+        # Add free tier specific properties
+        if free_pool_entry_id:
+            properties["free_pool_entry_id"] = free_pool_entry_id
+        if distance_miles is not None:
+            properties["distance_miles"] = distance_miles
+
+        analytics.track_event("plane:request", properties)
     except Exception as e:
         logger.error(f"Failed to track plane:request event: {e}", exc_info=True)
 
-def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None):
+
+def track_scan_start(request: Request, subscription: str = "yoto-club"):
+    """Track scan:start analytics event when user initiates a scan
+
+    Args:
+        request: FastAPI request object
+        subscription: "yoto-club" for paid, "free" for free tier
+    """
+    try:
+        import hashlib
+
+        client_ip = extract_client_ip(request)
+        user_agent = extract_user_agent(request)
+        browser_info = parse_user_agent(user_agent)
+
+        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}"
+        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+
+        analytics.track_event("scan:start", {
+            "ip": client_ip,
+            "$user_agent": user_agent,
+            "$session_id": session_id,
+            "$insert_id": f"scan_start_{subscription}_{session_id}",
+            "browser": browser_info["browser"],
+            "browser_version": browser_info["browser_version"],
+            "os": browser_info["os"],
+            "os_version": browser_info["os_version"],
+            "device": browser_info["device"],
+            "subscription": subscription,
+        })
+    except Exception as e:
+        logger.error(f"Failed to track scan:start event: {e}", exc_info=True)
+
+def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None, subscription: str = "yoto-club"):
     """Track generate:audio analytics event with flight and audio details"""
     try:
         import hashlib
@@ -414,7 +491,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
-            "$insert_id": f"mp3_gen_{session_id}_{plane_index}",  # Prevents duplicates
+            "$insert_id": f"mp3_gen_{subscription}_{session_id}_{plane_index}",  # Prevents duplicates
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
             "os": browser_info["os"],
@@ -438,7 +515,8 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "text_length": len(sentence),
             "tts_provider": tts_provider,
             "audio_format": audio_format,
-            "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "amy_neural" if tts_provider == "polly" else "gemini-2.5-flash-preview-tts" if tts_provider == "google" else "unknown"
+            "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "amy_neural" if tts_provider == "polly" else "gemini-2.5-flash-preview-tts" if tts_provider == "google" else "unknown",
+            "subscription": subscription,
         })
     except Exception as e:
         logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
@@ -773,6 +851,8 @@ async def handle_plane_endpoint(
         provider: Aircraft data provider override (requires secret)
         country: Optional country code override (e.g., "FR", "GB", "US") for testing metric/imperial units
     """
+    from .free_pool import populate_free_pool, stitch_audio
+
     logger.info(f"Request to /plane/{plane_index}")
     validate_flight_position_override(lat, lng, secret)
 
@@ -822,7 +902,7 @@ async def handle_plane_endpoint(
             media_type=mime_type,
             headers=response_headers
         )
-    
+
     # Cache miss - get aircraft data (this will use cached API data if available)
     aircraft, error_message = await get_nearby_aircraft(
         user_lat,
@@ -832,14 +912,22 @@ async def handle_plane_endpoint(
         provider_override=forced_provider,
         user_city=user_city,
     )
-    
-    
+
+
     # Check if we have the requested plane
     fun_fact_source = None  # Initialize for all cases
+    opening_text = None
+    body_text = None
+    use_split_tts = False  # Flag to track if we can use split TTS
 
     if aircraft and len(aircraft) > zero_based_index:
         selected_aircraft = aircraft[zero_based_index]
-        sentence, fun_fact_source = generate_flight_text_for_aircraft(selected_aircraft, user_lat, user_lng, plane_index, country_code)
+        # Use split text generation for free pool support
+        opening_text, body_text, fun_fact_source = generate_flight_text_for_aircraft(
+            selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True
+        )
+        sentence = f"{opening_text} {body_text}"
+        use_split_tts = True
 
     elif aircraft and len(aircraft) > 0:
         # Not enough planes, return an appropriate message for this plane index
@@ -858,11 +946,47 @@ async def handle_plane_endpoint(
     override_sentence = get_plane_sentence_override(plane_index)
     if override_sentence:
         sentence = override_sentence
-    
-    # Generate TTS for the sentence
+        use_split_tts = False  # Don't use split TTS for override sentences
+
+    # Generate TTS
     import time
     tts_start_time = time.time()
-    audio_content, tts_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
+
+    if use_split_tts and opening_text and body_text:
+        # Split TTS: generate opening and body separately for free pool support
+        opening_audio, opening_error, _, _, _ = await convert_text_to_speech(opening_text, tts_override=tts_override)
+        body_audio, body_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(body_text, tts_override=tts_override)
+
+        if opening_audio and body_audio and not opening_error and not body_error:
+            # Stitch opening + body with 1s silence at start
+            audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True)
+            tts_error = ""
+
+            # Cache body audio separately for free pool reuse
+            # Generate location hash for body cache key
+            import hashlib
+            location_str = f"{round(user_lat, 2)},{round(user_lng, 2)}"
+            location_hash = hashlib.md5(location_str.encode()).hexdigest()
+            body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.mp3"
+            asyncio.create_task(s3_cache.set(body_cache_key, body_audio))
+
+            # After plane 3: populate free pool (planes 1 & 2 only)
+            if plane_index == 3 and aircraft and len(aircraft) >= 2:
+                asyncio.create_task(
+                    populate_free_pool(
+                        aircraft_list=aircraft[:3],
+                        location_hash=location_hash,
+                        tts_provider=tts_provider_used,
+                        convert_text_to_speech_fn=lambda text: convert_text_to_speech(text, tts_override=tts_override),
+                    )
+                )
+        else:
+            # Fallback to combined sentence if split fails
+            audio_content, tts_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
+    else:
+        # Single TTS call for non-split cases
+        audio_content, tts_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
+
     tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
 
     if audio_content and not tts_error:
@@ -1047,6 +1171,472 @@ async def plane_3_options():
             "Access-Control-Max-Age": "3600"
         }
     )
+
+
+# =============================================================================
+# FREE TIER ENDPOINTS
+# =============================================================================
+
+from fastapi.responses import JSONResponse
+
+from .free_pool import (
+    get_free_pool_index,
+    get_session_for_free_user,
+    check_free_tier_rate_limit,
+    get_empty_pool_audio,
+    stitch_audio,
+)
+
+# Free tier S3 base URL
+FREE_TIER_S3_BASE = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/free"
+
+
+async def stream_free_static_mp3(request: Request, filename: str):
+    """Stream a static MP3 file from the free tier S3 folder
+
+    Args:
+        request: FastAPI request object
+        filename: MP3 filename (e.g., "scanning.mp3", "overandout.mp3")
+
+    Returns:
+        StreamingResponse with the MP3 content
+    """
+    mp3_url = f"{FREE_TIER_S3_BASE}/{filename}"
+
+    try:
+        # Prepare headers for the S3 request
+        request_headers = {}
+
+        # Handle Range requests for seeking/partial content
+        range_header = request.headers.get("range")
+        if range_header:
+            request_headers["Range"] = range_header
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(mp3_url, headers=request_headers)
+
+            if response.status_code in [200, 206]:
+                content = response.content
+                content_length = len(content)
+
+                response_headers = {
+                    "Content-Type": "audio/mpeg",
+                    "Content-Length": str(content_length),
+                    "Accept-Ranges": "bytes",
+                    "Cache-Control": "public, max-age=3600",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+                    "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+                    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+                }
+
+                # Handle range requests
+                if range_header and response.status_code == 206:
+                    content_range = response.headers.get("content-range")
+                    if content_range:
+                        response_headers["Content-Range"] = content_range
+
+                # Copy important S3 headers if present
+                if response.headers.get("etag"):
+                    response_headers["ETag"] = response.headers["etag"]
+                if response.headers.get("last-modified"):
+                    response_headers["Last-Modified"] = response.headers["last-modified"]
+
+                return StreamingResponse(
+                    iter([content]),
+                    status_code=response.status_code,
+                    media_type="audio/mpeg",
+                    headers=response_headers
+                )
+            else:
+                return JSONResponse(
+                    {"error": f"MP3 file not accessible. Status: {response.status_code}"},
+                    status_code=response.status_code
+                )
+
+    except httpx.TimeoutException:
+        return JSONResponse({"error": "Timeout accessing MP3 file"}, status_code=504)
+    except Exception as e:
+        logger.error(f"Error streaming free tier MP3 {filename}: {e}")
+        return JSONResponse({"error": f"Failed to stream MP3: {str(e)}"}, status_code=500)
+
+
+import random as _random
+
+async def fetch_random_free_intro() -> Optional[bytes]:
+    """Fetch a random intro audio file from S3 (flight-intro-1 through flight-intro-6)
+
+    Returns:
+        Audio bytes if successful, None if all intros fail to load
+    """
+    intro_number = _random.randint(1, 6)
+    intro_key = f"free/intros/flight-intro-{intro_number}.mp3"
+
+    intro_audio = await s3_cache.get_raw(intro_key)
+    if intro_audio:
+        return intro_audio
+
+    # If the random one failed, try others
+    for fallback_num in range(1, 7):
+        if fallback_num == intro_number:
+            continue
+        fallback_key = f"free/intros/flight-intro-{fallback_num}.mp3"
+        intro_audio = await s3_cache.get_raw(fallback_key)
+        if intro_audio:
+            logger.warning(f"Free intro {intro_number} not found, using fallback {fallback_num}")
+            return intro_audio
+
+    logger.error("No free intro files found in S3")
+    return None
+
+
+async def handle_free_plane_endpoint(request: Request, plane_index: int):
+    """Handle free tier requests - plane 1 and 2 only
+
+    Free users hear pre-generated audio from paid scans, without real-time API calls.
+    Both planes get a random static intro (from flight-intro-1 to flight-intro-6) + cached body.
+    """
+    # Free tier limited to 2 planes
+    if plane_index > 2:
+        return JSONResponse(
+            {"error": "Free tier limited to 2 planes"},
+            status_code=400
+        )
+
+    client_ip = extract_client_ip(request)
+
+    # Check rate limit
+    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
+    if not is_allowed:
+        return JSONResponse(
+            {"error": "Rate limit exceeded", "retry_after": retry_after},
+            status_code=429,
+            headers={"Retry-After": str(retry_after)}
+        )
+
+    # Get free pool index
+    index = await get_free_pool_index()
+    if not index or not index.get("entries"):
+        # Empty pool - return friendly message
+        empty_audio = await get_empty_pool_audio(convert_text_to_speech)
+        if empty_audio:
+            return StreamingResponse(
+                iter([empty_audio]),
+                media_type="audio/mpeg",
+                headers={
+                    "Content-Type": "audio/mpeg",
+                    "Content-Length": str(len(empty_audio)),
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=60"
+                }
+            )
+        return JSONResponse(
+            {"error": "Free pool is warming up, check back soon"},
+            status_code=503
+        )
+
+    # Select consistent session for this user
+    session = get_session_for_free_user(client_ip, index)
+    if not session:
+        return JSONResponse(
+            {"error": "No sessions available"},
+            status_code=503
+        )
+
+    planes = session.get("planes", [])
+    plane_data = None
+    for p in planes:
+        if p.get("index") == plane_index:
+            plane_data = p
+            break
+
+    if not plane_data:
+        # This plane not available in this session
+        empty_audio = await get_empty_pool_audio(convert_text_to_speech)
+        if empty_audio:
+            return StreamingResponse(
+                iter([empty_audio]),
+                media_type="audio/mpeg",
+                headers={
+                    "Content-Type": "audio/mpeg",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            )
+        return JSONResponse(
+            {"error": f"Plane {plane_index} not available in this session"},
+            status_code=404
+        )
+
+    # Fetch cached body audio from free pool
+    body_audio = await s3_cache.get_raw(plane_data["body_cache_key"])
+
+    if not body_audio:
+        logger.warning(f"Free pool body audio missing for session {session.get('id')}, plane {plane_index}")
+        empty_audio = await get_empty_pool_audio(convert_text_to_speech)
+        if empty_audio:
+            return StreamingResponse(
+                iter([empty_audio]),
+                media_type="audio/mpeg",
+                headers={
+                    "Content-Type": "audio/mpeg",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            )
+        return JSONResponse(
+            {"error": "Audio temporarily unavailable"},
+            status_code=503
+        )
+
+    # Fetch random static intro from S3
+    intro_audio = await fetch_random_free_intro()
+
+    if not intro_audio:
+        # No intro available, just return body with silence
+        logger.warning("No free intro audio available, serving body only")
+        from pydub import AudioSegment
+        import io
+        silence = AudioSegment.silent(duration=1000)
+        body_seg = AudioSegment.from_file(io.BytesIO(body_audio), format="mp3")
+        combined_seg = silence + body_seg
+        output = io.BytesIO()
+        combined_seg.export(output, format="mp3")
+        combined = output.getvalue()
+    else:
+        # Stitch: silence + random intro + body
+        combined = await stitch_audio(intro_audio, body_audio, add_silence=True)
+
+    # Get user location for tracking
+    user_lat, user_lng, _, user_city = await get_user_location(request)
+
+    # Track analytics using unified event with subscription=free
+    track_plane_request(
+        request=request,
+        lat=user_lat,
+        lng=user_lng,
+        city=user_city,
+        plane_index=plane_index,
+        from_cache=True,  # Free tier always serves cached content
+        subscription="free",
+        free_pool_entry_id=session.get("id"),
+    )
+
+    return StreamingResponse(
+        iter([combined]),
+        media_type="audio/mpeg",
+        headers={
+            "Content-Type": "audio/mpeg",
+            "Content-Length": str(len(combined)),
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
+        }
+    )
+
+
+@app.get("/free/scan")
+async def free_scan_endpoint(request: Request):
+    """Free tier scan intro - serves static audio from S3, NO pre-caching
+
+    This endpoint serves a pre-generated static intro audio file for free users.
+    Unlike paid /scan, this does not trigger any pre-caching or API calls.
+    """
+    client_ip = extract_client_ip(request)
+
+    # Check rate limit
+    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
+    if not is_allowed:
+        return JSONResponse(
+            {"error": "Rate limit exceeded", "retry_after": retry_after},
+            status_code=429,
+            headers={"Retry-After": str(retry_after)}
+        )
+
+    # Track analytics using unified event with subscription=free
+    track_scan_start(request, subscription="free")
+
+    # Serve static file from S3 free folder
+    return await stream_free_static_mp3(request, "scanning.mp3")
+
+
+@app.get("/free/scanning.mp3")
+async def free_scanning_endpoint(request: Request):
+    """Free tier scanning audio - serves static file from S3"""
+    client_ip = extract_client_ip(request)
+
+    # Check rate limit
+    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
+    if not is_allowed:
+        return JSONResponse(
+            {"error": "Rate limit exceeded", "retry_after": retry_after},
+            status_code=429,
+            headers={"Retry-After": str(retry_after)}
+        )
+
+    # Track analytics
+    track_scan_start(request, subscription="free")
+
+    return await stream_free_static_mp3(request, "scanning.mp3")
+
+
+@app.get("/free/scanning-again.mp3")
+async def free_scanning_again_endpoint(request: Request):
+    """Free tier scanning-again audio - serves static file from S3"""
+    client_ip = extract_client_ip(request)
+
+    # Check rate limit
+    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
+    if not is_allowed:
+        return JSONResponse(
+            {"error": "Rate limit exceeded", "retry_after": retry_after},
+            status_code=429,
+            headers={"Retry-After": str(retry_after)}
+        )
+
+    return await stream_free_static_mp3(request, "scanning-again.mp3")
+
+
+@app.get("/free/overandout.mp3")
+async def free_overandout_endpoint(request: Request):
+    """Free tier overandout audio - serves static file from S3"""
+    client_ip = extract_client_ip(request)
+
+    # Check rate limit
+    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
+    if not is_allowed:
+        return JSONResponse(
+            {"error": "Rate limit exceeded", "retry_after": retry_after},
+            status_code=429,
+            headers={"Retry-After": str(retry_after)}
+        )
+
+    return await stream_free_static_mp3(request, "overandout.mp3")
+
+
+@app.options("/free/scan")
+async def free_scan_options():
+    """Handle CORS preflight requests for /free/scan endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+
+@app.get("/free/plane/1")
+async def free_plane_1_endpoint(request: Request):
+    """Get MP3 for free tier plane 1
+
+    Free tier plane 1 includes a dynamic distance intro calculated from
+    the free user's location to the cached flight position.
+    """
+    return await handle_free_plane_endpoint(request, 1)
+
+
+@app.get("/free/plane/2")
+async def free_plane_2_endpoint(request: Request):
+    """Get MP3 for free tier plane 2
+
+    Free tier plane 2 includes a generic opening (no distance) + cached body.
+    """
+    return await handle_free_plane_endpoint(request, 2)
+
+
+@app.get("/free/plane/3")
+async def free_plane_3_endpoint(request: Request):
+    """Free tier is limited to 2 planes - returns error for plane 3"""
+    return await handle_free_plane_endpoint(request, 3)
+
+
+@app.options("/free/plane/1")
+async def free_plane_1_options():
+    """Handle CORS preflight requests for /free/plane/1 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+
+@app.options("/free/plane/2")
+async def free_plane_2_options():
+    """Handle CORS preflight requests for /free/plane/2 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+
+@app.options("/free/plane/3")
+async def free_plane_3_options():
+    """Handle CORS preflight requests for /free/plane/3 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+
+@app.options("/free/scanning.mp3")
+async def free_scanning_options():
+    """Handle CORS preflight requests for /free/scanning.mp3 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+
+@app.options("/free/scanning-again.mp3")
+async def free_scanning_again_options():
+    """Handle CORS preflight requests for /free/scanning-again.mp3 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+
+@app.options("/free/overandout.mp3")
+async def free_overandout_options():
+    """Handle CORS preflight requests for /free/overandout.mp3 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
 
 if __name__ == "__main__":
     import uvicorn

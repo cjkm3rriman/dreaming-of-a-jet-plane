@@ -45,10 +45,10 @@ class Analytics:
             else:
                 # Use anonymous tracking
                 self.mp.track('anonymous', event_name, properties)
-                
+
         except Exception as e:
             logger.error(f"Failed to track event {event_name}: {e}")
-    
+
 
 # Global analytics instance
 analytics = Analytics()

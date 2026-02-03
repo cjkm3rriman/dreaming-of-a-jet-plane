@@ -324,6 +324,43 @@ class S3MP3Cache:
             logger.error(f"S3 cache set error for key {cache_key}: {e}")
             return False
     
+    async def get_raw(self, cache_key: str) -> Optional[bytes]:
+        """Get raw bytes from S3 without TTL check (for free pool audio)
+
+        Free pool audio should be served regardless of age since it's
+        explicitly managed by the free pool index (FIFO, max 100 entries).
+
+        Args:
+            cache_key: S3 key to retrieve (can be full path like 'free_pool/xyz.mp3')
+
+        Returns:
+            bytes if found, None if not found or error
+        """
+        if not self.enabled:
+            return None
+
+        try:
+            s3_url = f"https://{self.bucket_name}.s3.{self.aws_region}.amazonaws.com/{cache_key}"
+
+            async with httpx.AsyncClient() as client:
+                response = await client.get(s3_url, timeout=30.0)
+
+                if response.status_code == 200:
+                    return response.content
+                elif response.status_code == 404:
+                    logger.info(f"Free pool audio not found: {cache_key}")
+                    return None
+                else:
+                    logger.warning(f"S3 GET request failed for free pool: {response.status_code}")
+                    return None
+
+        except httpx.TimeoutException:
+            logger.error(f"S3 timeout fetching free pool audio: {cache_key}")
+            return None
+        except Exception as e:
+            logger.error(f"S3 error fetching free pool audio {cache_key}: {e}")
+            return None
+
     async def exists_and_fresh(self, cache_key: str, content_type: str = "audio") -> bool:
         """Check if cached file exists and is still fresh"""
         if not self.enabled:
