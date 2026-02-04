@@ -261,7 +261,7 @@ def generate_flight_text_for_aircraft(
     if plane_index == 2:
         detection_sentence = f"{base_opening_word} We've found another jet plane, flying high {distance_str} from this Yoto!"
     elif plane_index == 3:
-        detection_sentence = f"{base_opening_word} We've identified one more jet plane up there, {distance_str} from this Yoto!"
+        detection_sentence = f"{base_opening_word} Our scanner has identified one more jet plane up there, {distance_str} from this Yoto!"
     else:
         # Default for plane 1 or any other index
         detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_str} from this Yoto!"
@@ -306,7 +306,7 @@ def generate_flight_text_for_aircraft(
         descriptor_pool = small_aircraft_descriptors
     aircraft_descriptor = random.choice(descriptor_pool)
     scanner_info = (
-        f"My scanner tells me that Captain {captain_name} is piloting this "
+        f"Captain {captain_name} is piloting this "
         f"{aircraft_descriptor} {aircraft_name_with_digits}"
     )
     

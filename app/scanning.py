@@ -40,6 +40,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         from .main import get_nearby_aircraft, convert_text_to_speech, TTS_PROVIDER
         from .flight_text import generate_flight_text_for_aircraft, generate_flight_text
         from .location_utils import get_location_from_ip, extract_client_ip
+        from .free_pool import populate_free_pool
 
         # Get country code and city for metric/imperial units and analytics
         # We already have lat/lng
@@ -66,6 +67,10 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         from .main import get_audio_format_for_provider
         file_ext, mime_type = get_audio_format_for_provider(effective_provider)
 
+        # Compute location hash once for body cache keys
+        location_str = f"{round(lat, 2)},{round(lng, 2)}"
+        location_hash = hashlib.md5(location_str.encode()).hexdigest()
+
         # Track destination cities across all 3 planes for diversity
         used_destinations = set()
 
@@ -85,9 +90,15 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
 
             # Generate appropriate text for this plane
             current_fun_fact_source = None
+            opening_text = None
+            body_text = None
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
-                sentence, current_fun_fact_source = generate_flight_text_for_aircraft(selected_aircraft, lat, lng, plane_index, country_code, used_destinations)
+                # Use split_text=True to get opening and body separately for free pool support
+                opening_text, body_text, current_fun_fact_source = generate_flight_text_for_aircraft(
+                    selected_aircraft, lat, lng, plane_index, country_code, used_destinations, split_text=True
+                )
+                sentence = f"{opening_text} {body_text}"
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
                 if plane_index == 2:
@@ -105,6 +116,8 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             override_sentence = get_plane_sentence_override(plane_index)
             if override_sentence:
                 sentence = override_sentence
+                opening_text = None  # Don't use split TTS for overrides
+                body_text = None
 
             # Create task to generate and cache this plane's audio
             selected_aircraft = aircraft[zero_based_index] if aircraft and len(aircraft) > zero_based_index else None
@@ -116,20 +129,32 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                     lat,
                     lng,
                     city,
-                    request,
-                    selected_aircraft,
-                    tts_override,
-                    current_fun_fact_source,
+                    location_hash=location_hash,
+                    opening_text=opening_text,
+                    body_text=body_text,
+                    request=request,
+                    aircraft=selected_aircraft,
+                    tts_override=tts_override,
+                    fun_fact_source=current_fun_fact_source,
                 )
             )
             tasks.append(task)
-        
+
         # Wait for all plane MP3s to be generated concurrently
         if tasks:
             results = await asyncio.gather(*tasks, return_exceptions=True)
             successes = sum(1 for r in results if r is True)
+            logger.info(f"Pre-generation completed: {successes}/{len(results)} planes cached successfully")
         else:
-            pass
+            logger.info("Pre-generation skipped: all planes already cached")
+
+        # After all planes complete, populate free pool (planes 1 & 2 only)
+        if aircraft and len(aircraft) >= 2:
+            await populate_free_pool(
+                aircraft_list=aircraft[:3],
+                location_hash=location_hash,
+                tts_provider=effective_provider,
+            )
 
     except Exception as e:
         logger.error(f"Error in MP3 pre-generation: {e}")
@@ -142,6 +167,9 @@ async def _generate_and_cache_plane_audio(
     lat: float,
     lng: float,
     city: str,
+    location_hash: str = None,
+    opening_text: str = None,
+    body_text: str = None,
     request: Request = None,
     aircraft: dict = None,
     tts_override: str = None,
@@ -152,10 +180,13 @@ async def _generate_and_cache_plane_audio(
     Args:
         plane_index: 1-based plane index (1, 2, 3)
         cache_key: S3 cache key (already includes TTS provider and format)
-        sentence: Text to convert to speech
+        sentence: Text to convert to speech (fallback if split text fails)
         lat: Latitude
         lng: Longitude
         city: City associated with the user request
+        location_hash: Hash of location for body cache key
+        opening_text: Opening text for split TTS (optional)
+        body_text: Body text for split TTS (optional)
         request: Optional FastAPI Request object
         aircraft: Optional aircraft data dict
         tts_override: Optional TTS provider override
@@ -167,11 +198,38 @@ async def _generate_and_cache_plane_audio(
     try:
         # Import here to avoid circular imports
         from .main import convert_text_to_speech, track_audio_generation
+        from .free_pool import stitch_audio
         import time
 
-        # Convert to speech with timing (pass TTS override)
         tts_start_time = time.time()
-        audio_content, tts_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
+        audio_content = None
+        tts_error = None
+        tts_provider_used = None
+        file_ext = None
+        mime_type = None
+
+        # Try split TTS if we have opening and body text
+        if opening_text and body_text and location_hash:
+            opening_audio, opening_error, _, _, _ = await convert_text_to_speech(opening_text, tts_override=tts_override)
+            body_audio, body_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(body_text, tts_override=tts_override)
+
+            if opening_audio and body_audio and not opening_error and not body_error:
+                # Stitch opening + body with 1s silence at start
+                audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True)
+                tts_error = ""
+
+                # Cache body audio separately for free pool reuse
+                body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.mp3"
+                await s3_cache.set(body_cache_key, body_audio)
+                logger.info(f"Cached body audio at {body_cache_key}")
+            else:
+                # Split TTS failed, fall through to single TTS
+                logger.warning(f"Split TTS failed for plane {plane_index}, falling back to single TTS. Opening error: {opening_error}, Body error: {body_error}")
+
+        # Fallback to single TTS if split didn't work or wasn't requested
+        if not audio_content:
+            audio_content, tts_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
+
         tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
 
         if audio_content and not tts_error:

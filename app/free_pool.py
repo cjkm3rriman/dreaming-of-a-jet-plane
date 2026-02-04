@@ -173,23 +173,21 @@ async def populate_free_pool(
     aircraft_list: List[Dict[str, Any]],
     location_hash: str,
     tts_provider: str,
-    convert_text_to_speech_fn,
 ) -> bool:
-    """Generate generic openings and add session to free pool
+    """Copy body audio to free pool for reuse with pre-recorded intros
 
-    Called after plane 3 completes for paid users. Only populates planes 1 & 2.
+    Called after pre-generation completes. Only populates planes 1 & 2.
+    Free tier endpoints use pre-recorded intro audio files, so we only need
+    to copy the body audio to the free pool.
 
     Args:
         aircraft_list: List of aircraft data (all 3 planes)
         location_hash: Hash for the paid user's location (for body cache keys)
         tts_provider: TTS provider being used
-        convert_text_to_speech_fn: Function to convert text to speech
 
     Returns:
         True if successful, False otherwise
     """
-    from .flight_text import generate_generic_opening
-
     try:
         session_id = str(uuid.uuid4())[:8]
         planes_data = []
@@ -211,23 +209,11 @@ async def populate_free_pool(
                 logger.warning(f"Body audio not found for free pool: {body_cache_key}")
                 continue
 
-            # Generate generic opening text and TTS
-            generic_opening_text = generate_generic_opening(plane_index)
-            opening_audio, tts_error, _, _, _ = await convert_text_to_speech_fn(generic_opening_text)
-
-            if tts_error or not opening_audio:
-                logger.error(f"Failed to generate generic opening TTS: {tts_error}")
-                continue
-
-            # Store generic opening in free pool
-            opening_cache_key = f"free_pool/{session_id}_plane{plane_index}_opening_{tts_provider}.mp3"
-            await s3_cache.set(opening_cache_key, opening_audio)
-
             # Copy body to free pool (for easier management)
             free_body_key = f"free_pool/{session_id}_plane{plane_index}_body_{tts_provider}.mp3"
             await s3_cache.set(free_body_key, body_audio)
 
-            # Build plane data for index
+            # Build plane data for index (no generic_opening_cache_key - free endpoints use pre-recorded intros)
             plane_data = {
                 "index": plane_index,
                 "flight_lat": aircraft.get("latitude"),
@@ -236,7 +222,6 @@ async def populate_free_pool(
                 "destination_city": aircraft.get("destination_city", "Unknown"),
                 "airline_name": aircraft.get("airline_name", "Unknown"),
                 "body_cache_key": free_body_key,
-                "generic_opening_cache_key": opening_cache_key
             }
             planes_data.append(plane_data)
 
@@ -258,32 +243,26 @@ async def populate_free_pool(
 
 
 def get_session_for_free_user(client_ip: str, index: Dict) -> Optional[Dict]:
-    """Select consistent session for a free user (IP + hour hash)
+    """Select a random session from the last 5 entries for free users
 
-    Uses a hash of client IP and current hour to consistently assign
-    the same session to a user within an hour, refreshing hourly for variety.
+    Picks randomly from the most recent sessions to ensure fresh, diverse content.
 
     Args:
-        client_ip: Client IP address
+        client_ip: Client IP address (unused, kept for API compatibility)
         index: Free pool index dict
 
     Returns:
         Session entry dict or None if no sessions available
     """
+    import random
+
     entries = index.get("entries", [])
     if not entries:
         return None
 
-    # Create hash from IP + current hour
-    current_hour = datetime.now(timezone.utc).strftime("%Y-%m-%d-%H")
-    hash_input = f"{client_ip}:{current_hour}"
-    hash_value = hashlib.md5(hash_input.encode()).hexdigest()
-
-    # Convert hash to index
-    hash_int = int(hash_value[:8], 16)
-    session_index = hash_int % len(entries)
-
-    return entries[session_index]
+    # Pick randomly from the last 5 entries (or fewer if pool is smaller)
+    recent_entries = entries[-5:]
+    return random.choice(recent_entries)
 
 
 def check_free_tier_rate_limit(client_ip: str) -> tuple[bool, Optional[int]]:
@@ -324,8 +303,38 @@ def check_free_tier_rate_limit(client_ip: str) -> tuple[bool, Optional[int]]:
     return True, None
 
 
+def _trim_silence(audio_segment: AudioSegment, silence_threshold: int = -40, min_silence_len: int = 100) -> AudioSegment:
+    """Trim leading and trailing silence from an audio segment
+
+    Args:
+        audio_segment: Pydub AudioSegment to trim
+        silence_threshold: dB threshold below which audio is considered silence (default -40)
+        min_silence_len: Minimum length of silence to detect in ms (default 100)
+
+    Returns:
+        Trimmed AudioSegment
+    """
+    from pydub.silence import detect_leading_silence
+
+    # Trim leading silence
+    start_trim = detect_leading_silence(audio_segment, silence_threshold=silence_threshold, chunk_size=10)
+
+    # Trim trailing silence (reverse, detect leading, reverse back)
+    end_trim = detect_leading_silence(audio_segment.reverse(), silence_threshold=silence_threshold, chunk_size=10)
+
+    # Ensure we don't trim everything
+    duration = len(audio_segment)
+    if start_trim + end_trim >= duration:
+        return audio_segment  # Return original if trimming would remove everything
+
+    return audio_segment[start_trim:duration - end_trim]
+
+
 async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True) -> bytes:
     """Combine opening + body audio using pydub
+
+    Trims trailing silence from opening and leading silence from body
+    to eliminate gaps between segments.
 
     Args:
         opening: Opening audio bytes (MP3)
@@ -339,11 +348,19 @@ async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True) ->
         opening_seg = AudioSegment.from_file(io.BytesIO(opening), format="mp3")
         body_seg = AudioSegment.from_file(io.BytesIO(body), format="mp3")
 
+        # Trim trailing silence from opening and leading silence from body
+        # to eliminate the gap between segments
+        opening_trimmed = _trim_silence(opening_seg)
+        body_trimmed = _trim_silence(body_seg)
+
+        # Add half second gap between opening and body for natural pacing
+        gap = AudioSegment.silent(duration=500)
+
         if add_silence:
-            silence = AudioSegment.silent(duration=1000)  # 1 second
-            combined = silence + opening_seg + body_seg
+            silence = AudioSegment.silent(duration=1000)  # 1 second at start
+            combined = silence + opening_trimmed + gap + body_trimmed
         else:
-            combined = opening_seg + body_seg
+            combined = opening_trimmed + gap + body_trimmed
 
         output = io.BytesIO()
         combined.export(output, format="mp3")
@@ -356,6 +373,8 @@ async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True) ->
 
 async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True) -> bytes:
     """Combine multiple audio segments using pydub
+
+    Trims silence from each segment to eliminate gaps between them.
 
     Args:
         segments: List of audio bytes (MP3)
@@ -375,7 +394,9 @@ async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True) ->
 
         for segment_bytes in segments:
             segment = AudioSegment.from_file(io.BytesIO(segment_bytes), format="mp3")
-            combined += segment
+            # Trim silence from each segment to eliminate gaps
+            trimmed = _trim_silence(segment)
+            combined += trimmed
 
         output = io.BytesIO()
         combined.export(output, format="mp3")

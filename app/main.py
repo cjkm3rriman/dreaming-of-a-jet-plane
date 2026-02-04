@@ -851,7 +851,7 @@ async def handle_plane_endpoint(
         provider: Aircraft data provider override (requires secret)
         country: Optional country code override (e.g., "FR", "GB", "US") for testing metric/imperial units
     """
-    from .free_pool import populate_free_pool, stitch_audio
+    from .free_pool import stitch_audio
 
     logger.info(f"Request to /plane/{plane_index}")
     validate_flight_position_override(lat, lng, secret)
@@ -962,24 +962,13 @@ async def handle_plane_endpoint(
             audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True)
             tts_error = ""
 
-            # Cache body audio separately for free pool reuse
+            # Cache body audio separately for free pool reuse (pre-generation handles populate_free_pool)
             # Generate location hash for body cache key
             import hashlib
             location_str = f"{round(user_lat, 2)},{round(user_lng, 2)}"
             location_hash = hashlib.md5(location_str.encode()).hexdigest()
             body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.mp3"
             asyncio.create_task(s3_cache.set(body_cache_key, body_audio))
-
-            # After plane 3: populate free pool (planes 1 & 2 only)
-            if plane_index == 3 and aircraft and len(aircraft) >= 2:
-                asyncio.create_task(
-                    populate_free_pool(
-                        aircraft_list=aircraft[:3],
-                        location_hash=location_hash,
-                        tts_provider=tts_provider_used,
-                        convert_text_to_speech_fn=lambda text: convert_text_to_speech(text, tts_override=tts_override),
-                    )
-                )
         else:
             # Fallback to combined sentence if split fails
             audio_content, tts_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
