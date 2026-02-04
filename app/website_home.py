@@ -71,6 +71,14 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             <script type="application/ld+json">
             {
               "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Dreaming of a Jet Plane",
+              "url": "https://dreamingofajetplane.com/"
+            }
+            </script>
+            <script type="application/ld+json">
+            {
+              "@context": "https://schema.org",
               "@type": "SoftwareApplication",
               "name": "Dreaming of a Jet Plane",
               "description": "Interactive Yoto Plane Scanner that finds airplanes in the skies and teaches kids about destinations",
