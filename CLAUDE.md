@@ -407,3 +407,27 @@ See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. E
 - `app/main.py` - Initialize Sentry
 - `pyproject.toml` - Add sentry-sdk dependency
 - Railway environment variables
+
+
+## TODO: Dynamic Intro for Premium Scanning Endpoint
+
+**Problem**: The `/scanning` endpoint currently streams a static pre-recorded MP3 file (`scanning.mp3`). This misses an opportunity for personalization and variety.
+
+**Solution**: Generate dynamic intro audio that can include:
+- Time-of-day greetings ("Good morning!", "Good evening!")
+- Location-aware content ("Let's see what's flying over London today!")
+- Seasonal or weather references
+- Variety in phrasing to keep the experience fresh
+
+**Implementation Ideas**:
+1. Generate intro text dynamically based on user context (time, location, etc.)
+2. Use TTS to generate the intro audio
+3. Cache generated intros with a key based on the dynamic factors (e.g., `scanning_{city}_{time_of_day}_{provider}.mp3`)
+4. Fall back to static MP3 if TTS fails
+
+**Considerations**:
+- Balance between variety and caching efficiency
+- TTS latency - intro needs to start playing quickly
+- Could pre-generate common combinations during off-peak hours
+
+**Files to modify**: `app/scanning.py`, potentially new `app/intro_text.py` for text generation
