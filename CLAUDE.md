@@ -431,3 +431,27 @@ See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. E
 - Could pre-generate common combinations during off-peak hours
 
 **Files to modify**: `app/scanning.py`, potentially new `app/intro_text.py` for text generation
+
+
+## TODO: Move Closing Prompts to Static Audio Files
+
+**Problem**: The closing prompts ("Should we find another jet plane?", "Let's find one more jet plane shall we?") are currently embedded in the generated plane audio. This creates issues:
+- TTS cost for regenerating the same phrases
+- Inflexibility when free tier has 2 planes vs premium's 3 planes
+- Can't easily adjust which plane gets a closing prompt
+
+**Solution**: Move closing prompts to static pre-recorded audio files (like `scanning-again.mp3`) that get stitched on the client side or server side after the main plane audio.
+
+**Implementation Ideas**:
+1. Remove closing prompts from `generate_flight_text_for_aircraft()` output
+2. Create static audio files: `find-another.mp3`, `find-one-more.mp3`
+3. Client plays: `plane1.mp3` → `find-another.mp3` → `plane2.mp3` → `find-one-more.mp3` → `plane3.mp3`
+4. Or server stitches them together based on plane count and tier
+
+**Benefits**:
+- Free tier can play 2 planes with appropriate closing
+- Premium tier can play 3 planes with appropriate closings
+- Reduces TTS generation costs
+- Easier to update/localize closing phrases
+
+**Files to modify**: `app/flight_text.py`, `app/main.py`, potentially client-side player logic
