@@ -56,6 +56,19 @@ from .tts_providers import (
     get_voice_folder as get_tts_voice_folder,
 )
 
+# Initialize Sentry for error monitoring (only if DSN is configured)
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+
+if os.getenv("SENTRY_DSN"):
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        environment=os.getenv("SENTRY_ENVIRONMENT", "development"),
+        traces_sample_rate=0.1,  # 10% of requests for performance monitoring
+        integrations=[FastApiIntegration()],
+    )
+    logger.info("Sentry error monitoring initialized")
+
 app = FastAPI()
 
 # Serve static assets
@@ -782,7 +795,7 @@ async def handle_plane_endpoint(
         forced_provider = provider.lower()
 
     # Get user location using shared function
-    user_lat, user_lng, user_country_code, user_city = await get_user_location(request, lat, lng, country)
+    user_lat, user_lng, user_country_code, user_city, user_region, user_country_name = await get_user_location(request, lat, lng, country)
     country_code = user_country_code  # Keep for backwards compatibility
 
     # Get TTS provider override from query parameters
@@ -853,7 +866,7 @@ async def handle_plane_endpoint(
                 sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
     else:
         # No aircraft found at all
-        sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code)
+        sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code, user_city=user_city, user_region=user_region, user_country_name=user_country_name)
 
     override_sentence = get_plane_sentence_override(plane_index)
     if override_sentence:

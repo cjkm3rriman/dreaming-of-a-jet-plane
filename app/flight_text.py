@@ -501,17 +501,19 @@ def generate_flight_text_for_aircraft(aircraft: Dict[str, Any], user_lat: float 
             # No fun facts available for this city
             fun_fact_source = None
 
-    # Add closing prompt for plane index 1 and 2
-    if plane_index == 1:
-        full_response += " Should we find another jet plane?"
-    elif plane_index == 2:
-        full_response += " Let's find one more jet plane shall we?"
-
     return full_response, fun_fact_source
 
 
-def make_error_message_friendly(error_message: str) -> str:
-    """Convert technical error messages to friendly, kid-appropriate explanations"""
+def make_error_message_friendly(error_message: str, user_location: str = "") -> str:
+    """Convert technical error messages to friendly, kid-appropriate explanations
+
+    Args:
+        error_message: Technical error message from the system
+        user_location: Optional user location string for "no aircraft found" messages
+
+    Returns:
+        Kid-friendly error explanation
+    """
     error_lower = error_message.lower()
 
     # Common ending for all error messages
@@ -521,9 +523,12 @@ def make_error_message_friendly(error_message: str) -> str:
     if "api key not configured" in error_lower:
         return "my scanner's acting all silly" + ending
 
-    # No aircraft found
+    # No aircraft found - use location-aware message
     if "no passenger aircraft found" in error_lower:
-        return "there just are not any jet planes in this celestial quadrant right now" + ending
+        if user_location:
+            return f"there just are not any jet planes in the celestial quadrant above {user_location} right now" + ending
+        else:
+            return "there just are not any jet planes in this celestial quadrant right now" + ending
 
     # HTTP status errors
     if "api returned http" in error_lower:
@@ -549,7 +554,22 @@ def make_error_message_friendly(error_message: str) -> str:
     return "my scanner had a technical hiccup" + ending
 
 
-def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional[str] = None, user_lat: float = None, user_lng: float = None, plane_index: int = 0, country_code: str = "US") -> str:
+def format_user_location(city: str = "", region: str = "", country_name: str = "") -> str:
+    """Format user location for display in error messages.
+
+    Returns the most specific available location: city, then region, then country.
+    Returns empty string if no location info is available.
+    """
+    if city:
+        return city
+    if region:
+        return region
+    if country_name:
+        return country_name
+    return ""
+
+
+def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional[str] = None, user_lat: float = None, user_lng: float = None, plane_index: int = 0, country_code: str = "US", user_city: str = "", user_region: str = "", user_country_name: str = "") -> str:
     """Generate descriptive text about detected aircraft or no-aircraft conditions
 
     Args:
@@ -559,6 +579,9 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
         user_lng: User's longitude (for determining US location)
         plane_index: Index of aircraft to use from the list (0-based)
         country_code: ISO 3166-1 alpha-2 country code for unit localization (default: "US")
+        user_city: User's city name for error messages
+        user_region: User's region/state name for error messages (fallback)
+        user_country_name: User's country name for error messages (fallback)
 
     Returns:
         str: Human-readable sentence describing the flight situation
@@ -576,9 +599,11 @@ def generate_flight_text(aircraft: List[Dict[str, Any]], error_message: Optional
         return sentence
     else:
         # Handle error cases with friendly error messages
+        user_location = format_user_location(user_city, user_region, user_country_name)
+
         if error_message:
-            friendly_error = make_error_message_friendly(error_message)
-            return f"I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because {friendly_error}"
+            friendly_error = make_error_message_friendly(error_message, user_location)
         else:
-            friendly_error = make_error_message_friendly("no passenger aircraft found within 100km radius")
-            return f"I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because {friendly_error}"
+            friendly_error = make_error_message_friendly("no passenger aircraft found within 100km radius", user_location)
+
+        return f"I'm sorry my old chum but my scanner was not able to find any jet planes nearby, because {friendly_error}"

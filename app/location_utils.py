@@ -14,8 +14,8 @@ import math
 
 logger = logging.getLogger(__name__)
 
-# IP location cache: {ip: (lat, lng, timestamp)}
-_ip_cache: Dict[str, Tuple[float, float, float]] = {}
+# IP location cache: {ip: (lat, lng, country_code, city, region, country_name, timestamp)}
+_ip_cache: Dict[str, Tuple[float, float, str, str, str, str, float]] = {}
 IP_CACHE_DURATION = 24 * 60 * 60  # 24 hours in seconds
 
 
@@ -53,11 +53,12 @@ def _track_ip_geolocation_failure(request: Request, ip: str, failure_type: str, 
         logger.error(f"Failed to track IP geolocation failure event: {e}", exc_info=True)
 
 
-async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float, float, str, str]:
-    """Get latitude, longitude, country code, and city from IP address using ipapi.co with 24-hour caching
+async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float, float, str, str, str, str]:
+    """Get latitude, longitude, country code, city, region, and country name from IP address using ipapi.co with 24-hour caching
 
     Returns:
-        tuple: (latitude, longitude, country_code, city) where country_code is ISO 3166-1 alpha-2 (e.g., "US", "GB", "FR")
+        tuple: (latitude, longitude, country_code, city, region, country_name)
+               where country_code is ISO 3166-1 alpha-2 (e.g., "US", "GB", "FR")
     """
     current_time = time.time()
 
@@ -67,15 +68,18 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
     # Check cache first (skip for localhost)
     if not is_localhost and ip in _ip_cache:
         cached_data = _ip_cache[ip]
-        # Handle both old 4-item cache (lat, lng, country, timestamp) and new 5-item cache
-        if len(cached_data) == 5:
+        # Handle old cache formats and new 7-item cache
+        if len(cached_data) == 7:
+            lat, lng, country_code, city, region, country_name, timestamp = cached_data
+        elif len(cached_data) == 5:
             lat, lng, country_code, city, timestamp = cached_data
+            region, country_name = "", ""
         else:
             lat, lng, country_code, timestamp = cached_data
-            city = "Unknown"
+            city, region, country_name = "Unknown", "", ""
         if current_time - timestamp < IP_CACHE_DURATION:
-            logger.info(f"Using cached location for IP {ip}: {lat}, {lng}, {country_code}, {city}")
-            return lat, lng, country_code, city
+            logger.info(f"Using cached location for IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
+            return lat, lng, country_code, city, region, country_name
         else:
             # Cache expired, remove entry
             del _ip_cache[ip]
@@ -99,7 +103,7 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                     logger.warning(f"IP geolocation API returned error for IP {ip}: {error_reason}")
 
                     # Use NYC fallback for API error responses
-                    fallback_lat, fallback_lng, fallback_country, fallback_city = 40.7128, -74.0060, "US", "New York"
+                    fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name = 40.7128, -74.0060, "US", "New York", "New York", "United States"
                     logger.info(f"Using NYC fallback for API error: {fallback_lat}, {fallback_lng}, {fallback_country}, {fallback_city}")
 
                     # Track API error response with fallback coordinates
@@ -108,18 +112,20 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
-                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, current_time)
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, current_time)
 
-                    return fallback_lat, fallback_lng, fallback_country, fallback_city
+                    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
 
                 lat = data.get("latitude", 0.0)
                 lng = data.get("longitude", 0.0)
                 country_code = data.get("country_code", "US")
-                city = data.get("city", "Unknown")
+                city = data.get("city", "")
+                region = data.get("region", "")
+                country_name = data.get("country_name", "")
 
                 # Check if we got null/missing coordinates and use NYC fallback
                 if lat == 0.0 and lng == 0.0:
-                    fallback_lat, fallback_lng, fallback_country, fallback_city = 40.7128, -74.0060, "US", "New York"
+                    fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name = 40.7128, -74.0060, "US", "New York", "New York", "United States"
                     logger.warning(f"IP geolocation API returned 0.0,0.0 for IP {ip}, using NYC fallback")
 
                     # Track null coordinates event
@@ -128,29 +134,29 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
-                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, current_time)
-                    return fallback_lat, fallback_lng, fallback_country, fallback_city
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, current_time)
+                    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
 
                 # Cache the result (skip for localhost)
                 if not is_localhost:
-                    _ip_cache[ip] = (lat, lng, country_code, city, current_time)
-                    logger.info(f"Cached new location for IP {ip}: {lat}, {lng}, {country_code}, {city}")
+                    _ip_cache[ip] = (lat, lng, country_code, city, region, country_name, current_time)
+                    logger.info(f"Cached new location for IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
                 else:
-                    logger.info(f"Skipping cache for localhost IP {ip}: {lat}, {lng}, {country_code}, {city}")
-                return lat, lng, country_code, city
+                    logger.info(f"Skipping cache for localhost IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
+                return lat, lng, country_code, city, region, country_name
                 
             elif response.status_code == 429:
                 logger.warning(f"IP geolocation API rate limited for IP {ip}, using default location")
                 # Cache the fallback location too (but for shorter duration, skip for localhost)
-                fallback_lat, fallback_lng, fallback_country, fallback_city = 40.7128, -74.0060, "US", "New York"
+                fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name = 40.7128, -74.0060, "US", "New York", "New York", "United States"
                 if not is_localhost:
-                    _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
+                    _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
 
                 # Track rate limit event
                 if request:
                     _track_ip_geolocation_failure(request, ip, "rate_limited", fallback_lat, fallback_lng)
 
-                return fallback_lat, fallback_lng, fallback_country, fallback_city
+                return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
             else:
                 logger.warning(f"IP geolocation API returned status {response.status_code} for IP {ip}")
                 
@@ -166,14 +172,14 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
             _track_ip_geolocation_failure(request, ip, "api_exception", 40.7128, -74.0060)
     
     # Use NYC fallback for any error case or missing coordinates
-    fallback_lat, fallback_lng, fallback_country, fallback_city = 40.7128, -74.0060, "US", "New York"
+    fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name = 40.7128, -74.0060, "US", "New York", "New York", "United States"
     logger.info(f"Using NYC fallback location for IP {ip}: {fallback_lat}, {fallback_lng}, {fallback_country}, {fallback_city}")
 
     # Cache the fallback location (skip for localhost)
     if not (ip in ['127.0.0.1', 'localhost', '::1']):
-        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, time.time())
+        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, time.time())
 
-    return fallback_lat, fallback_lng, fallback_country, fallback_city
+    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
 
 
 def uses_metric_system(country_code: str) -> bool:
@@ -435,7 +441,7 @@ def is_point_near_route(
         return False
 
 
-async def get_user_location(request: Request, lat: float = None, lng: float = None, country: str = None) -> tuple[float, float, str, str]:
+async def get_user_location(request: Request, lat: float = None, lng: float = None, country: str = None) -> tuple[float, float, str, str, str, str]:
     """Get user location from URL parameters or IP geolocation
 
     Args:
@@ -445,28 +451,28 @@ async def get_user_location(request: Request, lat: float = None, lng: float = No
         country: Optional country code override from URL parameters (e.g., "FR", "GB", "US")
 
     Returns:
-        tuple: (latitude, longitude, country_code, city)
-               - When lat/lng provided, country_code defaults to "US" and city defaults to "Unknown"
-               - When using IP geolocation, country_code and city come from ipapi.co
+        tuple: (latitude, longitude, country_code, city, region, country_name)
+               - When lat/lng provided, country_code defaults to "US" and location names are empty
+               - When using IP geolocation, all fields come from ipapi.co
     """
     if lat is not None and lng is not None:
         # Use provided coordinates
         # Default to US when coordinates are explicitly provided (no way to determine country from coords alone)
         # Unless country parameter is provided for testing
         country_code = country.upper() if country else "US"
-        city = "Unknown"  # Can't determine city from coordinates alone
-        logger.info(f"Using provided coordinates: lat={lat}, lng={lng}, country={country_code}, city={city}")
-        return lat, lng, country_code, city
+        city, region, country_name = "", "", ""  # Can't determine from coordinates alone
+        logger.info(f"Using provided coordinates: lat={lat}, lng={lng}, country={country_code}")
+        return lat, lng, country_code, city, region, country_name
     else:
-        # Get latitude, longitude, country code, and city from IP
+        # Get latitude, longitude, country code, city, region, and country name from IP
         client_ip = extract_client_ip(request)
-        user_lat, user_lng, country_code, city = await get_location_from_ip(client_ip, request)
+        user_lat, user_lng, country_code, city, region, country_name = await get_location_from_ip(client_ip, request)
 
         # Allow country override even when using IP geolocation (for testing)
         if country:
             country_code = country.upper()
             logger.info(f"Using IP-based location with country override: lat={user_lat}, lng={user_lng}, country={country_code}, city={city} for IP {client_ip}")
         else:
-            logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng}, country={country_code}, city={city} for IP {client_ip}")
+            logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng}, country={country_code}, city={city}, region={region} for IP {client_ip}")
 
-        return user_lat, user_lng, country_code, city
+        return user_lat, user_lng, country_code, city, region, country_name

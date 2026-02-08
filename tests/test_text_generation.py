@@ -79,22 +79,24 @@ def test_text_has_opening_phrase(sample_aircraft):
     assert any(sentence.startswith(word) for word in opening_words), f"Should start with opening phrase, got: {sentence[:20]}"
 
 
-def test_text_has_closing_prompt_plane1(sample_aircraft):
-    """Test that plane 1 has correct closing prompt"""
+def test_text_no_closing_prompt_plane1(sample_aircraft):
+    """Test that plane 1 has no closing prompt (moved to static audio files)"""
     sentence, _ = generate_flight_text_for_aircraft(
         sample_aircraft, 40.0, -74.0, plane_index=1, country_code="US"
     )
 
-    assert "Should we find another jet plane?" in sentence, "Plane 1 should ask about finding another"
+    assert "Should we find another" not in sentence, "Plane 1 should not have closing prompt (moved to static audio)"
+    assert "Let's find one more" not in sentence, "Plane 1 should not have closing prompt"
 
 
-def test_text_has_closing_prompt_plane2(sample_aircraft):
-    """Test that plane 2 has correct closing prompt"""
+def test_text_no_closing_prompt_plane2(sample_aircraft):
+    """Test that plane 2 has no closing prompt (moved to static audio files)"""
     sentence, _ = generate_flight_text_for_aircraft(
         sample_aircraft, 40.0, -74.0, plane_index=2, country_code="US"
     )
 
-    assert "Let's find one more jet plane shall we?" in sentence, "Plane 2 should suggest one more"
+    assert "Should we find another" not in sentence, "Plane 2 should not have closing prompt"
+    assert "Let's find one more" not in sentence, "Plane 2 should not have closing prompt (moved to static audio)"
 
 
 def test_text_no_closing_prompt_plane3(sample_aircraft):
@@ -153,7 +155,101 @@ def test_error_message_generation():
     # Should return a friendly error message
     assert isinstance(sentence, str)
     assert len(sentence) > 0
-    assert "scanner bot" in sentence.lower() or "error" in sentence.lower() or "sorry" in sentence.lower()
+    assert "sorry" in sentence.lower()
+
+
+def test_error_message_includes_city():
+    """Test that error message includes city when available"""
+    sentence = generate_flight_text(
+        [],
+        error_message="no passenger aircraft found",
+        user_lat=40.0,
+        user_lng=-74.0,
+        country_code="US",
+        user_city="New York",
+        user_region="New York",
+        user_country_name="United States"
+    )
+
+    assert "New York" in sentence, "Error message should include city name"
+    assert "celestial quadrant above New York" in sentence
+
+
+def test_error_message_falls_back_to_region():
+    """Test that error message falls back to region when city is empty"""
+    sentence = generate_flight_text(
+        [],
+        error_message="no passenger aircraft found",
+        user_lat=40.0,
+        user_lng=-74.0,
+        country_code="US",
+        user_city="",
+        user_region="Connecticut",
+        user_country_name="United States"
+    )
+
+    assert "Connecticut" in sentence, "Error message should fall back to region"
+    assert "celestial quadrant above Connecticut" in sentence
+
+
+def test_error_message_falls_back_to_country():
+    """Test that error message falls back to country when city and region are empty"""
+    sentence = generate_flight_text(
+        [],
+        error_message="no passenger aircraft found",
+        user_lat=40.0,
+        user_lng=-74.0,
+        country_code="US",
+        user_city="",
+        user_region="",
+        user_country_name="United States"
+    )
+
+    assert "United States" in sentence, "Error message should fall back to country"
+    assert "celestial quadrant above United States" in sentence
+
+
+def test_error_message_generic_when_no_location():
+    """Test that error message is generic when no location data available"""
+    sentence = generate_flight_text(
+        [],
+        error_message="no passenger aircraft found",
+        user_lat=40.0,
+        user_lng=-74.0,
+        country_code="US",
+        user_city="",
+        user_region="",
+        user_country_name=""
+    )
+
+    assert "in this celestial quadrant" in sentence, "Error message should be generic without location"
+
+
+def test_differentiated_error_messages():
+    """Test that different error types produce different friendly messages"""
+    # Timeout error
+    timeout_sentence = generate_flight_text(
+        [], error_message="Request timed out", user_lat=40.0, user_lng=-74.0, country_code="US"
+    )
+    assert "took too long" in timeout_sentence, "Timeout should mention taking too long"
+
+    # API key error
+    api_key_sentence = generate_flight_text(
+        [], error_message="API key not configured", user_lat=40.0, user_lng=-74.0, country_code="US"
+    )
+    assert "acting all silly" in api_key_sentence, "API key error should say scanner is silly"
+
+    # HTTP error
+    http_sentence = generate_flight_text(
+        [], error_message="API returned HTTP 500", user_lat=40.0, user_lng=-74.0, country_code="US"
+    )
+    assert "tracking module" in http_sentence, "HTTP error should mention tracking module"
+
+    # Connection error
+    conn_sentence = generate_flight_text(
+        [], error_message="Network connection error", user_lat=40.0, user_lng=-74.0, country_code="US"
+    )
+    assert "connection" in conn_sentence.lower(), "Connection error should mention connection"
 
 
 def test_text_generation_returns_tuple(sample_aircraft):

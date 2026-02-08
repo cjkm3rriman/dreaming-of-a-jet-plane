@@ -16,7 +16,7 @@ CalculateMinDistanceToRouteFn = Callable[[float, float, float, float, float, flo
 def register_test_live_aircraft_routes(
     app: FastAPI,
     *,
-    get_user_location_fn: Callable[[Request, Optional[float], Optional[float], Optional[str]], Awaitable[Tuple[float, float, str, str]]],
+    get_user_location_fn: Callable[[Request, Optional[float], Optional[float], Optional[str]], Awaitable[Tuple[float, float, str, str, str, str]]],
     get_nearby_aircraft_fn: AircraftListFetcher,
     get_provider_definition_fn: Callable[[str], Optional[Dict[str, Any]]],
     provider_override_secret_getter: Callable[[], Optional[str]],
@@ -42,7 +42,7 @@ def register_test_live_aircraft_routes(
         if secret != secret_value:
             return HTMLResponse("<h1>Invalid secret.</h1>", status_code=403)
 
-        user_lat, user_lng, country_code, user_city = await get_user_location_fn(request, lat, lng, country)
+        user_lat, user_lng, country_code, user_city, _, _ = await get_user_location_fn(request, lat, lng, country)
 
         selected_provider = provider or request.query_params.get("aircraft_provider")
         selected_provider = selected_provider.lower() if selected_provider else None
