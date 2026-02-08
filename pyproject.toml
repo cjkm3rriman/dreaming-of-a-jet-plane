@@ -15,6 +15,7 @@ dependencies = [
     "httpx>=0.28.1",
     "mixpanel>=4.11.1",
     "pydub>=0.25.1",
+    "sentry-sdk[fastapi]>=2.34.1",
     "ua-parser>=1.0.1",
 ]
 

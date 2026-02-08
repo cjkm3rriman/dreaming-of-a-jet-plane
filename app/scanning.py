@@ -46,10 +46,12 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # We already have lat/lng
         if request:
             client_ip = extract_client_ip(request)
-            _, _, country_code, city = await get_location_from_ip(client_ip, request)
+            _, _, country_code, city, region, country_name = await get_location_from_ip(client_ip, request)
         else:
             country_code = "US"  # Default fallback if no request
             city = "Unknown"
+            region = ""
+            country_name = ""
 
         # Get flight data (this will use cached API data if available, or cache new data)
         aircraft, error_message = await get_nearby_aircraft(
@@ -111,7 +113,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                         sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try firing up the scanner again in a few minutes."
             else:
                 # No aircraft found at all
-                sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code)
+                sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code, user_city=city, user_region=region, user_country_name=country_name)
 
             override_sentence = get_plane_sentence_override(plane_index)
             if override_sentence:
@@ -320,7 +322,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     """Stream scanning MP3 file from S3 and trigger audio pre-generation"""
 
     # Get user location using shared function
-    user_lat, user_lng, user_country_code, user_city = await get_user_location(request, lat, lng)
+    user_lat, user_lng, user_country_code, user_city, _, _ = await get_user_location(request, lat, lng)
     country_code = user_country_code  # Keep for backwards compatibility
 
     # Get TTS provider override from query parameters
