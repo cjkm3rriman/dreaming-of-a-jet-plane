@@ -215,16 +215,16 @@ Each flight description includes:
 2. **Scanner sentence** (~150-200 chars): Aircraft type, captain name, capacity, speed, altitude
 3. **Flight details** (~150-250 chars): Airline, flight number, origin, destination, ETA with kid-friendly comparison
 4. **Fun fact** (~80-150 chars): Random fact about destination city (optional, not all cities have facts)
-5. **Closing prompt** (~30-50 chars): Only for planes 1 and 2
-
 ### Character Count Estimates
 
 | Endpoint | Typical Range | Notes |
 |----------|---------------|-------|
-| `/plane/1` | 550-650 chars | Includes closing: "Should we find another jet plane?" |
-| `/plane/2` | 500-650 chars | Includes closing: "Let's find one more jet plane shall we?" |
-| `/plane/3` | 400-550 chars | No closing prompt, sometimes no fun fact |
-| **All 3 planes** | **1,500-1,850 chars** | Total for a full session |
+| `/plane/1` | 450-550 chars | First plane detected |
+| `/plane/2` | 450-550 chars | Second plane found |
+| `/plane/3` | 400-500 chars | Sometimes no fun fact |
+| **All 3 planes** | **1,300-1,600 chars** | Total for a full session |
+
+Note: Closing prompts ("Should we find another jet plane?", etc.) are now handled as separate static audio files, not included in the generated text.
 
 ### Variables Affecting Length
 
@@ -356,59 +356,6 @@ See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. E
 - `app/s3_cache.py` - S3 caching operations
 
 
-## TODO: Add Sentry Error Monitoring
-
-**Problem**: Need real-time notifications when external API calls fail in production (Railway environment).
-
-**Solution**: Integrate Sentry for comprehensive error tracking and alerting.
-
-**Implementation Steps**:
-1. Sign up for Sentry account at https://sentry.io (free tier: 5,000 errors/month)
-2. Create new Python project and get DSN
-3. Add environment variables to Railway:
-   - `SENTRY_DSN` - Sentry Data Source Name
-   - `SENTRY_ENVIRONMENT=production`
-4. Install Sentry SDK: `uv add sentry-sdk[fastapi]`
-5. Initialize Sentry in `app/main.py`:
-   ```python
-   import sentry_sdk
-   from sentry_sdk.integrations.fastapi import FastApiIntegration
-
-   if os.getenv("SENTRY_DSN"):
-       sentry_sdk.init(
-           dsn=os.getenv("SENTRY_DSN"),
-           environment=os.getenv("SENTRY_ENVIRONMENT", "development"),
-           traces_sample_rate=0.1,
-           integrations=[FastApiIntegration()],
-       )
-   ```
-6. Configure alerts in Sentry dashboard (email/Slack/Discord)
-7. Optional: Add manual context for external API calls
-
-**Benefits**:
-- Automatic capture of all unhandled exceptions
-- Real-time notifications for critical errors
-- Stack traces with full context
-- Error grouping and frequency tracking
-- Performance monitoring
-- Request context (IP, headers, etc.)
-
-**Monitored Services**:
-- FlightRadar24 API
-- Airlabs API
-- ElevenLabs TTS
-- Google Gemini TTS
-- AWS Polly TTS
-- IP Geolocation (ipapi.co)
-- S3 cache operations
-- Mixpanel analytics
-
-**Files to modify**:
-- `app/main.py` - Initialize Sentry
-- `pyproject.toml` - Add sentry-sdk dependency
-- Railway environment variables
-
-
 ## TODO: Dynamic Intro for Premium Scanning Endpoint
 
 **Problem**: The `/scanning` endpoint currently streams a static pre-recorded MP3 file (`scanning.mp3`). This misses an opportunity for personalization and variety.
@@ -433,25 +380,3 @@ See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. E
 **Files to modify**: `app/scanning.py`, potentially new `app/intro_text.py` for text generation
 
 
-## TODO: Move Closing Prompts to Static Audio Files
-
-**Problem**: The closing prompts ("Should we find another jet plane?", "Let's find one more jet plane shall we?") are currently embedded in the generated plane audio. This creates issues:
-- TTS cost for regenerating the same phrases
-- Inflexibility when free tier has 2 planes vs premium's 3 planes
-- Can't easily adjust which plane gets a closing prompt
-
-**Solution**: Move closing prompts to static pre-recorded audio files (like `scanning-again.mp3`) that get stitched on the client side or server side after the main plane audio.
-
-**Implementation Ideas**:
-1. Remove closing prompts from `generate_flight_text_for_aircraft()` output
-2. Create static audio files: `find-another.mp3`, `find-one-more.mp3`
-3. Client plays: `plane1.mp3` → `find-another.mp3` → `plane2.mp3` → `find-one-more.mp3` → `plane3.mp3`
-4. Or server stitches them together based on plane count and tier
-
-**Benefits**:
-- Free tier can play 2 planes with appropriate closing
-- Premium tier can play 3 planes with appropriate closings
-- Reduces TTS generation costs
-- Easier to update/localize closing phrases
-
-**Files to modify**: `app/flight_text.py`, `app/main.py`, potentially client-side player logic

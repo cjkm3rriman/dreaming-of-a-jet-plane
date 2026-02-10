@@ -155,13 +155,10 @@ async def test_three_plane_sequence_maintains_variety(nyc_location):
         )
         sentences.append(sentence)
 
-    # Check closing prompts are different for plane 1, 2, and 3
-    assert "Should we find another jet plane?" in sentences[0], "Plane 1 should have 'find another' prompt"
-    assert "Let's find one more jet plane" in sentences[1], "Plane 2 should have 'one more' prompt"
-
-    # Plane 3 should not have either prompt
-    assert "Should we find another" not in sentences[2], "Plane 3 should not have 'find another'"
-    assert "Let's find one more" not in sentences[2], "Plane 3 should not have 'one more'"
+    # Closing prompts are now separate static audio files, so they should NOT be in the generated text
+    for i, sentence in enumerate(sentences, start=1):
+        assert "Should we find another" not in sentence, f"Plane {i} should not have closing prompt"
+        assert "Let's find one more" not in sentence, f"Plane {i} should not have closing prompt"
 
 
 @pytest.mark.asyncio

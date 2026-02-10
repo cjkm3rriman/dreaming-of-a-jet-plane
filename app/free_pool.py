@@ -176,7 +176,7 @@ async def populate_free_pool(
 ) -> bool:
     """Copy body audio to free pool for reuse with pre-recorded intros
 
-    Called after pre-generation completes. Only populates planes 1 & 2.
+    Called after pre-generation completes. Populates planes 1, 2, and 3.
     Free tier endpoints use pre-recorded intro audio files, so we only need
     to copy the body audio to the free pool.
 
@@ -192,8 +192,8 @@ async def populate_free_pool(
         session_id = str(uuid.uuid4())[:8]
         planes_data = []
 
-        # Only process planes 1 and 2 for free tier
-        for plane_index in [1, 2]:
+        # Process all 3 planes for free tier
+        for plane_index in [1, 2, 3]:
             if plane_index > len(aircraft_list):
                 continue
 

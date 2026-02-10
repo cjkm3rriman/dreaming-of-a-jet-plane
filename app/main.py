@@ -1293,15 +1293,15 @@ async def fetch_random_free_intro() -> Optional[bytes]:
 
 
 async def handle_free_plane_endpoint(request: Request, plane_index: int):
-    """Handle free tier requests - plane 1 and 2 only
+    """Handle free tier requests - planes 1, 2, and 3
 
     Free users hear pre-generated audio from paid scans, without real-time API calls.
-    Both planes get a random static intro (from flight-intro-1 to flight-intro-6) + cached body.
+    All planes get a random static intro (from flight-intro-1 to flight-intro-6) + cached body.
     """
-    # Free tier limited to 2 planes
-    if plane_index > 2:
+    # Free tier limited to 3 planes
+    if plane_index > 3:
         return JSONResponse(
-            {"error": "Free tier limited to 2 planes"},
+            {"error": "Free tier limited to 3 planes"},
             status_code=400
         )
 
@@ -1463,7 +1463,7 @@ async def free_scan_endpoint(request: Request):
     return await stream_free_static_mp3(request, "scanning.mp3")
 
 
-@app.get("/free/scanning.mp3")
+@app.get("/free/scanning")
 async def free_scanning_endpoint(request: Request):
     """Free tier scanning audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
@@ -1483,7 +1483,7 @@ async def free_scanning_endpoint(request: Request):
     return await stream_free_static_mp3(request, "scanning.mp3")
 
 
-@app.get("/free/scanning-again.mp3")
+@app.get("/free/scanning-again")
 async def free_scanning_again_endpoint(request: Request):
     """Free tier scanning-again audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
@@ -1500,7 +1500,7 @@ async def free_scanning_again_endpoint(request: Request):
     return await stream_free_static_mp3(request, "scanning-again.mp3")
 
 
-@app.get("/free/overandout.mp3")
+@app.get("/free/overandout")
 async def free_overandout_endpoint(request: Request):
     """Free tier overandout audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
@@ -1552,7 +1552,10 @@ async def free_plane_2_endpoint(request: Request):
 
 @app.get("/free/plane/3")
 async def free_plane_3_endpoint(request: Request):
-    """Free tier is limited to 2 planes - returns error for plane 3"""
+    """Get MP3 for free tier plane 3
+
+    Free tier plane 3 includes a generic opening (no distance) + cached body.
+    """
     return await handle_free_plane_endpoint(request, 3)
 
 
@@ -1598,9 +1601,9 @@ async def free_plane_3_options():
     )
 
 
-@app.options("/free/scanning.mp3")
+@app.options("/free/scanning")
 async def free_scanning_options():
-    """Handle CORS preflight requests for /free/scanning.mp3 endpoint"""
+    """Handle CORS preflight requests for /free/scanning endpoint"""
     return StreamingResponse(
         iter([b""]),
         headers={
@@ -1612,9 +1615,9 @@ async def free_scanning_options():
     )
 
 
-@app.options("/free/scanning-again.mp3")
+@app.options("/free/scanning-again")
 async def free_scanning_again_options():
-    """Handle CORS preflight requests for /free/scanning-again.mp3 endpoint"""
+    """Handle CORS preflight requests for /free/scanning-again endpoint"""
     return StreamingResponse(
         iter([b""]),
         headers={
@@ -1626,9 +1629,9 @@ async def free_scanning_again_options():
     )
 
 
-@app.options("/free/overandout.mp3")
+@app.options("/free/overandout")
 async def free_overandout_options():
-    """Handle CORS preflight requests for /free/overandout.mp3 endpoint"""
+    """Handle CORS preflight requests for /free/overandout endpoint"""
     return StreamingResponse(
         iter([b""]),
         headers={
