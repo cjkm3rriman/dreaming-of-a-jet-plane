@@ -1408,7 +1408,7 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
         combined = await stitch_audio(intro_audio, body_audio, add_silence=True)
 
     # Get user location for tracking
-    user_lat, user_lng, _, user_city = await get_user_location(request)
+    user_lat, user_lng, _, user_city, _, _ = await get_user_location(request)
 
     # Track analytics using unified event with subscription=free
     track_plane_request(
