@@ -58,8 +58,8 @@ async def get_free_pool_index() -> Optional[Dict]:
                             "origin_city": "New York",
                             "destination_city": "London",
                             "airline_name": "British Airways",
-                            "body_cache_key": "free_pool/abc123_plane1_body_inworld.ogg",
-                            "generic_opening_cache_key": "free_pool/abc123_plane1_opening_inworld.ogg"
+                            "body_cache_key": "free_pool/abc123_plane1_body_inworld.opus",
+                            "generic_opening_cache_key": "free_pool/abc123_plane1_opening_inworld.opus"
                         },
                         ...
                     ],
