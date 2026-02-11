@@ -75,7 +75,7 @@ def test_text_has_opening_phrase(sample_aircraft):
         sample_aircraft, 40.0, -74.0, plane_index=1, country_code="US"
     )
 
-    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
     assert any(sentence.startswith(word) for word in opening_words), f"Should start with opening phrase, got: {sentence[:20]}"
 
 
@@ -115,7 +115,7 @@ def test_text_plane4_opening(sample_aircraft):
         sample_aircraft, 40.0, -74.0, plane_index=4, country_code="US"
     )
 
-    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
     assert any(sentence.startswith(word) for word in opening_words), f"Should start with opening phrase, got: {sentence[:20]}"
     assert "yet another jet plane" in sentence, "Plane 4 should mention 'yet another'"
 
@@ -126,7 +126,7 @@ def test_text_plane5_opening(sample_aircraft):
         sample_aircraft, 40.0, -74.0, plane_index=5, country_code="US"
     )
 
-    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
     assert any(sentence.startswith(word) for word in opening_words), f"Should start with opening phrase, got: {sentence[:20]}"
     assert "one final jet plane" in sentence, "Plane 5 should mention 'one final'"
 
