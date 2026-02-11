@@ -553,7 +553,7 @@ def select_diverse_aircraft(
         user_city: Optional city name for logging/analytics context
 
     Returns:
-        List of up to 3 aircraft selected for maximum diversity and educational value
+        List of up to 5 aircraft selected for maximum diversity and educational value
     """
     if not aircraft_list:
         return []
@@ -591,7 +591,7 @@ def select_diverse_aircraft(
 
     # Step 3: Select diverse passenger flights (prioritize far destinations)
     passenger_pool = passenger_far + passenger_near
-    selected = _select_by_destination_diversity(passenger_pool, max_count=3)
+    selected = _select_by_destination_diversity(passenger_pool, max_count=5)
 
     # Step 4: Sort by proximity (closest aircraft first)
     selected.sort(key=lambda x: x.get("distance_km", float('inf')))
@@ -603,17 +603,16 @@ def select_diverse_aircraft(
         if len(selected) >= 2:
             # We have 2+ passenger flights: insert cargo/private in position 2
             selected.insert(1, cargo_private[0])
-            selected = selected[:3]
+            selected = selected[:5]
         elif len(selected) == 1:
-            # Only 1 passenger flight: add up to 2 cargo/private
-            selected.append(cargo_private[0])
-            if len(cargo_private) > 1:
-                selected.append(cargo_private[1])
+            # Only 1 passenger flight: add up to 4 cargo/private
+            for cp in cargo_private[:4]:
+                selected.append(cp)
         else:
-            # No passenger flights: use up to 3 cargo/private
-            selected = cargo_private[:3]
+            # No passenger flights: use up to 5 cargo/private
+            selected = cargo_private[:5]
 
-    final_selection = selected[:3]
+    final_selection = selected[:5]
     dest_iatas = [plane.get("destination_airport") or "UNK" for plane in final_selection]
     display_city = user_city or "Unknown"
     logger.info(
@@ -709,7 +708,7 @@ async def get_nearby_aircraft(
     lat: float,
     lng: float,
     radius_km: float = 100,
-    limit: int = 3,
+    limit: int = 5,
     request: Optional[Request] = None,
     provider_override: Optional[str] = None,
     user_city: Optional[str] = None,
@@ -852,11 +851,11 @@ async def handle_plane_endpoint(
     provider: Optional[str] = None,
     country: Optional[str] = None,
 ):
-    """Handle individual plane endpoints (/plane/1, /plane/2, /plane/3)
+    """Handle individual plane endpoints (/plane/1 through /plane/5)
 
     Args:
         request: FastAPI request object
-        plane_index: 1-based plane index (1, 2, 3)
+        plane_index: 1-based plane index (1-5)
         lat: Optional latitude override
         lng: Optional longitude override
         secret: Secret key for provider overrides
@@ -919,7 +918,7 @@ async def handle_plane_endpoint(
     aircraft, error_message = await get_nearby_aircraft(
         user_lat,
         user_lng,
-        limit=max(3, plane_index),
+        limit=max(5, plane_index),
         request=request,
         provider_override=forced_provider,
         user_city=user_city,
@@ -946,11 +945,11 @@ async def handle_plane_endpoint(
         if plane_index == 2:
             sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
         elif plane_index == 3:
-            plane_count = len(aircraft)
-            if plane_count == 1:
-                sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
-            else:
-                sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
+            sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
+        elif plane_index == 4:
+            sentence = "I'm sorry my old chum but there aren't enough jet planes up there right now. Try firing up the scanner again soon."
+        elif plane_index == 5:
+            sentence = "I'm sorry my old chum but the skies are a bit quiet right now. Try firing up the scanner again soon."
     else:
         # No aircraft found at all
         sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code, user_city=user_city, user_region=user_region, user_country_name=user_country_name)
@@ -1134,6 +1133,50 @@ async def plane_3_endpoint(
     """
     return await handle_plane_endpoint(request, 3, lat, lng, secret, provider, country)
 
+@app.get("/plane/4")
+async def plane_4_endpoint(
+    request: Request,
+    lat: float = None,
+    lng: float = None,
+    tts: str = None,
+    secret: str = None,
+    provider: str = None,
+    country: str = None,
+):
+    """Get MP3 for the fourth closest aircraft
+
+    Query Parameters:
+        lat: Optional latitude override (requires secret)
+        lng: Optional longitude override (requires secret)
+        tts: TTS provider override (requires secret)
+        provider: Aircraft data provider override (requires secret)
+        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
+        secret: Secret key for TTS/provider overrides
+    """
+    return await handle_plane_endpoint(request, 4, lat, lng, secret, provider, country)
+
+@app.get("/plane/5")
+async def plane_5_endpoint(
+    request: Request,
+    lat: float = None,
+    lng: float = None,
+    tts: str = None,
+    secret: str = None,
+    provider: str = None,
+    country: str = None,
+):
+    """Get MP3 for the fifth closest aircraft
+
+    Query Parameters:
+        lat: Optional latitude override (requires secret)
+        lng: Optional longitude override (requires secret)
+        tts: TTS provider override (requires secret)
+        provider: Aircraft data provider override (requires secret)
+        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
+        secret: Secret key for TTS/provider overrides
+    """
+    return await handle_plane_endpoint(request, 5, lat, lng, secret, provider, country)
+
 @app.options("/plane/1")
 async def plane_1_options():
     """Handle CORS preflight requests for /plane/1 endpoint"""
@@ -1163,6 +1206,32 @@ async def plane_2_options():
 @app.options("/plane/3")
 async def plane_3_options():
     """Handle CORS preflight requests for /plane/3 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+@app.options("/plane/4")
+async def plane_4_options():
+    """Handle CORS preflight requests for /plane/4 endpoint"""
+    return StreamingResponse(
+        iter([b""]),
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+@app.options("/plane/5")
+async def plane_5_options():
+    """Handle CORS preflight requests for /plane/5 endpoint"""
     return StreamingResponse(
         iter([b""]),
         headers={

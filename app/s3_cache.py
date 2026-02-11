@@ -75,7 +75,7 @@ class S3MP3Cache:
             lat: Latitude
             lng: Longitude
             content_type: Type of content ("audio", "json")
-            plane_index: Optional plane index for multiple aircraft (1, 2, 3)
+            plane_index: Optional plane index for multiple aircraft (1-5)
             tts_provider: Optional TTS provider name for audio caching (different providers = different cache)
             audio_format: Optional audio format extension ("mp3", "ogg")
             namespace: Optional namespace to differentiate caches (e.g., provider name)

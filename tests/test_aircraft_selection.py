@@ -92,8 +92,8 @@ def test_diversity_selection_prefers_different_destinations(sample_aircraft_list
 
     selected = select_diverse_aircraft(aircraft_with_duplicates, user_lat=40.0, user_lng=-74.0)
 
-    # Should select 3 aircraft
-    assert len(selected) <= 3, "Should return max 3 aircraft"
+    # Should select up to 5 aircraft
+    assert len(selected) <= 5, "Should return max 5 aircraft"
 
     # Check destination diversity
     destinations = [a.get("destination_city") for a in selected if a.get("destination_city")]
@@ -104,13 +104,13 @@ def test_diversity_selection_prefers_different_destinations(sample_aircraft_list
 
 
 def test_diversity_selection_returns_limited_results(sample_aircraft_list):
-    """Test that select_diverse_aircraft limits results to 3"""
-    # Create list of 10 aircraft
+    """Test that select_diverse_aircraft limits results to 5"""
+    # Create list of 10+ aircraft
     many_aircraft = sample_aircraft_list * 4  # 12 aircraft
 
     selected = select_diverse_aircraft(many_aircraft, user_lat=40.0, user_lng=-74.0)
 
-    assert len(selected) <= 3, "Should limit to 3 aircraft"
+    assert len(selected) <= 5, "Should limit to 5 aircraft"
 
 
 def test_diversity_selection_handles_empty_list():

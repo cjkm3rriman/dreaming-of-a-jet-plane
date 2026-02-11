@@ -45,7 +45,7 @@ SPECIAL_PLANE3_TEXT = (
 def get_plane_sentence_override(plane_index: int) -> Optional[str]:
     """Return special holiday copy when applicable (7am GMT Dec 24 to 7am GMT Dec 25)"""
     now_utc = datetime.now(timezone.utc)
-    if plane_index == 3 and now_utc.month == 12:
+    if plane_index == 5 and now_utc.month == 12:
         # Active from 7am GMT Dec 24 to 7am GMT Dec 25
         if (now_utc.day == 24 and now_utc.hour >= 7) or (now_utc.day == 25 and now_utc.hour < 7):
             return SPECIAL_PLANE3_TEXT
@@ -262,6 +262,10 @@ def generate_flight_text_for_aircraft(
         detection_sentence = f"{base_opening_word} We've found another jet plane, flying high {distance_str} from this Yoto!"
     elif plane_index == 3:
         detection_sentence = f"{base_opening_word} Our scanner has identified one more jet plane up there, {distance_str} from this Yoto!"
+    elif plane_index == 4:
+        detection_sentence = f"{base_opening_word} We've spotted yet another jet plane soaring through the sky, {distance_str} from this Yoto!"
+    elif plane_index == 5:
+        detection_sentence = f"{base_opening_word} Our scanner has locked on to one final jet plane, {distance_str} from this Yoto!"
     else:
         # Default for plane 1 or any other index
         detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_str} from this Yoto!"
@@ -590,6 +594,10 @@ def generate_generic_opening(plane_index: int) -> str:
         return f"{word} We've found another jet plane, flying high up in the sky!"
     elif plane_index == 3:
         return f"{word} We've identified one more jet plane up there in the clouds!"
+    elif plane_index == 4:
+        return f"{word} We've spotted yet another jet plane soaring through the sky!"
+    elif plane_index == 5:
+        return f"{word} Our scanner has locked on to one final jet plane!"
     else:
         # Default for plane 1 or any other index
         return f"{word} We've detected a jet plane up in the sky!"

@@ -72,6 +72,17 @@ class TestPremiumEndpoints:
         assert response.status_code != 500, f"Server error: {response.text}"
 
 
+    def test_plane_4_endpoint_no_500(self, client):
+        """Test /plane/4 doesn't return 500 error"""
+        response = client.get("/plane/4")
+        assert response.status_code != 500, f"Server error: {response.text}"
+
+    def test_plane_5_endpoint_no_500(self, client):
+        """Test /plane/5 doesn't return 500 error"""
+        response = client.get("/plane/5")
+        assert response.status_code != 500, f"Server error: {response.text}"
+
+
 class TestHealthEndpoints:
     """Tests for health/utility endpoints"""
 
