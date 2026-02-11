@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "audioop-lts>=0.2.2",
-    "boto3>=1.40.25",
     "fastapi[standard]>=0.116.1",
     "ffmpeg-python>=0.2.0",
     "geopy>=2.4.1",

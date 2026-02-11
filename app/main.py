@@ -86,7 +86,7 @@ LIVE_AIRCRAFT_PROVIDER_FALLBACKS = [p.strip().lower() for p in os.getenv("LIVE_A
 PROVIDER_OVERRIDE_SECRET = os.getenv("PROVIDER_OVERRIDE_SECRET")
 
 # TTS Configuration
-TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "polly", "google", "fallback"
+TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "google", "inworld", "fallback"
 
 def get_tts_provider_override(request: Request) -> Optional[str]:
     """Extract and validate TTS provider override from query parameters
@@ -117,7 +117,7 @@ def get_tts_provider_override(request: Request) -> Optional[str]:
         return None
 
     # Validate provider is supported
-    valid_providers = ["elevenlabs", "polly", "google", "inworld", "fallback"]
+    valid_providers = ["elevenlabs", "google", "inworld", "fallback"]
     if tts_param.lower() not in valid_providers:
         logger.warning(f"Invalid TTS provider override: {tts_param}")
         return None
@@ -207,7 +207,7 @@ def get_audio_format_for_provider(provider: str) -> tuple[str, str]:
     """Get audio file extension and MIME type for TTS provider
 
     Args:
-        provider: TTS provider name (elevenlabs, polly, google)
+        provider: TTS provider name (elevenlabs, google, inworld)
 
     Returns:
         tuple: (file_extension, mime_type)
@@ -220,10 +220,10 @@ def get_voice_folder(tts_override: Optional[str] = None) -> str:
     """Get the voice folder name based on TTS provider configuration
 
     Args:
-        tts_override: Optional TTS provider override (e.g., "google", "polly")
+        tts_override: Optional TTS provider override (e.g., "google", "inworld")
 
     Returns:
-        str: "edward" for ElevenLabs, "amy" for AWS Polly, "sadachbia" for Google TTS
+        str: "edward" for ElevenLabs, "sadachbia" for Google TTS, "ronald" for Inworld
     """
     provider = (tts_override or TTS_PROVIDER).lower()
     # Handle "fallback" by defaulting to elevenlabs folder
@@ -236,7 +236,7 @@ def get_voice_specific_s3_url(filename: str, tts_override: Optional[str] = None)
 
     Args:
         filename: The MP3 filename (e.g., "scanning.mp3")
-        tts_override: Optional TTS provider override (e.g., "google", "polly")
+        tts_override: Optional TTS provider override (e.g., "google", "inworld")
 
     Returns:
         str: Full S3 URL with voice folder (e.g., "https://.../edward/scanning.mp3")
@@ -249,10 +249,9 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
 
     Supports multiple providers based on TTS_PROVIDER environment variable:
     - "elevenlabs": Use ElevenLabs (default)
-    - "polly": Use AWS Polly
     - "google": Use Google Gemini Flash TTS
     - "inworld": Use Inworld's TTS API
-    - "fallback": Try ElevenLabs first, fallback to Polly on error
+    - "fallback": Try ElevenLabs first, fallback to Inworld on error
 
     Args:
         text: Text to convert to speech
@@ -262,7 +261,7 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
         tuple: (audio_content, error_message, provider_used, file_extension, mime_type)
         - audio_content: Audio bytes if successful, empty bytes if failed
         - error_message: Empty string if successful, error description if failed
-        - provider_used: Which provider was actually used ("elevenlabs", "polly", or "google")
+        - provider_used: Which provider was actually used ("elevenlabs", "google", "inworld")
         - file_extension: File extension for the audio format ("mp3" or "ogg")
         - mime_type: MIME type for the audio format ("audio/mpeg" or "audio/ogg")
     """
@@ -273,7 +272,7 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
     provider_used = ""
 
     if provider == "fallback":
-        # Try ElevenLabs first, fallback to Polly on error
+        # Try ElevenLabs first, fallback to Inworld on error
         logger.info("Using fallback strategy: trying ElevenLabs first")
         elevenlabs_def = get_tts_provider_definition("elevenlabs")
         if elevenlabs_def:
@@ -281,11 +280,11 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
             if audio_content and not error:
                 provider_used = "elevenlabs"
             else:
-                logger.info(f"ElevenLabs failed ({error}), falling back to AWS Polly")
-                polly_def = get_tts_provider_definition("polly")
-                if polly_def:
-                    audio_content, error = await polly_def["generate_audio"](text)
-                    provider_used = "polly"
+                logger.info(f"ElevenLabs failed ({error}), falling back to Inworld")
+                inworld_def = get_tts_provider_definition("inworld")
+                if inworld_def:
+                    audio_content, error = await inworld_def["generate_audio"](text)
+                    provider_used = "inworld"
         if not provider_used:
             error = "Fallback providers not available"
             provider_used = "fallback"
@@ -296,7 +295,7 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
             audio_content, error = await provider_def["generate_audio"](text)
             provider_used = provider
         else:
-            error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'polly', 'google', 'inworld', or 'fallback'"
+            error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'google', 'inworld', or 'fallback'"
             logger.error(error_msg)
             return b"", error_msg, "unknown", "mp3", "audio/mpeg"
 
@@ -528,7 +527,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "text_length": len(sentence),
             "tts_provider": tts_provider,
             "audio_format": audio_format,
-            "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "amy_neural" if tts_provider == "polly" else "gemini-2.5-flash-preview-tts" if tts_provider == "google" else "unknown",
+            "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "gemini-2.5-flash-preview-tts" if tts_provider == "google" else "unknown",
             "subscription": subscription,
         })
     except Exception as e:

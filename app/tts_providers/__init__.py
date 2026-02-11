@@ -7,11 +7,6 @@ from .elevenlabs import (
     is_configured as elevenlabs_is_configured,
     DISPLAY_NAME as ELEVENLABS_DISPLAY_NAME,
 )
-from .polly import (
-    generate_audio as generate_polly_audio,
-    is_configured as polly_is_configured,
-    DISPLAY_NAME as POLLY_DISPLAY_NAME,
-)
 from .google import (
     generate_audio as generate_google_audio,
     is_configured as google_is_configured,
@@ -40,14 +35,6 @@ TTS_PROVIDERS: Dict[str, ProviderDefinition] = {
         "file_extension": "mp3",
         "mime_type": "audio/mpeg",
         "voice_folder": "edward",
-    },
-    "polly": {
-        "display_name": POLLY_DISPLAY_NAME,
-        "generate_audio": generate_polly_audio,
-        "is_configured": polly_is_configured,
-        "file_extension": "mp3",
-        "mime_type": "audio/mpeg",
-        "voice_folder": "amy",
     },
     "google": {
         "display_name": GOOGLE_DISPLAY_NAME,
@@ -82,7 +69,7 @@ def get_audio_format(provider: str) -> Tuple[str, str]:
     """Get the audio file extension and MIME type for a provider
 
     Args:
-        provider: Provider name (e.g., "elevenlabs", "polly", "google")
+        provider: Provider name (e.g., "elevenlabs", "google", "inworld")
 
     Returns:
         tuple: (file_extension, mime_type)
@@ -99,10 +86,10 @@ def get_voice_folder(provider: str) -> str:
     """Get the voice folder name for a provider
 
     Args:
-        provider: Provider name (e.g., "elevenlabs", "polly", "google")
+        provider: Provider name (e.g., "elevenlabs", "google", "inworld")
 
     Returns:
-        str: Voice folder name (e.g., "edward", "amy", "sadachbia")
+        str: Voice folder name (e.g., "edward", "sadachbia", "ronald")
     """
     provider_def = get_provider_definition(provider.lower())
     if provider_def:
