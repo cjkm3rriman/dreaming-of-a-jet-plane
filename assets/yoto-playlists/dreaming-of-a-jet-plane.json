@@ -39,7 +39,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
                             },
@@ -100,7 +100,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
                             },
@@ -161,7 +161,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "6",
                             "display": {
                                 "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
@@ -222,7 +222,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "8",
                             "display": {
                                 "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
@@ -283,7 +283,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "10",
                             "display": {
                                 "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"

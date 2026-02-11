@@ -978,7 +978,7 @@ async def handle_plane_endpoint(
             import hashlib
             location_str = f"{round(user_lat, 2)},{round(user_lng, 2)}"
             location_hash = hashlib.md5(location_str.encode()).hexdigest()
-            body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.mp3"
+            body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{actual_file_ext}"
             asyncio.create_task(s3_cache.set(body_cache_key, body_audio))
         else:
             # Fallback to combined sentence if split fails

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 INWORLD_API_KEY = os.getenv("INWORLD_API_KEY")
 INWORLD_MODEL_ID = os.getenv("INWORLD_MODEL_ID", "inworld-tts-1.5-max")
 INWORLD_VOICE_ID = os.getenv("INWORLD_VOICE_ID", "Ronald")
-INWORLD_AUDIO_ENCODING = os.getenv("INWORLD_AUDIO_ENCODING", "MP3")
+INWORLD_AUDIO_ENCODING = os.getenv("INWORLD_AUDIO_ENCODING", "OPUS")
 INWORLD_SPEAKING_RATE = float(os.getenv("INWORLD_SPEAKING_RATE", "1"))
 INWORLD_TEMPERATURE = float(os.getenv("INWORLD_TEMPERATURE", "1.3"))
 INWORLD_BASE_URL = os.getenv("INWORLD_TTS_BASE_URL", "https://api.inworld.ai/tts/v1/voice")
@@ -92,13 +92,13 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
                 audio_bytes = base64.b64decode(audio_content)
 
                 # Prepend 1 second of silence to the audio
-                audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="mp3")
+                audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="ogg")
                 silence = AudioSegment.silent(duration=1000)  # 1000ms = 1 second
                 audio_with_pause = silence + audio
 
                 # Export back to bytes
                 output_buffer = io.BytesIO()
-                audio_with_pause.export(output_buffer, format="mp3")
+                audio_with_pause.export(output_buffer, format="ogg", codec="libopus")
                 return output_buffer.getvalue(), ""
 
             except binascii.Error as exc:

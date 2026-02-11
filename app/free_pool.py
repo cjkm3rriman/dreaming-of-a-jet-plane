@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 from pydub import AudioSegment
 
 from .s3_cache import s3_cache
+from .tts_providers import get_audio_format
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +58,8 @@ async def get_free_pool_index() -> Optional[Dict]:
                             "origin_city": "New York",
                             "destination_city": "London",
                             "airline_name": "British Airways",
-                            "body_cache_key": "free_pool/abc123_plane1_body_inworld.mp3",
-                            "generic_opening_cache_key": "free_pool/abc123_plane1_opening_inworld.mp3"
+                            "body_cache_key": "free_pool/abc123_plane1_body_inworld.ogg",
+                            "generic_opening_cache_key": "free_pool/abc123_plane1_opening_inworld.ogg"
                         },
                         ...
                     ],
@@ -200,8 +201,8 @@ async def populate_free_pool(
             aircraft = aircraft_list[plane_index - 1]  # 0-indexed
 
             # Get body audio key from paid cache
-            # Format: cache/{hash}_plane{n}_body_{provider}.mp3
-            body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider}.mp3"
+            file_ext, _ = get_audio_format(tts_provider)
+            body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider}.{file_ext}"
 
             # Verify body audio exists
             body_audio = await s3_cache.get_raw(body_cache_key)
@@ -210,7 +211,7 @@ async def populate_free_pool(
                 continue
 
             # Copy body to free pool (for easier management)
-            free_body_key = f"free_pool/{session_id}_plane{plane_index}_body_{tts_provider}.mp3"
+            free_body_key = f"free_pool/{session_id}_plane{plane_index}_body_{tts_provider}.{file_ext}"
             await s3_cache.set(free_body_key, body_audio)
 
             # Build plane data for index (no generic_opening_cache_key - free endpoints use pre-recorded intros)

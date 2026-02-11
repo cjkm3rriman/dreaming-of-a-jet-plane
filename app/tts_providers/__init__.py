@@ -48,8 +48,8 @@ TTS_PROVIDERS: Dict[str, ProviderDefinition] = {
         "display_name": INWORLD_DISPLAY_NAME,
         "generate_audio": generate_inworld_audio,
         "is_configured": inworld_is_configured,
-        "file_extension": "mp3",
-        "mime_type": "audio/mpeg",
+        "file_extension": "ogg",
+        "mime_type": "audio/ogg",
         "voice_folder": "ronald",
     },
 }

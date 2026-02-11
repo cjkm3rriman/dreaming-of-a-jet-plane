@@ -225,7 +225,7 @@ async def _generate_and_cache_plane_audio(
                 tts_error = ""
 
                 # Cache body audio separately for free pool reuse
-                body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.mp3"
+                body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
                 await s3_cache.set(body_cache_key, body_audio)
                 logger.info(f"Cached body audio at {body_cache_key}")
             else:
