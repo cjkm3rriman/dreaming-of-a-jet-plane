@@ -99,7 +99,7 @@ class S3MP3Cache:
                 ext = audio_format
             elif tts_provider:
                 # Map provider to format
-                format_map = {"google": "mp3", "elevenlabs": "mp3", "polly": "mp3"}  # TODO: Switch Google back to OGG later
+                format_map = {"google": "mp3", "elevenlabs": "mp3"}  # TODO: Switch Google back to OGG later
                 ext = format_map.get(tts_provider.lower(), "mp3")
             else:
                 ext = "mp3"

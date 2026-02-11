@@ -79,6 +79,16 @@ When the user asks to "deploy", this means:
 3. Merge the PR via GitHub
 4. Railway automatically deploys from main
 
+## Linear Integration
+
+This project uses Linear for issue tracking. When working on Linear issues:
+
+- **Branch names**: Use Linear's suggested git branch name (from the issue's `gitBranchName` field)
+- **PR titles**: Include the issue identifier (e.g., `DOJP-17: Remove AWS Polly support`)
+- **PR linking**: Include `Closes DOJP-XX` in the PR body to link it to the Linear issue
+- **Start of work**: When beginning work on a Linear issue, set its status to **In Progress**
+- **PR merged**: When the user says they have merged the PR, set the issue status to **Done**
+
 ## Testing
 
 The project has a comprehensive test suite covering aircraft selection, text generation, duplicate destination handling, and end-to-end workflows.
@@ -190,7 +200,7 @@ The application requires several environment variables for full functionality:
 ### Required
 - `FR24_API_KEY`: Flightradar24 API key for live flight data
 - `GOOGLE_API_KEY`: Google API key for Gemini TTS
-- `TTS_PROVIDER`: TTS provider to use (options: `elevenlabs`, `polly`, `google`, `fallback`)
+- `TTS_PROVIDER`: TTS provider to use (options: `elevenlabs`, `google`, `inworld`, `fallback`)
 - `LIVE_AIRCRAFT_PROVIDER`: Primary live aircraft provider key (e.g., `fr24` or `airlabs`)
 
 ### Optional
@@ -200,7 +210,6 @@ The application requires several environment variables for full functionality:
 - `LIVE_AIRCRAFT_PROVIDER_FALLBACKS`: Comma-separated list of fallback providers to try if the primary fails
 - `AIRLABS_API_KEY`: Airlabs API key (needed if `airlabs` is used as a primary or fallback provider)
 - AWS S3 credentials for caching (if using S3 cache)
-- AWS Polly credentials (if using Polly TTS provider)
 
 See `.env.example` for a complete template of environment variables.
 

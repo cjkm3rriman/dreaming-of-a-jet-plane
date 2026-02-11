@@ -16,13 +16,11 @@ Check it out: https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2
 ### External APIs & Services
 - **Flightradar24 & Airlabs APIs** - Multi-provider live flight tracking with aircraft and route data
 - **ElevenLabs API** - Primary text-to-speech voice synthesis (Edward voice)
-- **AWS Polly** - Secondary/fallback text-to-speech with neural voices (Amy voice)
 - **ipapi.co** - IP geolocation service for converting IP addresses to coordinates
 - **Mixpanel** - Analytics
 
 ### HTTP Client & Networking
-- **httpx** - Async HTTP client for API requests and MP3 streaming
-- **boto3** - AWS SDK for Python (Polly TTS and S3 operations)
+- **httpx** - Async HTTP client for API requests, MP3 streaming, and S3 operations
 
 ### Cloud Services & Infrastructure
 - **Railway** - Deployment platform with automatic CI/CD from GitHub
