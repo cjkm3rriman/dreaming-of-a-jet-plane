@@ -1,5 +1,6 @@
 """Airlabs provider implementation"""
 
+import asyncio
 import logging
 import math
 import os
@@ -14,6 +15,8 @@ from ..airline_database import get_airline_name, is_cargo_airline, is_private_ai
 from ..location_utils import calculate_distance, is_point_near_route
 
 DEFAULT_CRUISE_SPEED_KMH = 840  # Typical narrow-body (A320/737)
+API_TIMEOUT = 10.0  # seconds
+RETRY_BACKOFF = 1.0  # seconds to wait before retry
 LANDING_BUFFER_MINUTES = 25
 AIRLINE_OVERRIDES = {
     "EDV": {"airline_icao": "DAL", "airline_iata": "DL"},
@@ -60,6 +63,32 @@ logger = logging.getLogger(__name__)
 
 AIRLABS_API_KEY = os.getenv("AIRLABS_API_KEY")
 AIRLABS_BASE_URL = os.getenv("AIRLABS_BASE_URL", "https://airlabs.co/api/v9")
+
+# Shared HTTP client for connection pooling (lazy initialized)
+_client: Optional[httpx.AsyncClient] = None
+
+
+async def _get_client() -> httpx.AsyncClient:
+    """Get or create shared HTTP client for connection pooling"""
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.AsyncClient(
+            limits=httpx.Limits(
+                max_keepalive_connections=5,
+                max_connections=10,
+                keepalive_expiry=30.0
+            ),
+            timeout=httpx.Timeout(API_TIMEOUT)
+        )
+    return _client
+
+
+async def close_client():
+    """Close the shared HTTP client"""
+    global _client
+    if _client is not None and not _client.is_closed:
+        await _client.aclose()
+        _client = None
 
 
 def _estimate_eta(distance_km: float, aircraft_icao: Optional[str] = None) -> Optional[str]:
@@ -176,10 +205,28 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
 
     url = f"{AIRLABS_BASE_URL}/flights"
 
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url, params=params)
+    # Retry logic: try once, if timeout retry once after short backoff
+    max_attempts = 2
+    last_error = None
 
+    for attempt in range(max_attempts):
+        try:
+            client = await _get_client()
+            response = await client.get(url, params=params)
+            break  # Success, exit retry loop
+        except httpx.TimeoutException as e:
+            last_error = e
+            if attempt < max_attempts - 1:
+                logger.warning(f"Airlabs API timeout (attempt {attempt + 1}/{max_attempts}), retrying in {RETRY_BACKOFF}s...")
+                await asyncio.sleep(RETRY_BACKOFF)
+            else:
+                logger.error(f"Airlabs API Timeout: Request timed out after {max_attempts} attempts")
+                return [], "Airlabs API request timed out"
+        except httpx.RequestError as exc:
+            logger.error(f"Airlabs API Connection Error: {exc}")
+            return [], f"Airlabs network connection error: {exc}"
+
+    try:
         if response.status_code != 200:
             error_msg = f"Airlabs API returned HTTP {response.status_code}"
             logger.error(f"{error_msg}: Body={response.text[:500]}")
@@ -355,10 +402,9 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
         logger.info(f"Airlabs returned {len(aircraft_list)} aircraft candidates")
         return aircraft_list, "" if aircraft_list else "No aircraft reported by Airlabs"
 
-    except httpx.TimeoutException:
-        logger.error("Airlabs API Timeout: Request timed out after 10 seconds")
-        return [], "Airlabs API request timed out"
-    except httpx.RequestError as exc:
-        logger.error(f"Airlabs API Connection Error: {exc}")
-        return [], f"Airlabs network connection error: {exc}"
+    except Exception as e:
+        logger.error(f"Airlabs API processing error: {e}")
+        return [], f"Airlabs API error: {e}"
+
+
 IGNORE_AIRLINES_ICAO = {"VJA"}

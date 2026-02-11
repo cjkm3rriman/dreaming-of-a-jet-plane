@@ -17,6 +17,11 @@ import random
 logger = logging.getLogger(__name__)
 
 class S3MP3Cache:
+    # Timeouts for different operations (seconds)
+    HEAD_TIMEOUT = 3.0      # Fast fail for cache existence checks
+    GET_TIMEOUT = 30.0      # Longer timeout for downloading audio
+    PUT_TIMEOUT = 60.0      # Longest timeout for uploads
+
     def __init__(self,
                  bucket_name: str = "dreaming-of-a-jet-plane",
                  cache_prefix: str = "cache/",
@@ -26,19 +31,43 @@ class S3MP3Cache:
         self.cache_prefix = cache_prefix
         self.ttl_minutes = ttl_minutes
         self.api_ttl_minutes = api_ttl_minutes
-        
+
         # AWS credentials from environment
         self.aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
         self.aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
         self.aws_region = os.getenv("AWS_REGION", "us-east-2")
-        
+
+        # Shared HTTP client for connection pooling (lazy initialized)
+        self._client: Optional[httpx.AsyncClient] = None
+
         if not self.aws_access_key or not self.aws_secret_key:
             logger.warning("AWS credentials not configured - S3 cache disabled")
             self.enabled = False
         else:
             self.enabled = True
             logger.info(f"S3 cache initialized: bucket={bucket_name}, prefix={cache_prefix}")
-    
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        """Get or create shared HTTP client for connection pooling"""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                # Connection pool settings
+                limits=httpx.Limits(
+                    max_keepalive_connections=5,
+                    max_connections=10,
+                    keepalive_expiry=30.0
+                ),
+                # Default timeout (overridden per-request)
+                timeout=httpx.Timeout(self.GET_TIMEOUT)
+            )
+        return self._client
+
+    async def close(self):
+        """Close the shared HTTP client"""
+        if self._client is not None and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
+
     def generate_cache_key(self, lat: float, lng: float, content_type: str = "audio", plane_index: Optional[int] = None, tts_provider: Optional[str] = None, audio_format: Optional[str] = None, namespace: Optional[str] = None) -> str:
         """Generate cache key based on rounded location coordinates
 
@@ -201,51 +230,51 @@ class S3MP3Cache:
             
         try:
             s3_url = f"https://{self.bucket_name}.s3.{self.aws_region}.amazonaws.com/{cache_key}"
-            
-            # First, check if object exists and get metadata
-            async with httpx.AsyncClient() as client:
-                head_response = await client.head(s3_url, timeout=10.0)
-                
-                if head_response.status_code == 404:
-                    logger.info(f"Cache miss: {cache_key} not found")
-                    return None
-                elif head_response.status_code != 200:
-                    logger.warning(f"S3 HEAD request failed: {head_response.status_code}")
-                    return None
-                
-                # Check if cached file is still valid - use appropriate TTL
-                ttl_minutes = self.api_ttl_minutes if content_type == "json" else self.ttl_minutes
-                last_modified_str = head_response.headers.get("last-modified")
-                if last_modified_str:
-                    try:
-                        # Parse S3 date format: 'Wed, 21 Oct 2015 07:28:00 GMT'
-                        from email.utils import parsedate_to_datetime
-                        last_modified = parsedate_to_datetime(last_modified_str)
-                        now = datetime.now(last_modified.tzinfo)
-                        
-                        if now - last_modified > timedelta(minutes=ttl_minutes):
-                            return None
-                    except Exception as e:
-                        logger.warning(f"Error parsing last-modified date: {e}")
+            client = await self._get_client()
+
+            # First, check if object exists and get metadata (fast timeout)
+            head_response = await client.head(s3_url, timeout=self.HEAD_TIMEOUT)
+
+            if head_response.status_code == 404:
+                logger.info(f"Cache miss: {cache_key} not found")
+                return None
+            elif head_response.status_code != 200:
+                logger.warning(f"S3 HEAD request failed: {head_response.status_code}")
+                return None
+
+            # Check if cached file is still valid - use appropriate TTL
+            ttl_minutes = self.api_ttl_minutes if content_type == "json" else self.ttl_minutes
+            last_modified_str = head_response.headers.get("last-modified")
+            if last_modified_str:
+                try:
+                    # Parse S3 date format: 'Wed, 21 Oct 2015 07:28:00 GMT'
+                    from email.utils import parsedate_to_datetime
+                    last_modified = parsedate_to_datetime(last_modified_str)
+                    now = datetime.now(last_modified.tzinfo)
+
+                    if now - last_modified > timedelta(minutes=ttl_minutes):
                         return None
-                
-                # File exists and is fresh, download it
-                get_response = await client.get(s3_url, timeout=30.0)
-                
-                if get_response.status_code == 200:
-                    
-                    # Return appropriate data type
-                    if content_type == "json":
-                        try:
-                            return json.loads(get_response.content.decode('utf-8'))
-                        except json.JSONDecodeError as e:
-                            logger.error(f"Failed to parse cached JSON: {e}")
-                            return None
-                    else:
-                        return get_response.content
-                else:
-                    logger.warning(f"S3 GET request failed: {get_response.status_code}")
+                except Exception as e:
+                    logger.warning(f"Error parsing last-modified date: {e}")
                     return None
+
+            # File exists and is fresh, download it (longer timeout for actual data)
+            get_response = await client.get(s3_url, timeout=self.GET_TIMEOUT)
+
+            if get_response.status_code == 200:
+
+                # Return appropriate data type
+                if content_type == "json":
+                    try:
+                        return json.loads(get_response.content.decode('utf-8'))
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse cached JSON: {e}")
+                        return None
+                else:
+                    return get_response.content
+            else:
+                logger.warning(f"S3 GET request failed: {get_response.status_code}")
+                return None
                     
         except httpx.TimeoutException:
             logger.error(f"S3 cache timeout for key: {cache_key}")
@@ -306,10 +335,10 @@ class S3MP3Cache:
 
             # Perform actual S3 upload with retry logic for rate limiting
             async def upload_operation():
-                async with httpx.AsyncClient(timeout=60.0) as client:
-                    response = await client.put(s3_url, content=data_bytes, headers=headers)
-                    response.raise_for_status()  # Raises HTTPStatusError for 4xx/5xx
-                    return response
+                client = await self._get_client()
+                response = await client.put(s3_url, content=data_bytes, headers=headers, timeout=self.PUT_TIMEOUT)
+                response.raise_for_status()  # Raises HTTPStatusError for 4xx/5xx
+                return response
 
             response = await self._retry_with_backoff(upload_operation)
 
@@ -341,18 +370,17 @@ class S3MP3Cache:
 
         try:
             s3_url = f"https://{self.bucket_name}.s3.{self.aws_region}.amazonaws.com/{cache_key}"
+            client = await self._get_client()
+            response = await client.get(s3_url, timeout=self.GET_TIMEOUT)
 
-            async with httpx.AsyncClient() as client:
-                response = await client.get(s3_url, timeout=30.0)
-
-                if response.status_code == 200:
-                    return response.content
-                elif response.status_code == 404:
-                    logger.info(f"Free pool audio not found: {cache_key}")
-                    return None
-                else:
-                    logger.warning(f"S3 GET request failed for free pool: {response.status_code}")
-                    return None
+            if response.status_code == 200:
+                return response.content
+            elif response.status_code == 404:
+                logger.info(f"Free pool audio not found: {cache_key}")
+                return None
+            else:
+                logger.warning(f"S3 GET request failed for free pool: {response.status_code}")
+                return None
 
         except httpx.TimeoutException:
             logger.error(f"S3 timeout fetching free pool audio: {cache_key}")
@@ -365,34 +393,36 @@ class S3MP3Cache:
         """Check if cached file exists and is still fresh"""
         if not self.enabled:
             return False
-            
+
         try:
             s3_url = f"https://{self.bucket_name}.s3.{self.aws_region}.amazonaws.com/{cache_key}"
-            
-            async with httpx.AsyncClient() as client:
-                head_response = await client.head(s3_url, timeout=10.0)
-                
-                if head_response.status_code != 200:
+            client = await self._get_client()
+            head_response = await client.head(s3_url, timeout=self.HEAD_TIMEOUT)
+
+            if head_response.status_code != 200:
+                return False
+
+            # Check freshness - use appropriate TTL
+            ttl_minutes = self.api_ttl_minutes if content_type == "json" else self.ttl_minutes
+            last_modified_str = head_response.headers.get("last-modified")
+            if last_modified_str:
+                try:
+                    from email.utils import parsedate_to_datetime
+                    last_modified = parsedate_to_datetime(last_modified_str)
+                    now = datetime.now(last_modified.tzinfo)
+
+                    is_fresh = now - last_modified <= timedelta(minutes=ttl_minutes)
+                    logger.info(f"Cache freshness check: {cache_key} = {is_fresh} (TTL: {ttl_minutes}min)")
+                    return is_fresh
+                except Exception as e:
+                    logger.warning(f"Error checking cache freshness: {e}")
                     return False
-                
-                # Check freshness - use appropriate TTL
-                ttl_minutes = self.api_ttl_minutes if content_type == "json" else self.ttl_minutes
-                last_modified_str = head_response.headers.get("last-modified")
-                if last_modified_str:
-                    try:
-                        from email.utils import parsedate_to_datetime
-                        last_modified = parsedate_to_datetime(last_modified_str)
-                        now = datetime.now(last_modified.tzinfo)
-                        
-                        is_fresh = now - last_modified <= timedelta(minutes=ttl_minutes)
-                        logger.info(f"Cache freshness check: {cache_key} = {is_fresh} (TTL: {ttl_minutes}min)")
-                        return is_fresh
-                    except Exception as e:
-                        logger.warning(f"Error checking cache freshness: {e}")
-                        return False
-                
-                return True
-                
+
+            return True
+
+        except httpx.TimeoutException:
+            logger.warning(f"S3 cache freshness check timeout for key: {cache_key}")
+            return False
         except Exception as e:
             logger.error(f"S3 cache exists check error for key {cache_key}: {e}")
             return False
