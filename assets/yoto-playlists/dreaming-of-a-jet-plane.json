@@ -10,7 +10,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "1",
                             "channels": "stereo",
                             "title": "Scanning The Skies for Jet Planes",
@@ -39,7 +39,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
                             },
@@ -69,7 +69,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                             },
@@ -100,7 +100,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
                             },
@@ -130,7 +130,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "5",
                             "channels": "stereo",
                             "display": {
@@ -161,7 +161,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "6",
                             "display": {
                                 "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
@@ -191,7 +191,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "7",
                             "channels": "stereo",
                             "display": {
@@ -222,7 +222,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "8",
                             "display": {
                                 "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
@@ -252,7 +252,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "9",
                             "channels": "stereo",
                             "display": {
@@ -283,7 +283,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "10",
                             "display": {
                                 "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
@@ -313,7 +313,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "11",
                             "display": {
                                 "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
