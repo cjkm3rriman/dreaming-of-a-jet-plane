@@ -26,7 +26,7 @@ SCANNING_DEBOUNCE_SECONDS = 30  # Prevent duplicate requests within 30 seconds
 
 
 async def pre_generate_flight_audio(lat: float, lng: float, request: Request = None, tts_override: str = None):
-    """Background task to pre-generate and cache flight audio for all 3 planes
+    """Background task to pre-generate and cache flight audio for all 5 planes
 
     Args:
         lat: Latitude
@@ -57,7 +57,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         aircraft, error_message = await get_nearby_aircraft(
             lat,
             lng,
-            limit=3,
+            limit=5,
             request=request,
             user_city=city,
         )
@@ -73,12 +73,12 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         location_str = f"{round(lat, 2)},{round(lng, 2)}"
         location_hash = hashlib.md5(location_str.encode()).hexdigest()
 
-        # Track destination cities across all 3 planes for diversity
+        # Track destination cities across all 5 planes for diversity
         used_destinations = set()
 
-        # Pre-generate audio for up to 3 planes
+        # Pre-generate audio for up to 5 planes
         tasks = []
-        for plane_index in range(1, 4):  # 1, 2, 3
+        for plane_index in range(1, 6):  # 1, 2, 3, 4, 5
             zero_based_index = plane_index - 1
 
             # Check cache first for this specific plane (include TTS provider and format in cache key)
@@ -103,14 +103,18 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                 sentence = f"{opening_text} {body_text}"
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
+                plane_count = len(aircraft)
                 if plane_index == 2:
                     sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try firing up the scanner again in a few minutes."
                 elif plane_index == 3:
-                    plane_count = len(aircraft)
                     if plane_count == 1:
                         sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try firing up the scanner again in a few minutes."
                     else:
                         sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try firing up the scanner again in a few minutes."
+                elif plane_index == 4:
+                    sentence = f"I'm sorry my old chum but scanner bot could only find {plane_count} jet plane{'s' if plane_count != 1 else ''} nearby. Try firing up the scanner again in a few minutes."
+                elif plane_index == 5:
+                    sentence = f"I'm sorry my old chum but scanner bot could only find {plane_count} jet plane{'s' if plane_count != 1 else ''} nearby. Try firing up the scanner again in a few minutes."
             else:
                 # No aircraft found at all
                 sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code, user_city=city, user_region=region, user_country_name=country_name)
@@ -150,10 +154,10 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         else:
             logger.info("Pre-generation skipped: all planes already cached")
 
-        # After all planes complete, populate free pool (all 3 planes)
+        # After all planes complete, populate free pool (up to 5 planes)
         if aircraft and len(aircraft) >= 2:
             await populate_free_pool(
-                aircraft_list=aircraft[:3],
+                aircraft_list=aircraft[:5],
                 location_hash=location_hash,
                 tts_provider=effective_provider,
             )
@@ -180,7 +184,7 @@ async def _generate_and_cache_plane_audio(
     """Helper function to generate and cache audio for a specific plane
 
     Args:
-        plane_index: 1-based plane index (1, 2, 3)
+        plane_index: 1-based plane index (1-5)
         cache_key: S3 cache key (already includes TTS provider and format)
         sentence: Text to convert to speech (fallback if split text fails)
         lat: Latitude

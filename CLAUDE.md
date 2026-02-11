@@ -251,7 +251,7 @@ The application currently has a basic structure with a single endpoint. The main
 
 ## Plane Endpoint Text Output
 
-The `/plane/1`, `/plane/2`, and `/plane/3` endpoints return MP3 audio generated from descriptive flight text. Understanding the character count is useful for TTS cost estimation and buffer sizing.
+The `/plane/1` through `/plane/5` endpoints return MP3 audio generated from descriptive flight text. Understanding the character count is useful for TTS cost estimation and buffer sizing.
 
 ### Text Composition
 
@@ -267,7 +267,9 @@ Each flight description includes:
 | `/plane/1` | 450-550 chars | First plane detected |
 | `/plane/2` | 450-550 chars | Second plane found |
 | `/plane/3` | 400-500 chars | Sometimes no fun fact |
-| **All 3 planes** | **1,300-1,600 chars** | Total for a full session |
+| `/plane/4` | 450-550 chars | Fourth plane spotted |
+| `/plane/5` | 400-500 chars | Final plane found |
+| **All 5 planes** | **2,200-2,650 chars** | Total for a full session |
 
 Note: Closing prompts ("Should we find another jet plane?", etc.) are now handled as separate static audio files, not included in the generated text.
 

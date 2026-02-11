@@ -75,7 +75,7 @@ def test_text_has_opening_phrase(sample_aircraft):
         sample_aircraft, 40.0, -74.0, plane_index=1, country_code="US"
     )
 
-    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
     assert any(sentence.startswith(word) for word in opening_words), f"Should start with opening phrase, got: {sentence[:20]}"
 
 
@@ -107,6 +107,28 @@ def test_text_no_closing_prompt_plane3(sample_aircraft):
 
     assert "Should we find another" not in sentence, "Plane 3 should not ask for another"
     assert "Let's find one more" not in sentence, "Plane 3 should not suggest one more"
+
+
+def test_text_plane4_opening(sample_aircraft):
+    """Test that plane 4 has a unique opening phrase"""
+    sentence, _ = generate_flight_text_for_aircraft(
+        sample_aircraft, 40.0, -74.0, plane_index=4, country_code="US"
+    )
+
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
+    assert any(sentence.startswith(word) for word in opening_words), f"Should start with opening phrase, got: {sentence[:20]}"
+    assert "yet another jet plane" in sentence, "Plane 4 should mention 'yet another'"
+
+
+def test_text_plane5_opening(sample_aircraft):
+    """Test that plane 5 has a unique opening phrase"""
+    sentence, _ = generate_flight_text_for_aircraft(
+        sample_aircraft, 40.0, -74.0, plane_index=5, country_code="US"
+    )
+
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
+    assert any(sentence.startswith(word) for word in opening_words), f"Should start with opening phrase, got: {sentence[:20]}"
+    assert "one final jet plane" in sentence, "Plane 5 should mention 'one final'"
 
 
 def test_fun_fact_source_is_tracked(sample_aircraft):

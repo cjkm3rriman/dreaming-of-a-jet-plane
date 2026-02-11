@@ -11,6 +11,7 @@ from .cities_database import get_fun_facts
 from .airport_database import get_airport_by_iata
 from .location_utils import uses_metric_system
 from .aircraft_database import get_phonetic_name
+from .flight_text_seasonal import get_plane_sentence_override  # noqa: F401 — re-exported for callers
 
 
 # Mapping for converting digits to English words for TTS
@@ -26,30 +27,6 @@ DIGIT_TO_WORD = {
     '8': 'eight',
     '9': 'nine'
 }
-
-
-SPECIAL_PLANE3_TEXT = (
-    "Incredible! My radar just picked up something truly extraordinary, gliding silently through the clouds! "
-    "It's not a jet, and it's not a bird - it's a wooden sleigh being pulled by a team of eight... no, wait... "
-    "nine flying reindeer!\n\n"
-    "My scanner is showing a very mysterious figure at the reigns, wearing a bright red suit and navigating with a "
-    "glowing red light right at the front of the pack. This unusual craft doesn't have a flight number, but it's moving "
-    "at incredible speeds, zig-zagging across the globe and carrying a massive sack overflowing with colorful packages.\n\n"
-    "Fun fact: Reindeer are the only deer species where both the males and females grow antlers, and they are excellent "
-    "swimmers, able to cross wide rivers and even parts of the ocean!\n\n"
-    "This magical team seems to be on a very tight schedule tonight, stopping at every rooftop before whisking away into "
-    "the starry night."
-)
-
-
-def get_plane_sentence_override(plane_index: int) -> Optional[str]:
-    """Return special holiday copy when applicable (7am GMT Dec 24 to 7am GMT Dec 25)"""
-    now_utc = datetime.now(timezone.utc)
-    if plane_index == 3 and now_utc.month == 12:
-        # Active from 7am GMT Dec 24 to 7am GMT Dec 25
-        if (now_utc.day == 24 and now_utc.hour >= 7) or (now_utc.day == 25 and now_utc.hour < 7):
-            return SPECIAL_PLANE3_TEXT
-    return None
 
 
 def convert_aircraft_name_digits(aircraft_name: str) -> str:
@@ -249,7 +226,7 @@ def generate_flight_text_for_aircraft(
     
     
     # Build the descriptive sentences with different opening words based on plane index
-    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
     base_opening_word = random.choice(opening_words)
 
     # Format distance with appropriate units
@@ -262,6 +239,10 @@ def generate_flight_text_for_aircraft(
         detection_sentence = f"{base_opening_word} We've found another jet plane, flying high {distance_str} from this Yoto!"
     elif plane_index == 3:
         detection_sentence = f"{base_opening_word} Our scanner has identified one more jet plane up there, {distance_str} from this Yoto!"
+    elif plane_index == 4:
+        detection_sentence = f"{base_opening_word} We've spotted yet another jet plane soaring through the sky, {distance_str} from this Yoto!"
+    elif plane_index == 5:
+        detection_sentence = f"{base_opening_word} Our scanner has locked on to one final jet plane, {distance_str} from this Yoto!"
     else:
         # Default for plane 1 or any other index
         detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_str} from this Yoto!"
@@ -583,13 +564,17 @@ def generate_generic_opening(plane_index: int) -> str:
     # Ensure fresh random state
     random.seed(time.time_ns())
 
-    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
+    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
     word = random.choice(opening_words)
 
     if plane_index == 2:
         return f"{word} We've found another jet plane, flying high up in the sky!"
     elif plane_index == 3:
         return f"{word} We've identified one more jet plane up there in the clouds!"
+    elif plane_index == 4:
+        return f"{word} We've spotted yet another jet plane soaring through the sky!"
+    elif plane_index == 5:
+        return f"{word} Our scanner has locked on to one final jet plane!"
     else:
         # Default for plane 1 or any other index
         return f"{word} We've detected a jet plane up in the sky!"
