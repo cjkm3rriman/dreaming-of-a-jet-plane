@@ -18,35 +18,35 @@ async def stream_scanning_again(request: Request, lat: float = None, lng: float 
     country_code = user_country_code  # Keep for backwards compatibility
 
     # Import here to avoid circular imports
-    from .main import get_voice_specific_s3_url, get_tts_provider_override
+    from .main import get_voice_specific_s3_url, get_tts_provider_override, get_static_audio_mime_type
 
     # Get TTS provider override from query parameters
     tts_override = get_tts_provider_override(request)
 
-    # MP3 file hosted on S3 with voice-specific folder
-    mp3_url = get_voice_specific_s3_url("scanning-again.mp3", tts_override)
-    
+    # Audio file hosted on S3 with voice-specific folder
+    audio_url = get_voice_specific_s3_url("scanning-again.mp3", tts_override)
+    mime_type = get_static_audio_mime_type(tts_override)
+
     try:
         # Prepare headers for the S3 request
         request_headers = {}
-        
+
         # Handle Range requests for seeking/partial content
         range_header = request.headers.get("range")
         if range_header:
             request_headers["Range"] = range_header
-        
+
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(mp3_url, headers=request_headers)
-            
+            response = await client.get(audio_url, headers=request_headers)
+
             if response.status_code in [200, 206]:
                 # Get content details
                 content = response.content
                 content_length = len(content)
-                content_type = response.headers.get("content-type", "audio/mpeg")
-                
+
                 # Build response headers
                 response_headers = {
-                    "Content-Type": "audio/mpeg",
+                    "Content-Type": mime_type,
                     "Content-Length": str(content_length),
                     "Accept-Ranges": "bytes",
                     "Cache-Control": "public, max-age=3600",
@@ -113,16 +113,16 @@ async def stream_scanning_again(request: Request, lat: float = None, lng: float 
                 return StreamingResponse(
                     iter([content]),
                     status_code=response.status_code,
-                    media_type="audio/mpeg",
+                    media_type=mime_type,
                     headers=response_headers
                 )
             else:
-                return {"error": f"MP3 file not accessible. Status: {response.status_code}", "url": mp3_url}
-                
+                return {"error": f"Audio file not accessible. Status: {response.status_code}", "url": audio_url}
+
     except httpx.TimeoutException:
-        return {"error": "Timeout accessing MP3 file", "url": mp3_url}
+        return {"error": "Timeout accessing audio file", "url": audio_url}
     except Exception as e:
-        return {"error": f"Failed to stream MP3: {str(e)}", "url": mp3_url}
+        return {"error": f"Failed to stream audio: {str(e)}", "url": audio_url}
 
 
 async def scanning_again_options():

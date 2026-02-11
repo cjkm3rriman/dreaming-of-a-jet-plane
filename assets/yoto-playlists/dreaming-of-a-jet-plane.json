@@ -10,7 +10,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "1",
                             "channels": "stereo",
                             "title": "Scanning The Skies for Jet Planes",
@@ -69,7 +69,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                             },
@@ -130,7 +130,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "5",
                             "channels": "stereo",
                             "display": {
@@ -191,7 +191,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "7",
                             "channels": "stereo",
                             "display": {
@@ -252,7 +252,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "9",
                             "channels": "stereo",
                             "display": {
@@ -313,7 +313,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "11",
                             "display": {
                                 "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"

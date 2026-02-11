@@ -10,7 +10,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "1",
                             "display": {
                                 "icon16x16": "yoto:#H8eiNO94bxq5xtr5ugYToguOUJml10cQXZOxg-41U_I"
@@ -71,7 +71,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "3",
                             "display": {
                                 "icon16x16": "yoto:#jq01sqno8CJz9E2H9UIktMV--lA70jrfhFXGVVnM7rQ"
@@ -132,7 +132,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "5",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
@@ -193,7 +193,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "7",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
@@ -254,7 +254,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "9",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
@@ -315,7 +315,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "11",
                             "display": {
                                 "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"

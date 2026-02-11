@@ -232,17 +232,33 @@ def get_voice_folder(tts_override: Optional[str] = None) -> str:
     return get_tts_voice_folder(provider)
 
 def get_voice_specific_s3_url(filename: str, tts_override: Optional[str] = None) -> str:
-    """Generate voice-specific S3 URL for static MP3 files
+    """Generate voice-specific S3 URL for static audio files
 
     Args:
-        filename: The MP3 filename (e.g., "scanning.mp3")
+        filename: The audio filename (e.g., "scanning.mp3")
         tts_override: Optional TTS provider override (e.g., "google", "inworld")
 
     Returns:
-        str: Full S3 URL with voice folder (e.g., "https://.../edward/scanning.mp3")
+        str: Full S3 URL with voice folder and correct extension for the provider
     """
     voice_folder = get_voice_folder(tts_override)
-    return f"https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/{voice_folder}/{filename}"
+    file_ext, _ = get_audio_format_for_provider((tts_override or TTS_PROVIDER).lower())
+    # Swap the file extension to match the provider's audio format
+    base_name = filename.rsplit(".", 1)[0]
+    actual_filename = f"{base_name}.{file_ext}"
+    return f"https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/{voice_folder}/{actual_filename}"
+
+def get_static_audio_mime_type(tts_override: Optional[str] = None) -> str:
+    """Get the MIME type for static audio files based on the TTS provider
+
+    Args:
+        tts_override: Optional TTS provider override
+
+    Returns:
+        str: MIME type (e.g., "audio/mpeg" or "audio/ogg")
+    """
+    _, mime_type = get_audio_format_for_provider((tts_override or TTS_PROVIDER).lower())
+    return mime_type
 
 async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) -> tuple[bytes, str, str, str, str]:
     """Convert text to speech using configured or overridden TTS provider
