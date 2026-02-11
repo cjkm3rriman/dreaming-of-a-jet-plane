@@ -41,7 +41,43 @@ uv run fastapi run app/main.py --host 0.0.0.0 --port 8000    # Run with custom h
 railway up    # Deploy to Railway (if Railway CLI is installed)
 ```
 
-**IMPORTANT**: When the user asks to "deploy", this means commit all changes to GitHub which automatically triggers Railway deployment. Use git add, commit, and push to deploy the application.
+## Git Workflow
+
+**Use feature branches and pull requests** for all changes (do not commit directly to main).
+
+### Workflow:
+1. **Create feature branch** from main:
+   ```bash
+   git checkout main && git pull
+   git checkout -b feature/description-of-change
+   ```
+
+2. **Make commits** on the feature branch as you work
+
+3. **Push and create PR** when ready:
+   ```bash
+   git push -u origin feature/description-of-change
+   gh pr create --fill
+   ```
+
+4. **Merge via GitHub** - use "Squash and merge" for clean history
+
+5. **Clean up** locally after merge:
+   ```bash
+   git checkout main && git pull && git branch -d feature/description-of-change
+   ```
+
+### Branch naming conventions:
+- `feature/add-retry-logic` - new functionality
+- `fix/s3-timeout-handling` - bug fixes
+- `refactor/cleanup-error-handling` - code improvements
+
+### Deployment:
+When the user asks to "deploy", this means:
+1. Push the feature branch to GitHub
+2. Create a PR (or update existing PR)
+3. Merge the PR via GitHub
+4. Railway automatically deploys from main
 
 ## Testing
 
