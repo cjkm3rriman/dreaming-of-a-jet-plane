@@ -85,8 +85,9 @@ This project uses Linear for issue tracking. When working on Linear issues:
 
 - **Branch names**: Use Linear's suggested git branch name (from the issue's `gitBranchName` field)
 - **PR titles**: Include the issue identifier (e.g., `DOJP-17: Remove AWS Polly support`)
-- **PR linking**: Link PRs to Linear issues so they auto-update on merge
-- **Status updates**: Update the Linear issue status when work begins and completes
+- **PR linking**: Include `Closes DOJP-XX` in the PR body to link it to the Linear issue
+- **Start of work**: When beginning work on a Linear issue, set its status to **In Progress**
+- **PR merged**: When the user says they have merged the PR, set the issue status to **Done**
 
 ## Testing
 
