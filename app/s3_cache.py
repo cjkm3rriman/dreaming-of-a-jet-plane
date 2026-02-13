@@ -277,10 +277,10 @@ class S3MP3Cache:
                 return None
                     
         except httpx.TimeoutException:
-            logger.error(f"S3 cache timeout for key: {cache_key}")
+            logger.warning(f"S3 cache timeout for key: {cache_key}")
             return None
         except Exception as e:
-            logger.error(f"S3 cache get error for key {cache_key}: {e}")
+            logger.warning(f"S3 cache get error for key {cache_key}: {e}")
             return None
     
     async def set(self, cache_key: str, data: Union[bytes, Dict[str, Any]], content_type: str = "audio") -> bool:
@@ -346,11 +346,11 @@ class S3MP3Cache:
                 logger.info(f"Successfully uploaded to S3: {cache_key} ({len(data_bytes)} bytes, type={content_type})")
                 return True
             else:
-                logger.error(f"S3 upload failed: {response.status_code} - {response.text[:200]}")
+                logger.warning(f"S3 upload failed: {response.status_code} - {response.text[:200]}")
                 return False
             
         except Exception as e:
-            logger.error(f"S3 cache set error for key {cache_key}: {e}")
+            logger.warning(f"S3 cache set error for key {cache_key}: {e}")
             return False
     
     async def get_raw(self, cache_key: str) -> Optional[bytes]:
@@ -383,10 +383,10 @@ class S3MP3Cache:
                 return None
 
         except httpx.TimeoutException:
-            logger.error(f"S3 timeout fetching free pool audio: {cache_key}")
+            logger.warning(f"S3 timeout fetching free pool audio: {cache_key}")
             return None
         except Exception as e:
-            logger.error(f"S3 error fetching free pool audio {cache_key}: {e}")
+            logger.warning(f"S3 error fetching free pool audio {cache_key}: {e}")
             return None
 
     async def exists_and_fresh(self, cache_key: str, content_type: str = "audio") -> bool:
@@ -424,7 +424,7 @@ class S3MP3Cache:
             logger.warning(f"S3 cache freshness check timeout for key: {cache_key}")
             return False
         except Exception as e:
-            logger.error(f"S3 cache exists check error for key {cache_key}: {e}")
+            logger.warning(f"S3 cache exists check error for key {cache_key}: {e}")
             return False
 
 
