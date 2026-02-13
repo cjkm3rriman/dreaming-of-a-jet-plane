@@ -331,23 +331,26 @@ def _trim_silence(audio_segment: AudioSegment, silence_threshold: int = -40, min
     return audio_segment[start_trim:duration - end_trim]
 
 
-async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True) -> bytes:
+async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True, audio_format: str = "mp3") -> bytes:
     """Combine opening + body audio using pydub
 
     Trims trailing silence from opening and leading silence from body
     to eliminate gaps between segments.
 
     Args:
-        opening: Opening audio bytes (MP3)
-        body: Body audio bytes (MP3)
+        opening: Opening audio bytes
+        body: Body audio bytes
         add_silence: If True, add 1 second silence at start
+        audio_format: Audio format for import/export (e.g., "mp3", "ogg")
 
     Returns:
-        Combined MP3 audio bytes
+        Combined audio bytes in the specified format
     """
     try:
-        opening_seg = AudioSegment.from_file(io.BytesIO(opening), format="mp3")
-        body_seg = AudioSegment.from_file(io.BytesIO(body), format="mp3")
+        # pydub uses "ogg" for both .ogg and .opus files
+        pydub_format = "ogg" if audio_format == "opus" else audio_format
+        opening_seg = AudioSegment.from_file(io.BytesIO(opening), format=pydub_format)
+        body_seg = AudioSegment.from_file(io.BytesIO(body), format=pydub_format)
 
         # Trim trailing silence from opening and leading silence from body
         # to eliminate the gap between segments
@@ -364,7 +367,9 @@ async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True) ->
             combined = opening_trimmed + gap + body_trimmed
 
         output = io.BytesIO()
-        combined.export(output, format="mp3")
+        export_format = "ogg" if audio_format == "opus" else audio_format
+        export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
+        combined.export(output, format=export_format, parameters=export_params)
         return output.getvalue()
 
     except Exception as e:
@@ -372,35 +377,39 @@ async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True) ->
         raise
 
 
-async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True) -> bytes:
+async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True, audio_format: str = "mp3") -> bytes:
     """Combine multiple audio segments using pydub
 
     Trims silence from each segment to eliminate gaps between them.
 
     Args:
-        segments: List of audio bytes (MP3)
+        segments: List of audio bytes
         add_silence: If True, add 1 second silence at start
+        audio_format: Audio format for import/export (e.g., "mp3", "ogg")
 
     Returns:
-        Combined MP3 audio bytes
+        Combined audio bytes in the specified format
     """
     try:
         if not segments:
             raise ValueError("No audio segments provided")
 
+        pydub_format = "ogg" if audio_format == "opus" else audio_format
         combined = AudioSegment.empty()
 
         if add_silence:
             combined += AudioSegment.silent(duration=1000)  # 1 second
 
         for segment_bytes in segments:
-            segment = AudioSegment.from_file(io.BytesIO(segment_bytes), format="mp3")
+            segment = AudioSegment.from_file(io.BytesIO(segment_bytes), format=pydub_format)
             # Trim silence from each segment to eliminate gaps
             trimmed = _trim_silence(segment)
             combined += trimmed
 
         output = io.BytesIO()
-        combined.export(output, format="mp3")
+        export_format = "ogg" if audio_format == "opus" else audio_format
+        export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
+        combined.export(output, format=export_format, parameters=export_params)
         return output.getvalue()
 
     except Exception as e:
@@ -408,19 +417,23 @@ async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True) ->
         raise
 
 
-async def get_static_intro_audio(convert_text_to_speech_fn) -> Optional[bytes]:
+async def get_static_intro_audio(convert_text_to_speech_fn, audio_format: str = "mp3") -> Optional[bytes]:
     """Get or generate static intro audio for /free/scan
 
     Args:
         convert_text_to_speech_fn: Function to convert text to speech
+        audio_format: Audio format extension (e.g., "mp3", "opus")
 
     Returns:
-        MP3 audio bytes or None if error
+        Audio bytes or None if error
     """
     from .flight_text import FREE_SCAN_INTRO
 
+    # Use format-specific cache key
+    static_intro_key = f"free_pool/static_intro.{audio_format}"
+
     # Try to get from cache first
-    cached = await s3_cache.get_raw(FREE_POOL_STATIC_INTRO_KEY)
+    cached = await s3_cache.get_raw(static_intro_key)
     if cached:
         return cached
 
@@ -428,17 +441,21 @@ async def get_static_intro_audio(convert_text_to_speech_fn) -> Optional[bytes]:
     try:
         audio, error, _, _, _ = await convert_text_to_speech_fn(FREE_SCAN_INTRO)
         if audio and not error:
+            pydub_format = "ogg" if audio_format == "opus" else audio_format
+            export_format = "ogg" if audio_format == "opus" else audio_format
+            export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
+
             # Add 1 second silence at start
             silence = AudioSegment.silent(duration=1000)
-            intro_seg = AudioSegment.from_file(io.BytesIO(audio), format="mp3")
+            intro_seg = AudioSegment.from_file(io.BytesIO(audio), format=pydub_format)
             combined = silence + intro_seg
 
             output = io.BytesIO()
-            combined.export(output, format="mp3")
+            combined.export(output, format=export_format, parameters=export_params)
             final_audio = output.getvalue()
 
             # Cache for future use
-            asyncio.create_task(s3_cache.set(FREE_POOL_STATIC_INTRO_KEY, final_audio))
+            asyncio.create_task(s3_cache.set(static_intro_key, final_audio))
 
             return final_audio
         else:
@@ -449,16 +466,17 @@ async def get_static_intro_audio(convert_text_to_speech_fn) -> Optional[bytes]:
         return None
 
 
-async def get_empty_pool_audio(convert_text_to_speech_fn) -> Optional[bytes]:
+async def get_empty_pool_audio(convert_text_to_speech_fn, audio_format: str = "mp3") -> Optional[bytes]:
     """Get audio message for when free pool is empty (cold start)
 
     Args:
         convert_text_to_speech_fn: Function to convert text to speech
+        audio_format: Audio format extension (e.g., "mp3", "opus")
 
     Returns:
-        MP3 audio bytes or None if error
+        Audio bytes or None if error
     """
-    empty_pool_key = "free_pool/empty_pool_message.mp3"
+    empty_pool_key = f"free_pool/empty_pool_message.{audio_format}"
     empty_pool_text = "I'm still warming up my scanner! Check back in a few minutes."
 
     # Try to get from cache first
@@ -470,13 +488,17 @@ async def get_empty_pool_audio(convert_text_to_speech_fn) -> Optional[bytes]:
     try:
         audio, error, _, _, _ = await convert_text_to_speech_fn(empty_pool_text)
         if audio and not error:
+            pydub_format = "ogg" if audio_format == "opus" else audio_format
+            export_format = "ogg" if audio_format == "opus" else audio_format
+            export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
+
             # Add 1 second silence at start
             silence = AudioSegment.silent(duration=1000)
-            msg_seg = AudioSegment.from_file(io.BytesIO(audio), format="mp3")
+            msg_seg = AudioSegment.from_file(io.BytesIO(audio), format=pydub_format)
             combined = silence + msg_seg
 
             output = io.BytesIO()
-            combined.export(output, format="mp3")
+            combined.export(output, format=export_format, parameters=export_params)
             final_audio = output.getvalue()
 
             # Cache for future use

@@ -221,7 +221,7 @@ async def _generate_and_cache_plane_audio(
 
             if opening_audio and body_audio and not opening_error and not body_error:
                 # Stitch opening + body with 1s silence at start
-                audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True)
+                audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=file_ext)
                 tts_error = ""
 
                 # Cache body audio separately for free pool reuse

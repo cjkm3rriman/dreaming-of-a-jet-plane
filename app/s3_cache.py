@@ -310,7 +310,9 @@ class S3MP3Cache:
                 if isinstance(data, bytes):
                     data_bytes = data
                     # Determine MIME type from cache key extension
-                    if cache_key.endswith('.ogg') or cache_key.endswith('.opus'):
+                    if cache_key.endswith('.opus'):
+                        content_type_header = "audio/opus"
+                    elif cache_key.endswith('.ogg'):
                         content_type_header = "audio/ogg"
                     else:
                         content_type_header = "audio/mpeg"

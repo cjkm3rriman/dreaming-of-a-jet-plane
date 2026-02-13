@@ -986,7 +986,7 @@ async def handle_plane_endpoint(
 
         if opening_audio and body_audio and not opening_error and not body_error:
             # Stitch opening + body with 1s silence at start
-            audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True)
+            audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=actual_file_ext)
             tts_error = ""
 
             # Cache body audio separately for free pool reuse (pre-generation handles populate_free_pool)
@@ -1277,17 +1277,18 @@ from .free_pool import (
 FREE_TIER_S3_BASE = "https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/free"
 
 
-async def stream_free_static_mp3(request: Request, filename: str):
-    """Stream a static MP3 file from the free tier S3 folder
+async def stream_free_static_audio(request: Request, filename: str):
+    """Stream a static audio file from the free tier S3 folder
 
     Args:
         request: FastAPI request object
-        filename: MP3 filename (e.g., "scanning.mp3", "overandout.mp3")
+        filename: Audio filename (e.g., "scanning.opus", "overandout.opus")
 
     Returns:
-        StreamingResponse with the MP3 content
+        StreamingResponse with the audio content
     """
-    mp3_url = f"{FREE_TIER_S3_BASE}/{filename}"
+    audio_url = f"{FREE_TIER_S3_BASE}/{filename}"
+    mime_type = "audio/opus" if filename.endswith(".opus") else "audio/mpeg"
 
     try:
         # Prepare headers for the S3 request
@@ -1299,14 +1300,14 @@ async def stream_free_static_mp3(request: Request, filename: str):
             request_headers["Range"] = range_header
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(mp3_url, headers=request_headers)
+            response = await client.get(audio_url, headers=request_headers)
 
             if response.status_code in [200, 206]:
                 content = response.content
                 content_length = len(content)
 
                 response_headers = {
-                    "Content-Type": "audio/mpeg",
+                    "Content-Type": mime_type,
                     "Content-Length": str(content_length),
                     "Accept-Ranges": "bytes",
                     "Cache-Control": "public, max-age=3600",
@@ -1331,32 +1332,35 @@ async def stream_free_static_mp3(request: Request, filename: str):
                 return StreamingResponse(
                     iter([content]),
                     status_code=response.status_code,
-                    media_type="audio/mpeg",
+                    media_type=mime_type,
                     headers=response_headers
                 )
             else:
                 return JSONResponse(
-                    {"error": f"MP3 file not accessible. Status: {response.status_code}"},
+                    {"error": f"Audio file not accessible. Status: {response.status_code}"},
                     status_code=response.status_code
                 )
 
     except httpx.TimeoutException:
-        return JSONResponse({"error": "Timeout accessing MP3 file"}, status_code=504)
+        return JSONResponse({"error": "Timeout accessing audio file"}, status_code=504)
     except Exception as e:
-        logger.error(f"Error streaming free tier MP3 {filename}: {e}")
-        return JSONResponse({"error": f"Failed to stream MP3: {str(e)}"}, status_code=500)
+        logger.error(f"Error streaming free tier audio {filename}: {e}")
+        return JSONResponse({"error": f"Failed to stream audio: {str(e)}"}, status_code=500)
 
 
 import random as _random
 
-async def fetch_random_free_intro() -> Optional[bytes]:
+async def fetch_random_free_intro(audio_format: str = "mp3") -> Optional[bytes]:
     """Fetch a random intro audio file from S3 (flight-intro-1 through flight-intro-6)
+
+    Args:
+        audio_format: Audio format extension (e.g., "mp3", "opus")
 
     Returns:
         Audio bytes if successful, None if all intros fail to load
     """
     intro_number = _random.randint(1, 6)
-    intro_key = f"free/intros/flight-intro-{intro_number}.mp3"
+    intro_key = f"free/intros/flight-intro-{intro_number}.{audio_format}"
 
     intro_audio = await s3_cache.get_raw(intro_key)
     if intro_audio:
@@ -1366,7 +1370,7 @@ async def fetch_random_free_intro() -> Optional[bytes]:
     for fallback_num in range(1, 7):
         if fallback_num == intro_number:
             continue
-        fallback_key = f"free/intros/flight-intro-{fallback_num}.mp3"
+        fallback_key = f"free/intros/flight-intro-{fallback_num}.{audio_format}"
         intro_audio = await s3_cache.get_raw(fallback_key)
         if intro_audio:
             logger.warning(f"Free intro {intro_number} not found, using fallback {fallback_num}")
@@ -1403,14 +1407,15 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
     # Get free pool index
     index = await get_free_pool_index()
     if not index or not index.get("entries"):
-        # Empty pool - return friendly message
-        empty_audio = await get_empty_pool_audio(convert_text_to_speech)
+        # Empty pool - return friendly message (use default provider format)
+        default_ext, default_mime = get_audio_format_for_provider(TTS_PROVIDER)
+        empty_audio = await get_empty_pool_audio(convert_text_to_speech, audio_format=default_ext)
         if empty_audio:
             return StreamingResponse(
                 iter([empty_audio]),
-                media_type="audio/mpeg",
+                media_type=default_mime,
                 headers={
-                    "Content-Type": "audio/mpeg",
+                    "Content-Type": default_mime,
                     "Content-Length": str(len(empty_audio)),
                     "Access-Control-Allow-Origin": "*",
                     "Cache-Control": "public, max-age=60"
@@ -1429,6 +1434,10 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
             status_code=503
         )
 
+    # Determine audio format from session's TTS provider
+    session_tts_provider = session.get("tts_provider", "elevenlabs")
+    file_ext, mime_type = get_audio_format_for_provider(session_tts_provider)
+
     planes = session.get("planes", [])
     plane_data = None
     for p in planes:
@@ -1438,13 +1447,13 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
 
     if not plane_data:
         # This plane not available in this session
-        empty_audio = await get_empty_pool_audio(convert_text_to_speech)
+        empty_audio = await get_empty_pool_audio(convert_text_to_speech, audio_format=file_ext)
         if empty_audio:
             return StreamingResponse(
                 iter([empty_audio]),
-                media_type="audio/mpeg",
+                media_type=mime_type,
                 headers={
-                    "Content-Type": "audio/mpeg",
+                    "Content-Type": mime_type,
                     "Access-Control-Allow-Origin": "*"
                 }
             )
@@ -1458,13 +1467,13 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
 
     if not body_audio:
         logger.warning(f"Free pool body audio missing for session {session.get('id')}, plane {plane_index}")
-        empty_audio = await get_empty_pool_audio(convert_text_to_speech)
+        empty_audio = await get_empty_pool_audio(convert_text_to_speech, audio_format=file_ext)
         if empty_audio:
             return StreamingResponse(
                 iter([empty_audio]),
-                media_type="audio/mpeg",
+                media_type=mime_type,
                 headers={
-                    "Content-Type": "audio/mpeg",
+                    "Content-Type": mime_type,
                     "Access-Control-Allow-Origin": "*"
                 }
             )
@@ -1473,23 +1482,26 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
             status_code=503
         )
 
-    # Fetch random static intro from S3
-    intro_audio = await fetch_random_free_intro()
+    # Fetch random static intro from S3 in matching format
+    intro_audio = await fetch_random_free_intro(audio_format=file_ext)
 
     if not intro_audio:
         # No intro available, just return body with silence
         logger.warning("No free intro audio available, serving body only")
         from pydub import AudioSegment
         import io
+        pydub_format = "ogg" if file_ext == "opus" else file_ext
+        export_format = "ogg" if file_ext == "opus" else file_ext
+        export_params = ["-acodec", "libopus"] if file_ext == "opus" else []
         silence = AudioSegment.silent(duration=1000)
-        body_seg = AudioSegment.from_file(io.BytesIO(body_audio), format="mp3")
+        body_seg = AudioSegment.from_file(io.BytesIO(body_audio), format=pydub_format)
         combined_seg = silence + body_seg
         output = io.BytesIO()
-        combined_seg.export(output, format="mp3")
+        combined_seg.export(output, format=export_format, parameters=export_params)
         combined = output.getvalue()
     else:
         # Stitch: silence + random intro + body
-        combined = await stitch_audio(intro_audio, body_audio, add_silence=True)
+        combined = await stitch_audio(intro_audio, body_audio, add_silence=True, audio_format=file_ext)
 
     # Get user location for tracking
     user_lat, user_lng, _, user_city, _, _ = await get_user_location(request)
@@ -1508,9 +1520,9 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
 
     return StreamingResponse(
         iter([combined]),
-        media_type="audio/mpeg",
+        media_type=mime_type,
         headers={
-            "Content-Type": "audio/mpeg",
+            "Content-Type": mime_type,
             "Content-Length": str(len(combined)),
             "Accept-Ranges": "bytes",
             "Cache-Control": "public, max-age=3600",
@@ -1544,7 +1556,7 @@ async def free_scan_endpoint(request: Request):
     track_scan_start(request, subscription="free")
 
     # Serve static file from S3 free folder
-    return await stream_free_static_mp3(request, "scanning.mp3")
+    return await stream_free_static_audio(request, "scanning.opus")
 
 
 @app.get("/free/scanning")
@@ -1564,7 +1576,7 @@ async def free_scanning_endpoint(request: Request):
     # Track analytics
     track_scan_start(request, subscription="free")
 
-    return await stream_free_static_mp3(request, "scanning.mp3")
+    return await stream_free_static_audio(request, "scanning.opus")
 
 
 @app.get("/free/scanning-again")
@@ -1581,7 +1593,7 @@ async def free_scanning_again_endpoint(request: Request):
             headers={"Retry-After": str(retry_after)}
         )
 
-    return await stream_free_static_mp3(request, "scanning-again.mp3")
+    return await stream_free_static_audio(request, "scanning-again.opus")
 
 
 @app.get("/free/overandout")
@@ -1598,7 +1610,7 @@ async def free_overandout_endpoint(request: Request):
             headers={"Retry-After": str(retry_after)}
         )
 
-    return await stream_free_static_mp3(request, "overandout.mp3")
+    return await stream_free_static_audio(request, "overandout.opus")
 
 
 @app.options("/free/scan")
