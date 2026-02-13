@@ -25,7 +25,7 @@ class S3MP3Cache:
     def __init__(self,
                  bucket_name: str = "dreaming-of-a-jet-plane",
                  cache_prefix: str = "cache/",
-                 ttl_minutes: int = 3,
+                 ttl_minutes: int = 10,
                  api_ttl_minutes: int = 3):
         self.bucket_name = bucket_name
         self.cache_prefix = cache_prefix
