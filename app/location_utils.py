@@ -2,6 +2,7 @@
 Shared location detection utilities for consistent location handling across endpoints
 """
 
+import asyncio
 import logging
 import os
 from fastapi import Request
@@ -84,19 +85,23 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
             # Cache expired, remove entry
             del _ip_cache[ip]
     
-    # Cache miss or expired - fetch from API
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-             # Build URL with optional API key
-            url = f"https://ipapi.co/{ip}/json/"
-            api_key = os.getenv("IPAPI_API_KEY")
-            if api_key:
-                url += f"?key={api_key}"
+    # Cache miss or expired - fetch from API with simple retry
+    max_attempts = 2
+    last_exception = None
+    for attempt in range(max_attempts):
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                 # Build URL with optional API key
+                url = f"https://ipapi.co/{ip}/json/"
+                api_key = os.getenv("IPAPI_API_KEY")
+                if api_key:
+                    url += f"?key={api_key}"
 
-            response = await client.get(url)
+                response = await client.get(url)
+
             if response.status_code == 200:
                 data = response.json()
-                
+
                 # Check if API returned an error response
                 if data.get("error", False):
                     error_reason = data.get("reason", "unknown_error")
@@ -144,7 +149,7 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                 else:
                     logger.info(f"Skipping cache for localhost IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
                 return lat, lng, country_code, city, region, country_name
-                
+
             elif response.status_code == 429:
                 logger.warning(f"IP geolocation API rate limited for IP {ip}, using default location")
                 # Cache the fallback location too (but for shorter duration, skip for localhost)
@@ -159,24 +164,30 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                 return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
             else:
                 logger.warning(f"IP geolocation API returned status {response.status_code} for IP {ip}")
-                
+
                 # Track API error event
                 if request:
                     _track_ip_geolocation_failure(request, ip, f"api_error_{response.status_code}", 0.0, 0.0)
-                
-    except Exception as e:
-        logger.error(f"IP geolocation API error for IP {ip}: {e}")
-        
-        # Track API exception event
-        if request:
-            _track_ip_geolocation_failure(request, ip, "api_exception", 40.7128, -74.0060)
-    
+
+        except Exception as e:
+            last_exception = e
+            if attempt < max_attempts - 1:
+                logger.warning(f"IP geolocation API error for IP {ip} (attempt {attempt + 1}/{max_attempts}): {e}")
+                await asyncio.sleep(0.5)
+                continue
+            else:
+                logger.warning(f"IP geolocation API error for IP {ip} after {max_attempts} attempts: {e}")
+
+                # Track API exception event
+                if request:
+                    _track_ip_geolocation_failure(request, ip, "api_exception", 40.7128, -74.0060)
+
     # Use NYC fallback for any error case or missing coordinates
     fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name = 40.7128, -74.0060, "US", "New York", "New York", "United States"
     logger.info(f"Using NYC fallback location for IP {ip}: {fallback_lat}, {fallback_lng}, {fallback_country}, {fallback_city}")
 
     # Cache the fallback location (skip for localhost)
-    if not (ip in ['127.0.0.1', 'localhost', '::1']):
+    if not is_localhost:
         _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, time.time())
 
     return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name

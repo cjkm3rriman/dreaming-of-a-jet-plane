@@ -99,7 +99,7 @@ class S3MP3Cache:
                 ext = audio_format
             elif tts_provider:
                 # Map provider to format
-                format_map = {"google": "mp3", "elevenlabs": "mp3"}  # TODO: Switch Google back to OGG later
+                format_map = {"google": "mp3", "elevenlabs": "mp3", "inworld": "opus"}
                 ext = format_map.get(tts_provider.lower(), "mp3")
             else:
                 ext = "mp3"
@@ -310,7 +310,9 @@ class S3MP3Cache:
                 if isinstance(data, bytes):
                     data_bytes = data
                     # Determine MIME type from cache key extension
-                    if cache_key.endswith('.ogg'):
+                    if cache_key.endswith('.opus'):
+                        content_type_header = "audio/opus"
+                    elif cache_key.endswith('.ogg'):
                         content_type_header = "audio/ogg"
                     else:
                         content_type_header = "audio/mpeg"
