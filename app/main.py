@@ -1040,44 +1040,86 @@ async def handle_plane_endpoint(
         return {"message": sentence, "tts_error": tts_error}
 
 
-@app.get("/intro.mp3")
-async def intro_endpoint(request: Request, lat: float = None, lng: float = None):
-    """Stream MP3 file from S3"""
+@app.get("/intro")
+async def intro_endpoint_clean(request: Request, lat: float = None, lng: float = None):
+    """Stream intro audio from S3"""
     return await stream_intro(request, lat, lng)
 
-@app.options("/intro.mp3") 
+@app.get("/intro.mp3")
+async def intro_endpoint(request: Request, lat: float = None, lng: float = None):
+    """Stream intro audio from S3 (legacy .mp3 URL)"""
+    return await stream_intro(request, lat, lng)
+
+@app.options("/intro")
+async def intro_options_endpoint_clean():
+    """Handle CORS preflight requests for /intro endpoint"""
+    return await intro_options()
+
+@app.options("/intro.mp3")
 async def intro_options_endpoint():
     """Handle CORS preflight requests for /intro.mp3 endpoint"""
     return await intro_options()
 
-@app.get("/overandout.mp3")
-async def overandout_endpoint(request: Request, lat: float = None, lng: float = None):
-    """Stream MP3 file from S3"""
+@app.get("/overandout")
+async def overandout_endpoint_clean(request: Request, lat: float = None, lng: float = None):
+    """Stream overandout audio from S3"""
     return await stream_overandout(request, lat, lng)
 
-@app.options("/overandout.mp3") 
+@app.get("/overandout.mp3")
+async def overandout_endpoint(request: Request, lat: float = None, lng: float = None):
+    """Stream overandout audio from S3 (legacy .mp3 URL)"""
+    return await stream_overandout(request, lat, lng)
+
+@app.options("/overandout")
+async def overandout_options_endpoint_clean():
+    """Handle CORS preflight requests for /overandout endpoint"""
+    return await overandout_options()
+
+@app.options("/overandout.mp3")
 async def overandout_options_endpoint():
     """Handle CORS preflight requests for /overandout.mp3 endpoint"""
     return await overandout_options()
 
+@app.get("/scanning-again")
+async def scanning_again_endpoint_clean(request: Request, lat: float = None, lng: float = None):
+    """Stream scanning-again audio from S3"""
+    logger.info("Request to /scanning-again")
+    return await stream_scanning_again(request, lat, lng)
+
 @app.get("/scanning-again.mp3")
 async def scanning_again_endpoint(request: Request, lat: float = None, lng: float = None):
-    """Stream MP3 file from S3"""
+    """Stream scanning-again audio from S3 (legacy .mp3 URL)"""
     logger.info("Request to /scanning-again.mp3")
     return await stream_scanning_again(request, lat, lng)
 
-@app.options("/scanning-again.mp3") 
+@app.options("/scanning-again")
+async def scanning_again_options_endpoint_clean():
+    """Handle CORS preflight requests for /scanning-again endpoint"""
+    return await scanning_again_options()
+
+@app.options("/scanning-again.mp3")
 async def scanning_again_options_endpoint():
     """Handle CORS preflight requests for /scanning-again.mp3 endpoint"""
     return await scanning_again_options()
 
+@app.get("/scanning")
+async def scanning_endpoint_clean(request: Request, lat: float = None, lng: float = None):
+    """Stream scanning audio from S3"""
+    logger.info("Request to /scanning")
+    return await stream_scanning(request, lat, lng)
+
 @app.get("/scanning.mp3")
 async def scanning_endpoint(request: Request, lat: float = None, lng: float = None):
-    """Stream scanning MP3 file from S3"""
+    """Stream scanning audio from S3 (legacy .mp3 URL)"""
     logger.info("Request to /scanning.mp3")
     return await stream_scanning(request, lat, lng)
 
-@app.options("/scanning.mp3") 
+@app.options("/scanning")
+async def scanning_options_endpoint_clean():
+    """Handle CORS preflight requests for /scanning endpoint"""
+    return await scanning_options()
+
+@app.options("/scanning.mp3")
 async def scanning_options_endpoint():
     """Handle CORS preflight requests for /scanning.mp3 endpoint"""
     return await scanning_options()
