@@ -304,13 +304,14 @@ def check_free_tier_rate_limit(client_ip: str) -> tuple[bool, Optional[int]]:
     return True, None
 
 
-def _trim_silence(audio_segment: AudioSegment, silence_threshold: int = -40, min_silence_len: int = 100) -> AudioSegment:
+def _trim_silence(audio_segment: AudioSegment, silence_threshold: int = -50, min_silence_len: int = 100, tail_padding_ms: int = 75) -> AudioSegment:
     """Trim leading and trailing silence from an audio segment
 
     Args:
         audio_segment: Pydub AudioSegment to trim
-        silence_threshold: dB threshold below which audio is considered silence (default -40)
+        silence_threshold: dB threshold below which audio is considered silence (default -50)
         min_silence_len: Minimum length of silence to detect in ms (default 100)
+        tail_padding_ms: Extra milliseconds to keep after trailing trim to protect fade-outs (default 75)
 
     Returns:
         Trimmed AudioSegment
@@ -322,6 +323,9 @@ def _trim_silence(audio_segment: AudioSegment, silence_threshold: int = -40, min
 
     # Trim trailing silence (reverse, detect leading, reverse back)
     end_trim = detect_leading_silence(audio_segment.reverse(), silence_threshold=silence_threshold, chunk_size=10)
+
+    # Keep a small tail buffer to avoid clipping fade-outs
+    end_trim = max(0, end_trim - tail_padding_ms)
 
     # Ensure we don't trim everything
     duration = len(audio_segment)
