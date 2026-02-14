@@ -9,10 +9,10 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "1",
                             "channels": "stereo",
-                            "title": "Scanning The Skies for Jet Planes",
+                            "title": "Tuning In To The Scanner",
                             "trackUrl": "https://dreamingofajetplane.com/free/scanning",
                             "duration": null,
                             "key": "track1",
@@ -23,7 +23,7 @@
                         }
                     ],
                     "overlayLabel": "1",
-                    "title": "Scanning The Skies",
+                    "title": "Tuning In To The Scanner",
                     "key": "00",
                     "display": {
                         "icon16x16": "yoto:#tal2wCH_bPOitYdPZQUvUSPGK5YobvV-rCXPH7sVGIg"
@@ -38,12 +38,12 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
                             },
                             "overlayLabel": "2",
-                            "title": "Closest Jet Plane",
+                            "title": "A Jet Plane",
                             "trackUrl": "https://dreamingofajetplane.com/free/plane/1",
                             "duration": null,
                             "key": "track2",
@@ -53,7 +53,7 @@
                         }
                     ],
                     "overlayLabel": "2",
-                    "title": "Closest Jet Plane",
+                    "title": "A Jet Plane",
                     "key": "01",
                     "display": {
                         "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
@@ -68,13 +68,13 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                             },
                             "overlayLabel": "3",
                             "channels": "stereo",
-                            "title": "Scanning…",
+                            "title": "Tuning...",
                             "trackUrl": "https://dreamingofajetplane.com/free/scanning-again",
                             "duration": null,
                             "key": "track3",
@@ -84,7 +84,7 @@
                         }
                     ],
                     "overlayLabel": "3",
-                    "title": "Scanning…",
+                    "title": "Tuning...",
                     "key": "02",
                     "display": {
                         "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
@@ -99,7 +99,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "display": {
                                 "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
                             },
@@ -129,13 +129,13 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "5",
                             "channels": "stereo",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                             },
-                            "title": "Scanning...",
+                            "title": "Tuning...",
                             "trackUrl": "https://dreamingofajetplane.com/free/scanning-again",
                             "duration": null,
                             "key": "track5",
@@ -145,7 +145,7 @@
                         }
                     ],
                     "overlayLabel": "5",
-                    "title": "Scanning...",
+                    "title": "Tuning...",
                     "key": "04",
                     "display": {
                         "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
@@ -160,7 +160,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "6",
                             "display": {
                                 "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
@@ -190,7 +190,7 @@
                 {
                     "tracks": [
                         {
-                            "format": "mp3",
+                            "format": "opus",
                             "overlayLabel": "7",
                             "display": {
                                 "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
@@ -223,7 +223,7 @@
             "cover": {
                 "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/NfrAUq9SXHnpFQRfED4PCaXj0qqe18bwWZ9g_qXeLy4"
             },
-            "author": "Jet Plane Scanner",
+            "author": "Raccoon Research Labs",
             "order": "featured",
             "description": "Magically turn your Yoto player into a Jet Plane Scanner that finds aeroplanes in the skies around you and teaches you all about them and the faraway destinations they are headed. In the free edition, you can listen in on the flights recently spotted by our network of junior air traffic controllers around the world.",
             "category": "activities",
@@ -235,6 +235,7 @@
                 "readableFileSize": 0
             }
         },
-        "title": "Dreaming Of A Jet Plane: Free",
-        "creatorEmail": "cjkmerriman@gmail.com"
+        "title": "Dreaming Of A Jet Plane: Free Edition",
+        "cardId": "fdz4h"
+                    
     }
