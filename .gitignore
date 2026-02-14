@@ -16,3 +16,6 @@ wheels/
 
 # macOS system files
 .DS_Store
+
+# Local scripts
+generate_static.py
