@@ -315,12 +315,12 @@ async def _stream_scanning_mp3_only(request: Request, tts_override: str = None):
                     headers=response_headers
                 )
             else:
-                return {"error": f"MP3 file not accessible. Status: {response.status_code}", "url": mp3_url}
-                
+                return {"error": f"Audio file not accessible. Status: {response.status_code}", "url": audio_url}
+
     except httpx.TimeoutException:
-        return {"error": "Timeout accessing MP3 file", "url": mp3_url}
+        return {"error": "Timeout accessing audio file", "url": audio_url}
     except Exception as e:
-        return {"error": f"Failed to stream MP3: {str(e)}", "url": mp3_url}
+        return {"error": f"Failed to stream audio: {str(e)}", "url": audio_url}
 
 
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
