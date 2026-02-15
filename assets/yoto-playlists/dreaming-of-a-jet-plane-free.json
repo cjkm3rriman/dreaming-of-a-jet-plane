@@ -12,7 +12,7 @@
                             "format": "opus",
                             "overlayLabel": "1",
                             "channels": "stereo",
-                            "title": "Tuning In To The Scanner",
+                            "title": "Tuning In",
                             "trackUrl": "https://dreamingofajetplane.com/free/scanning",
                             "duration": null,
                             "key": "track1",
@@ -23,7 +23,7 @@
                         }
                     ],
                     "overlayLabel": "1",
-                    "title": "Tuning In To The Scanner",
+                    "title": "Tuning In",
                     "key": "00",
                     "display": {
                         "icon16x16": "yoto:#tal2wCH_bPOitYdPZQUvUSPGK5YobvV-rCXPH7sVGIg"
@@ -221,11 +221,11 @@
         },
         "metadata": {
             "cover": {
-                "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/NfrAUq9SXHnpFQRfED4PCaXj0qqe18bwWZ9g_qXeLy4"
+                "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/YFuVLqHxeJDnOBYDAHDljgwVkanuAbi-sMkAED1FCoc"
             },
             "author": "Raccoon Research Labs",
             "order": "featured",
-            "description": "Magically turn your Yoto player into a Jet Plane Scanner that finds aeroplanes in the skies around you and teaches you all about them and the faraway destinations they are headed. In the free edition, you can listen in on the flights recently spotted by our network of junior air traffic controllers around the world.",
+            "description": "Tune in to flights recently spotted by our network of junior air traffic controllers around the world and learn all about them and the faraway destinations they are headed.\n\nFor your own personal scanner that finds jet planes in the skies around you please find this card in the Yoto Club Collection in your Yoto app.\n\nThis is a connected card, which means it requires an internet connection on your Yoto player to play. The card uses AI to create the live voice audio, but all content is from safe, professional sources and curated by humans.\n\nLearn more at dreamingofajetplane.com",
             "category": "activities",
             "media": {
                 "duration": 0,

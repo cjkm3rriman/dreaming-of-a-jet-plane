@@ -484,7 +484,7 @@ def generate_flight_text_for_aircraft(
             else:
                 fun_facts = get_fun_facts(city_for_facts, location_for_facts, "United States")
         else:
-            fun_facts = get_fun_facts(city_for_facts)
+            fun_facts = get_fun_facts(city_for_facts, country=country_for_facts)
 
         if fun_facts:
             random_fact = random.choice(fun_facts)
