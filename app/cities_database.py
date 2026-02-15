@@ -53,15 +53,26 @@ class CitiesDatabase:
                 if key.lower() == combined_key.lower():
                     return value
         
+        # For non-US cities, try "City, Country" format if country is provided
+        if country and (not state or country.lower() not in ["united states", "the united states", "us", "usa"]):
+            combined_key = f"{city_name}, {country}"
+            if combined_key in self._cities:
+                return self._cities[combined_key]
+
+            # Case-insensitive lookup for "City, Country" format
+            for key, value in self._cities.items():
+                if key.lower() == combined_key.lower():
+                    return value
+
         # Direct lookup with city name only
         if city_name in self._cities:
             return self._cities[city_name]
-        
+
         # Case-insensitive lookup with city name only
         for key, value in self._cities.items():
             if key.lower() == city_name.lower():
                 return value
-        
+
         return None
     
     def get_fun_facts(self, city_name: str, state: str = None, country: str = None) -> List[str]:

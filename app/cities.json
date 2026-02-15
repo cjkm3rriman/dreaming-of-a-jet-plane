@@ -5013,5 +5013,122 @@
             "Kerikeri has the Mission House, the oldest wooden building still standing in New Zealand, and the Stone Store, the oldest stone building!",
             "Kerikeri was the first place in New Zealand where a plough was used to farm the land on May 3, 1820!"
         ]
+    },
+    "Southampton": {
+        "city": "Southampton",
+        "state": null,
+        "country": "United Kingdom",
+        "population": 252000,
+        "fun_facts": [
+            "Southampton is where the famous Titanic set sail on its very first voyage in 1912 - over 500 crew members who worked on the ship lived right in the city!",
+            "Southampton has the longest surviving stretch of medieval town walls in all of England, with 13 ancient defensive towers still standing after hundreds of years!",
+            "Southampton is one of Europe's busiest cruise ship ports, and some of the biggest cruise ships in the entire world start their journeys right here!",
+            "Southampton has the world's oldest surviving bowling green, where people have been playing bowls since the year 1299 - that's over 700 years of bowling!",
+            "Southampton is where the legendary Spitfire airplane was designed and first flew in 1936 - this incredible plane helped protect Britain during World War Two!"
+        ]
+    },
+    "Rochester, New York": {
+        "city": "Rochester",
+        "state": "New York",
+        "country": "United States",
+        "population": 211000,
+        "fun_facts": [
+            "Rochester is home to the Strong National Museum of Play, which has both the National Toy Hall of Fame and the World Video Game Hall of Fame - a dream come true for any kid!",
+            "Rochester is known as the Imaging Capital of the World because George Eastman started the famous Kodak camera company right here!",
+            "Rochester used to be called the Flour City because of all its flour mills, but later became the Flower City because of its beautiful gardens and nurseries!",
+            "Rochester is where Susan B. Anthony lived and fought for women's right to vote - her house is now a National Historic Landmark that you can visit!",
+            "Rochester sits right on the shore of Lake Ontario, one of the five Great Lakes, and has incredible sunsets over the water every evening!"
+        ]
+    },
+    "Greenville, South Carolina": {
+        "city": "Greenville",
+        "state": "South Carolina",
+        "country": "United States",
+        "population": 74000,
+        "fun_facts": [
+            "Greenville has a secret scavenger hunt called Mice on Main where tiny bronze mice are hidden along the downtown streets for kids to find!",
+            "Greenville has a stunning waterfall called Reedy River Falls right in the middle of downtown that was once hidden under a huge highway bridge until the city uncovered it!",
+            "Greenville has a baseball stadium called Fluor Field that was built as a mini replica of the famous Fenway Park in Boston!",
+            "Greenville is home to the Children's Museum of the Upstate, which is connected to the Smithsonian and is one of the largest children's museums in the whole country!",
+            "Greenville sits at the foot of the beautiful Blue Ridge Mountains and is surrounded by amazing waterfalls and hiking trails!"
+        ]
+    },
+    "Hurghada": {
+        "city": "Hurghada",
+        "state": null,
+        "country": "Egypt",
+        "population": 250000,
+        "fun_facts": [
+            "Hurghada was just a tiny fishing village with barely anyone living there, and now millions of visitors come every single year to enjoy its beautiful beaches!",
+            "Hurghada sits on the Red Sea which is home to one of the most colorful coral reefs on Earth, with over 1,100 different species of fish swimming around!",
+            "Hurghada has special underwater areas called dolphin houses where you can actually swim with wild dolphins while they rest and play!",
+            "Hurghada has an amazing Grand Aquarium where you can walk through glass tunnels completely surrounded by sharks, rays, and tropical fish swimming all around you!",
+            "Hurghada gets sunshine almost every single day of the year, making it one of the sunniest places on the entire planet!"
+        ]
+    },
+    "Jackson, Mississippi": {
+        "city": "Jackson",
+        "state": "Mississippi",
+        "country": "United States",
+        "population": 153000,
+        "fun_facts": [
+            "Jackson is the capital of Mississippi and its nickname is the City with Soul because so many famous blues, jazz, and gospel musicians have called it home!",
+            "Jackson is one of only four cities in the entire world that hosts the International Ballet Competition, bringing amazing dancers from all over the globe!",
+            "Jackson was designed using Thomas Jefferson's checkerboard plan in 1822, with parks placed in every other square like a giant green chessboard!",
+            "Jackson has the Mississippi Museum of Natural Science with over 200 living species including alligators, turtles, and fish in giant aquariums!",
+            "Jackson was chosen as the state capital in 1821 because it was right in the center of Mississippi - the perfect spot for everyone in the state to reach!"
+        ]
+    },
+    "Jackson, Wyoming": {
+        "city": "Jackson",
+        "state": "Wyoming",
+        "country": "United States",
+        "population": 11000,
+        "fun_facts": [
+            "Jackson has four giant arches in its town square built entirely from real elk antlers - each arch uses more than 2,000 antlers and weighs over 14,000 pounds!",
+            "Jackson is the gateway to two incredible national parks - Grand Teton is just 5 miles away and Yellowstone, the very first national park ever created, is less than 60 miles away!",
+            "Jackson has a National Elk Refuge right next to town where about 11,000 elk spend the winter - that's roughly one elk for every person living in town!",
+            "Jackson made history in 1920 when it elected an all-women government including the mayor, town council, and town marshal - the first town in America to do so!",
+            "Jackson sits in a valley called Jackson Hole, and the word hole was used by early fur trappers to describe a flat valley surrounded by towering mountains on all sides!"
+        ]
+    },
+    "Roma": {
+        "city": "Roma",
+        "state": "Queensland",
+        "country": "Australia",
+        "population": 7200,
+        "fun_facts": [
+            "Roma is home to the Big Rig, a giant museum celebrating the discovery of Australia's very first natural gas right in Roma back in 1900!",
+            "Roma has the largest cattle saleyards in the entire Southern Hemisphere where thousands of cows are bought and sold every week!",
+            "Roma has a famous bottle tree on its main street with a trunk so big it measures over 9 metres around - that's wider than a car!",
+            "Roma hosts a huge Easter in the Country festival every year that attracts thousands of visitors with rodeos, parades, and country music!",
+            "Roma is home to the Romavilla Winery, the oldest winery in all of Queensland, where grapes have been growing since the 1800s!"
+        ]
+    },
+    "Savannah, Georgia": {
+        "city": "Savannah",
+        "state": "Georgia",
+        "country": "United States",
+        "population": 147000,
+        "fun_facts": [
+            "Savannah is called the Forest City because its streets are lined with gorgeous oak trees draped in hanging Spanish moss that looks like something from a fairy tale!",
+            "Savannah is where Juliette Gordon Low was born - she went on to start the Girl Scouts of the United States of America, and you can still visit her childhood home!",
+            "Savannah has 22 beautiful park-like squares scattered throughout its historic district, making it one of the most unique and walkable cities in the whole country!",
+            "Savannah is where the very first steam-powered ship to cross the Atlantic Ocean set sail in 1819, traveling all the way to Liverpool, England!",
+            "Savannah is famous for its delicious praline candy made from pecans, sugar, and butter - there are candy shops on almost every corner of the historic district!"
+        ]
+    },
+    "Innsbruck": {
+        "city": "Innsbruck",
+        "state": null,
+        "country": "Austria",
+        "population": 133000,
+        "fun_facts": [
+            "Innsbruck has hosted the Winter Olympics not once but twice, in 1964 and 1976, making it one of the most famous winter sports cities in the world!",
+            "Innsbruck has a famous Golden Roof made of 2,657 shiny gilded copper tiles that was built over 500 years ago for Emperor Maximilian to celebrate his wedding!",
+            "Innsbruck means bridge over the Inn River, and the city is nestled right in the middle of the towering Alps with snow-capped mountains visible from almost every street!",
+            "Innsbruck has a colorful Old Town filled with medieval houses painted in beautiful pastel colors like pink, yellow, and light blue that look like a giant box of crayons!",
+            "Innsbruck also hosted the very first Winter Youth Olympics in 2012, making it one of the most decorated Olympic cities for winter sports in the entire world!"
+        ]
     }
 }
