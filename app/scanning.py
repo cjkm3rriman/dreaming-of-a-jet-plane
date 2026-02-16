@@ -46,7 +46,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # We already have lat/lng
         if request:
             client_ip = extract_client_ip(request)
-            _, _, country_code, city, region, country_name = await get_location_from_ip(client_ip, request)
+            _, _, country_code, city, region, country_name, _ = await get_location_from_ip(client_ip, request)
         else:
             country_code = "US"  # Default fallback if no request
             city = "Unknown"
@@ -327,7 +327,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     """Stream scanning MP3 file from S3 and trigger audio pre-generation"""
 
     # Get user location using shared function
-    user_lat, user_lng, user_country_code, user_city, _, _ = await get_user_location(request, lat, lng)
+    user_lat, user_lng, user_country_code, user_city, _, _, _ = await get_user_location(request, lat, lng)
     country_code = user_country_code  # Keep for backwards compatibility
 
     # Get TTS provider override from query parameters

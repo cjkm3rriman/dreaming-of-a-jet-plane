@@ -15,8 +15,8 @@ import math
 
 logger = logging.getLogger(__name__)
 
-# IP location cache: {ip: (lat, lng, country_code, city, region, country_name, timestamp)}
-_ip_cache: Dict[str, Tuple[float, float, str, str, str, str, float]] = {}
+# IP location cache: {ip: (lat, lng, country_code, city, region, country_name, is_fallback, timestamp)}
+_ip_cache: Dict[str, Tuple[float, float, str, str, str, str, bool, float]] = {}
 IP_CACHE_DURATION = 24 * 60 * 60  # 24 hours in seconds
 
 
@@ -54,12 +54,13 @@ def _track_ip_geolocation_failure(request: Request, ip: str, failure_type: str, 
         logger.error(f"Failed to track IP geolocation failure event: {e}", exc_info=True)
 
 
-async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float, float, str, str, str, str]:
+async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float, float, str, str, str, str, bool]:
     """Get latitude, longitude, country code, city, region, and country name from IP address using ipapi.co with 24-hour caching
 
     Returns:
-        tuple: (latitude, longitude, country_code, city, region, country_name)
+        tuple: (latitude, longitude, country_code, city, region, country_name, is_fallback)
                where country_code is ISO 3166-1 alpha-2 (e.g., "US", "GB", "FR")
+               and is_fallback is True when NYC fallback was used
     """
     current_time = time.time()
 
@@ -69,18 +70,23 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
     # Check cache first (skip for localhost)
     if not is_localhost and ip in _ip_cache:
         cached_data = _ip_cache[ip]
-        # Handle old cache formats and new 7-item cache
-        if len(cached_data) == 7:
+        # Handle old cache formats and new 8-item cache
+        if len(cached_data) == 8:
+            lat, lng, country_code, city, region, country_name, is_fallback, timestamp = cached_data
+        elif len(cached_data) == 7:
             lat, lng, country_code, city, region, country_name, timestamp = cached_data
+            is_fallback = False
         elif len(cached_data) == 5:
             lat, lng, country_code, city, timestamp = cached_data
             region, country_name = "", ""
+            is_fallback = False
         else:
             lat, lng, country_code, timestamp = cached_data
             city, region, country_name = "Unknown", "", ""
+            is_fallback = False
         if current_time - timestamp < IP_CACHE_DURATION:
-            logger.info(f"Using cached location for IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
-            return lat, lng, country_code, city, region, country_name
+            logger.info(f"Using cached location for IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}, is_fallback={is_fallback}")
+            return lat, lng, country_code, city, region, country_name, is_fallback
         else:
             # Cache expired, remove entry
             del _ip_cache[ip]
@@ -117,9 +123,9 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
-                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, current_time)
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, current_time)
 
-                    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
+                    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True
 
                 lat = data.get("latitude", 0.0)
                 lng = data.get("longitude", 0.0)
@@ -139,29 +145,29 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
-                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, current_time)
-                    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, current_time)
+                    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True
 
                 # Cache the result (skip for localhost)
                 if not is_localhost:
-                    _ip_cache[ip] = (lat, lng, country_code, city, region, country_name, current_time)
+                    _ip_cache[ip] = (lat, lng, country_code, city, region, country_name, False, current_time)
                     logger.info(f"Cached new location for IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
                 else:
                     logger.info(f"Skipping cache for localhost IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
-                return lat, lng, country_code, city, region, country_name
+                return lat, lng, country_code, city, region, country_name, False
 
             elif response.status_code == 429:
                 logger.warning(f"IP geolocation API rate limited for IP {ip}, using default location")
                 # Cache the fallback location too (but for shorter duration, skip for localhost)
                 fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name = 40.7128, -74.0060, "US", "New York", "New York", "United States"
                 if not is_localhost:
-                    _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
+                    _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
 
                 # Track rate limit event
                 if request:
                     _track_ip_geolocation_failure(request, ip, "rate_limited", fallback_lat, fallback_lng)
 
-                return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
+                return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True
             else:
                 logger.warning(f"IP geolocation API returned status {response.status_code} for IP {ip}")
 
@@ -188,9 +194,9 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
     # Cache the fallback location (skip for localhost)
     if not is_localhost:
-        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, time.time())
+        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, time.time())
 
-    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name
+    return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True
 
 
 def uses_metric_system(country_code: str) -> bool:
@@ -452,7 +458,7 @@ def is_point_near_route(
         return False
 
 
-async def get_user_location(request: Request, lat: float = None, lng: float = None, country: str = None) -> tuple[float, float, str, str, str, str]:
+async def get_user_location(request: Request, lat: float = None, lng: float = None, country: str = None) -> tuple[float, float, str, str, str, str, bool]:
     """Get user location from URL parameters or IP geolocation
 
     Args:
@@ -462,8 +468,8 @@ async def get_user_location(request: Request, lat: float = None, lng: float = No
         country: Optional country code override from URL parameters (e.g., "FR", "GB", "US")
 
     Returns:
-        tuple: (latitude, longitude, country_code, city, region, country_name)
-               - When lat/lng provided, country_code defaults to "US" and location names are empty
+        tuple: (latitude, longitude, country_code, city, region, country_name, is_fallback_location)
+               - When lat/lng provided, country_code defaults to "US", location names are empty, is_fallback_location is True
                - When using IP geolocation, all fields come from ipapi.co
     """
     if lat is not None and lng is not None:
@@ -473,11 +479,11 @@ async def get_user_location(request: Request, lat: float = None, lng: float = No
         country_code = country.upper() if country else "US"
         city, region, country_name = "", "", ""  # Can't determine from coordinates alone
         logger.info(f"Using provided coordinates: lat={lat}, lng={lng}, country={country_code}")
-        return lat, lng, country_code, city, region, country_name
+        return lat, lng, country_code, city, region, country_name, True
     else:
         # Get latitude, longitude, country code, city, region, and country name from IP
         client_ip = extract_client_ip(request)
-        user_lat, user_lng, country_code, city, region, country_name = await get_location_from_ip(client_ip, request)
+        user_lat, user_lng, country_code, city, region, country_name, is_fallback = await get_location_from_ip(client_ip, request)
 
         # Allow country override even when using IP geolocation (for testing)
         if country:
@@ -486,4 +492,4 @@ async def get_user_location(request: Request, lat: float = None, lng: float = No
         else:
             logger.info(f"Using IP-based location: lat={user_lat}, lng={user_lng}, country={country_code}, city={city}, region={region} for IP {client_ip}")
 
-        return user_lat, user_lng, country_code, city, region, country_name
+        return user_lat, user_lng, country_code, city, region, country_name, is_fallback

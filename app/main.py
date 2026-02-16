@@ -889,7 +889,7 @@ async def handle_plane_endpoint(
         forced_provider = provider.lower()
 
     # Get user location using shared function
-    user_lat, user_lng, user_country_code, user_city, user_region, user_country_name = await get_user_location(request, lat, lng, country)
+    user_lat, user_lng, user_country_code, user_city, user_region, user_country_name, is_fallback_location = await get_user_location(request, lat, lng, country)
     country_code = user_country_code  # Keep for backwards compatibility
 
     # Get TTS provider override from query parameters
@@ -951,7 +951,8 @@ async def handle_plane_endpoint(
         selected_aircraft = aircraft[zero_based_index]
         # Use split text generation for free pool support
         opening_text, body_text, fun_fact_source = generate_flight_text_for_aircraft(
-            selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True
+            selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True,
+            is_fallback_location=is_fallback_location,
         )
         sentence = f"{opening_text} {body_text}"
         use_split_tts = True
@@ -1546,7 +1547,7 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
         combined = await stitch_audio(intro_audio, body_audio, add_silence=True, audio_format=file_ext)
 
     # Get user location for tracking
-    user_lat, user_lng, _, user_city, _, _ = await get_user_location(request)
+    user_lat, user_lng, _, user_city, _, _, _ = await get_user_location(request)
 
     # Track analytics using unified event with subscription=free
     track_plane_request(

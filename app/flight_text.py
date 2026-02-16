@@ -159,6 +159,7 @@ def generate_flight_text_for_aircraft(
     country_code: str = "US",
     used_destinations: set = None,
     split_text: bool = False,
+    is_fallback_location: bool = False,
 ) -> tuple[str, Optional[str]] | tuple[str, str, Optional[str]]:
     """Generate descriptive text for a specific aircraft
 
@@ -240,13 +241,17 @@ def generate_flight_text_for_aircraft(
     elif plane_index == 3:
         detection_sentence = f"{base_opening_word} Our scanner has identified one more jet plane up there, {distance_str} from this Yoto!"
     elif plane_index == 4:
-        detection_sentence = f"{base_opening_word} We've spotted yet another jet plane soaring through the sky, {distance_str} from this Yoto!"
+        detection_sentence = f"{base_opening_word} We've spotted yet another jet plane, {distance_str} from this Yoto!"
     elif plane_index == 5:
         detection_sentence = f"{base_opening_word} Our scanner has locked on to one final jet plane, {distance_str} from this Yoto!"
     else:
         # Default for plane 1 or any other index
         detection_sentence = f"{base_opening_word} We've detected a jet plane up in the sky, {distance_str} from this Yoto!"
-    
+
+    # For plane 1, prepend a fallback location notice when we couldn't geolocate the user
+    if plane_index == 1 and is_fallback_location:
+        detection_sentence = f"We couldn't find your location so let's find some jet planes over New York City! {detection_sentence}"
+
     # Add aircraft type, capacity, speed, and altitude information
     aircraft_name = aircraft.get("aircraft") or "unknown aircraft type"
     aircraft_icao = aircraft.get("aircraft_icao")
