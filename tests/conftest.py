@@ -12,6 +12,23 @@ def event_loop():
     loop.close()
 
 
+@pytest.fixture(autouse=True)
+async def _reset_airlabs_client():
+    """Reset the Airlabs shared HTTP client after each test.
+
+    The Airlabs provider uses a module-level httpx.AsyncClient for connection
+    pooling. When the event loop changes between tests the client's connection
+    pool becomes stale, causing 'Event loop is closed' errors. Closing it here
+    forces a fresh client on the next test.
+    """
+    yield
+    try:
+        from app.aircraft_providers.airlabs import close_client
+        await close_client()
+    except Exception:
+        pass
+
+
 # Test locations
 @pytest.fixture
 def nyc_location():
