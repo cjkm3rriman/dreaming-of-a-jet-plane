@@ -1,4 +1,4 @@
-{
+ {
         "content": {
             "playbackType": "linear",
             "config": {
@@ -11,153 +11,151 @@
                         {
                             "format": "opus",
                             "overlayLabel": "1",
-                            "display": {
-                                "icon16x16": "yoto:#tal2wCH_bPOitYdPZQUvUSPGK5YobvV-rCXPH7sVGIg"
-                            },
                             "channels": "stereo",
                             "title": "Scanning The Skies for Jet Planes",
                             "trackUrl": "https://dreamingofajetplane.com/scanning?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track1",
                             "type": "stream",
+                            "display": null,
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "1",
                     "title": "Scanning The Skies",
-                    "key": "001",
+                    "key": "00",
                     "display": {
                         "icon16x16": "yoto:#tal2wCH_bPOitYdPZQUvUSPGK5YobvV-rCXPH7sVGIg"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
                         {
                             "format": "opus",
-                            "overlayLabel": "2",
                             "display": {
                                 "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
                             },
+                            "overlayLabel": "2",
                             "title": "Closest Jet Plane",
                             "trackUrl": "https://dreamingofajetplane.com/plane/1?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track2",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "2",
                     "title": "Closest Jet Plane",
-                    "key": "002",
+                    "key": "01",
                     "display": {
                         "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
                         {
                             "format": "opus",
-                            "overlayLabel": "3",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                             },
+                            "overlayLabel": "3",
                             "channels": "stereo",
                             "title": "Scanning…",
                             "trackUrl": "https://dreamingofajetplane.com/scanning-again?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track3",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "3",
                     "title": "Scanning…",
-                    "key": "003",
+                    "key": "02",
                     "display": {
                         "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
                         {
                             "format": "opus",
-                            "overlayLabel": "4",
                             "display": {
                                 "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
                             },
+                            "overlayLabel": "4",
                             "title": "Another Jet Plane",
                             "trackUrl": "https://dreamingofajetplane.com/plane/2?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track4",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "4",
                     "title": "Another Jet Plane",
-                    "key": "004",
+                    "key": "03",
                     "display": {
                         "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
                         {
                             "format": "opus",
                             "overlayLabel": "5",
+                            "channels": "stereo",
                             "display": {
                                 "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                             },
-                            "channels": "stereo",
                             "title": "Scanning...",
                             "trackUrl": "https://dreamingofajetplane.com/scanning-again?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track5",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "5",
                     "title": "Scanning...",
-                    "key": "005",
+                    "key": "04",
                     "display": {
                         "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
@@ -169,25 +167,25 @@
                             },
                             "title": "And Another Jet Plane",
                             "trackUrl": "https://dreamingofajetplane.com/plane/3?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track6",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "6",
                     "title": "And Another Jet Plane",
-                    "key": "006",
+                    "key": "05",
                     "display": {
                         "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
@@ -200,25 +198,25 @@
                             "channels": "stereo",
                             "title": "Scanning...",
                             "trackUrl": "https://dreamingofajetplane.com/scanning-again?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track7",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "7",
                     "title": "Scanning...",
-                    "key": "007",
+                    "key": "06",
                     "display": {
                         "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
@@ -230,25 +228,25 @@
                             },
                             "title": "Yet Another Jet Plane",
                             "trackUrl": "https://dreamingofajetplane.com/plane/4?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track8",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "8",
                     "title": "Yet Another Jet Plane",
-                    "key": "008",
+                    "key": "07",
                     "display": {
                         "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
@@ -261,25 +259,25 @@
                             "channels": "stereo",
                             "title": "Scanning...",
                             "trackUrl": "https://dreamingofajetplane.com/scanning-again?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track9",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "9",
                     "title": "Scanning...",
-                    "key": "009",
+                    "key": "08",
                     "display": {
                         "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
@@ -291,25 +289,25 @@
                             },
                             "title": "One Final Jet Plane",
                             "trackUrl": "https://dreamingofajetplane.com/plane/5?secret=raccoon&tts=inworld",
+                            "duration": null,
                             "key": "track10",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "10",
                     "title": "One Final Jet Plane",
-                    "key": "010",
+                    "key": "09",
                     "display": {
                         "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
                     },
-                    "duration": 0,
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 },
                 {
                     "tracks": [
@@ -319,46 +317,46 @@
                             "display": {
                                 "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
                             },
-                            "title": "Over and Out",
                             "trackUrl": "https://dreamingofajetplane.com/overandout?secret=raccoon&tts=inworld",
+                            "title": "Over and Out",
+                            "duration": null,
                             "key": "track11",
                             "type": "stream",
                             "ambient": null,
-                            "fileSize": null,
-                            "duration": null
+                            "fileSize": null
                         }
                     ],
                     "overlayLabel": "11",
-                    "title": "Over and Out",
-                    "key": "011",
                     "display": {
                         "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
                     },
-                    "duration": 0,
+                    "key": "10",
+                    "title": "Over and Out",
                     "availableFrom": null,
                     "ambient": null,
                     "defaultTrackDisplay": null,
                     "defaultTrackAmbient": null,
-                    "fileSize": 0
+                    "fileSize": 0,
+                    "duration": 0
                 }
             ]
         },
         "metadata": {
-            "media": {
-                "hasStreams": true,
-                "duration": 0,
-                "fileSize": 0
-            },
-            "author": "Raccoon Research Labs",
-            "order": "featured",
-            "description": "Magically turn your Yoto player into a Jet Plane Scanner that finds aeroplanes in the skies around you and teaches you all about them and the faraway destinations they are headed.",
             "cover": {
                 "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/2Hag0_5iJYzWhEIEOGwxqPLfzdZAED1tWGokuRIYVDI"
             },
-            "category": "activities"
+            "author": "Raccoon Research Labs",
+            "order": "featured",
+            "description": "Magically turn your Yoto player into a jet plane scanner that finds planes in the skies around you and teaches you all about them and the faraway destinations they are headed.\n\nThis is a connected card, which means it requires an internet connection on your Yoto player to play. The card uses AI to create the live voice audio, but all content is from safe, professional sources and curated by humans.\n\nLearn more at dreamingofajetplane.com",
+            "category": "activities",
+            "media": {
+                "duration": 0,
+                "hasStreams": true,
+                "fileSize": 0,
+                "readableDuration": "",
+                "readableFileSize": 0
+            }
         },
-        "title": "Dreaming Of A Test Plane",
-        "cardId": "bqaqS",
-        "creatorEmail": "cjkmerriman@gmail.com"
-    
+        "title": "Dreaming Of A Jet Plane",
+        "cardId": "bqaqS"
 }
