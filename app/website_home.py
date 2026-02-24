@@ -305,7 +305,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
                 .flight-path {
                     width: 100%;
-                    padding: 6.5rem 2rem 3rem;
+                    padding: 6.5rem 4rem 5rem;
                     background: #fff url('/assets/img/card-bg.png') center top repeat-x;
                     background-size: 240px auto;
                     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -483,7 +483,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     }
 
                     .flight-path {
-                        padding: 2rem 1.5rem;
+                        padding: 3rem 2rem;
                     }
 
                     .flight-path h2 {
@@ -588,7 +588,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 }
 
                 .faq-item {
-                    margin-bottom: 1.2rem;
+                    margin-bottom: 2rem;
                 }
 
                 .faq-question {
@@ -770,14 +770,17 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     }
 
                     .testimonials h2,
-                    .disclaimer h2 {
+                    .disclaimer h2,
+                    .faq h2 {
                         font-size: 1.2rem;
                     }
 
                     .testimonials-intro,
                     .testimonial-quote,
                     .disclaimer p,
-                    .disclaimer-list li {
+                    .disclaimer-list li,
+                    .faq-question,
+                    .faq-answer {
                         font-size: 0.9rem;
                     }
 
