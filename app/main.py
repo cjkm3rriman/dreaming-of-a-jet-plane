@@ -616,9 +616,9 @@ def select_diverse_aircraft(
     if cargo_private:
         cargo_private.sort(key=lambda x: x.get("distance_km", float('inf')))
 
-        if len(selected) >= 2:
-            # We have 2+ passenger flights: insert cargo/private in position 2
-            selected.insert(1, cargo_private[0])
+        if len(selected) >= 4:
+            # We have 4+ passenger flights: insert cargo/private in position 4
+            selected.insert(3, cargo_private[0])
             selected = selected[:5]
         elif len(selected) == 1:
             # Only 1 passenger flight: add up to 4 cargo/private
