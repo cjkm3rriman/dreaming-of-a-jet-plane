@@ -68,7 +68,7 @@ def register_test_live_aircraft_routes(
                         error_message = provider_error
         else:
             # Try providers in sequence to get full list (bypass get_nearby_aircraft diversity selection)
-            from ..aircraft_providers import get_provider_names
+            from .aircraft_providers import get_provider_names
             provider_names = get_provider_names()
 
             for provider_name in provider_names:
@@ -219,7 +219,7 @@ def register_test_live_aircraft_routes(
 
                 airline = plane.get("airline_name") or plane.get("airline_icao") or "Unknown"
 
-                position_label = "1st (closest passenger)" if i == 1 else "2nd (cargo/private if available)" if i == 2 else "3rd (diverse destination)"
+                position_label = "1st (closest passenger)" if i == 1 else "4th (cargo/private if available)" if i == 4 else "diverse destination"
                 selected_items.append(
                     f"<li><strong>Position {i}</strong> ({position_label}): {html.escape(flight_id)} - {route_str}{html.escape(dest_dist_str)} [{html.escape(airline)}]</li>"
                 )
