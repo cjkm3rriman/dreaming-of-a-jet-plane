@@ -32,8 +32,8 @@ TTS_PROVIDERS: Dict[str, ProviderDefinition] = {
         "display_name": ELEVENLABS_DISPLAY_NAME,
         "generate_audio": generate_elevenlabs_audio,
         "is_configured": elevenlabs_is_configured,
-        "file_extension": "mp3",
-        "mime_type": "audio/mpeg",
+        "file_extension": "opus",
+        "mime_type": "audio/opus",
         "voice_folder": "edward",
     },
     "google": {

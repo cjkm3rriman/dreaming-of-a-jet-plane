@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_TEXT_TO_VOICE_API_KEY")
 ELEVENLABS_BASE_URL = "https://api.elevenlabs.io/v1"
 DEFAULT_VOICE_ID = "goT3UYdM9bhm0n2lmKQx"  # Edward voice - British, Dark, Seductive, Low
+DEFAULT_OUTPUT_FORMAT = "opus_48000_64"  # Opus at 48kHz, 64kbps
 
 
 def is_configured() -> Tuple[bool, Optional[str]]:
@@ -27,7 +28,7 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
 
     Returns:
         tuple: (audio_content, error_message)
-        - audio_content: MP3 audio bytes if successful, empty bytes if failed
+        - audio_content: Opus audio bytes if successful, empty bytes if failed
         - error_message: Empty string if successful, error description if failed
     """
     configured, reason = is_configured()
@@ -40,7 +41,7 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
         text_with_pause = '<break time="1s"/>' + text
 
         # Prepare the request to ElevenLabs API
-        url = f"{ELEVENLABS_BASE_URL}/text-to-speech/{DEFAULT_VOICE_ID}"
+        url = f"{ELEVENLABS_BASE_URL}/text-to-speech/{DEFAULT_VOICE_ID}?output_format={DEFAULT_OUTPUT_FORMAT}"
 
         headers = {
             "xi-api-key": ELEVENLABS_API_KEY,
