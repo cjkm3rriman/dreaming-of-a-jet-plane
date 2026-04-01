@@ -387,6 +387,58 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     padding-bottom: 0.6rem;
                 }
 
+                button.yoto-button {
+                    border: none;
+                    cursor: pointer;
+                }
+
+                .modal-overlay {
+                    display: none;
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0, 0, 0, 0.6);
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                }
+
+                .modal-content {
+                    background: white;
+                    border-radius: 1rem;
+                    padding: 2rem;
+                    max-width: 420px;
+                    text-align: center;
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                }
+
+                .modal-content h3 {
+                    font-size: 1.3rem;
+                    margin-bottom: 1rem;
+                    color: #1a1a2e;
+                }
+
+                .modal-content p {
+                    font-size: 1rem;
+                    line-height: 1.6;
+                    color: rgba(0, 0, 0, 0.7);
+                    margin-bottom: 1.5rem;
+                }
+
+                .modal-close {
+                    background: #4361ee;
+                    color: white;
+                    border: none;
+                    padding: 0.6rem 1.5rem;
+                    border-radius: 0.5rem;
+                    font-size: 0.95rem;
+                    cursor: pointer;
+                    font-weight: 600;
+                }
+
+                .modal-close:hover {
+                    background: #3a56d4;
+                }
+
                 .tier-card > p {
                     font-size: 1.1rem;
                     line-height: 1.6;
@@ -837,10 +889,10 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                         <div class="tier-card tier-card-club">
                             <h3>Yoto Club Members<span>Your Own Scanner</span></h3>
                             <div class="tier-card-button">
-                                <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" rel="noopener" class="yoto-button yoto-button-sm">
+                                <button onclick="document.getElementById('comingSoonModal').style.display='flex'" class="yoto-button yoto-button-sm">
                                     <img src="/assets/img/yoto.png" alt="Yoto app icon" class="button-icon">
                                     Add to Library & Listen
-                                </a>
+                                </button>
                             </div>
                             <p>Yoto Club members unlock the full power of the jet plane scanner, giving them real-time information on the planes traversing the skies above their Yoto.</p>
                             <ul>
@@ -943,6 +995,14 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             <footer class="footer">
                 <img src="/assets/img/raccoonresearchlabs.png" alt="Raccoon Research Labs" class="footer-logo">
             </footer>
+
+            <div id="comingSoonModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+                <div class="modal-content">
+                    <h3>Link Coming Soon!</h3>
+                    <p>For now, find it in the <strong>Yoto Club</strong> section of your Yoto app.</p>
+                    <button class="modal-close" onclick="document.getElementById('comingSoonModal').style.display='none'">Got it</button>
+                </div>
+            </div>
 
             <script>
                 const video = document.getElementById('mainVideo');
