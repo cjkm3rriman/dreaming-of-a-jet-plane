@@ -29,7 +29,7 @@ FREE_POOL_INDEX_CACHE_TTL = 60  # seconds
 
 # Rate limiting: track requests per IP
 _rate_limit_cache: Dict[str, List[float]] = {}  # {ip: [timestamp, ...]}
-FREE_TIER_RATE_LIMIT = 10  # requests per minute
+FREE_TIER_RATE_LIMIT = 50  # requests per minute
 FREE_TIER_RATE_WINDOW = 60  # seconds
 
 # Free pool configuration
