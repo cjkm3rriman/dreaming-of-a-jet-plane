@@ -303,10 +303,217 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     text-decoration: underline;
                 }
 
+                .flight-path {
+                    width: 100%;
+                    padding: 6.5rem 4rem 5rem;
+                    background: #fff url('/assets/img/card-bg.png') center top repeat-x;
+                    background-size: 240px auto;
+                    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+
+                .flight-path-inner {
+                    max-width: 900px;
+                    margin: 0 auto;
+                }
+
+                .flight-path h2 {
+                    font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
+                    font-size: 1.6rem;
+                    color: #000;
+                    margin-bottom: 0.5rem;
+                    font-weight: 400;
+                    text-transform: uppercase;
+                    text-align: center;
+                }
+
+                .flight-path-intro {
+                    font-size: 1.1rem;
+                    line-height: 1.6;
+                    color: #333;
+                    text-align: center;
+                    margin-bottom: 2rem;
+                }
+
+                .tier-cards {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1.5rem;
+                    margin-bottom: 2.5rem;
+                    align-items: start;
+                }
+
+                .tier-card {
+                    border-radius: 16px;
+                    padding: 1.8rem;
+                    position: relative;
+                }
+
+                .tier-card-club {
+                    background: #003c1f;
+                }
+
+                .tier-card-free {
+                    background: #fbf9f9;
+                }
+
+
+
+                .tier-card h3 {
+                    font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
+                    font-size: 1.2rem;
+                    font-weight: 400;
+                    margin-bottom: 0.5rem;
+                    text-transform: uppercase;
+                    text-align: center;
+                }
+
+                .tier-card h3 span {
+                    display: block;
+                    font-size: 1.6rem;
+                    margin-top: 0.2rem;
+                }
+
+
+                .tier-card-button {
+                    text-align: center;
+                    margin-top: 0.8rem;
+                    margin-bottom: 1rem;
+                }
+
+                .yoto-button-sm {
+                    padding: 0.7rem 1.5rem;
+                    font-size: 0.9rem;
+                    padding-top: 0.8rem;
+                    padding-bottom: 0.6rem;
+                }
+
+                .tier-card > p {
+                    font-size: 1.1rem;
+                    line-height: 1.6;
+                    color: rgba(0, 0, 0, 0.6);
+                    margin-bottom: 1rem;
+                }
+
+                .tier-card ul {
+                    list-style: none;
+                    padding: 0;
+                }
+
+                .tier-card ul li {
+                    font-size: 1.1rem;
+                    line-height: 1.6;
+                    color: rgba(0, 0, 0, 0.6);
+                    margin-bottom: 0.6rem;
+                    padding-left: 0.2rem;
+                }
+
+                .tier-card ul li strong {
+                    color: #000;
+                }
+
+                .tier-card-club,
+                .tier-card-club > p,
+                .tier-card-club ul li,
+                .tier-card-club h3 {
+                    color: rgba(255, 255, 255, 0.9);
+                }
+
+                .tier-card-club ul li strong,
+                .tier-card-club h3 span {
+                    color: #fff;
+                }
+
+                .tier-card-free h3 {
+                    color: rgba(0, 0, 0, 0.6);
+                }
+
+                .tier-card-free h3 span {
+                    color: #222;
+                }
+
+                .comparison-table {
+                    width: 100%;
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    font-size: 0.95rem;
+                    border-radius: 8px;
+                    border: 1px solid #eee;
+                }
+
+                .comparison-table thead th:first-child {
+                    width: 35%;
+                }
+
+                .comparison-table thead th {
+                    background: #eee;
+                    color: #111;
+                    padding: 0.8rem 1rem;
+                    text-align: left;
+                    font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
+                    font-weight: 400;
+                    font-size: 1.1rem;
+                    text-transform: uppercase;
+                }
+
+                .comparison-table thead th:not(:first-child) {
+                    text-align: center;
+                }
+
+                .comparison-table tbody td {
+                    padding: 0.7rem 1rem;
+                    border-bottom: 1px solid #eee;
+                    color: #333;
+                }
+
+                .comparison-table tbody td:not(:first-child) {
+                    text-align: center;
+                }
+
+                .comparison-table tbody tr:nth-child(even) {
+                    background: #f9f9f9;
+                }
+
+                .comparison-table tbody tr:last-child td {
+                    border-bottom: none;
+                }
+
+                @media (max-width: 768px) {
+                    .tier-cards {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .flight-path {
+                        padding: 3rem 2rem;
+                    }
+
+                    .flight-path h2 {
+                        font-size: 1.2rem;
+                    }
+
+                    .flight-path-intro {
+                        font-size: 0.9rem;
+                    }
+
+                    .tier-card h3 {
+                        font-size: 1.1rem;
+                    }
+
+                    .tier-card > p,
+                    .tier-card ul li,
+                    .comparison-table {
+                        font-size: 0.85rem;
+                    }
+
+                    .comparison-table thead th,
+                    .comparison-table tbody td {
+                        padding: 0.5rem 0.6rem;
+                    }
+                }
+
                 .testimonials {
                     width: 100%;
                     padding: 2rem;
-                    background: linear-gradient(to bottom, #fff, #eee);
+                    background: #f5f0f0;
                     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 }
 
@@ -357,6 +564,44 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     line-height: 0;
                     vertical-align: -0.3em;
                     margin-left: 0.1em;
+                }
+
+                .faq {
+                    width: 100%;
+                    padding: 3rem 2rem;
+                    background: #FE6601;
+                    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+
+                .faq-inner {
+                    max-width: 900px;
+                    margin: 0 auto;
+                }
+
+                .faq h2 {
+                    font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
+                    font-size: 1.6rem;
+                    color: #fff;
+                    font-weight: 400;
+                    text-transform: uppercase;
+                    margin-bottom: 1.5rem;
+                }
+
+                .faq-item {
+                    margin-bottom: 2rem;
+                }
+
+                .faq-question {
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    color: #fff;
+                    margin-bottom: 0.5rem;
+                }
+
+                .faq-answer {
+                    font-size: 1.1rem;
+                    line-height: 1.6;
+                    color: rgba(255, 255, 255, 0.9);
                 }
 
                 .disclaimer {
@@ -525,14 +770,17 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     }
 
                     .testimonials h2,
-                    .disclaimer h2 {
+                    .disclaimer h2,
+                    .faq h2 {
                         font-size: 1.2rem;
                     }
 
                     .testimonials-intro,
                     .testimonial-quote,
                     .disclaimer p,
-                    .disclaimer-list li {
+                    .disclaimer-list li,
+                    .faq-question,
+                    .faq-answer {
                         font-size: 0.9rem;
                     }
 
@@ -580,14 +828,68 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 </div>
             </header>
 
-            <main class="content-container">
-                <div class="button-column">
-                    <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" rel="noopener" class="yoto-button">
-                        <img src="/assets/img/yoto.png" alt="Yoto app icon" class="button-icon">
-                        Listen & Add To Your Library
-                    </a>
+            <section class="flight-path">
+                <div class="flight-path-inner">
+                    <h2>Choose Your Flight Path</h2>
+                    <p class="flight-path-intro">Whether you want to track the jets flying directly over your house, or simply tune into recently spotted flights from around the world, there's a version of Dreaming of a Jet Plane for every young air traffic controller on Yoto.</p>
+
+                    <div class="tier-cards">
+                        <div class="tier-card tier-card-club">
+                            <h3>Yoto Club Members<span>Your Own Scanner</span></h3>
+                            <div class="tier-card-button">
+                                <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" rel="noopener" class="yoto-button yoto-button-sm">
+                                    <img src="/assets/img/yoto.png" alt="Yoto app icon" class="button-icon">
+                                    Add to Library & Listen
+                                </a>
+                            </div>
+                            <p>Yoto Club members unlock the full power of the jet plane scanner, giving them real-time information on the planes traversing the skies above their Yoto.</p>
+                            <ul>
+                                <li><strong>Real-Time Scanning:</strong> Find real jet planes in the skies above your Yoto, and understand exactly how far away the plane is from your Yoto.</li>
+                                <li><strong>Jet Plane Facts &amp; Fun:</strong> Learn all about the aircraft, its route, and fun facts about the destination it is headed to.</li>
+                                <li><strong>A Full Flight Deck:</strong> Track the top five local aircraft and their destinations with each scan.</li>
+                                <li><strong>Unlimited Scans:</strong> Don't miss a single flight. Refresh your radar at any time to catch every jet plane entering your airspace.</li>
+                                <li><strong>Special Signal Events:</strong> Exclusive access to magical scanning events throughout the year, such as Santa's sleigh on Christmas Eve.</li>
+                            </ul>
+                        </div>
+                        <div class="tier-card tier-card-free">
+                            <h3>Free<span>Tune In</span></h3>
+                            <div class="tier-card-button">
+                                <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" rel="noopener" class="yoto-button yoto-button-sm">
+                                    <img src="/assets/img/yoto.png" alt="Yoto app icon" class="button-icon">
+                                    Add to Library & Listen
+                                </a>
+                            </div>
+                            <p>Not a Yoto Club member, no problem! Listen in on flights recently spotted by our network of junior air traffic controllers around the world.</p>
+                            <ul>
+                                <li><strong>Tune In:</strong> Hear what other jet planes spotters are finding across the globe. There will always be something new to discover.</li>
+                                <li><strong>Jet Plane Facts &amp; Fun:</strong> Get the same high-quality details on aircraft types, airlines, and fun destination facts.</li>
+                                <li><strong>A Discovery Deck:</strong> Get the details on three jet planes with each play, with the ability to tune in multiple times per day.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Yoto Club</th>
+                                <th>Free</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Kid-Safe Content</td><td>Yes</td><td>Yes</td></tr>
+                            <tr><td>High Quality Narration from Hamish</td><td>Yes</td><td>Yes</td></tr>
+                            <tr><td>Jet Plane Facts</td><td>Yes</td><td>Yes</td></tr>
+                            <tr><td>Destination Fun Facts</td><td>Yes</td><td>Yes</td></tr>
+                            <tr><td>Realtime Local Scanning</td><td>Yes</td><td>No</td></tr>
+                            <tr><td>Jet Plane Selection Pool</td><td>Local To Your Yoto</td><td>Random</td></tr>
+                            <tr><td>Jet Plane Results per Scan</td><td>5</td><td>3</td></tr>
+                            <tr><td>Special Signal Events</td><td>Yes</td><td>No</td></tr>
+                            <tr><td>Unlimited Scans</td><td>Yes</td><td>No: Daily Limits</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-            </main>
+            </section>
 
             <section class="testimonials">
                 <div class="testimonials-inner">
@@ -612,15 +914,29 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 <div class="disclaimer-inner">
                     <h2>How we use AI</h2>
                     <p>The app uses AI to bring Hamish to life in real-time, allowing the audio to be personalized for each user based on their location. The AI is simply the voice reading a script; it does not think or create its own stories.</p>
-                    <p>While the voice is generated by AI, the information and content it shares is not:</p>
+                    <p>While the voice is generated by AI, the information and content is from professional sources and curated by humans:</p>
                     <ul class="disclaimer-list">
                         <li><strong>Flight Data:</strong> All flight details are pulled from industry-standard flight tracking services such as FlightRadar and Airlabs.</li>
                         <li><strong>City Facts:</strong> Every educational city fact was hand-picked and personally verified as child-friendly.</li>
-                        <li><strong>Human Content:</strong> All words spoken by Hamish were either written or reviewed by the developer. The app does not use AI to write content or "chat" with children.</li>
+                        <li><strong>Human Content:</strong> All words spoken by Hamish were either written or reviewed by the developer. The app does not use AI to write content or chat with children.</li>
                     </ul>
-                    <p><strong>Safety First.</strong> Because the content has been reviewed and the flight data comes from professional sources, there is no risk of the app "hallucinating" or saying something unexpected. The content is fixed and predictable.</p>
+                    <p><strong>Safety First.</strong> Because the content has been reviewed and the flight data comes from professional sources, there is no risk of the app hallucinating or saying something unexpected. The content is fixed and predictable.</p>
                     <p>As a parent myself, I built this with my own children in mind. I wanted to create something that feels like magic but operates within a strictly controlled, safe environment that parents can trust completely.</p>
                     <p>Any questions, get in touch on <a href="https://yoto.space/developers/post/dreaming-of-a-jet-plane-cDFgOvSmJNJi4LK?highlight=31rkfxQwLKqiW7U" target="_blank" rel="noopener">Yoto Space</a></p>
+                </div>
+            </section>
+
+            <section class="faq">
+                <div class="faq-inner">
+                    <h2>FAQs</h2>
+                    <div class="faq-item">
+                        <h3 class="faq-question">Why is Dreaming of a Jet Plane no longer free?</h3>
+                        <p class="faq-answer">Dreaming of a Jet Plane uses real-time flight data and AI-powered narration to create a unique experience every time you play. These services come with ongoing costs that grow as more families discover the app. We believe making the full experience available through Yoto Club is the most accessible way to keep it running and improving for everyone. That said, the free version still offers the same engaging, high-quality content with Hamish and fun destination facts - it's just not personalized to the skies above your Yoto.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3 class="faq-question">Where has Hamish gone?</h3>
+                        <p class="faq-answer">Hamish has taken a well-earned respite in the Maldives! In the meantime, Hugo has taken his place at the scanner and will be guiding your little ones through the skies for the foreseeable future.</p>
+                    </div>
                 </div>
             </section>
 
