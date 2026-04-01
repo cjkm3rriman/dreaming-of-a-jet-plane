@@ -148,6 +148,13 @@ class S3MP3Cache:
                 # For other exceptions, don't retry
                 raise
 
+    def _sign_request(self, method: str, url: str, headers: dict = None, payload: bytes = b'') -> dict:
+        """Create signed headers for any S3 request (GET, HEAD, PUT, etc.)
+
+        Convenience wrapper that handles empty payloads for read operations.
+        """
+        return self._create_aws_signature(method, url, headers or {}, payload)
+
     def _create_aws_signature(self, method: str, url: str, headers: dict, payload: bytes) -> dict:
         """Create AWS Signature Version 4 headers for S3 request"""
         from urllib.parse import urlparse
@@ -233,7 +240,8 @@ class S3MP3Cache:
             client = await self._get_client()
 
             # First, check if object exists and get metadata (fast timeout)
-            head_response = await client.head(s3_url, timeout=self.HEAD_TIMEOUT)
+            head_headers = self._sign_request('HEAD', s3_url)
+            head_response = await client.head(s3_url, headers=head_headers, timeout=self.HEAD_TIMEOUT)
 
             if head_response.status_code == 404:
                 logger.info(f"Cache miss: {cache_key} not found")
@@ -259,7 +267,8 @@ class S3MP3Cache:
                     return None
 
             # File exists and is fresh, download it (longer timeout for actual data)
-            get_response = await client.get(s3_url, timeout=self.GET_TIMEOUT)
+            get_headers = self._sign_request('GET', s3_url)
+            get_response = await client.get(s3_url, headers=get_headers, timeout=self.GET_TIMEOUT)
 
             if get_response.status_code == 200:
 
@@ -373,7 +382,8 @@ class S3MP3Cache:
         try:
             s3_url = f"https://{self.bucket_name}.s3.{self.aws_region}.amazonaws.com/{cache_key}"
             client = await self._get_client()
-            response = await client.get(s3_url, timeout=self.GET_TIMEOUT)
+            get_headers = self._sign_request('GET', s3_url)
+            response = await client.get(s3_url, headers=get_headers, timeout=self.GET_TIMEOUT)
 
             if response.status_code == 200:
                 return response.content
@@ -399,7 +409,8 @@ class S3MP3Cache:
         try:
             s3_url = f"https://{self.bucket_name}.s3.{self.aws_region}.amazonaws.com/{cache_key}"
             client = await self._get_client()
-            head_response = await client.head(s3_url, timeout=self.HEAD_TIMEOUT)
+            head_headers = self._sign_request('HEAD', s3_url)
+            head_response = await client.head(s3_url, headers=head_headers, timeout=self.HEAD_TIMEOUT)
 
             if head_response.status_code != 200:
                 return False
