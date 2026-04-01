@@ -412,31 +412,36 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 }
 
                 .modal-content h3 {
-                    font-size: 1.3rem;
+                    font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
+                    font-size: 1.6rem;
+                    font-weight: 400;
+                    text-transform: uppercase;
                     margin-bottom: 1rem;
-                    color: #1a1a2e;
+                    color: #000;
                 }
 
                 .modal-content p {
-                    font-size: 1rem;
+                    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-size: 1.1rem;
                     line-height: 1.6;
-                    color: rgba(0, 0, 0, 0.7);
+                    color: #333;
                     margin-bottom: 1.5rem;
                 }
 
                 .modal-close {
-                    background: #4361ee;
+                    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background: #FE6601;
                     color: white;
                     border: none;
-                    padding: 0.6rem 1.5rem;
+                    padding: 0.7rem 1.5rem;
                     border-radius: 0.5rem;
-                    font-size: 0.95rem;
+                    font-size: 1rem;
                     cursor: pointer;
                     font-weight: 600;
                 }
 
                 .modal-close:hover {
-                    background: #3a56d4;
+                    background: #e55b00;
                 }
 
                 .tier-card > p {
