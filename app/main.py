@@ -61,9 +61,9 @@ import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 if os.getenv("SENTRY_DSN"):
-    # Auto-detect environment: if running on Railway, use SENTRY_ENVIRONMENT;
-    # otherwise default to "development" (e.g. local dev via `railway run`)
-    _sentry_env = "production" if os.getenv("RAILWAY_ENVIRONMENT") else "development"
+    # Auto-detect environment: RAILWAY_REPLICA_ID is only set on deployed
+    # Railway containers, not via `railway run` locally
+    _sentry_env = "production" if os.getenv("RAILWAY_REPLICA_ID") else "development"
     sentry_sdk.init(
         dsn=os.getenv("SENTRY_DSN"),
         environment=_sentry_env,
