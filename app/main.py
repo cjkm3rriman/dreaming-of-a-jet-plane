@@ -472,7 +472,7 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
     except Exception as e:
         logger.error(f"Failed to track scan:start event: {e}", exc_info=True)
 
-def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None, subscription: str = "yoto-club"):
+def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None, subscription: str = "yoto-club", fun_fact_cache_hit: Optional[bool] = None):
     """Track generate:audio analytics event with flight and audio details"""
     try:
         import hashlib
@@ -548,6 +548,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "audio_format": audio_format,
             "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "gemini-2.5-flash-preview-tts" if tts_provider == "google" else "unknown",
             "subscription": subscription,
+            "fun_fact_cache_hit": fun_fact_cache_hit,
         })
     except Exception as e:
         logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
@@ -989,6 +990,7 @@ async def handle_plane_endpoint(
     # Generate TTS
     import time
     tts_start_time = time.time()
+    fun_fact_cache_hit = None
 
     if use_split_tts and opening_text and body_text:
         # Split TTS: generate opening and body separately for free pool support
@@ -1005,6 +1007,7 @@ async def handle_plane_endpoint(
             fun_fact_opening_audio = None
             fun_fact_body_audio = None
 
+            fun_fact_cache_hit = None
             if fun_fact_opening_text and fun_fact_body_text:
                 # Check cache for fun fact opening phrase
                 fun_fact_opening_audio = await get_cached_opening_phrase_audio(fun_fact_opening_text, tts_provider_used, actual_file_ext)
@@ -1015,7 +1018,10 @@ async def handle_plane_endpoint(
 
                 # Check cache for fun fact body
                 fun_fact_body_audio = await get_cached_fun_fact_audio(fun_fact_body_text, tts_provider_used, actual_file_ext)
-                if not fun_fact_body_audio:
+                if fun_fact_body_audio:
+                    fun_fact_cache_hit = True
+                else:
+                    fun_fact_cache_hit = False
                     fun_fact_body_audio, ff_body_err, _, _, _ = await convert_text_to_speech(fun_fact_body_text, tts_override=tts_override)
                     if fun_fact_body_audio and not ff_body_err:
                         asyncio.create_task(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, actual_file_ext))
@@ -1064,7 +1070,7 @@ async def handle_plane_endpoint(
         # Track audio generation analytics if we have aircraft data
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext, fun_fact_source)
+            track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext, fun_fact_source, fun_fact_cache_hit=fun_fact_cache_hit)
 
         # Track plane request analytics for cache miss
         track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=False)
