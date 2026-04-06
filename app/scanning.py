@@ -230,6 +230,7 @@ async def _generate_and_cache_plane_audio(
         tts_provider_used = None
         file_ext = None
         mime_type = None
+        fun_fact_cache_hit = None
 
         # Try split TTS if we have opening and body text
         if opening_text and body_text and location_hash:
@@ -242,6 +243,7 @@ async def _generate_and_cache_plane_audio(
                 fun_fact_opening_audio = None
                 fun_fact_body_audio = None
 
+                fun_fact_cache_hit = None
                 if fun_fact_opening_text and fun_fact_body_text:
                     # Check cache for fun fact opening phrase
                     fun_fact_opening_audio = await get_cached_opening_phrase_audio(fun_fact_opening_text, tts_provider_used, file_ext)
@@ -252,7 +254,10 @@ async def _generate_and_cache_plane_audio(
 
                     # Check cache for fun fact body
                     fun_fact_body_audio = await get_cached_fun_fact_audio(fun_fact_body_text, tts_provider_used, file_ext)
-                    if not fun_fact_body_audio:
+                    if fun_fact_body_audio:
+                        fun_fact_cache_hit = True
+                    else:
+                        fun_fact_cache_hit = False
                         fun_fact_body_audio, ff_body_err, _, _, _ = await convert_text_to_speech(fun_fact_body_text, tts_override=tts_override)
                         if fun_fact_body_audio and not ff_body_err:
                             asyncio.create_task(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, file_ext))
@@ -298,7 +303,7 @@ async def _generate_and_cache_plane_audio(
 
                 # Track audio generation analytics if we have request and aircraft data
                 if request and aircraft:
-                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext, fun_fact_source)
+                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext, fun_fact_source, fun_fact_cache_hit=fun_fact_cache_hit)
 
                 return True
             else:
