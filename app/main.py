@@ -61,13 +61,16 @@ import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 if os.getenv("SENTRY_DSN"):
+    # Auto-detect environment: if running on Railway, use SENTRY_ENVIRONMENT;
+    # otherwise default to "development" (e.g. local dev via `railway run`)
+    _sentry_env = "production" if os.getenv("RAILWAY_ENVIRONMENT") else "development"
     sentry_sdk.init(
         dsn=os.getenv("SENTRY_DSN"),
-        environment=os.getenv("SENTRY_ENVIRONMENT", "development"),
+        environment=_sentry_env,
         traces_sample_rate=0.1,  # 10% of requests for performance monitoring
         integrations=[FastApiIntegration()],
     )
-    logger.info("Sentry error monitoring initialized")
+    logger.info(f"Sentry error monitoring initialized (environment={_sentry_env})")
 
 app = FastAPI()
 
