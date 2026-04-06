@@ -304,6 +304,20 @@ def check_free_tier_rate_limit(client_ip: str) -> tuple[bool, Optional[int]]:
     return True, None
 
 
+TARGET_DBFS = -20  # Target loudness for normalization (~-16 LUFS for speech, avoids clipping)
+
+
+def _normalize_loudness(audio_segment: AudioSegment) -> AudioSegment:
+    """Normalize audio to a consistent loudness level.
+
+    Uses simple dBFS normalization which is effectively free for spoken word.
+    """
+    if audio_segment.dBFS == float('-inf'):
+        return audio_segment  # Silent segment, nothing to normalize
+    gain = TARGET_DBFS - audio_segment.dBFS
+    return audio_segment.apply_gain(gain)
+
+
 def _trim_silence(audio_segment: AudioSegment, silence_threshold: int = -50, min_silence_len: int = 100, tail_padding_ms: int = 75) -> AudioSegment:
     """Trim leading and trailing silence from an audio segment
 
@@ -361,14 +375,17 @@ async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True, au
         opening_trimmed = _trim_silence(opening_seg)
         body_trimmed = _trim_silence(body_seg)
 
-        # Add half second gap between opening and body for natural pacing
-        gap = AudioSegment.silent(duration=500)
+        # Add 1 second gap between opening and body for natural pacing
+        gap = AudioSegment.silent(duration=1000)
 
         if add_silence:
             silence = AudioSegment.silent(duration=1000)  # 1 second at start
             combined = silence + opening_trimmed + gap + body_trimmed
+            combined += AudioSegment.silent(duration=1000)  # 1 second at end
         else:
             combined = opening_trimmed + gap + body_trimmed
+
+        combined = _normalize_loudness(combined)
 
         output = io.BytesIO()
         export_format = "ogg" if audio_format == "opus" else audio_format
@@ -381,15 +398,17 @@ async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True, au
         raise
 
 
-async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True, audio_format: str = "mp3") -> bytes:
+async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True, audio_format: str = "mp3", gap_durations: List[int] = None) -> bytes:
     """Combine multiple audio segments using pydub
 
     Trims silence from each segment to eliminate gaps between them.
 
     Args:
         segments: List of audio bytes
-        add_silence: If True, add 1 second silence at start
+        add_silence: If True, add 1 second silence at start and end
         audio_format: Audio format for import/export (e.g., "mp3", "ogg")
+        gap_durations: Optional list of gap durations in ms between segments.
+                       Length should be len(segments) - 1. Defaults to 1000ms for each gap.
 
     Returns:
         Combined audio bytes in the specified format
@@ -404,11 +423,21 @@ async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True, au
         if add_silence:
             combined += AudioSegment.silent(duration=1000)  # 1 second
 
-        for segment_bytes in segments:
+        default_gap = 1000
+        for i, segment_bytes in enumerate(segments):
             segment = AudioSegment.from_file(io.BytesIO(segment_bytes), format=pydub_format)
             # Trim silence from each segment to eliminate gaps
             trimmed = _trim_silence(segment)
+            if i > 0:
+                gap_ms = gap_durations[i - 1] if gap_durations and i - 1 < len(gap_durations) else default_gap
+                combined += AudioSegment.silent(duration=gap_ms)
             combined += trimmed
+
+        # Add 1 second trailing silence for a clean outro (only for final output, not intermediate stitches)
+        if add_silence:
+            combined += AudioSegment.silent(duration=1000)
+
+        combined = _normalize_loudness(combined)
 
         output = io.BytesIO()
         export_format = "ogg" if audio_format == "opus" else audio_format

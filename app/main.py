@@ -878,7 +878,7 @@ async def handle_plane_endpoint(
         provider: Aircraft data provider override (requires secret)
         country: Optional country code override (e.g., "FR", "GB", "US") for testing metric/imperial units
     """
-    from .free_pool import stitch_audio
+    from .free_pool import stitch_audio, stitch_audio_multi
 
     logger.info(f"Request to /plane/{plane_index}")
     validate_flight_position_override(lat, lng, secret)
@@ -945,16 +945,21 @@ async def handle_plane_endpoint(
     fun_fact_source = None  # Initialize for all cases
     opening_text = None
     body_text = None
+    fun_fact_opening_text = None
+    fun_fact_body_text = None
     use_split_tts = False  # Flag to track if we can use split TTS
 
     if aircraft and len(aircraft) > zero_based_index:
         selected_aircraft = aircraft[zero_based_index]
         # Use split text generation for free pool support
-        opening_text, body_text, fun_fact_source = generate_flight_text_for_aircraft(
+        opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, fun_fact_source = generate_flight_text_for_aircraft(
             selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True,
             is_fallback_location=is_fallback_location,
         )
-        sentence = f"{opening_text} {body_text}"
+        if fun_fact_opening_text and fun_fact_body_text:
+            sentence = f"{opening_text} {body_text} {fun_fact_opening_text} {fun_fact_body_text}"
+        else:
+            sentence = f"{opening_text} {body_text}"
         use_split_tts = True
 
     elif aircraft and len(aircraft) > 0:
@@ -975,6 +980,8 @@ async def handle_plane_endpoint(
     if override_sentence:
         sentence = override_sentence
         use_split_tts = False  # Don't use split TTS for override sentences
+        fun_fact_opening_text = None
+        fun_fact_body_text = None
 
     # Generate TTS
     import time
@@ -982,21 +989,62 @@ async def handle_plane_endpoint(
 
     if use_split_tts and opening_text and body_text:
         # Split TTS: generate opening and body separately for free pool support
+        from .fun_fact_cache import (
+            get_cached_fun_fact_audio, cache_fun_fact_audio,
+            get_cached_opening_phrase_audio, cache_opening_phrase_audio,
+        )
+
         opening_audio, opening_error, _, _, _ = await convert_text_to_speech(opening_text, tts_override=tts_override)
         body_audio, body_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(body_text, tts_override=tts_override)
 
         if opening_audio and body_audio and not opening_error and not body_error:
-            # Stitch opening + body with 1s silence at start
-            audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=actual_file_ext)
-            tts_error = ""
+            # Handle fun fact segments separately for caching
+            fun_fact_opening_audio = None
+            fun_fact_body_audio = None
 
-            # Cache body audio separately for free pool reuse (pre-generation handles populate_free_pool)
-            # Generate location hash for body cache key
-            import hashlib
-            location_str = f"{round(user_lat, 2)},{round(user_lng, 2)}"
-            location_hash = hashlib.md5(location_str.encode()).hexdigest()
-            body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{actual_file_ext}"
-            asyncio.create_task(s3_cache.set(body_cache_key, body_audio))
+            if fun_fact_opening_text and fun_fact_body_text:
+                # Check cache for fun fact opening phrase
+                fun_fact_opening_audio = await get_cached_opening_phrase_audio(fun_fact_opening_text, tts_provider_used, actual_file_ext)
+                if not fun_fact_opening_audio:
+                    fun_fact_opening_audio, ff_open_err, _, _, _ = await convert_text_to_speech(fun_fact_opening_text, tts_override=tts_override)
+                    if fun_fact_opening_audio and not ff_open_err:
+                        asyncio.create_task(cache_opening_phrase_audio(fun_fact_opening_text, fun_fact_opening_audio, tts_provider_used, actual_file_ext))
+
+                # Check cache for fun fact body
+                fun_fact_body_audio = await get_cached_fun_fact_audio(fun_fact_body_text, tts_provider_used, actual_file_ext)
+                if not fun_fact_body_audio:
+                    fun_fact_body_audio, ff_body_err, _, _, _ = await convert_text_to_speech(fun_fact_body_text, tts_override=tts_override)
+                    if fun_fact_body_audio and not ff_body_err:
+                        asyncio.create_task(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, actual_file_ext))
+
+            # Stitch all segments together
+            if fun_fact_opening_audio and fun_fact_body_audio:
+                audio_content = await stitch_audio_multi(
+                    [opening_audio, body_audio, fun_fact_opening_audio, fun_fact_body_audio],
+                    add_silence=True, audio_format=actual_file_ext,
+                    gap_durations=[1000, 1000, 500]
+                )
+                # Cache body+fact stitched for free pool reuse
+                body_with_fact = await stitch_audio_multi(
+                    [body_audio, fun_fact_opening_audio, fun_fact_body_audio],
+                    add_silence=False, audio_format=actual_file_ext,
+                    gap_durations=[1000, 500]
+                )
+                import hashlib
+                location_str = f"{round(user_lat, 2)},{round(user_lng, 2)}"
+                location_hash = hashlib.md5(location_str.encode()).hexdigest()
+                body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{actual_file_ext}"
+                asyncio.create_task(s3_cache.set(body_cache_key, body_with_fact))
+            else:
+                audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=actual_file_ext)
+                # Cache body audio for free pool reuse (no fun fact)
+                import hashlib
+                location_str = f"{round(user_lat, 2)},{round(user_lng, 2)}"
+                location_hash = hashlib.md5(location_str.encode()).hexdigest()
+                body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{actual_file_ext}"
+                asyncio.create_task(s3_cache.set(body_cache_key, body_audio))
+
+            tts_error = ""
         else:
             # Fallback to combined sentence if split fails
             audio_content, tts_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)

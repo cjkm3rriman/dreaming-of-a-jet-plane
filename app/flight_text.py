@@ -447,9 +447,11 @@ def generate_flight_text_for_aircraft(
     else:
         flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} from {origin_city} in {origin_location} all the way to {destination_city} in {destination_location}{eta_text}."
     
-    # Build body text (scanner + flight details + fun fact + closing)
+    # Build body text (scanner + flight details + closing)
     body_text = f"{scanner_sentence} {flight_sentence}"
     fun_fact_source = None  # Track which city we used for fun facts
+    fun_fact_opening_text = None  # e.g. "Did you know?"
+    fun_fact_body_text = None  # The actual fun fact text
 
     if destination_city and destination_city != "an unknown destination":
         # Check for duplicate destinations - use origin city for fun facts if duplicate
@@ -495,15 +497,19 @@ def generate_flight_text_for_aircraft(
             random_fact = random.choice(fun_facts)
             fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
             fun_fact_opening = random.choice(fun_fact_openings)
-            body_text += f" {fun_fact_opening} {random_fact}."
+            fun_fact_opening_text = fun_fact_opening
+            fun_fact_body_text = f"{random_fact}."
         else:
             # No fun facts available for this city
             fun_fact_source = None
 
     if split_text:
-        return detection_sentence, body_text, fun_fact_source
+        return detection_sentence, body_text, fun_fact_opening_text, fun_fact_body_text, fun_fact_source
     else:
-        full_response = f"{detection_sentence} {body_text}"
+        if fun_fact_opening_text and fun_fact_body_text:
+            full_response = f"{detection_sentence} {body_text} {fun_fact_opening_text} {fun_fact_body_text}"
+        else:
+            full_response = f"{detection_sentence} {body_text}"
         return full_response, fun_fact_source
 
 

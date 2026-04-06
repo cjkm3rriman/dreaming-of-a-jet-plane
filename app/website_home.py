@@ -909,7 +909,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                             </ul>
                         </div>
                         <div class="tier-card tier-card-free">
-                            <h3>Free<span>Tune In</span></h3>
+                            <h3>Free Edition<span>Tune In</span></h3>
                             <div class="tier-card-button">
                                 <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" rel="noopener" class="yoto-button yoto-button-sm">
                                     <img src="/assets/img/yoto.png" alt="Yoto app icon" class="button-icon">
@@ -930,7 +930,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                             <tr>
                                 <th>Feature</th>
                                 <th>Yoto Club</th>
-                                <th>Free</th>
+                                <th>Free Edition</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -988,7 +988,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     <h2>FAQs</h2>
                     <div class="faq-item">
                         <h3 class="faq-question">Why is Dreaming of a Jet Plane no longer free?</h3>
-                        <p class="faq-answer">Dreaming of a Jet Plane uses real-time flight data and AI-powered narration to create a unique experience every time you play. These services come with ongoing costs that grow as more families discover the app. We believe making the full experience available through Yoto Club is the most accessible way to keep it running and improving for everyone. That said, the free version still offers the same engaging, high-quality content with Hamish and fun destination facts - it's just not personalized to the skies above your Yoto.</p>
+                        <p class="faq-answer">Dreaming of a Jet Plane uses real-time flight data and AI-powered narration to create a unique experience every time you play. These services come with ongoing costs that grow as more families discover the app. We believe making the full experience available through Yoto Club is the most accessible way to keep it running and improving for everyone. That said, the Free Edition still offers the same engaging, high-quality content with Hamish and fun destination facts - it's just not personalized to the skies above your Yoto.</p>
                     </div>
                     <div class="faq-item">
                         <h3 class="faq-question">Where has Hamish gone?</h3>
