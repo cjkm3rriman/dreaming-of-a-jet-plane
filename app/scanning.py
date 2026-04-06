@@ -94,13 +94,18 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             current_fun_fact_source = None
             opening_text = None
             body_text = None
+            fun_fact_opening_text = None
+            fun_fact_body_text = None
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
                 # Use split_text=True to get opening and body separately for free pool support
-                opening_text, body_text, current_fun_fact_source = generate_flight_text_for_aircraft(
+                opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, current_fun_fact_source = generate_flight_text_for_aircraft(
                     selected_aircraft, lat, lng, plane_index, country_code, used_destinations, split_text=True
                 )
-                sentence = f"{opening_text} {body_text}"
+                if fun_fact_opening_text and fun_fact_body_text:
+                    sentence = f"{opening_text} {body_text} {fun_fact_opening_text} {fun_fact_body_text}"
+                else:
+                    sentence = f"{opening_text} {body_text}"
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes, generate appropriate message
                 plane_count = len(aircraft)
@@ -124,6 +129,8 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                 sentence = override_sentence
                 opening_text = None  # Don't use split TTS for overrides
                 body_text = None
+                fun_fact_opening_text = None
+                fun_fact_body_text = None
 
             # Create task to generate and cache this plane's audio
             selected_aircraft = aircraft[zero_based_index] if aircraft and len(aircraft) > zero_based_index else None
@@ -138,6 +145,8 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                     location_hash=location_hash,
                     opening_text=opening_text,
                     body_text=body_text,
+                    fun_fact_opening_text=fun_fact_opening_text,
+                    fun_fact_body_text=fun_fact_body_text,
                     request=request,
                     aircraft=selected_aircraft,
                     tts_override=tts_override,
@@ -176,6 +185,8 @@ async def _generate_and_cache_plane_audio(
     location_hash: str = None,
     opening_text: str = None,
     body_text: str = None,
+    fun_fact_opening_text: str = None,
+    fun_fact_body_text: str = None,
     request: Request = None,
     aircraft: dict = None,
     tts_override: str = None,
@@ -193,6 +204,8 @@ async def _generate_and_cache_plane_audio(
         location_hash: Hash of location for body cache key
         opening_text: Opening text for split TTS (optional)
         body_text: Body text for split TTS (optional)
+        fun_fact_opening_text: Fun fact opening phrase e.g. "Did you know?" (optional)
+        fun_fact_body_text: Fun fact body text (optional)
         request: Optional FastAPI Request object
         aircraft: Optional aircraft data dict
         tts_override: Optional TTS provider override
@@ -204,7 +217,11 @@ async def _generate_and_cache_plane_audio(
     try:
         # Import here to avoid circular imports
         from .main import convert_text_to_speech, track_audio_generation
-        from .free_pool import stitch_audio
+        from .free_pool import stitch_audio, stitch_audio_multi
+        from .fun_fact_cache import (
+            get_cached_fun_fact_audio, cache_fun_fact_audio,
+            get_cached_opening_phrase_audio, cache_opening_phrase_audio,
+        )
         import time
 
         tts_start_time = time.time()
@@ -216,18 +233,54 @@ async def _generate_and_cache_plane_audio(
 
         # Try split TTS if we have opening and body text
         if opening_text and body_text and location_hash:
+            # Generate opening and body audio via TTS
             opening_audio, opening_error, _, _, _ = await convert_text_to_speech(opening_text, tts_override=tts_override)
             body_audio, body_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(body_text, tts_override=tts_override)
 
             if opening_audio and body_audio and not opening_error and not body_error:
-                # Stitch opening + body with 1s silence at start
-                audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=file_ext)
-                tts_error = ""
+                # Handle fun fact segments (opening phrase + fact body) separately
+                fun_fact_opening_audio = None
+                fun_fact_body_audio = None
 
-                # Cache body audio separately for free pool reuse
-                body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
-                await s3_cache.set(body_cache_key, body_audio)
-                logger.info(f"Cached body audio at {body_cache_key}")
+                if fun_fact_opening_text and fun_fact_body_text:
+                    # Check cache for fun fact opening phrase
+                    fun_fact_opening_audio = await get_cached_opening_phrase_audio(fun_fact_opening_text, tts_provider_used, file_ext)
+                    if not fun_fact_opening_audio:
+                        fun_fact_opening_audio, ff_open_err, _, _, _ = await convert_text_to_speech(fun_fact_opening_text, tts_override=tts_override)
+                        if fun_fact_opening_audio and not ff_open_err:
+                            asyncio.create_task(cache_opening_phrase_audio(fun_fact_opening_text, fun_fact_opening_audio, tts_provider_used, file_ext))
+
+                    # Check cache for fun fact body
+                    fun_fact_body_audio = await get_cached_fun_fact_audio(fun_fact_body_text, tts_provider_used, file_ext)
+                    if not fun_fact_body_audio:
+                        fun_fact_body_audio, ff_body_err, _, _, _ = await convert_text_to_speech(fun_fact_body_text, tts_override=tts_override)
+                        if fun_fact_body_audio and not ff_body_err:
+                            asyncio.create_task(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, file_ext))
+
+                # Stitch all segments together
+                if fun_fact_opening_audio and fun_fact_body_audio:
+                    audio_content = await stitch_audio_multi(
+                        [opening_audio, body_audio, fun_fact_opening_audio, fun_fact_body_audio],
+                        add_silence=True, audio_format=file_ext,
+                        gap_durations=[1000, 1000, 500]
+                    )
+                    # Cache body+fact stitched together for free pool reuse
+                    body_with_fact = await stitch_audio_multi(
+                        [body_audio, fun_fact_opening_audio, fun_fact_body_audio],
+                        add_silence=False, audio_format=file_ext,
+                        gap_durations=[1000, 500]
+                    )
+                    body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
+                    await s3_cache.set(body_cache_key, body_with_fact)
+                    logger.info(f"Cached body+fact audio at {body_cache_key}")
+                else:
+                    audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=file_ext)
+                    # Cache body audio for free pool reuse (no fun fact)
+                    body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
+                    await s3_cache.set(body_cache_key, body_audio)
+                    logger.info(f"Cached body audio at {body_cache_key}")
+
+                tts_error = ""
             else:
                 # Split TTS failed, fall through to single TTS
                 logger.warning(f"Split TTS failed for plane {plane_index}, falling back to single TTS. Opening error: {opening_error}, Body error: {body_error}")
