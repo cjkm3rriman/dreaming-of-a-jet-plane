@@ -12,8 +12,7 @@ from fastapi.responses import StreamingResponse
 import httpx
 from .s3_cache import s3_cache
 from .flight_text import generate_flight_text, get_plane_sentence_override
-from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
-from .analytics import analytics
+from .location_utils import get_user_location, extract_client_ip, extract_user_agent
 
 logger = logging.getLogger(__name__)
 
@@ -410,38 +409,9 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     # Update cache with current request time
     _scanning_request_cache[session_key] = current_time
     
-    # Track scan:start event
-    try:
-        browser_info = parse_user_agent(user_agent)
-        session_id = session_key  # Use the same session key for consistency
-        
-        analytics.track_event("scan:start", {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,  # Use $session_id label
-            "$insert_id": f"scan_{session_id}",  # Prevents duplicates
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
-            "user_lat": round(user_lat, 2),
-            "user_lng": round(user_lng, 2),
-            "user_city": user_city,
-            "location_source": "params" if (lat is not None and lng is not None) else "ip"
-        })
-    except Exception as e:
-        # Log error but don't break the response
-        logger.error(f"Analytics tracking failed: {e}")
-        # Still try to track without session data
-        try:
-            analytics.track_event("scan:start", {
-                "lat": round(user_lat, 2),
-                "lng": round(user_lng, 2),
-                "location_source": "params" if (lat is not None and lng is not None) else "ip"
-            })
-        except:
-            pass  # Silently fail if analytics completely broken
+    # Track scan:start event using unified tracking function
+    from .main import track_scan_start
+    track_scan_start(request, subscription="yoto-club")
     
     # Start audio pre-generation in background (don't await)
     if user_lat != 0.0 or user_lng != 0.0:  # Only if we have a valid location
