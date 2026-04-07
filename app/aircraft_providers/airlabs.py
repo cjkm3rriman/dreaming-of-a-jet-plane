@@ -205,8 +205,8 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
 
     url = f"{AIRLABS_BASE_URL}/flights"
 
-    # Retry logic: try once, if timeout retry once after short backoff
-    max_attempts = 2
+    # Retry logic: retry on timeouts and connection errors with backoff
+    max_attempts = 3
     last_error = None
 
     for attempt in range(max_attempts):
@@ -214,17 +214,16 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
             client = await _get_client()
             response = await client.get(url, params=params)
             break  # Success, exit retry loop
-        except httpx.TimeoutException as e:
+        except (httpx.TimeoutException, httpx.RequestError) as e:
             last_error = e
+            error_type = "timeout" if isinstance(e, httpx.TimeoutException) else "connection error"
             if attempt < max_attempts - 1:
-                logger.warning(f"Airlabs API timeout (attempt {attempt + 1}/{max_attempts}), retrying in {RETRY_BACKOFF}s...")
-                await asyncio.sleep(RETRY_BACKOFF)
+                backoff = RETRY_BACKOFF * (2 ** attempt)  # 1s, 2s
+                logger.warning(f"Airlabs API {error_type} (attempt {attempt + 1}/{max_attempts}), retrying in {backoff}s...")
+                await asyncio.sleep(backoff)
             else:
-                logger.error(f"Airlabs API Timeout: Request timed out after {max_attempts} attempts")
-                return [], "Airlabs API request timed out"
-        except httpx.RequestError as exc:
-            logger.error(f"Airlabs API Connection Error: {exc}")
-            return [], f"Airlabs network connection error: {exc}"
+                logger.error(f"Airlabs API {error_type} after {max_attempts} attempts: {e}")
+                return [], f"Airlabs API {error_type} after {max_attempts} attempts"
 
     try:
         if response.status_code != 200:
