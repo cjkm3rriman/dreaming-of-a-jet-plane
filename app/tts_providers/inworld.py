@@ -1,5 +1,6 @@
 """Inworld TTS provider implementation"""
 
+import asyncio
 import base64
 import binascii
 import io
@@ -21,6 +22,9 @@ INWORLD_AUDIO_ENCODING = os.getenv("INWORLD_AUDIO_ENCODING", "OGG_OPUS")
 INWORLD_SPEAKING_RATE = float(os.getenv("INWORLD_SPEAKING_RATE", "1"))
 INWORLD_TEMPERATURE = float(os.getenv("INWORLD_TEMPERATURE", "1.3"))
 INWORLD_BASE_URL = os.getenv("INWORLD_TTS_BASE_URL", "https://api.inworld.ai/tts/v1/voice")
+
+MAX_RETRIES = 3
+RETRYABLE_STATUS_CODES = {429, 502, 503}
 
 
 def is_configured() -> Tuple[bool, Optional[str]]:
@@ -75,45 +79,58 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
 
     payload = _build_payload(text)
 
+    last_error = ""
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(INWORLD_BASE_URL, headers=headers, json=payload)
-            if response.status_code != 200:
-                logger.error("Inworld API error: %s - %s", response.status_code, response.text)
-                return b"", f"Inworld API returned status {response.status_code}"
+            for attempt in range(MAX_RETRIES):
+                response = await client.post(INWORLD_BASE_URL, headers=headers, json=payload)
 
-            data = response.json()
-            audio_content = data.get("audioContent")
-            if not audio_content:
-                logger.error("Inworld API response missing audioContent")
-                return b"", "Inworld API response missing audioContent"
+                if response.status_code in RETRYABLE_STATUS_CODES and attempt < MAX_RETRIES - 1:
+                    backoff = 2 ** attempt  # 1s, 2s
+                    logger.warning(
+                        "Inworld API returned %s, retrying in %ss (attempt %d/%d)",
+                        response.status_code, backoff, attempt + 1, MAX_RETRIES,
+                    )
+                    await asyncio.sleep(backoff)
+                    continue
 
-            try:
-                audio_bytes = base64.b64decode(audio_content)
+                if response.status_code != 200:
+                    logger.error("Inworld API error: %s - %s", response.status_code, response.text)
+                    return b"", f"Inworld API returned status {response.status_code}"
 
-                # Prepend 1 second of silence to the audio
-                audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="ogg")
-                silence = AudioSegment.silent(duration=1000)  # 1000ms = 1 second
-                audio_with_pause = silence + audio
+                data = response.json()
+                audio_content = data.get("audioContent")
+                if not audio_content:
+                    logger.error("Inworld API response missing audioContent")
+                    return b"", "Inworld API response missing audioContent"
 
-                # Export back to bytes
-                output_buffer = io.BytesIO()
-                audio_with_pause.export(output_buffer, format="ogg", codec="libopus")
-                return output_buffer.getvalue(), ""
+                try:
+                    audio_bytes = base64.b64decode(audio_content)
 
-            except binascii.Error as exc:
-                logger.error("Failed to decode Inworld audio: %s", exc)
-                return b"", "Failed to decode Inworld audio"
-            except Exception as exc:
-                logger.error("Failed to process Inworld audio with silence: %s", exc)
-                return b"", f"Failed to process Inworld audio: {exc}"
+                    # Prepend 1 second of silence to the audio
+                    audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="ogg")
+                    silence = AudioSegment.silent(duration=1000)  # 1000ms = 1 second
+                    audio_with_pause = silence + audio
+
+                    # Export back to bytes
+                    output_buffer = io.BytesIO()
+                    audio_with_pause.export(output_buffer, format="ogg", codec="libopus")
+                    return output_buffer.getvalue(), ""
+
+                except binascii.Error as exc:
+                    logger.error("Failed to decode Inworld audio: %s", exc)
+                    return b"", "Failed to decode Inworld audio"
+                except Exception as exc:
+                    logger.error("Failed to process Inworld audio with silence: %s", exc)
+                    return b"", f"Failed to process Inworld audio: {exc}"
 
     except httpx.TimeoutException:
+        last_error = "Inworld API timeout (30 seconds exceeded)"
         logger.error("Inworld API timeout")
-        return b"", "Inworld API timeout (30 seconds exceeded)"
     except httpx.RequestError as exc:
+        last_error = f"Inworld API connection error: {exc}"
         logger.error("Inworld API connection error: %s", exc)
-        return b"", f"Inworld API connection error: {exc}"
     except Exception as exc:
+        last_error = f"Inworld API unexpected error: {exc}"
         logger.error("Inworld API error: %s", exc)
-        return b"", f"Inworld API unexpected error: {exc}"
+    return b"", last_error
