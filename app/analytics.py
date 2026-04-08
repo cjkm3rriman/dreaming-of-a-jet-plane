@@ -28,23 +28,25 @@ class Analytics:
         else:
             logger.warning("MIXPANEL_TOKEN not set, analytics disabled")
     
-    def track_event(self, event_name: str, properties: Dict[str, Any], user_id: Optional[str] = None):
-        """Track an event with properties"""
+    def track_event(self, event_name: str, properties: Dict[str, Any], distinct_id: Optional[str] = None):
+        """Track an event with properties
+
+        Args:
+            event_name: Name of the event
+            properties: Event properties dict
+            distinct_id: Unique identifier for the user (e.g. hash of IP + user agent)
+        """
         if not self.mp:
             return
-            
+
         try:
             # Add timestamp and basic properties
             properties.update({
                 'timestamp': int(time.time()),
                 'app_version': '0.1.0'
             })
-            
-            if user_id:
-                self.mp.track(user_id, event_name, properties)
-            else:
-                # Use anonymous tracking
-                self.mp.track('anonymous', event_name, properties)
+
+            self.mp.track(distinct_id or 'anonymous', event_name, properties)
 
         except Exception as e:
             logger.error(f"Failed to track event {event_name}: {e}")
