@@ -322,6 +322,13 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
     file_ext, mime_type = get_audio_format_for_provider(provider_used)
     return audio_content, error, provider_used, file_ext, mime_type
 
+def _generate_distinct_id(client_ip: str, user_agent: str) -> str:
+    """Generate a stable anonymous user ID from IP + user agent"""
+    import hashlib
+    hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}"
+    return hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:16]
+
+
 def track_scan_complete(
     request: Request,
     lat: float,
@@ -350,6 +357,7 @@ def track_scan_complete(
         client_ip = extract_client_ip(request)
         user_agent = extract_user_agent(request)
         browser_info = parse_user_agent(user_agent)
+        distinct_id = _generate_distinct_id(client_ip, user_agent)
 
         # Create consistent session ID
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
@@ -372,7 +380,7 @@ def track_scan_complete(
             "nearby_aircraft": nearby_aircraft,
             "aircraft_provider": provider,
             "subscription": subscription,
-        })
+        }, distinct_id=distinct_id)
     except Exception as e:
         logger.error(f"Failed to track scan:complete event: {e}", exc_info=True)
 
@@ -406,6 +414,7 @@ def track_plane_request(
         client_ip = extract_client_ip(request)
         user_agent = extract_user_agent(request)
         browser_info = parse_user_agent(user_agent)
+        distinct_id = _generate_distinct_id(client_ip, user_agent)
 
         # Create consistent session ID
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
@@ -435,7 +444,7 @@ def track_plane_request(
         if distance_miles is not None:
             properties["distance_miles"] = distance_miles
 
-        analytics.track_event("plane:request", properties)
+        analytics.track_event("plane:request", properties, distinct_id=distinct_id)
     except Exception as e:
         logger.error(f"Failed to track plane:request event: {e}", exc_info=True)
 
@@ -453,6 +462,7 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
         client_ip = extract_client_ip(request)
         user_agent = extract_user_agent(request)
         browser_info = parse_user_agent(user_agent)
+        distinct_id = _generate_distinct_id(client_ip, user_agent)
 
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}"
         session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
@@ -468,7 +478,7 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
             "os_version": browser_info["os_version"],
             "device": browser_info["device"],
             "subscription": subscription,
-        })
+        }, distinct_id=distinct_id)
     except Exception as e:
         logger.error(f"Failed to track scan:start event: {e}", exc_info=True)
 
@@ -480,6 +490,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
         client_ip = extract_client_ip(request)
         user_agent = extract_user_agent(request)
         browser_info = parse_user_agent(user_agent)
+        distinct_id = _generate_distinct_id(client_ip, user_agent)
 
         # Create consistent session ID
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
@@ -549,7 +560,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "model": "eleven_turbo_v2" if tts_provider == "elevenlabs" else "gemini-2.5-flash-preview-tts" if tts_provider == "google" else "unknown",
             "subscription": subscription,
             "fun_fact_cache_hit": fun_fact_cache_hit,
-        })
+        }, distinct_id=distinct_id)
     except Exception as e:
         logger.error(f"Failed to track generate:audio event: {e}", exc_info=True)
 
