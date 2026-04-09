@@ -989,6 +989,10 @@ async def handle_plane_endpoint(
             sentence = "I'm sorry my old chum but the skies are a bit quiet right now. Try firing up the scanner again soon."
     else:
         # No aircraft found at all
+        logger.warning(
+            "No aircraft found for /plane/%s: error=%s, lat=%s, lng=%s, city=%s",
+            plane_index, error_message, user_lat, user_lng, user_city,
+        )
         sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code, user_city=user_city, user_region=user_region, user_country_name=user_country_name)
 
     override_sentence = get_plane_sentence_override(plane_index)
@@ -1106,6 +1110,10 @@ async def handle_plane_endpoint(
         )
     else:
         # Fall back to text if TTS fails
+        logger.error(
+            "TTS generation failed for /plane/%s: error=%s, provider=%s, lat=%s, lng=%s, city=%s, text_length=%d",
+            plane_index, tts_error, effective_provider, user_lat, user_lng, user_city, len(sentence),
+        )
         return {"message": sentence, "tts_error": tts_error}
 
 
