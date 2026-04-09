@@ -46,7 +46,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             <meta property="og:url" content="https://dreamingofajetplane.com/">
             <meta property="og:title" content="Dreaming of a Jet Plane - Magical Yoto Jet Plane Scanner">
             <meta property="og:description" content="Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.">
-            <meta property="og:image" content="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-share.jpg">
+            <meta property="og:image" content="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/website/dojp-share.jpg">
             <meta property="og:site_name" content="Dreaming of a Jet Plane">
 
             <!-- Twitter -->
@@ -54,7 +54,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
             <meta property="twitter:url" content="https://dreamingofajetplane.com/">
             <meta property="twitter:title" content="Dreaming of a Jet Plane - Magical Yoto Jet Plane Scanner">
             <meta property="twitter:description" content="Magically turn your Yoto player into a Jet Plane Scanner that finds airplanes in the skies around you, then teaches you all about them and the faraway destinations they are headed.">
-            <meta property="twitter:image" content="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/dreaming-of-a-jet-plane-share.jpg">
+            <meta property="twitter:image" content="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/website/dojp-share.jpg">
 
             <!-- Additional SEO -->
             <link rel="canonical" href="https://dreamingofajetplane.com/">
@@ -403,12 +403,18 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                 }
 
                 .modal-content {
-                    background: white;
+                    background: #fbf9f9;
                     border-radius: 1rem;
                     padding: 2rem;
                     max-width: 420px;
                     text-align: center;
                     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                }
+
+                .modal-content img.modal-screenshot {
+                    width: 100%;
+                    border-radius: 0.75rem;
+                    margin-bottom: 1rem;
                 }
 
                 .modal-content h3 {
@@ -911,10 +917,10 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                         <div class="tier-card tier-card-free">
                             <h3>Free Edition<span>Tune In</span></h3>
                             <div class="tier-card-button">
-                                <a href="https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2" target="_blank" rel="noopener" class="yoto-button yoto-button-sm">
+                                <button onclick="document.getElementById('freeModal').style.display='flex'" class="yoto-button yoto-button-sm">
                                     <img src="/assets/img/yoto.png" alt="Yoto app icon" class="button-icon">
                                     Add to Library & Listen
-                                </a>
+                                </button>
                             </div>
                             <p>Not a Yoto Club member, no problem! Listen in on flights recently spotted by our network of junior air traffic controllers around the world.</p>
                             <ul>
@@ -1003,9 +1009,17 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
             <div id="comingSoonModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
                 <div class="modal-content">
-                    <h3>Link Coming Soon!</h3>
-                    <p>For now, find it in the <strong>Yoto Club</strong> section of your Yoto app.</p>
+                    <img src="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/website/dojp-yoto-club-find.jpg" alt="Find Dreaming of a Jet Plane in the Yoto app" class="modal-screenshot">
+                    <p>Search for <strong>Dreaming of a Jet Plane</strong> in the Yoto Club area of the Yoto app, accessible from the Discover tab.</p>
                     <button class="modal-close" onclick="document.getElementById('comingSoonModal').style.display='none'">Got it</button>
+                </div>
+            </div>
+
+            <div id="freeModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+                <div class="modal-content">
+                    <img src="https://dreaming-of-a-jet-plane.s3.us-east-2.amazonaws.com/website/dojp-free-find.jpg" alt="Find Dreaming of a Jet Plane in the Yoto app" class="modal-screenshot">
+                    <p>Find <strong>Dreaming of a Jet Plane</strong> in the Discover tab of the Yoto App.</p>
+                    <button class="modal-close" onclick="document.getElementById('freeModal').style.display='none'">Got it</button>
                 </div>
             </div>
 
