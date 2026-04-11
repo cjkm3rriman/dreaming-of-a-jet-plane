@@ -1,241 +1,224 @@
 {
-        "content": {
-            "playbackType": "linear",
-            "config": {
-                "resumeTimeout": 3600,
-                "autoadvance": "true"
-            },
-            "chapters": [
-                {
-                    "tracks": [
-                        {
-                            "format": "opus",
-                            "overlayLabel": "1",
-                            "channels": "stereo",
-                            "title": "Tuning In",
-                            "trackUrl": "https://dreamingofajetplane.com/free/scanning",
-                            "duration": null,
-                            "key": "track1",
-                            "type": "stream",
-                            "display": null,
-                            "ambient": null,
-                            "fileSize": null
-                        }
-                    ],
-                    "overlayLabel": "1",
-                    "title": "Tuning In",
-                    "key": "00",
-                    "display": {
-                        "icon16x16": "yoto:#tal2wCH_bPOitYdPZQUvUSPGK5YobvV-rCXPH7sVGIg"
-                    },
-                    "availableFrom": null,
-                    "ambient": null,
-                    "defaultTrackDisplay": null,
-                    "defaultTrackAmbient": null,
-                    "fileSize": 0,
-                    "duration": 0
+    "content": {
+        "chapters": [
+            {
+                "display": {
+                    "icon16x16": "yoto:#tal2wCH_bPOitYdPZQUvUSPGK5YobvV-rCXPH7sVGIg"
                 },
-                {
-                    "tracks": [
-                        {
-                            "format": "opus",
-                            "display": {
-                                "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
-                            },
-                            "overlayLabel": "2",
-                            "title": "A Jet Plane",
-                            "trackUrl": "https://dreamingofajetplane.com/free/plane/1",
-                            "duration": null,
-                            "key": "track2",
-                            "type": "stream",
-                            "ambient": null,
-                            "fileSize": null
-                        }
-                    ],
-                    "overlayLabel": "2",
-                    "title": "A Jet Plane",
-                    "key": "01",
-                    "display": {
-                        "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
-                    },
-                    "availableFrom": null,
-                    "ambient": null,
-                    "defaultTrackDisplay": null,
-                    "defaultTrackAmbient": null,
-                    "fileSize": 0,
-                    "duration": 0
-                },
-                {
-                    "tracks": [
-                        {
-                            "format": "opus",
-                            "display": {
-                                "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
-                            },
-                            "overlayLabel": "3",
-                            "channels": "stereo",
-                            "title": "Tuning...",
-                            "trackUrl": "https://dreamingofajetplane.com/free/scanning-again",
-                            "duration": null,
-                            "key": "track3",
-                            "type": "stream",
-                            "ambient": null,
-                            "fileSize": null
-                        }
-                    ],
-                    "overlayLabel": "3",
-                    "title": "Tuning...",
-                    "key": "02",
-                    "display": {
-                        "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
-                    },
-                    "availableFrom": null,
-                    "ambient": null,
-                    "defaultTrackDisplay": null,
-                    "defaultTrackAmbient": null,
-                    "fileSize": 0,
-                    "duration": 0
-                },
-                {
-                    "tracks": [
-                        {
-                            "format": "opus",
-                            "display": {
-                                "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
-                            },
-                            "overlayLabel": "4",
-                            "title": "Another Jet Plane",
-                            "trackUrl": "https://dreamingofajetplane.com/free/plane/2",
-                            "duration": null,
-                            "key": "track4",
-                            "type": "stream",
-                            "ambient": null,
-                            "fileSize": null
-                        }
-                    ],
-                    "overlayLabel": "4",
-                    "title": "Another Jet Plane",
-                    "key": "03",
-                    "display": {
-                        "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
-                    },
-                    "availableFrom": null,
-                    "ambient": null,
-                    "defaultTrackDisplay": null,
-                    "defaultTrackAmbient": null,
-                    "fileSize": 0,
-                    "duration": 0
-                },
-                {
-                    "tracks": [
-                        {
-                            "format": "opus",
-                            "overlayLabel": "5",
-                            "channels": "stereo",
-                            "display": {
-                                "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
-                            },
-                            "title": "Tuning...",
-                            "trackUrl": "https://dreamingofajetplane.com/free/scanning-again",
-                            "duration": null,
-                            "key": "track5",
-                            "type": "stream",
-                            "ambient": null,
-                            "fileSize": null
-                        }
-                    ],
-                    "overlayLabel": "5",
-                    "title": "Tuning...",
-                    "key": "04",
-                    "display": {
-                        "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
-                    },
-                    "availableFrom": null,
-                    "ambient": null,
-                    "defaultTrackDisplay": null,
-                    "defaultTrackAmbient": null,
-                    "fileSize": 0,
-                    "duration": 0
-                },
-                {
-                    "tracks": [
-                        {
-                            "format": "opus",
-                            "overlayLabel": "6",
-                            "display": {
-                                "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
-                            },
-                            "title": "And Another Jet Plane",
-                            "trackUrl": "https://dreamingofajetplane.com/free/plane/3",
-                            "duration": null,
-                            "key": "track6",
-                            "type": "stream",
-                            "ambient": null,
-                            "fileSize": null
-                        }
-                    ],
-                    "overlayLabel": "6",
-                    "title": "And Another Jet Plane",
-                    "key": "05",
-                    "display": {
-                        "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
-                    },
-                    "availableFrom": null,
-                    "ambient": null,
-                    "defaultTrackDisplay": null,
-                    "defaultTrackAmbient": null,
-                    "fileSize": 0,
-                    "duration": 0
-                },
-                {
-                    "tracks": [
-                        {
-                            "format": "opus",
-                            "overlayLabel": "7",
-                            "display": {
-                                "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
-                            },
-                            "trackUrl": "https://dreamingofajetplane.com/free/overandout",
-                            "title": "Over and Out",
-                            "duration": null,
-                            "key": "track7",
-                            "type": "stream",
-                            "ambient": null,
-                            "fileSize": null
-                        }
-                    ],
-                    "overlayLabel": "7",
-                    "display": {
-                        "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
-                    },
-                    "key": "06",
-                    "title": "Over and Out",
-                    "availableFrom": null,
-                    "ambient": null,
-                    "defaultTrackDisplay": null,
-                    "defaultTrackAmbient": null,
-                    "fileSize": 0,
-                    "duration": 0
-                }
-            ]
-        },
-        "metadata": {
-            "cover": {
-                "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/YFuVLqHxeJDnOBYDAHDljgwVkanuAbi-sMkAED1FCoc"
-            },
-            "author": "Raccoon Research Labs",
-            "order": "featured",
-            "description": "Tune in to flights recently spotted by our network of junior air traffic controllers around the world and learn all about them and the faraway destinations they are headed.\n\nYoto Club Members should find this card in the Club Collection section of the Yoto app for their own personal scanner that finds jet planes in the skies around them.\n\nThis is a connected card, which means it requires an internet connection on your Yoto player to play. The card uses AI to create the live voice audio, but all content is from safe, professional sources and curated by humans.\n\nLearn more at dreamingofajetplane.com",
-            "category": "activities",
-            "media": {
                 "duration": 0,
-                "hasStreams": true,
                 "fileSize": 0,
-                "readableDuration": "",
-                "readableFileSize": 0
+                "key": "00",
+                "title": "Tuning In",
+                "tracks": [
+                    {
+                        "channels": "stereo",
+                        "format": "opus",
+                        "key": "track1",
+                        "title": "Tuning In",
+                        "trackUrl": "https://dreamingofajetplane.com/free/scanning",
+                        "type": "stream",
+                        "display": null,
+                        "ambient": null,
+                        "fileSize": null,
+                        "duration": null
+                    }
+                ],
+                "availableFrom": null,
+                "ambient": null,
+                "defaultTrackDisplay": null,
+                "defaultTrackAmbient": null
+            },
+            {
+                "display": {
+                    "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+                },
+                "duration": 0,
+                "fileSize": 0,
+                "key": "01",
+                "title": "A Jet Plane",
+                "tracks": [
+                    {
+                        "display": {
+                            "icon16x16": "yoto:#sOnvwB-0HkhblZEVSZp5bEULhy1mF-gCyRXfnJECYSQ"
+                        },
+                        "format": "opus",
+                        "key": "track2",
+                        "title": "A Jet Plane",
+                        "trackUrl": "https://dreamingofajetplane.com/free/plane/1",
+                        "type": "stream",
+                        "ambient": null,
+                        "fileSize": null,
+                        "duration": null
+                    }
+                ],
+                "availableFrom": null,
+                "ambient": null,
+                "defaultTrackDisplay": null,
+                "defaultTrackAmbient": null
+            },
+            {
+                "display": {
+                    "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
+                },
+                "duration": 0,
+                "fileSize": 0,
+                "key": "02",
+                "title": "Tuning...",
+                "tracks": [
+                    {
+                        "channels": "stereo",
+                        "display": {
+                            "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
+                        },
+                        "format": "opus",
+                        "key": "track3",
+                        "title": "Tuning...",
+                        "trackUrl": "https://dreamingofajetplane.com/free/scanning-again",
+                        "type": "stream",
+                        "ambient": null,
+                        "fileSize": null,
+                        "duration": null
+                    }
+                ],
+                "availableFrom": null,
+                "ambient": null,
+                "defaultTrackDisplay": null,
+                "defaultTrackAmbient": null
+            },
+            {
+                "display": {
+                    "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
+                },
+                "duration": 0,
+                "fileSize": 0,
+                "key": "03",
+                "title": "Another Jet Plane",
+                "tracks": [
+                    {
+                        "display": {
+                            "icon16x16": "yoto:#9cZWaKgs-tS2b6kLV2DzE1iABSg-jQu84UzzAhtdP7c"
+                        },
+                        "format": "opus",
+                        "key": "track4",
+                        "title": "Another Jet Plane",
+                        "trackUrl": "https://dreamingofajetplane.com/free/plane/2",
+                        "type": "stream",
+                        "ambient": null,
+                        "fileSize": null,
+                        "duration": null
+                    }
+                ],
+                "availableFrom": null,
+                "ambient": null,
+                "defaultTrackDisplay": null,
+                "defaultTrackAmbient": null
+            },
+            {
+                "display": {
+                    "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
+                },
+                "duration": 0,
+                "fileSize": 0,
+                "key": "04",
+                "title": "Tuning...",
+                "tracks": [
+                    {
+                        "channels": "stereo",
+                        "display": {
+                            "icon16x16": "yoto:#nIGf1CHb9WEDO8uNV7uHdFK-Y2fLovO8EM-ULiBXT94"
+                        },
+                        "format": "opus",
+                        "key": "track5",
+                        "title": "Tuning...",
+                        "trackUrl": "https://dreamingofajetplane.com/free/scanning-again",
+                        "type": "stream",
+                        "ambient": null,
+                        "fileSize": null,
+                        "duration": null
+                    }
+                ],
+                "availableFrom": null,
+                "ambient": null,
+                "defaultTrackDisplay": null,
+                "defaultTrackAmbient": null
+            },
+            {
+                "display": {
+                    "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
+                },
+                "duration": 0,
+                "fileSize": 0,
+                "key": "05",
+                "title": "And Another Jet Plane",
+                "tracks": [
+                    {
+                        "display": {
+                            "icon16x16": "yoto:#XKFmN6VrdXfMdeyB2KZFABuUwwlRzScvcqiDL2MD_ow"
+                        },
+                        "format": "opus",
+                        "key": "track6",
+                        "title": "And Another Jet Plane",
+                        "trackUrl": "https://dreamingofajetplane.com/free/plane/3",
+                        "type": "stream",
+                        "ambient": null,
+                        "fileSize": null,
+                        "duration": null
+                    }
+                ],
+                "availableFrom": null,
+                "ambient": null,
+                "defaultTrackDisplay": null,
+                "defaultTrackAmbient": null
+            },
+            {
+                "display": {
+                    "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
+                },
+                "duration": 0,
+                "fileSize": 0,
+                "key": "06",
+                "title": "Over and Out",
+                "tracks": [
+                    {
+                        "display": {
+                            "icon16x16": "yoto:#LFGuO-YB89xPlqIoQqs06t2JlhhBPAqq05oEhlGPuY8"
+                        },
+                        "format": "opus",
+                        "key": "track7",
+                        "title": "Over and Out",
+                        "trackUrl": "https://dreamingofajetplane.com/free/overandout",
+                        "type": "stream",
+                        "ambient": null,
+                        "fileSize": null,
+                        "duration": null
+                    }
+                ],
+                "availableFrom": null,
+                "ambient": null,
+                "defaultTrackDisplay": null,
+                "defaultTrackAmbient": null
             }
+        ],
+        "config": {
+            "resumeTimeout": 3600,
+            "autoadvance": "true"
         },
-        "title": "Dreaming Of A Jet Plane: Free Edition",
-        "cardId": "fdz4h"
-                    
-    }
+        "playbackType": "linear"
+    },
+    "metadata": {
+        "author": "Raccoon Research Labs",
+        "category": "activities",
+        "cover": {
+            "imageL": "https://card-content.yotoplay.com/1S9-9AyWunyeR3_GCRkColJqtR78aFyM5jhnYiHi_70I~/pub/YFuVLqHxeJDnOBYDAHDljgwVkanuAbi-sMkAED1FCoc"
+        },
+        "description": "Tune in to flights recently spotted by our network of junior air traffic controllers around the world and learn all about them and the faraway destinations they are headed.\n\nYoto Club Members should find this card in the Club Collection section of the Yoto app for their own personal scanner that finds jet planes in the skies around them.\n\nThis is a connected card, which means it requires an internet connection on your Yoto player to play. The card uses AI to create the live voice audio, but all content is from safe, professional sources and curated by humans.\n\nLearn more at dreamingofajetplane.com",
+        "media": {
+            "duration": 0,
+            "fileSize": 0,
+            "hasStreams": true
+        },
+        "order": "featured"
+    },
+    "title": "Dreaming Of A Jet Plane: Free Edition",
+    "cardId": "uuU8r"
+}
