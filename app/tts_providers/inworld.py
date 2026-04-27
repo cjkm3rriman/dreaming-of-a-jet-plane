@@ -83,7 +83,20 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             for attempt in range(MAX_RETRIES):
-                response = await client.post(INWORLD_BASE_URL, headers=headers, json=payload)
+                try:
+                    response = await client.post(INWORLD_BASE_URL, headers=headers, json=payload)
+                except (httpx.TimeoutException, httpx.RequestError) as exc:
+                    last_error = f"Inworld API connection error: {exc}"
+                    if attempt < MAX_RETRIES - 1:
+                        backoff = 2 ** attempt  # 1s, 2s
+                        logger.warning(
+                            "Inworld API connection error: %s, retrying in %ss (attempt %d/%d)",
+                            exc, backoff, attempt + 1, MAX_RETRIES,
+                        )
+                        await asyncio.sleep(backoff)
+                        continue
+                    logger.error("Inworld API connection error after %d attempts: %s", MAX_RETRIES, exc)
+                    return b"", last_error
 
                 if response.status_code in RETRYABLE_STATUS_CODES and attempt < MAX_RETRIES - 1:
                     backoff = 2 ** attempt  # 1s, 2s
@@ -124,12 +137,6 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
                     logger.error("Failed to process Inworld audio with silence: %s", exc)
                     return b"", f"Failed to process Inworld audio: {exc}"
 
-    except httpx.TimeoutException:
-        last_error = "Inworld API timeout (30 seconds exceeded)"
-        logger.error("Inworld API timeout")
-    except httpx.RequestError as exc:
-        last_error = f"Inworld API connection error: {exc}"
-        logger.error("Inworld API connection error: %s", exc)
     except Exception as exc:
         last_error = f"Inworld API unexpected error: {exc}"
         logger.error("Inworld API error: %s", exc)
