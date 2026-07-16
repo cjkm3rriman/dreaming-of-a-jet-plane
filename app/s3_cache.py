@@ -53,8 +53,8 @@ class S3MP3Cache:
             self._client = httpx.AsyncClient(
                 # Connection pool settings
                 limits=httpx.Limits(
-                    max_keepalive_connections=5,
-                    max_connections=10,
+                    max_keepalive_connections=50,
+                    max_connections=100,
                     keepalive_expiry=30.0
                 ),
                 # Default timeout (overridden per-request)
