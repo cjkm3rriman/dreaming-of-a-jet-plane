@@ -260,6 +260,49 @@ flowchart LR
     T2 --> BODYC["body+fact stitched → S3<br/>(reused by the free tier)"]
 ```
 
+### The four segments
+
+Every paid plane script is assembled from these, in order. Examples are real
+output for a Delta 757 from New York to Lisbon, 14.5 km from the listener:
+
+| # | Segment | Example | What varies | TTS |
+|---|---|---|---|---|
+| 1 | **Opening** | *"What Luck! We've detected a jet plane up in the sky, 9 miles from this Yoto!"* | 10 exclamations × 5 templates keyed to plane index; distance and units are computed | Always fresh — contains the listener's distance |
+| 2 | **Scanner** | *"Captain Martinez is piloting this humongous Boeing seven five seven carrying 200 passengers."* | 57 captain surnames × 6 adjectives; then **one** stat chosen from passengers / speed / altitude | Always fresh |
+| 3 | **Flight details** | *"This flight D L four nine nine nine belongs to Delta Air Lines and is cloud hopping from New York City in New York all the way to Lisbon in Portugal landing in about 2 hours — that's like watching eight of your favorite tv episodes in a row."* | 6 movement verbs × 13 ETA buckets, each with 2 kid-scale comparisons | Always fresh |
+| 4 | **Fun fact** | *"Did you know?"* + *"Lisbon has tiles called azulejos that cover entire buildings…"* | 4 openers × the destination city's fact list (median 5, range 1–14) | **Cached** by content hash — opener and fact body separately |
+
+### How much variation that buys
+
+| Pool | Size | Notes |
+|---|---|---|
+| Opening exclamations | 10 | "Marvelous!", "By Jove!", … |
+| Plane-index templates | 5 | One per `/plane/N`, so plane 3 never sounds like plane 1 |
+| Captain surnames | 57 | Deliberately international; includes "Boo Boo Butt" and "Merriman" |
+| Aircraft adjectives | 6 + 6 | Second set swaps in at ≤50 seats — a Saab 340 is "svelte", not "humongous" |
+| Stat phrasings | 9 | passengers (1) · speed (5 intensifiers) · altitude (3 verbs) |
+| Movement verbs | 6 | "sky skimming", "cloud hopping", … |
+| ETA comparisons | 26 | 13 duration buckets × 2 phrasings |
+| Fun fact openers | 4 | |
+| Fun facts | 392 of 397 cities | median 5 per city |
+
+Multiplied out, one flight to one city yields roughly **7.4 million** distinct
+scripts. The point isn't the number — it's that a child scanning the same busy
+airport corridor every morning shouldn't recognise the wording.
+
+Randomisation is reseeded per call with `random.seed(time.time_ns())`, so
+repeated requests for the same flight vary. This also means the text is **not**
+reproducible from the aircraft data alone, which matters when debugging a
+complaint about a specific phrasing.
+
+### Two details the table doesn't cover
+
+Units follow the listener's country — imperial for `US`, `GB`, and seven others,
+metric elsewhere — and numbers are spelled out before they reach TTS ("BA123" →
+"B A one two three"), because every provider otherwise mangles them.
+
+### Why the split matters
+
 Splitting the text is what makes the free tier possible. The opening names a
 distance that is only true for the user who triggered the scan, but the body —
 airline, route, aircraft, fun fact — is true for anybody. So the body is cached
@@ -268,13 +311,6 @@ separately and later paired with a generic pre-recorded opening.
 Fun facts are cached by **content hash**, not by city, which gives free
 invalidation: editing a fact in `cities.json` changes the hash and misses the
 cache; removing one leaves an orphan that S3 lifecycle rules eventually reap.
-
-The text itself is heavily randomised — opening exclamation, captain surname,
-aircraft adjective, movement verb, which stat gets mentioned, which of four fun
-fact openers is used, and a kid-scale ETA comparison ("about how long it takes to
-read three bedtime stories"). Units follow the user's country: imperial for
-`US`, `GB`, and seven others, metric elsewhere. Numbers are spelled out for TTS
-("BA123" → "B A one two three") because the models otherwise mangle them.
 
 If split TTS fails at any point, the code falls back to a single TTS call on the
 full concatenated sentence. If TTS fails entirely, `/plane/N` returns JSON with
