@@ -469,8 +469,11 @@ async def get_user_location(request: Request, lat: float = None, lng: float = No
 
     Returns:
         tuple: (latitude, longitude, country_code, city, region, country_name, is_fallback_location)
-               - When lat/lng provided, country_code defaults to "US", location names are empty, is_fallback_location is True
-               - When using IP geolocation, all fields come from ipapi.co
+               - When lat/lng provided, country_code defaults to "US", location names are empty, and
+                 is_fallback_location is False: the coordinates are known precisely, so the caller
+                 must not announce that we couldn't find the user's location
+               - When using IP geolocation, all fields come from ipapi.co and is_fallback_location is
+                 True only when geolocation genuinely failed and we fell back to NYC
     """
     if lat is not None and lng is not None:
         # Use provided coordinates
@@ -479,7 +482,7 @@ async def get_user_location(request: Request, lat: float = None, lng: float = No
         country_code = country.upper() if country else "US"
         city, region, country_name = "", "", ""  # Can't determine from coordinates alone
         logger.info(f"Using provided coordinates: lat={lat}, lng={lng}, country={country_code}")
-        return lat, lng, country_code, city, region, country_name, True
+        return lat, lng, country_code, city, region, country_name, False
     else:
         # Get latitude, longitude, country code, city, region, and country name from IP
         client_ip = extract_client_ip(request)
