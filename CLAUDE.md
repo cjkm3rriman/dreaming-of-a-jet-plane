@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a FastAPI application called "dreaming-of-a-jet-plane" that uses Yoto to help users learn about jet planes in the sky and their destinations. The project is deployed on Railway at: https://dreaming-of-a-jet-plane-production.up.railway.app
 
+See `docs/ARCHITECTURE.md` for the system architecture: request lifecycle, provider fallback, caching strategy, and the free tier.
+
 ## Sentry
 
 - **Organization**: `raccoon-research-labs` (region: `https://us.sentry.io`)
