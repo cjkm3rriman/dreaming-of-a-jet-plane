@@ -15,8 +15,8 @@ from ..airline_database import get_airline_name, is_cargo_airline, is_private_ai
 from ..location_utils import calculate_distance, is_point_near_route
 
 DEFAULT_CRUISE_SPEED_KMH = 840  # Typical narrow-body (A320/737)
-API_TIMEOUT = 10.0  # seconds
-RETRY_BACKOFF = 1.0  # seconds to wait before retry
+API_TIMEOUT = 4.0  # p99 baseline is <1s; 4s catches genuinely slow responses without punishing fallback latency
+RETRY_BACKOFF = 0.5  # seconds to wait before retry
 LANDING_BUFFER_MINUTES = 25
 AIRLINE_OVERRIDES = {
     "EDV": {"airline_icao": "DAL", "airline_iata": "DL"},
@@ -206,7 +206,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
     url = f"{AIRLABS_BASE_URL}/flights"
 
     # Retry logic: retry on timeouts and connection errors with backoff
-    max_attempts = 3
+    max_attempts = 2
     last_error = None
 
     for attempt in range(max_attempts):
