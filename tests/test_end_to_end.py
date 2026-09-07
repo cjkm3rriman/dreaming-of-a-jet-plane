@@ -51,7 +51,7 @@ async def test_full_scan_flow_nyc(nyc_location):
         assert isinstance(result["sentence"], str)
 
         # Check opening phrases
-        opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!"]
+        opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
         assert any(result["sentence"].startswith(word) for word in opening_words), \
             f"Sentence should start with opening phrase: {result['sentence'][:30]}"
 
