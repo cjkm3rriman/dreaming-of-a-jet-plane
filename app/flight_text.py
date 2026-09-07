@@ -498,7 +498,9 @@ def generate_flight_text_for_aircraft(
             fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
             fun_fact_opening = random.choice(fun_fact_openings)
             fun_fact_opening_text = fun_fact_opening
-            fun_fact_body_text = f"{random_fact}."
+            # Facts in cities.json carry their own terminal punctuation (see
+            # tests/test_fun_fact_punctuation.py), so nothing is appended here.
+            fun_fact_body_text = random_fact
         else:
             # No fun facts available for this city
             fun_fact_source = None
