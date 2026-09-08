@@ -72,9 +72,9 @@ def get_audio_format(provider: str) -> Tuple[str, str]:
         provider: Provider name (e.g., "elevenlabs", "google", "inworld")
 
     Returns:
-        tuple: (file_extension, mime_type)
-        - file_extension: "mp3" or "ogg"
-        - mime_type: "audio/mpeg" or "audio/ogg"
+        tuple: (file_extension, mime_type) taken from TTS_PROVIDERS, falling
+        back to mp3 for an unregistered provider. Today that is "opus" /
+        "audio/opus" for elevenlabs and inworld, "mp3" / "audio/mpeg" for google.
     """
     provider_def = get_provider_definition(provider.lower())
     if provider_def:

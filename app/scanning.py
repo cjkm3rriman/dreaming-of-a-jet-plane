@@ -162,10 +162,11 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         else:
             logger.info("Pre-generation skipped: all planes already cached")
 
-        # After all planes complete, populate free pool (up to 5 planes)
+        # After all planes complete, populate free pool. Only three free plane
+        # endpoints exist, so populate_free_pool consumes at most three.
         if aircraft and len(aircraft) >= 2:
             await populate_free_pool(
-                aircraft_list=aircraft[:5],
+                aircraft_list=aircraft[:3],
                 location_hash=location_hash,
                 tts_provider=effective_provider,
             )

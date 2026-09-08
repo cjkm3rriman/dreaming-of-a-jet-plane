@@ -97,13 +97,15 @@ class S3MP3Cache:
         if content_type == "json":
             filename = f"{cache_key}_aircraft.json"
         elif plane_index is not None:
-            # Determine file extension from explicit format or provider mapping
+            # Determine file extension from explicit format, else from the TTS
+            # registry. Deriving it keeps one source of truth: a local map here
+            # previously claimed ElevenLabs produced mp3 when it produces opus,
+            # which would have written and read mismatched extensions.
             if audio_format:
                 ext = audio_format
             elif tts_provider:
-                # Map provider to format
-                format_map = {"google": "mp3", "elevenlabs": "mp3", "inworld": "opus"}
-                ext = format_map.get(tts_provider.lower(), "mp3")
+                from .tts_providers import get_audio_format
+                ext, _ = get_audio_format(tts_provider)
             else:
                 ext = "mp3"
 
