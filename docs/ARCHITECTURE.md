@@ -117,7 +117,7 @@ sequenceDiagram
         BG->>T: TTS opening + body + fun fact
         T-->>BG: audio segments
         BG->>BG: stitch with pydub
-        BG->>S3: PUT plane audio (10 min TTL)
+        BG->>S3: PUT plane audio (3 min TTL)
     end
     BG->>S3: copy bodies into free pool + update index
 
@@ -270,7 +270,7 @@ output for a Delta 757 from New York to Lisbon, 14.5 km from the listener:
 | 1 | **Opening** | *"What Luck! We've detected a jet plane up in the sky, 9 miles from this Yoto!"* | 10 exclamations × 5 templates keyed to plane index; distance and units are computed | Always fresh — contains the listener's distance |
 | 2 | **Scanner** | *"Captain Martinez is piloting this humongous Boeing seven five seven carrying 200 passengers."* | 57 captain surnames × 6 adjectives; then **one** stat chosen from passengers / speed / altitude | Always fresh |
 | 3 | **Flight details** | *"This flight D L four nine nine nine belongs to Delta Air Lines and is cloud hopping from New York City in New York all the way to Lisbon in Portugal landing in about 2 hours — that's like watching eight of your favorite tv episodes in a row."* | 6 movement verbs × 13 ETA buckets, each with 2 kid-scale comparisons | Always fresh |
-| 4 | **Fun fact** | *"Did you know?"* + *"Lisbon has tiles called azulejos that cover entire buildings…"* | 4 openers × the destination city's fact list (median 5, range 1–14) | **Cached** by content hash — opener and fact body separately |
+| 4 | **Fun fact** | *"Did you know?"* + *"Lisbon has tiles called azulejos that cover entire buildings…"* | Opener picked at random from 4; the fact itself **rotates on the clock** through the city's list (median 5, range 1–14) rather than being drawn at random | **Cached** by content hash — opener and fact body separately |
 
 ### How much variation that buys
 
@@ -284,16 +284,53 @@ output for a Delta 757 from New York to Lisbon, 14.5 km from the listener:
 | Movement verbs | 6 | "sky skimming", "cloud hopping", … |
 | ETA comparisons | 26 | 13 duration buckets × 2 phrasings |
 | Fun fact openers | 4 | |
-| Fun facts | 392 of 397 cities | median 5 per city |
+| Fun facts | 392 of 397 cities | median 5 per city; selected by rotation, not at random |
 
 Multiplied out, one flight to one city yields roughly **7.4 million** distinct
 scripts. The point isn't the number — it's that a child scanning the same busy
 airport corridor every morning shouldn't recognise the wording.
 
+One caveat on that arithmetic: every pool except the last is sampled per call, so
+its variation is available at any instant. The fun fact is fixed by the clock, so
+at a given moment only one of a city's facts can appear — that axis is reached
+over time rather than per request.
+
 Randomisation is reseeded per call with `random.seed(time.time_ns())`, so
-repeated requests for the same flight vary. This also means the text is **not**
-reproducible from the aircraft data alone, which matters when debugging a
+repeated requests for the same flight vary. This also means most of the text is
+**not** reproducible from the aircraft data alone, which matters when debugging a
 complaint about a specific phrasing.
+
+### Fun facts are the exception: they rotate, they don't roll
+
+`select_rotating_fun_fact()` picks by a counter derived from the clock rather
+than `random.choice`:
+
+```python
+bucket = int(now.timestamp()) // FUN_FACT_ROTATION_SECONDS   # 5 minutes
+index  = (now.date().toordinal() + bucket + plane_index) % len(fun_facts)
+```
+
+Yoto passes no session or user id, so there is no way to remember what a listener
+has already heard. A clock-derived counter gets most of the benefit for free: the
+fact changes every five minutes, cycles the whole list before repeating, differs
+between two planes heading to the same city in one scan, and is reproducible from
+its inputs — which is what makes a complaint about a specific fact debuggable.
+
+**The five-minute bucket is load-bearing, not a round number.** A day advances the
+counter `86400/bucket + 1` steps, and that number must share no factor with a
+city's fact count or the city lands on the same fact at the same time *every day*.
+At five minutes it is 289 = 17², which is safe for every fact count in
+`cities.json`. At ten minutes it would be 145 = 5 × 29 — and 372 of the 397 cities
+have exactly five facts, so essentially the whole database would repeat daily.
+The cycle length (`len × bucket`) matters too: a six-minute bucket gives five-fact
+cities a 30-minute cycle, which collides with every round half-hour rescan gap.
+`tests/test_fun_fact_rotation.py` guards both properties.
+
+What this does **not** do is eliminate repeats between two arbitrary scans, and
+nothing memoryless can — for an arbitrary gap any scheme repeats with probability
+`1/len`, the same odds as the `random.choice` it replaced. What rotation buys is
+that repeats are never back-to-back and coverage is even rather than clumped. The
+real lever on repetition is writing more facts per city.
 
 ### Two details the table doesn't cover
 
@@ -348,11 +385,23 @@ The TTS provider choice cascades further than it looks. It determines the audio
 format (`opus` for ElevenLabs and Inworld, `mp3` for Google), the MIME type, the
 S3 folder for static clips (`edward` / `sadachbia` / `ronald`), and it is baked
 into every cache key — so switching providers invalidates the entire audio cache
-by construction.
+by construction. The format is read from the registry in `tts_providers/` at
+every point that needs it, including `s3_cache.generate_cache_key`; a second copy
+of that mapping would silently produce keys that never match.
 
-`PROVIDER_OVERRIDE_SECRET` gates all overrides, including the `lat`/`lng`
-position override. Without it configured, override query params are silently
-ignored; with it configured, a wrong secret is logged with the client IP.
+`PROVIDER_OVERRIDE_SECRET` gates all overrides. How a bad secret is handled
+depends on which route and which parameter:
+
+| Route | Parameters | Behaviour with a missing or wrong secret |
+|---|---|---|
+| `/plane/N` | `lat`, `lng`, `provider`, `tts` | **403** — rejected before any geolocation or flight lookup |
+| `/scanning`, `/scanning-again`, `/intro`, `/overandout` | `tts`, `provider` | Silently ignored; a wrong secret is logged with the client IP |
+
+The split is because the `/plane/N` routes declare their overrides as real
+parameters and validate them in the handler, while the other endpoints do not
+declare them and re-read the query string via `get_tts_provider_override()`. Both
+paths share one list of valid provider names through
+`normalize_tts_provider_override()`.
 
 ---
 
@@ -373,7 +422,7 @@ flowchart TD
     end
 
     subgraph Consume["Consumer — /free/plane/N"]
-        C1["Request"] --> C2{"Rate limit<br/>50 req/min per IP"}
+        C1["Request"] --> C2{"Rate limit<br/>50 req/min per IP<br/>per container"}
         C2 -->|exceeded| C3["429 + Retry-After"]
         C2 -->|ok| C4["Load index (60s in-memory cache)"]
         C4 --> C5{"Pool empty?"}
@@ -403,14 +452,22 @@ persistence layer.
 | Key pattern | Contents | TTL | Read path |
 |---|---|---|---|
 | `cache/{md5}_aircraft.json` | Selected flights for a location + provider | 3 min | `get(content_type="json")` |
-| `cache/{md5}_plane{n}_{provider}.{ext}` | Finished plane audio | 10 min | `get()` |
-| `cache/{md5}_plane{n}_body_{provider}.{ext}` | Body (+fact) audio, for free-tier reuse | 10 min | `get_raw()` |
+| `cache/{md5}_plane{n}_{provider}.{ext}` | Finished plane audio | 3 min | `get()` |
+| `cache/{md5}_plane{n}_body_{provider}.{ext}` | Body (+fact) audio, for free-tier reuse | 3 min, not enforced | `get_raw()` |
 | `cache/fun_facts/{hash}_{provider}.{ext}` | Fun fact audio | none — content-hashed | `get_raw()` |
 | `cache/fun_facts/openings/{hash}_{provider}.{ext}` | "Did you know?" etc. | none | `get_raw()` |
 | `free_pool/index.json` | Session index, max 100 FIFO | none | `get_raw()` |
 | `free_pool/{session}_plane{n}_body_{provider}.{ext}` | Free tier body audio | none | `get_raw()` |
 | `free/intros/flight-intro-{1..6}.{ext}` | Generic free openings | static | `get_raw()` |
 | `{voice}/intro.mp3`, `scanning.mp3`, … | Per-voice static clips | static | Public HTTPS GET |
+
+**The audio TTL must not exceed the flight-data TTL, and they are equal for that
+reason.** `/plane/N` checks the audio cache before it consults flight data, so
+audio that outlives the JSON it was generated from gets replayed against a sky
+that has already changed — a rescan hears the identical five planes, word for
+word. The audio TTL was 10 minutes against a 3-minute JSON TTL, which meant that
+for seven of every ten minutes the app served a recording it knew to be stale.
+Both are now 3 minutes. `tests/test_cache_ttl.py` fails if they drift apart.
 
 The location hash is `md5("{lat:.2f},{lng:.2f}")` — roughly 1 km precision, so
 neighbours share cache entries. The JSON key adds a `provider:{name}` namespace
@@ -535,21 +592,20 @@ Things that are true today and would surprise a reader of the code.
   at line 353. The surrounding `try/except Exception` catches it, so ETA
   estimation silently yields `None` for the first flight and reuses the previous
   flight's type thereafter.
-- **The free-tier rate limit docstring disagrees with the code** — 10/min in the
-  docstring, `FREE_TIER_RATE_LIMIT = 50` in the constant.
-- **`populate_free_pool` is passed 5 aircraft but only loops over planes 1-3**,
-  matching the three free endpoints; the docstring still says "up to 5 planes".
-- **`s3_cache.generate_cache_key`'s fallback format map says
-  `elevenlabs → mp3`**, while the TTS registry says ElevenLabs produces `opus`.
-  Harmless today because every real call passes `audio_format` explicitly, but
-  it's a trap for a future caller that doesn't.
-- **`/plane/N` accepts a `tts` query parameter it never reads** — the override is
-  re-extracted from the raw request inside `get_tts_provider_override`, so the
-  declared parameter is decorative.
-- **Fallback location is New York City.** Any geolocation failure puts the child
-  over NYC, and plane 1 says so out loud.
+- **Fallback location is New York City.** A genuine geolocation failure puts the
+  child over NYC, and plane 1 says so out loud. The `is_fallback_location` flag
+  that triggers that line means *"we do not trust this location"*, not *"this
+  location did not come from IP geolocation"* — an explicit `lat`/`lng` override
+  is a known location and must not set it.
+- **The free-tier rate limit is per-container.** `FREE_TIER_RATE_LIMIT = 50` is
+  counted in process memory, so the real ceiling is 50 × the number of Railway
+  replicas. Whether 50/min per IP is the right number for a tier meant to shed
+  load is an open question, not a settled one.
+- **The free tier only ever uses three planes.** `populate_free_pool` is passed
+  `aircraft[:3]` and loops over planes 1-3, matching the three free endpoints,
+  even though a paid scan generates five.
 
 ---
 
-*Generated from the code as of the `docs/architecture-overview` branch. Diagrams
-are Mermaid and render natively on GitHub.*
+*Written against the code on `main`, last revised after DOJP-24, DOJP-26, DOJP-27
+and DOJP-28 (PRs #38-#41). Diagrams are Mermaid and render natively on GitHub.*
