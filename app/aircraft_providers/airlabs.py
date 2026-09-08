@@ -242,146 +242,165 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
         aircraft_list: List[Dict[str, Any]] = []
 
         for flight in flights:
-            status = (flight.get("status") or "").strip().lower()
-            if status != "en-route":
-                continue
+            # One malformed record must not discard the whole batch (DOJP-23):
+            # skip the flight, keep the rest, and say so in the logs
+            try:
+                status = (flight.get("status") or "").strip().lower()
+                if status != "en-route":
+                    continue
 
-            aircraft_lat = flight.get("lat")
-            aircraft_lon = flight.get("lng") if flight.get("lng") is not None else flight.get("lon")
-            if aircraft_lat is None or aircraft_lon is None:
-                continue
+                aircraft_lat = flight.get("lat")
+                aircraft_lon = flight.get("lng") if flight.get("lng") is not None else flight.get("lon")
+                if aircraft_lat is None or aircraft_lon is None:
+                    continue
 
-            distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
-            if distance > radius_km:
-                continue
+                distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
+                if distance > radius_km:
+                    continue
 
-            callsign = (
-                flight.get("flight_icao")
-                or flight.get("flight_number")
-                or flight.get("hex")
-                or "Unknown"
-            )
-            origin_iata = flight.get("dep_iata")
-            dest_iata = flight.get("arr_iata")
+                callsign = (
+                    flight.get("flight_icao")
+                    or flight.get("flight_number")
+                    or flight.get("hex")
+                    or "Unknown"
+                )
+                origin_iata = flight.get("dep_iata")
+                dest_iata = flight.get("arr_iata")
 
-            # Validate aircraft position makes sense for its route using great circle math
-            # Skip aircraft whose flight path doesn't pass near the user
-            if origin_iata and dest_iata:
-                origin_airport = get_airport_by_iata(origin_iata)
-                dest_airport = get_airport_by_iata(dest_iata)
+                # Validate aircraft position makes sense for its route using great circle math
+                # Skip aircraft whose flight path doesn't pass near the user
+                if origin_iata and dest_iata:
+                    origin_airport = get_airport_by_iata(origin_iata)
+                    dest_airport = get_airport_by_iata(dest_iata)
 
-                if origin_airport and dest_airport:
-                    origin_lat = origin_airport.get("lat")
-                    origin_lon = origin_airport.get("lon")
-                    dest_lat = dest_airport.get("lat")
-                    dest_lon = dest_airport.get("lon")
+                    if origin_airport and dest_airport:
+                        origin_lat = origin_airport.get("lat")
+                        origin_lon = origin_airport.get("lon")
+                        dest_lat = dest_airport.get("lat")
+                        dest_lon = dest_airport.get("lon")
 
-                    if all([origin_lat, origin_lon, dest_lat, dest_lon]):
-                        # Validate if the flight route could reasonably pass near the user
-                        # Uses multiple checks: endpoint proximity, geographic bounds, and generous great circle tolerance
-                        route_is_valid = is_point_near_route(
-                            point_lat=lat,
-                            point_lng=lng,
-                            origin_lat=origin_lat,
-                            origin_lng=origin_lon,
-                            dest_lat=dest_lat,
-                            dest_lng=dest_lon
-                        )
-
-                        if not route_is_valid:
-                            logger.warning(
-                                f"Skipping aircraft with invalid route: {callsign} at ({aircraft_lat:.2f}, {aircraft_lon:.2f}) "
-                                f"reports {origin_iata}→{dest_iata} route, which doesn't pass near user location. "
-                                f"This is likely stale/incorrect position data from Airlabs API."
-                            )
-                            continue
-
-            origin_city, origin_country = get_city_country(origin_iata) if origin_iata else (None, None)
-            dest_city, dest_country = get_city_country(dest_iata) if dest_iata else (None, None)
-
-            eta_estimate = None
-            if dest_iata and aircraft_lat is not None and aircraft_lon is not None:
-                dest_airport = get_airport_by_iata(dest_iata)
-                if dest_airport:
-                    dest_lat = dest_airport.get("lat")
-                    dest_lon = dest_airport.get("lon")
-                    if dest_lat is not None and dest_lon is not None:
-                        try:
-                            distance_to_dest = calculate_distance(
-                                aircraft_lat, aircraft_lon, dest_lat, dest_lon
-                            )
-                            eta_estimate = _estimate_eta(distance_to_dest, aircraft_type)
-                        except Exception as exc:
-                            logger.debug(
-                                "Failed to estimate ETA for Airlabs flight %s: %s",
-                                flight.get("flight_number") or flight.get("hex"),
-                                exc,
+                        if all([origin_lat, origin_lon, dest_lat, dest_lon]):
+                            # Validate if the flight route could reasonably pass near the user
+                            # Uses multiple checks: endpoint proximity, geographic bounds, and generous great circle tolerance
+                            route_is_valid = is_point_near_route(
+                                point_lat=lat,
+                                point_lng=lng,
+                                origin_lat=origin_lat,
+                                origin_lng=origin_lon,
+                                dest_lat=dest_lat,
+                                dest_lng=dest_lon
                             )
 
-            airline_icao = flight.get("airline_icao") or flight.get("airline_code")
-            airline_iata = flight.get("airline_iata")
-            raw_flight_number = flight.get("flight_number")
+                            if not route_is_valid:
+                                logger.warning(
+                                    f"Skipping aircraft with invalid route: {callsign} at ({aircraft_lat:.2f}, {aircraft_lon:.2f}) "
+                                    f"reports {origin_iata}→{dest_iata} route, which doesn't pass near user location. "
+                                    f"This is likely stale/incorrect position data from Airlabs API."
+                                )
+                                continue
 
-            # Apply simple airline overrides (e.g., Endeavor Air → Delta)
-            if airline_icao:
-                override = AIRLINE_OVERRIDES.get(airline_icao.strip().upper())
-                if override:
-                    airline_icao = override.get("airline_icao", airline_icao)
-                    airline_iata = override.get("airline_iata", airline_iata)
+                origin_city, origin_country = get_city_country(origin_iata) if origin_iata else (None, None)
+                dest_city, dest_country = get_city_country(dest_iata) if dest_iata else (None, None)
 
-            # Apply Republic Airways flight number range mapping
-            # This maps YX/RPA flights to their branded partners (AA, UA, DL) based on flight number
-            republic_override = get_branded_airline_from_flight_number(airline_icao, raw_flight_number)
-            if republic_override:
-                airline_icao = republic_override.get("airline_icao", airline_icao)
-                airline_iata = republic_override.get("airline_iata", airline_iata)
+                # Must be assigned before the ETA estimate below reads it; it used to
+                # live after that block, so the first flight of every fetch raised a
+                # swallowed UnboundLocalError and later flights reused the previous
+                # flight's type for their cruise speed (DOJP-23)
+                aircraft_type = flight.get("aircraft_icao") or flight.get("aircraft_type") or ""
 
-            if airline_icao and airline_icao.upper() in IGNORE_AIRLINES_ICAO:
+                eta_estimate = None
+                if dest_iata and aircraft_lat is not None and aircraft_lon is not None:
+                    dest_airport = get_airport_by_iata(dest_iata)
+                    if dest_airport:
+                        dest_lat = dest_airport.get("lat")
+                        dest_lon = dest_airport.get("lon")
+                        if dest_lat is not None and dest_lon is not None:
+                            try:
+                                distance_to_dest = calculate_distance(
+                                    aircraft_lat, aircraft_lon, dest_lat, dest_lon
+                                )
+                                eta_estimate = _estimate_eta(distance_to_dest, aircraft_type)
+                            except (TypeError, ValueError) as exc:
+                                # Bad geo data only - a programmer error must not be
+                                # silently absorbed here again
+                                logger.warning(
+                                    "Failed to estimate ETA for Airlabs flight %s: %s",
+                                    flight.get("flight_number") or flight.get("hex"),
+                                    exc,
+                                )
+
+                airline_icao = flight.get("airline_icao") or flight.get("airline_code")
+                airline_iata = flight.get("airline_iata")
+                raw_flight_number = flight.get("flight_number")
+
+                # Apply simple airline overrides (e.g., Endeavor Air → Delta)
+                if airline_icao:
+                    override = AIRLINE_OVERRIDES.get(airline_icao.strip().upper())
+                    if override:
+                        airline_icao = override.get("airline_icao", airline_icao)
+                        airline_iata = override.get("airline_iata", airline_iata)
+
+                # Apply Republic Airways flight number range mapping
+                # This maps YX/RPA flights to their branded partners (AA, UA, DL) based on flight number
+                republic_override = get_branded_airline_from_flight_number(airline_icao, raw_flight_number)
+                if republic_override:
+                    airline_icao = republic_override.get("airline_icao", airline_icao)
+                    airline_iata = republic_override.get("airline_iata", airline_iata)
+
+                if airline_icao and airline_icao.upper() in IGNORE_AIRLINES_ICAO:
+                    continue
+                airline_name = get_airline_name(airline_icao) if airline_icao else None
+                is_cargo = is_cargo_airline(airline_icao) if airline_icao else False
+                is_private = is_private_airline(airline_icao) if airline_icao else False
+
+                flight_iata = flight.get("flight_iata")
+                if flight_iata:
+                    formatted_flight_number = flight_iata
+                elif airline_iata and raw_flight_number:
+                    formatted_flight_number = f"{airline_iata}{raw_flight_number}"
+                else:
+                    formatted_flight_number = raw_flight_number
+
+                aircraft_info = {
+                    "icao24": flight.get("hex"),
+                    "callsign": callsign,
+                    "flight_number": formatted_flight_number,
+                    "airline_icao": airline_icao,
+                    "airline_name": airline_name,
+                    "is_cargo_operator": is_cargo,
+                    "is_private_operator": is_private,
+                    "aircraft_registration": flight.get("reg_number") or flight.get("registration"),
+                    "aircraft_icao": aircraft_type,
+                    "aircraft": get_aircraft_name(aircraft_type),
+                    "passenger_capacity": get_passenger_capacity(aircraft_type),
+                    "origin_airport": origin_iata,
+                    "origin_city": origin_city,
+                    "origin_country": origin_country,
+                    "destination_airport": dest_iata,
+                    "destination_city": dest_city,
+                    "destination_country": dest_country,
+                    "latitude": aircraft_lat,
+                    "longitude": aircraft_lon,
+                    "altitude": round(flight.get("alt", 0) * 3.28084) if flight.get("alt") is not None else None,
+                    "velocity": round(flight.get("speed", 0) * 0.539957) if flight.get("speed") is not None else None,
+                    "distance_km": round(distance),
+                    "distance_miles": round(distance * 0.621371),
+                    "status": flight.get("status"),
+                    # Always estimated: the bulk /flights endpoint returns no
+                    # arrival-time field at all (real times live on the per-flight
+                    # /flight endpoint, one extra API call per aircraft)
+                    "eta": eta_estimate,
+                    "updated": flight.get("updated"),
+                }
+
+                aircraft_list.append(aircraft_info)
+            except Exception as exc:
+                logger.warning(
+                    "Skipping malformed Airlabs flight record %s: %s",
+                    flight.get("flight_number") or flight.get("hex") or "<no id>",
+                    exc,
+                )
                 continue
-            airline_name = get_airline_name(airline_icao) if airline_icao else None
-            is_cargo = is_cargo_airline(airline_icao) if airline_icao else False
-            is_private = is_private_airline(airline_icao) if airline_icao else False
-
-            flight_iata = flight.get("flight_iata")
-            if flight_iata:
-                formatted_flight_number = flight_iata
-            elif airline_iata and raw_flight_number:
-                formatted_flight_number = f"{airline_iata}{raw_flight_number}"
-            else:
-                formatted_flight_number = raw_flight_number
-
-            aircraft_type = flight.get("aircraft_icao") or flight.get("aircraft_type") or ""
-
-            aircraft_info = {
-                "icao24": flight.get("hex"),
-                "callsign": callsign,
-                "flight_number": formatted_flight_number,
-                "airline_icao": airline_icao,
-                "airline_name": airline_name,
-                "is_cargo_operator": is_cargo,
-                "is_private_operator": is_private,
-                "aircraft_registration": flight.get("reg_number") or flight.get("registration"),
-                "aircraft_icao": aircraft_type,
-                "aircraft": get_aircraft_name(aircraft_type),
-                "passenger_capacity": get_passenger_capacity(aircraft_type),
-                "origin_airport": origin_iata,
-                "origin_city": origin_city,
-                "origin_country": origin_country,
-                "destination_airport": dest_iata,
-                "destination_city": dest_city,
-                "destination_country": dest_country,
-                "latitude": aircraft_lat,
-                "longitude": aircraft_lon,
-                "altitude": round(flight.get("alt", 0) * 3.28084) if flight.get("alt") is not None else None,
-                "velocity": round(flight.get("speed", 0) * 0.539957) if flight.get("speed") is not None else None,
-                "distance_km": round(distance),
-                "distance_miles": round(distance * 0.621371),
-                "status": flight.get("status"),
-                "eta": flight.get("arr_time") or eta_estimate,
-                "updated": flight.get("updated"),
-            }
-
-            aircraft_list.append(aircraft_info)
 
         aircraft_list.sort(key=lambda x: x.get("distance_km", float("inf")))
 
