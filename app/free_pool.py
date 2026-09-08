@@ -269,7 +269,9 @@ def get_session_for_free_user(client_ip: str, index: Dict) -> Optional[Dict]:
 def check_free_tier_rate_limit(client_ip: str) -> tuple[bool, Optional[int]]:
     """Check if client IP is within rate limit
 
-    Rate limit: 10 requests per minute per IP.
+    Allows FREE_TIER_RATE_LIMIT requests per FREE_TIER_RATE_WINDOW seconds per
+    IP. The counter lives in process memory, so the effective ceiling is that
+    limit multiplied by the number of running containers.
 
     Args:
         client_ip: Client IP address

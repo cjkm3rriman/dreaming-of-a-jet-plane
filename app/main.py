@@ -91,11 +91,34 @@ PROVIDER_OVERRIDE_SECRET = os.getenv("PROVIDER_OVERRIDE_SECRET")
 # TTS Configuration
 TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "google", "inworld", "fallback"
 
+TTS_OVERRIDE_PROVIDERS = ["elevenlabs", "google", "inworld", "fallback"]
+
+
+def normalize_tts_provider_override(tts: Optional[str]) -> Optional[str]:
+    """Lowercase and validate a requested TTS provider name
+
+    Returns None for an unsupported name so the caller falls back to the
+    configured provider rather than failing the request.
+    """
+    if not tts:
+        return None
+
+    if tts.lower() not in TTS_OVERRIDE_PROVIDERS:
+        logger.warning(f"Invalid TTS provider override: {tts}")
+        return None
+
+    return tts.lower()
+
+
 def get_tts_provider_override(request: Request) -> Optional[str]:
-    """Extract and validate TTS provider override from query parameters
+    """Extract and validate TTS provider override from the raw query string
 
     Allows testing different TTS providers via query parameters:
     Example: ?tts=google&secret=your_secret_key
+
+    Used by endpoints that do not declare tts/secret in their own signature
+    (/scanning, /scanning-again, /intro, /overandout). The /plane/N routes
+    declare the parameters and pass them to handle_plane_endpoint instead.
 
     Args:
         request: FastAPI Request object
@@ -119,14 +142,10 @@ def get_tts_provider_override(request: Request) -> Optional[str]:
         logger.warning(f"Invalid TTS override secret attempt from IP: {extract_client_ip(request)}")
         return None
 
-    # Validate provider is supported
-    valid_providers = ["elevenlabs", "google", "inworld", "fallback"]
-    if tts_param.lower() not in valid_providers:
-        logger.warning(f"Invalid TTS provider override: {tts_param}")
-        return None
-
-    logger.info(f"TTS provider override: {tts_param} from IP: {extract_client_ip(request)}")
-    return tts_param.lower()
+    provider = normalize_tts_provider_override(tts_param)
+    if provider:
+        logger.info(f"TTS provider override: {provider} from IP: {extract_client_ip(request)}")
+    return provider
 
 
 def get_aircraft_provider_override(request: Optional[Request]) -> Optional[str]:
@@ -213,9 +232,8 @@ def get_audio_format_for_provider(provider: str) -> tuple[str, str]:
         provider: TTS provider name (elevenlabs, google, inworld)
 
     Returns:
-        tuple: (file_extension, mime_type)
-        - file_extension: "mp3" or "ogg"
-        - mime_type: "audio/mpeg" or "audio/ogg"
+        tuple: (file_extension, mime_type) from the TTS registry - see
+        get_audio_format() in app/tts_providers for the current values
     """
     return get_tts_audio_format(provider)
 
@@ -881,6 +899,7 @@ async def handle_plane_endpoint(
     secret: Optional[str] = None,
     provider: Optional[str] = None,
     country: Optional[str] = None,
+    tts: Optional[str] = None,
 ):
     """Handle individual plane endpoints (/plane/1 through /plane/5)
 
@@ -892,6 +911,7 @@ async def handle_plane_endpoint(
         secret: Secret key for provider overrides
         provider: Aircraft data provider override (requires secret)
         country: Optional country code override (e.g., "FR", "GB", "US") for testing metric/imperial units
+        tts: TTS provider override (requires secret)
     """
     from .free_pool import stitch_audio, stitch_audio_multi
 
@@ -903,13 +923,18 @@ async def handle_plane_endpoint(
         ensure_override_secret(secret)
         forced_provider = provider.lower()
 
+    # TTS override arrives as an explicit parameter, mirroring `provider` above.
+    # Validated here, alongside the other overrides, so an unauthorized request
+    # is rejected before any geolocation or flight lookup happens.
+    tts_override = None
+    if tts:
+        ensure_override_secret(secret)
+        tts_override = normalize_tts_provider_override(tts)
+    effective_provider = tts_override if tts_override else TTS_PROVIDER
+
     # Get user location using shared function
     user_lat, user_lng, user_country_code, user_city, user_region, user_country_name, is_fallback_location = await get_user_location(request, lat, lng, country)
     country_code = user_country_code  # Keep for backwards compatibility
-
-    # Get TTS provider override from query parameters
-    tts_override = get_tts_provider_override(request)
-    effective_provider = tts_override if tts_override else TTS_PROVIDER
 
     # Convert to 0-based index
     zero_based_index = plane_index - 1
@@ -1222,7 +1247,7 @@ async def plane_1_endpoint(
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 1, lat, lng, secret, provider, country)
+    return await handle_plane_endpoint(request, 1, lat, lng, secret, provider, country, tts)
 
 @app.get("/plane/2")
 async def plane_2_endpoint(
@@ -1244,7 +1269,7 @@ async def plane_2_endpoint(
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 2, lat, lng, secret, provider, country)
+    return await handle_plane_endpoint(request, 2, lat, lng, secret, provider, country, tts)
 
 @app.get("/plane/3")
 async def plane_3_endpoint(
@@ -1266,7 +1291,7 @@ async def plane_3_endpoint(
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 3, lat, lng, secret, provider, country)
+    return await handle_plane_endpoint(request, 3, lat, lng, secret, provider, country, tts)
 
 @app.get("/plane/4")
 async def plane_4_endpoint(
@@ -1288,7 +1313,7 @@ async def plane_4_endpoint(
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 4, lat, lng, secret, provider, country)
+    return await handle_plane_endpoint(request, 4, lat, lng, secret, provider, country, tts)
 
 @app.get("/plane/5")
 async def plane_5_endpoint(
@@ -1310,7 +1335,7 @@ async def plane_5_endpoint(
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 5, lat, lng, secret, provider, country)
+    return await handle_plane_endpoint(request, 5, lat, lng, secret, provider, country, tts)
 
 @app.options("/plane/1")
 async def plane_1_options():
