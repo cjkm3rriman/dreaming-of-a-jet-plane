@@ -105,6 +105,59 @@ def is_location_in_us(lat: float, lng: float) -> bool:
     return False
 
 
+# How often the fun fact rotation advances. Five minutes is longer than the audio
+# cache TTL in s3_cache.py, so any rescan fresh enough to regenerate audio also
+# lands in a new bucket. It also yields 288 buckets a day, so with the date term
+# the counter advances 289 = 17^2 steps overnight - sharing no factor with any
+# fact count that is not a multiple of 17, which is what keeps a city off the
+# same fact at the same time each day (see select_rotating_fun_fact).
+#
+# Retuning this is not a free choice: 10 minutes gives 145 = 5 x 29, and 5 is the
+# fact count of 372 of our 397 cities, so every city would repeat daily. 6 minutes
+# gives a 30-minute cycle, which collides with every round half-hour rescan gap.
+# tests/test_fun_fact_rotation.py checks both properties.
+FUN_FACT_ROTATION_SECONDS = 5 * 60
+
+
+def select_rotating_fun_fact(fun_facts: List[str], plane_index: int = 1, now: datetime = None) -> Optional[str]:
+    """Pick a fun fact by deterministic rotation rather than random choice
+
+    Yoto gives us no session or user id, so we cannot remember what a listener
+    has already heard. A counter derived from the clock gets us the same effect
+    without storing anything: the fact changes every few minutes, cycles the
+    whole list before repeating, and is reproducible from its inputs.
+
+    The bucket advances 288 times a day and the date once more, so the same city
+    at the same clock time moves 289 facts forward overnight. 289 is 17 squared,
+    so it shares no factor with any list length that is not a multiple of 17 -
+    that is what stops a city aliasing back to the same fact every day at the
+    same time. Every fact count in cities.json is well clear of 17.
+
+    What this cannot do is guarantee two arbitrary scans differ. With no memory
+    of what a listener heard, any scheme repeats with probability 1/len for an
+    arbitrary gap - the same odds as the random.choice this replaces. What
+    rotation buys is that repeats are never back-to-back, the whole list is
+    covered evenly instead of clumping, and the output is reproducible. The real
+    lever on repetition is writing more facts per city.
+
+    Args:
+        fun_facts: Candidate facts for the chosen city
+        plane_index: 1-based plane index, so two planes to the same city in one
+                     scan get different facts
+        now: Override for the current time (testing)
+
+    Returns:
+        The selected fact, or None if there are no facts to choose from
+    """
+    if not fun_facts:
+        return None
+
+    now = now or datetime.now(timezone.utc)
+    bucket = int(now.timestamp()) // FUN_FACT_ROTATION_SECONDS
+    index = (now.date().toordinal() + bucket + plane_index) % len(fun_facts)
+    return fun_facts[index]
+
+
 def km_to_miles(km: float) -> float:
     """Convert kilometers to miles
 
@@ -494,13 +547,13 @@ def generate_flight_text_for_aircraft(
             fun_facts = get_fun_facts(city_for_facts, country=country_for_facts)
 
         if fun_facts:
-            random_fact = random.choice(fun_facts)
+            selected_fact = select_rotating_fun_fact(fun_facts, plane_index)
             fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
             fun_fact_opening = random.choice(fun_fact_openings)
             fun_fact_opening_text = fun_fact_opening
             # Facts in cities.json carry their own terminal punctuation (see
             # tests/test_fun_fact_punctuation.py), so nothing is appended here.
-            fun_fact_body_text = random_fact
+            fun_fact_body_text = selected_fact
         else:
             # No fun facts available for this city
             fun_fact_source = None
