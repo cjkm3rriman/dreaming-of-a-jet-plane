@@ -3,6 +3,30 @@
 import pytest
 from app.main import get_nearby_aircraft, select_diverse_aircraft
 
+# NetJets - the private operator most often seen in real traffic, and one of the
+# two ICAO codes flagged private_or_charter in airlines.json
+PRIVATE_ICAO = "EJA"
+
+
+def _plane(city, *, airline_icao="DAL", distance_km=100):
+    """Minimal aircraft dict; each gets a distinct destination so the
+    destination-diversity pass keeps all of them"""
+    return {
+        "aircraft": "Boeing 737",
+        "airline_icao": airline_icao,
+        "origin_city": "Boston",
+        "destination_city": city,
+        "destination_airport": city[:3].upper(),
+        "destination_country": "United States",
+        "distance_km": distance_km,
+    }
+
+
+def _select(planes):
+    """Select without user coordinates, so destination-distance enrichment is
+    skipped and every passenger flight lands in the 'far' pool"""
+    return select_diverse_aircraft(planes, user_lat=None, user_lng=None)
+
 
 @pytest.mark.asyncio
 async def test_nyc_aircraft_selection(nyc_location):
@@ -120,6 +144,70 @@ def test_diversity_selection_handles_empty_list():
     assert selected == [], "Should return empty list for empty input"
 
 
+@pytest.mark.unit
+@pytest.mark.parametrize("passenger_count", [1, 2, 3])
+def test_private_flight_never_displaces_passenger_flights(passenger_count):
+    """1-3 passenger flights plus a private jet must all survive.
+
+    The insertion branch used to test `len(selected) == 1`, so 2 or 3 passenger
+    picks fell through to the else and were replaced wholesale by the private
+    flight - the user heard one private jet and four "no more planes" messages
+    (DOJP-38).
+    """
+    cities = ["Chicago", "Denver", "Miami"][:passenger_count]
+    planes = [_plane(city) for city in cities]
+    planes.append(_plane("Aspen", airline_icao=PRIVATE_ICAO, distance_km=200))
+
+    selected = _select(planes)
+
+    assert len(selected) == passenger_count + 1
+    kept = {p.get("destination_city") for p in selected}
+    assert kept == set(cities) | {"Aspen"}
+
+
+@pytest.mark.unit
+def test_several_private_flights_fill_only_the_remaining_slots():
+    """Private flights top the list up to 5 without evicting passengers"""
+    planes = [_plane(c) for c in ["Chicago", "Denver"]]
+    planes += [
+        _plane(c, airline_icao=PRIVATE_ICAO, distance_km=200)
+        for c in ["Aspen", "Teterboro", "Nantucket", "Vail"]
+    ]
+
+    selected = _select(planes)
+
+    assert len(selected) == 5
+    passenger_kept = [p for p in selected if p["airline_icao"] != PRIVATE_ICAO]
+    assert len(passenger_kept) == 2, "both passenger flights must survive"
+
+
+@pytest.mark.unit
+def test_private_only_results_are_unchanged():
+    """With no passenger flights at all, private flights still fill the list"""
+    planes = [
+        _plane(c, airline_icao=PRIVATE_ICAO)
+        for c in ["Aspen", "Teterboro", "Nantucket"]
+    ]
+
+    selected = _select(planes)
+
+    assert len(selected) == 3
+    assert all(p["airline_icao"] == PRIVATE_ICAO for p in selected)
+
+
+@pytest.mark.unit
+def test_private_flight_takes_position_four_when_passengers_are_plentiful():
+    """With 4+ passenger flights the private one is inserted at position 4"""
+    planes = [_plane(c) for c in ["Chicago", "Denver", "Miami", "Seattle", "Austin"]]
+    planes.append(_plane("Aspen", airline_icao=PRIVATE_ICAO, distance_km=200))
+
+    selected = _select(planes)
+
+    assert len(selected) == 5
+    assert selected[3]["destination_city"] == "Aspen"
+
+
+@pytest.mark.unit
 def test_aircraft_required_fields(sample_aircraft):
     """Test that aircraft objects have expected fields"""
     # Check essential fields
