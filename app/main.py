@@ -592,7 +592,8 @@ def select_diverse_aircraft(
 
     Selection strategies:
     - Geographic diversity: Prioritizes different countries and cities for destination variety
-    - Cargo/private inclusion: Places one cargo or private flight in position 2 (if available)
+    - Cargo/private inclusion: With 4+ passenger flights, one cargo/private flight is placed
+      in position 4; with fewer, they fill the remaining slots without displacing passengers
     - Distance from user: Deprioritizes destinations within 100 miles of user's location
 
     Args:
@@ -653,12 +654,13 @@ def select_diverse_aircraft(
             # We have 4+ passenger flights: insert cargo/private in position 4
             selected.insert(3, cargo_private[0])
             selected = selected[:5]
-        elif len(selected) == 1:
-            # Only 1 passenger flight: add up to 4 cargo/private
-            for cp in cargo_private[:4]:
-                selected.append(cp)
+        elif selected:
+            # 1-3 passenger flights: keep every one of them and fill the
+            # remaining slots. This test used to be `== 1`, so 2 or 3 passenger
+            # picks fell through to the else below and were thrown away (DOJP-38)
+            selected.extend(cargo_private[:5 - len(selected)])
         else:
-            # No passenger flights: use up to 5 cargo/private
+            # No passenger flights at all: use up to 5 cargo/private
             selected = cargo_private[:5]
 
     final_selection = selected[:5]
