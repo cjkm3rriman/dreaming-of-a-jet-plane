@@ -219,3 +219,40 @@ def test_aircraft_required_fields(sample_aircraft):
     # Check types
     assert isinstance(sample_aircraft["distance_km"], (int, float))
     assert isinstance(sample_aircraft["aircraft"], str)
+
+
+@pytest.mark.unit
+def test_no_route_flights_are_picked_last():
+    """A flight with no destination data becomes 'flying to somewhere
+    exciting' - real but weak content that also skipped route validation.
+    It used to land in the *preferred* pool because its distance-from-user
+    is None; it must only appear when better flights run out (DOJP-37)."""
+    mystery = _plane("nowhere")
+    del mystery["destination_airport"]
+    mystery["destination_city"] = None
+    mystery["destination_country"] = None
+
+    cities = ["Chicago", "Denver", "Miami", "Seattle", "Austin"]
+    planes = [mystery] + [_plane(c) for c in cities]  # mystery listed first
+
+    selected = _select(planes)
+
+    assert len(selected) == 5
+    assert all(p.get("destination_airport") for p in selected), \
+        "the no-route flight displaced a flight with a real destination"
+
+
+@pytest.mark.unit
+def test_no_route_flight_still_used_when_sky_is_thin():
+    """Deprioritized, not banned: with only two flights, both fly"""
+    mystery = _plane("nowhere")
+    del mystery["destination_airport"]
+    mystery["destination_city"] = None
+    mystery["destination_country"] = None
+
+    selected = _select([mystery, _plane("Chicago")])
+
+    assert len(selected) == 2
+    # and the known-destination flight is preferred in ordering terms:
+    # the mystery flight came first in the input but sorts by distance later
+    assert {p.get("destination_city") for p in selected} == {"Chicago", None}

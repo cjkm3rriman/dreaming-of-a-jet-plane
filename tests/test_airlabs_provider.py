@@ -10,6 +10,7 @@ These tests run the real parser against a canned payload served by a fake HTTP
 client - no live API, no skipping when the sky is empty.
 """
 
+import time
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -29,7 +30,7 @@ def _flight(**overrides):
         "lat": 40.9,
         "lng": -73.9,
         "status": "en-route",
-        "updated": 1757300000,
+        "updated": int(time.time()),
         "aircraft_icao": "B738",
         "airline_icao": "DAL",
         "airline_iata": "DL",
@@ -93,7 +94,7 @@ async def test_every_flight_gets_an_eta(serve_payload):
         _flight(flight_number="303", aircraft_icao="B77W"),
     ])
 
-    aircraft, error = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
+    aircraft, error, _stats = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
 
     assert error == ""
     assert len(aircraft) == 3
@@ -112,7 +113,7 @@ async def test_eta_uses_each_aircrafts_own_cruise_speed(serve_payload):
         _flight(flight_number="202", aircraft_icao="DH8D"),
     ])
 
-    aircraft, _ = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
+    aircraft, _, _stats = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
     by_type = {plane["aircraft_icao"]: plane for plane in aircraft}
     assert set(by_type) == {"B738", "DH8D"}
 
@@ -138,7 +139,7 @@ async def test_one_malformed_record_does_not_discard_the_batch(serve_payload):
         _flight(flight_number="303", aircraft_icao="B77W"),
     ])
 
-    aircraft, error = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
+    aircraft, error, _stats = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
 
     assert error == ""
     numbers = {plane["flight_number"] for plane in aircraft}
@@ -152,9 +153,71 @@ async def test_eta_is_always_the_estimate(serve_payload):
     the payload must not leak through as a raw non-ISO string"""
     serve_payload([_flight(flight_number="101", arr_time="2026-09-08 14:30")])
 
-    aircraft, _ = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
+    aircraft, _, _stats = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
 
     assert len(aircraft) == 1
     # ISO with Z suffix, parseable the way flight_text parses it
     parsed = datetime.fromisoformat(aircraft[0]["eta"].replace("Z", "+00:00"))
     assert parsed.tzinfo is not None
+
+
+@pytest.mark.unit
+async def test_stale_signal_is_rejected_and_counted(serve_payload):
+    """A position whose last signal is older than the freshness gate must not
+    reach a child - it describes a sky that no longer exists (DOJP-37)"""
+    stale_age = airlabs.AIRLABS_MAX_SIGNAL_AGE_S + 120
+    serve_payload([
+        _flight(flight_number="101"),
+        _flight(flight_number="202", updated=int(time.time()) - stale_age),
+    ])
+
+    aircraft, error, stats = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
+
+    assert error == ""
+    assert [p["flight_number"] for p in aircraft] == ["DL101"]
+    assert stats["rejected_stale"] == 1
+    assert stats["oldest_signal_age_s"] >= stale_age
+    assert stats["stale_threshold_s"] == airlabs.AIRLABS_MAX_SIGNAL_AGE_S
+
+
+@pytest.mark.unit
+async def test_missing_updated_field_is_not_treated_as_stale(serve_payload):
+    """No signal timestamp means we cannot judge freshness - keep the flight
+    rather than inventing a rejection"""
+    flight = _flight(flight_number="101")
+    del flight["updated"]
+    serve_payload([flight])
+
+    aircraft, _, stats = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
+
+    assert len(aircraft) == 1
+    assert stats["rejected_stale"] == 0
+
+
+@pytest.mark.unit
+async def test_enroute_at_taxi_speed_is_rejected_as_implausible(serve_payload):
+    """'en-route' at near-zero ground speed is a parked aircraft with a stale
+    status, not something overhead"""
+    serve_payload([
+        _flight(flight_number="101"),
+        _flight(flight_number="202", speed=5),
+    ])
+
+    aircraft, _, stats = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
+
+    assert [p["flight_number"] for p in aircraft] == ["DL101"]
+    assert stats["rejected_implausible"] == 1
+
+
+@pytest.mark.unit
+async def test_flights_without_a_destination_are_counted(serve_payload):
+    """No-route flights are kept (deprioritized later in selection) but
+    counted, so their prevalence is visible in scan:complete"""
+    no_dest = _flight(flight_number="202")
+    del no_dest["arr_iata"]
+    serve_payload([_flight(flight_number="101"), no_dest])
+
+    aircraft, _, stats = await airlabs.fetch_aircraft(USER_LAT, USER_LNG, 100, 5)
+
+    assert len(aircraft) == 2
+    assert stats["accepted_no_route"] == 1

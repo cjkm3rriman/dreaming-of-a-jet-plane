@@ -27,11 +27,16 @@ def is_configured() -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -> Tuple[List[Dict[str, Any]], str]:
-    """Fetch aircraft data from Flightradar24 within the bounding box"""
+async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -> Tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
+    """Fetch aircraft data from Flightradar24 within the bounding box
+
+    Returns (aircraft_list, error_message, data_quality_stats). FR24 positions
+    are trusted and its ETA comes from the API, so the stats dict is empty -
+    the third element exists to keep the provider contract uniform.
+    """
     configured, reason = is_configured()
     if not configured:
-        return [], reason or "FlightRadar24 provider unavailable"
+        return [], reason or "FlightRadar24 provider unavailable", {}
 
     lat_delta = radius_km / 111.0  # 1 degree lat ≈ 111 km
     lon_denominator = 111.0 * max(math.cos(math.radians(lat)), 0.01)
@@ -64,7 +69,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
         if response.status_code != 200:
             error_msg = f"FlightRadar24 API returned HTTP {response.status_code}"
             logger.error(f"{error_msg}: Body={response.text[:500]}")
-            return [], error_msg
+            return [], error_msg, {}
 
         data = response.json()
         flights = data.get("data", [])
@@ -126,11 +131,11 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
             aircraft_list.append(aircraft_info)
 
         logger.info(f"FlightRadar24 returned {len(aircraft_list)} aircraft candidates")
-        return aircraft_list, "" if aircraft_list else "No passenger aircraft found within radius"
+        return aircraft_list, ("" if aircraft_list else "No passenger aircraft found within radius"), {}
 
     except httpx.TimeoutException:
         logger.error("FlightRadar24 API Timeout: Request timed out after 10 seconds")
-        return [], "FlightRadar24 API request timed out"
+        return [], "FlightRadar24 API request timed out", {}
     except httpx.RequestError as exc:
         logger.error(f"FlightRadar24 API Connection Error: {exc}")
-        return [], f"FlightRadar24 network connection error: {exc}"
+        return [], f"FlightRadar24 network connection error: {exc}", {}

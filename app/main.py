@@ -356,6 +356,7 @@ def track_scan_complete(
     nearby_aircraft: int,
     provider: str,
     subscription: str = "yoto-club",
+    data_quality: Optional[Dict[str, Any]] = None,
 ):
     """Track scan:complete analytics event with flight data results
 
@@ -368,6 +369,11 @@ def track_scan_complete(
         nearby_aircraft: Number of aircraft found
         provider: Aircraft data provider used
         subscription: "yoto-club" for paid, "free" for free tier
+        data_quality: Optional rejection counters from the provider fetch
+            (rejected_stale, rejected_route, rejected_implausible,
+            accepted_no_route, oldest_signal_age_s, stale_threshold_s).
+            Absent on cache hits and provider failures, so the properties
+            only appear on events where a live fetch actually ran.
     """
     try:
         import hashlib
@@ -381,7 +387,7 @@ def track_scan_complete(
         hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
         session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
 
-        analytics.track_event("scan:complete", {
+        properties = {
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
@@ -398,7 +404,11 @@ def track_scan_complete(
             "nearby_aircraft": nearby_aircraft,
             "aircraft_provider": provider,
             "subscription": subscription,
-        }, distinct_id=distinct_id)
+        }
+        if data_quality:
+            properties.update(data_quality)
+
+        analytics.track_event("scan:complete", properties, distinct_id=distinct_id)
     except Exception as e:
         logger.error(f"Failed to track scan:complete event: {e}", exc_info=True)
 
@@ -618,6 +628,7 @@ def select_diverse_aircraft(
     cargo_private = []
     passenger_far = []  # Destinations > 100 miles from user
     passenger_near = []  # Destinations <= 100 miles from user
+    passenger_no_route = []  # No destination data - weakest content, used last
 
     for aircraft in aircraft_list:
         airline_icao = aircraft.get("airline_icao")
@@ -632,6 +643,16 @@ def select_diverse_aircraft(
         if airline_icao and airline_db.is_private_airline(airline_icao):
             cargo_private.append(aircraft)
         else:
+            # A flight with no destination becomes "flying all the way to
+            # somewhere exciting" in the text - real but weak content, and it
+            # skips route validation entirely, so it is also the least
+            # trustworthy data. It used to land in passenger_far (the
+            # *preferred* pool) because its distance-from-user is None;
+            # now it only appears when better flights run out (DOJP-37)
+            if not aircraft.get("destination_airport"):
+                passenger_no_route.append(aircraft)
+                continue
+
             # Categorize passenger flights by destination distance
             dest_distance = aircraft.get("destination_distance_from_user_km")
             if dest_distance is not None and dest_distance < NEARBY_THRESHOLD_KM:
@@ -639,8 +660,9 @@ def select_diverse_aircraft(
             else:
                 passenger_far.append(aircraft)
 
-    # Step 3: Select diverse passenger flights (prioritize far destinations)
-    passenger_pool = passenger_far + passenger_near
+    # Step 3: Select diverse passenger flights (prioritize far destinations,
+    # then nearby ones, then flights with no route data at all)
+    passenger_pool = passenger_far + passenger_near + passenger_no_route
     selected = _select_by_destination_diversity(passenger_pool, max_count=5)
 
     # Step 4: Sort by proximity (closest aircraft first)
@@ -822,7 +844,7 @@ async def get_nearby_aircraft(
                 continue
 
         try:
-            aircraft_list, provider_error = await provider_def["fetch"](
+            aircraft_list, provider_error, data_quality = await provider_def["fetch"](
                 lat, lng, radius_km, provider_fetch_limit
             )
         except Exception as exc:
@@ -854,6 +876,7 @@ async def get_nearby_aircraft(
                     from_cache=False,
                     nearby_aircraft=len(aircraft_list),
                     provider=provider_name,
+                    data_quality=data_quality,
                 )
 
             return aircraft_list[:limit], ""

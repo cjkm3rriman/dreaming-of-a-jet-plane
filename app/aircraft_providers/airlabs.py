@@ -4,6 +4,7 @@ import asyncio
 import logging
 import math
 import os
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -18,6 +19,18 @@ DEFAULT_CRUISE_SPEED_KMH = 840  # Typical narrow-body (A320/737)
 API_TIMEOUT = 4.0  # p99 baseline is <1s; 4s catches genuinely slow responses without punishing fallback latency
 RETRY_BACKOFF = 0.5  # seconds to wait before retry
 LANDING_BUFFER_MINUTES = 25
+
+# Freshness gate on the `updated` field ("UNIX timestamp of last aircraft
+# signal"). Airlabs sometimes reports positions minutes-to-hours old; a stale
+# position puts a plane in a child's sky that is no longer there (DOJP-37).
+# At cruise speed every minute of staleness is ~14 km of position error.
+# Env-overridable so the threshold can be tuned from Railway without a deploy;
+# the value is also emitted on scan:complete so changes are visible in Mixpanel.
+AIRLABS_MAX_SIGNAL_AGE_S = int(os.getenv("AIRLABS_MAX_SIGNAL_AGE_SECONDS", "300"))
+
+# An "en-route" flight reporting near-zero ground speed is a parked aircraft
+# with a stale status, not something overhead
+MIN_ENROUTE_SPEED_KMH = 50
 AIRLINE_OVERRIDES = {
     "EDV": {"airline_icao": "DAL", "airline_iata": "DL"},
     "PDT": {"airline_icao": "EGF", "airline_iata": "MQ"},
@@ -179,11 +192,18 @@ def is_configured() -> Tuple[bool, Optional[str]]:
     return True, None
 
 
-async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -> Tuple[List[Dict[str, Any]], str]:
-    """Fetch aircraft data from Airlabs using a bounding box"""
+async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -> Tuple[List[Dict[str, Any]], str, Dict[str, Any]]:
+    """Fetch aircraft data from Airlabs using a bounding box
+
+    Returns:
+        (aircraft_list, error_message, data_quality_stats). The stats dict
+        counts flights rejected by the data-quality gates and is merged into
+        the scan:complete analytics event by get_nearby_aircraft, so rejection
+        rates are observable instead of scrolling away as log lines.
+    """
     configured, reason = is_configured()
     if not configured:
-        return [], reason or "Airlabs provider unavailable"
+        return [], reason or "Airlabs provider unavailable", {}
 
     lat_delta = radius_km / 111.0
     lon_denominator = 111.0 * max(math.cos(math.radians(lat)), 0.01)
@@ -223,13 +243,13 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                 await asyncio.sleep(backoff)
             else:
                 logger.error(f"Airlabs API {error_type} after {max_attempts} attempts: {e}")
-                return [], f"Airlabs API {error_type} after {max_attempts} attempts"
+                return [], f"Airlabs API {error_type} after {max_attempts} attempts", {}
 
     try:
         if response.status_code != 200:
             error_msg = f"Airlabs API returned HTTP {response.status_code}"
             logger.error(f"{error_msg}: Body={response.text[:500]}")
-            return [], error_msg
+            return [], error_msg, {}
 
         data = response.json()
         flights = data.get("response") or data.get("data") or []
@@ -237,9 +257,18 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
         if error_info:
             error_message = error_info if isinstance(error_info, str) else error_info.get("message")
             logger.warning(f"Airlabs API error payload: {error_info}")
-            return [], error_message or "Airlabs API returned an error"
+            return [], error_message or "Airlabs API returned an error", {}
 
         aircraft_list: List[Dict[str, Any]] = []
+        stats: Dict[str, Any] = {
+            "rejected_stale": 0,
+            "rejected_route": 0,
+            "rejected_implausible": 0,
+            "accepted_no_route": 0,
+            "oldest_signal_age_s": 0,
+            "stale_threshold_s": AIRLABS_MAX_SIGNAL_AGE_S,
+        }
+        now_ts = time.time()
 
         for flight in flights:
             # One malformed record must not discard the whole batch (DOJP-23):
@@ -256,6 +285,36 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
 
                 distance = calculate_distance(lat, lng, aircraft_lat, aircraft_lon)
                 if distance > radius_km:
+                    continue
+
+                # Data-quality gate 1: signal freshness. `updated` is the UNIX
+                # timestamp of the last aircraft signal; a stale position
+                # describes a sky that no longer exists (DOJP-37)
+                updated_ts = flight.get("updated")
+                if updated_ts:
+                    age_s = int(now_ts - updated_ts)
+                    if age_s > stats["oldest_signal_age_s"]:
+                        stats["oldest_signal_age_s"] = age_s
+                    if age_s > AIRLABS_MAX_SIGNAL_AGE_S:
+                        stats["rejected_stale"] += 1
+                        logger.warning(
+                            "Skipping stale Airlabs flight %s: signal %ds old (max %ds)",
+                            flight.get("flight_number") or flight.get("hex"),
+                            age_s,
+                            AIRLABS_MAX_SIGNAL_AGE_S,
+                        )
+                        continue
+
+                # Data-quality gate 2: an en-route flight at near-zero ground
+                # speed is a parked aircraft with a stale status
+                speed_kmh = flight.get("speed")
+                if speed_kmh is not None and speed_kmh < MIN_ENROUTE_SPEED_KMH:
+                    stats["rejected_implausible"] += 1
+                    logger.warning(
+                        "Skipping implausible Airlabs flight %s: en-route at %s km/h",
+                        flight.get("flight_number") or flight.get("hex"),
+                        speed_kmh,
+                    )
                     continue
 
                 callsign = (
@@ -297,6 +356,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                                     f"reports {origin_iata}→{dest_iata} route, which doesn't pass near user location. "
                                     f"This is likely stale/incorrect position data from Airlabs API."
                                 )
+                                stats["rejected_route"] += 1
                                 continue
 
                 origin_city, origin_country = get_city_country(origin_iata) if origin_iata else (None, None)
@@ -393,6 +453,8 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                     "updated": flight.get("updated"),
                 }
 
+                if not dest_iata:
+                    stats["accepted_no_route"] += 1
                 aircraft_list.append(aircraft_info)
             except Exception as exc:
                 logger.warning(
@@ -418,11 +480,11 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                     break
 
         logger.info(f"Airlabs returned {len(aircraft_list)} aircraft candidates")
-        return aircraft_list, "" if aircraft_list else "No aircraft reported by Airlabs"
+        return aircraft_list, ("" if aircraft_list else "No aircraft reported by Airlabs"), stats
 
     except Exception as e:
         logger.error(f"Airlabs API processing error: {e}")
-        return [], f"Airlabs API error: {e}"
+        return [], f"Airlabs API error: {e}", {}
 
 
 IGNORE_AIRLINES_ICAO = {"VJA"}

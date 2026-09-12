@@ -63,7 +63,7 @@ def register_test_live_aircraft_routes(
                 else:
                     provider_label = provider_def.get("display_name", selected_provider)
                     # Fetch more aircraft to display full list (not just diversity-selected ones)
-                    aircraft, provider_error = await provider_def["fetch"](user_lat, user_lng, 100, 30)
+                    aircraft, provider_error, _quality_stats = await provider_def["fetch"](user_lat, user_lng, 100, 30)
                     if provider_error and not aircraft:
                         error_message = provider_error
         else:
@@ -82,7 +82,7 @@ def register_test_live_aircraft_routes(
 
                 try:
                     provider_label = provider_def.get("display_name", provider_name)
-                    aircraft, provider_error = await provider_def["fetch"](user_lat, user_lng, 100, 30)
+                    aircraft, provider_error, _quality_stats = await provider_def["fetch"](user_lat, user_lng, 100, 30)
                     if aircraft:
                         break  # Use first provider that returns data
                     if provider_error:

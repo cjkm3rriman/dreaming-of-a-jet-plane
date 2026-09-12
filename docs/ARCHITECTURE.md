@@ -180,15 +180,26 @@ The two providers are **not** equivalent in how much cleaning they need:
 |---|---|---|
 | Filter | `categories=P` (passenger) at the API | `status == "en-route"` client-side |
 | ETA | Provided by the API | Estimated from distance ÷ cruise speed, plus a landing buffer |
-| Position trust | Trusted | Validated against the great-circle route (`is_point_near_route`) — stale positions are common |
+| Position trust | Trusted | Gated on signal freshness (`updated` ≤ 5 min, env-tunable), plausible ground speed, and the great-circle route (`is_point_near_route`) — stale positions are common |
 | Airline naming | Direct ICAO lookup | Overrides for regional carriers (Endeavor → Delta, Republic flight-number ranges → AA/UA/DL) |
 | Retry | None (10s timeout) | 2 attempts, 0.5s → 1s backoff, 4s timeout |
 
-The route validation on the Airlabs side is the most opinionated code in the
-repo. It rejects a flight if the user is nowhere near its origin→destination
-great circle, if the user sits outside a 10°-margin bounding box around the route,
-or if the closest approach exceeds 50% of the total route length — the last check
-catches short private-jet hops that report implausible positions.
+Airlabs data passes three quality gates before a child hears about it, cheapest
+and most direct first. **Freshness**: the `updated` field is the UNIX timestamp
+of the aircraft's last signal; anything older than `AIRLABS_MAX_SIGNAL_AGE_S`
+(default 300s, overridable via `AIRLABS_MAX_SIGNAL_AGE_SECONDS`) is dropped — at
+cruise speed each minute of staleness is ~14 km of position error. **Plausibility**:
+"en-route" below 50 km/h is a parked aircraft with a stale status. **Route
+consistency** (`is_point_near_route`): reject if the user is near neither
+endpoint and sits more than 1,500 km from the sampled geodesic, or if the
+closest approach exceeds 50% of the route length — the ratio catches short
+private-jet hops reporting implausible positions. There was once a lat/lng
+bounding-box pre-filter here too; it was removed because the geodesic check
+already rejected everything it caught, while the box wrongly rejected users
+under date-line routes (Fiji beneath SYD→LAX) and polar great circles
+(Fairbanks beneath JFK→NRT). Rejection counts are emitted on the
+`scan:complete` analytics event, so gate thresholds are tuned from Mixpanel
+rather than guessed.
 
 ### Selection rules
 
@@ -202,11 +213,14 @@ flowchart TD
     Enrich --> Cat{"Categorise by operator"}
     Cat -->|cargo| Drop["Skipped entirely<br/>(temporary, see TODO in code)"]
     Cat -->|private| CP["cargo_private pool"]
-    Cat -->|passenger| Dist{"Destination < 160 km<br/>from the user?"}
+    Cat -->|passenger| HasDest{"Has destination<br/>data?"}
+    HasDest -->|no| NoRoute["passenger_no_route<br/>(used last)"]
+    HasDest -->|yes| Dist{"Destination < 160 km<br/>from the user?"}
     Dist -->|yes| Near["passenger_near<br/>(deprioritised)"]
     Dist -->|no| Far["passenger_far<br/>(preferred)"]
-    Far --> Pool["passenger_far + passenger_near"]
+    Far --> Pool["passenger_far + passenger_near<br/>+ passenger_no_route"]
     Near --> Pool
+    NoRoute --> Pool
     Pool --> D1["Pass 1: one flight per unique country"]
     D1 --> D2["Pass 2: fill with unused destination cities"]
     D2 --> D3["Pass 3: fill with anything left"]
@@ -224,7 +238,11 @@ flowchart TD
 
 Nearby destinations are pushed down the list deliberately: a flight from the next
 town over is less interesting than one crossing an ocean, and the fun fact about
-the destination city is worthless if the child already lives there.
+the destination city is worthless if the child already lives there. Flights with
+no destination data at all sort last: they become "flying all the way to
+somewhere exciting" in the text and skip route validation entirely, so they are
+both the weakest content and the least-trusted data — used only when better
+flights run out.
 
 ---
 
@@ -568,7 +586,7 @@ on every event for deduplication. Yoto Players are detected by their
 | Event | Fired when | Notable properties |
 |---|---|---|
 | `scan:start` | `/scanning` or a `/free/*` entry point | `subscription` |
-| `scan:complete` | Aircraft fetch resolves | `nearby_aircraft`, `aircraft_provider`, `from_cache` |
+| `scan:complete` | Aircraft fetch resolves | `nearby_aircraft`, `aircraft_provider`, `from_cache`; on live Airlabs fetches also `rejected_stale`, `rejected_route`, `rejected_implausible`, `accepted_no_route`, `oldest_signal_age_s`, `stale_threshold_s` |
 | `plane:request` | Any `/plane/N` or `/free/plane/N` | `plane_index`, `from_cache`, `free_pool_entry_id` |
 | `generate:audio` | TTS produces a plane's audio | `generation_time_ms`, `tts_provider`, `fun_fact_source`, `fun_fact_cache_hit`, origin/destination |
 | `error:location` | IP geolocation fails or falls back | `failure_type`, `fallback_location` |
