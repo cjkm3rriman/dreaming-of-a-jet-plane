@@ -356,10 +356,15 @@ def is_point_near_route(
     - Weather avoidance
     - North Atlantic Tracks (NAT) which change daily
 
-    This function uses multiple checks to balance accuracy with real-world route deviations:
-    1. Great circle distance (with generous tolerance for route deviations)
-    2. Endpoint proximity (if origin OR destination is nearby, likely valid)
-    3. Geographic bounding box (user should be roughly "between" origin and destination)
+    This function uses two checks to balance accuracy with real-world route deviations:
+    1. Endpoint proximity (if origin OR destination is nearby, likely valid)
+    2. Distance to the sampled geodesic (with generous tolerance for route deviations)
+
+    There was once a lat/lng bounding-box pre-filter between these two. It was
+    removed (DOJP-37): the geodesic check already rejects everything the box
+    rejected, while the box itself wrongly rejected users under date-line routes
+    (Fiji beneath SYD-LAX) and polar great circles (Fairbanks beneath JFK-NRT),
+    because great circles leave the box their endpoints span.
 
     Args:
         point_lat: Latitude of the point to check (e.g., user location)
@@ -397,40 +402,13 @@ def is_point_near_route(
         )
         return True
 
-    # Check 2: Is user roughly "between" origin and destination geographically?
-    # This catches completely wrong routes like BNE->DFW showing in Connecticut
-    lat_min = min(origin_lat, dest_lat) - 10  # 10 degree margin (~1100km)
-    lat_max = max(origin_lat, dest_lat) + 10
-    lng_min = min(origin_lng, dest_lng) - 10
-    lng_max = max(origin_lng, dest_lng) + 10
-
-    # Handle date line crossing for longitude
-    if abs(origin_lng - dest_lng) > 180:
-        # Route crosses date line, invert the check
-        if not (lng_min <= point_lng <= lng_max):
-            logger.debug(
-                f"Route validation FAIL: Point outside geographic bounds of route "
-                f"(lat range: {lat_min:.1f} to {lat_max:.1f}, lng range: {lng_min:.1f} to {lng_max:.1f}, "
-                f"point: {point_lat:.1f}, {point_lng:.1f})"
-            )
-            return False
-    else:
-        # Normal case
-        if not (lat_min <= point_lat <= lat_max and lng_min <= point_lng <= lng_max):
-            logger.debug(
-                f"Route validation FAIL: Point outside geographic bounds of route "
-                f"(lat range: {lat_min:.1f} to {lat_max:.1f}, lng range: {lng_min:.1f} to {lng_max:.1f}, "
-                f"point: {point_lat:.1f}, {point_lng:.1f})"
-            )
-            return False
-
-    # Check 3: Calculate great circle distance with VERY generous tolerance
+    # Check 2: Calculate great circle distance with VERY generous tolerance
     # Trans-oceanic routes can deviate 1000+ km due to jet streams, NATs, ETOPS, etc.
     min_distance_km = calculate_min_distance_to_route(
         point_lat, point_lng, origin_lat, origin_lng, dest_lat, dest_lng
     )
 
-    # Check 3a: Reject routes where closest distance is > 50% of total route distance
+    # Check 2a: Reject routes where closest distance is > 50% of total route distance
     # This catches false positives especially with private jets on short routes
     # Example: 200km flight, closest point 120km away = 60% = false positive
     # Note: route_distance_km already calculated in Check 1
@@ -441,7 +419,7 @@ def is_point_near_route(
         )
         return False
 
-    # Check 3b: Absolute distance tolerance for longer routes
+    # Check 2b: Absolute distance tolerance for longer routes
     GENEROUS_TOLERANCE_KM = 1500  # Very generous for trans-oceanic route deviations
     if min_distance_km < GENEROUS_TOLERANCE_KM:
         logger.debug(

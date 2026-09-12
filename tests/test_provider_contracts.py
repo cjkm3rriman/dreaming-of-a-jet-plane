@@ -50,7 +50,20 @@ def fr24_payload():
 
 @pytest.fixture
 def airlabs_payload():
-    return _load("airlabs_flights.json")
+    """The recorded payload with `updated` shifted so the newest signal is now.
+
+    Relative ages are preserved. Without this shift every recorded flight ages
+    past the freshness gate as wall-clock time advances, and the fixture would
+    silently stop exercising anything (DOJP-37).
+    """
+    import time
+    payload = _load("airlabs_flights.json")
+    newest = max(f["updated"] for f in payload["response"] if f.get("updated"))
+    shift = int(time.time()) - newest
+    for flight in payload["response"]:
+        if flight.get("updated"):
+            flight["updated"] += shift
+    return payload
 
 
 @pytest.fixture
@@ -88,7 +101,7 @@ def _by_registration(aircraft, registration):
 
 @pytest.mark.unit
 async def test_fr24_emits_every_required_key(configured_providers, fr24_payload):
-    aircraft, error = await _fetch_fr24(fr24_payload)
+    aircraft, error, _stats = await _fetch_fr24(fr24_payload)
 
     assert error == ""
     assert aircraft
@@ -99,7 +112,7 @@ async def test_fr24_emits_every_required_key(configured_providers, fr24_payload)
 
 @pytest.mark.unit
 async def test_airlabs_emits_every_required_key(configured_providers, airlabs_payload):
-    aircraft, error = await _fetch_airlabs(airlabs_payload)
+    aircraft, error, _stats = await _fetch_airlabs(airlabs_payload)
 
     assert error == ""
     assert aircraft
@@ -115,8 +128,8 @@ async def test_both_providers_agree_on_shape(configured_providers, fr24_payload,
     get_nearby_aircraft falls back from one to the other mid-request, so a key
     present in only one of them is a latent crash on the fallback path.
     """
-    fr24_aircraft, _ = await _fetch_fr24(fr24_payload)
-    airlabs_aircraft, _ = await _fetch_airlabs(airlabs_payload)
+    fr24_aircraft, _, _stats = await _fetch_fr24(fr24_payload)
+    airlabs_aircraft, _, _stats = await _fetch_airlabs(airlabs_payload)
 
     fr24_keys = set(fr24_aircraft[0])
     airlabs_keys = set(airlabs_aircraft[0])
@@ -137,7 +150,7 @@ async def test_fr24_normalizes_a_known_flight_exactly(configured_providers, fr24
     painted_as->airline_icao->airline_name, type->aircraft name and capacity,
     orig/dest_iata->city and country.
     """
-    aircraft, _ = await _fetch_fr24(fr24_payload)
+    aircraft, _, _stats = await _fetch_fr24(fr24_payload)
     plane = _by_registration(aircraft, "N941WN")
 
     assert plane["icao24"] == "AD12E0"
@@ -163,7 +176,7 @@ async def test_fr24_normalizes_a_known_flight_exactly(configured_providers, fr24
 async def test_fr24_passes_altitude_and_speed_through_unconverted(configured_providers, fr24_payload):
     """FR24 already reports feet and knots - a conversion added here would be a bug"""
     raw = {f["reg"]: f for f in fr24_payload["data"]}["N941WN"]
-    aircraft, _ = await _fetch_fr24(fr24_payload)
+    aircraft, _, _stats = await _fetch_fr24(fr24_payload)
     plane = _by_registration(aircraft, "N941WN")
 
     assert plane["altitude"] == raw["alt"]
@@ -177,7 +190,7 @@ async def test_fr24_passes_altitude_and_speed_through_unconverted(configured_pro
 @pytest.mark.unit
 async def test_airlabs_normalizes_a_known_flight_exactly(configured_providers, airlabs_payload):
     """Southwest 3364, HOU->LGA, as recorded"""
-    aircraft, _ = await _fetch_airlabs(airlabs_payload)
+    aircraft, _, _stats = await _fetch_airlabs(airlabs_payload)
     plane = _by_registration(aircraft, "N8918Q")
 
     assert plane["airline_icao"] == "SWA"
@@ -199,7 +212,7 @@ async def test_airlabs_converts_altitude_and_speed_to_feet_and_knots(configured_
     pins the arithmetic against the recorded raw values rather than a range.
     """
     raw = {f["reg_number"]: f for f in airlabs_payload["response"]}["N8918Q"]
-    aircraft, _ = await _fetch_airlabs(airlabs_payload)
+    aircraft, _, _stats = await _fetch_airlabs(airlabs_payload)
     plane = _by_registration(aircraft, "N8918Q")
 
     assert plane["altitude"] == round(raw["alt"] * 3.28084)
@@ -219,7 +232,7 @@ async def test_airlabs_gives_every_aircraft_an_eta(configured_providers, airlabs
     recorded payload the old code produced a None; the fixed code produces an
     ETA for every aircraft with a known destination.
     """
-    aircraft, _ = await _fetch_airlabs(airlabs_payload)
+    aircraft, _, _stats = await _fetch_airlabs(airlabs_payload)
 
     assert len(aircraft) > 5, "fixture should exercise a realistic batch"
     missing = [p["callsign"] for p in aircraft if p["destination_airport"] and not p["eta"]]
@@ -229,7 +242,7 @@ async def test_airlabs_gives_every_aircraft_an_eta(configured_providers, airlabs
 @pytest.mark.unit
 async def test_airlabs_etas_are_parseable_future_timestamps(configured_providers, airlabs_payload):
     """flight_text parses the ETA with fromisoformat and subtracts now()"""
-    aircraft, _ = await _fetch_airlabs(airlabs_payload)
+    aircraft, _, _stats = await _fetch_airlabs(airlabs_payload)
     now = datetime.now(timezone.utc)
 
     for plane in aircraft:
@@ -254,9 +267,9 @@ async def test_destinations_resolve_to_real_cities(configured_providers, fr24_pa
     silently loses its city. Most flights in a real batch should resolve.
     """
     if provider == "fr24":
-        aircraft, _ = await _fetch_fr24(fr24_payload)
+        aircraft, _, _stats = await _fetch_fr24(fr24_payload)
     else:
-        aircraft, _ = await _fetch_airlabs(airlabs_payload)
+        aircraft, _, _stats = await _fetch_airlabs(airlabs_payload)
 
     with_dest = [p for p in aircraft if p["destination_airport"]]
     resolved = [p for p in with_dest if p["destination_city"]]
@@ -267,7 +280,7 @@ async def test_destinations_resolve_to_real_cities(configured_providers, fr24_pa
 @pytest.mark.unit
 async def test_all_returned_aircraft_are_within_the_radius(configured_providers, airlabs_payload):
     """The recorded payload is a bounding box, which is wider than the radius"""
-    aircraft, _ = await _fetch_airlabs(airlabs_payload)
+    aircraft, _, _stats = await _fetch_airlabs(airlabs_payload)
 
     assert aircraft
     assert all(p["distance_km"] <= RADIUS_KM for p in aircraft)
@@ -282,5 +295,5 @@ async def test_airlabs_skips_flights_that_are_not_en_route(configured_providers,
     statuses = {f.get("status") for f in airlabs_payload["response"]}
     assert statuses - {"en-route"}, "fixture no longer exercises the status filter"
 
-    aircraft, _ = await _fetch_airlabs(airlabs_payload)
+    aircraft, _, _stats = await _fetch_airlabs(airlabs_payload)
     assert all(p["status"] == "en-route" for p in aircraft)
