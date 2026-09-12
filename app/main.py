@@ -916,6 +916,32 @@ register_test_live_aircraft_routes(
 )
 
 
+# Client-side caching of dynamic plane audio must not outlive the server's own
+# S3 TTL, or any intermediary that honors the header re-creates the rescan
+# staleness DOJP-27 fixed. Derived, so the two can never drift apart (DOJP-39).
+PLANE_AUDIO_CACHE_MAX_AGE_S = s3_cache.ttl_minutes * 60
+
+
+def plane_audio_response_headers(mime_type: str, content_length: int) -> Dict[str, str]:
+    """Response headers for dynamically generated plane audio.
+
+    Deliberately no Accept-Ranges: StreamingResponse ignores Range headers and
+    returns the full body regardless, and advertising ranges we don't serve
+    made newer Yoto firmware issue multiple range requests per play — the
+    origin amplification behind the July 2026 outage (DOJP-22). Static clips
+    keep their own headers; this is only for /plane/N and /free/plane/N.
+    """
+    return {
+        "Content-Type": mime_type,
+        "Content-Length": str(content_length),
+        "Cache-Control": f"public, max-age={PLANE_AUDIO_CACHE_MAX_AGE_S}",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Length",
+        "Access-Control-Expose-Headers": "Content-Length",
+    }
+
+
 async def handle_plane_endpoint(
     request: Request,
     plane_index: int,
@@ -977,16 +1003,7 @@ async def handle_plane_endpoint(
         # Track plane request analytics for cache hit
         track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=True)
 
-        response_headers = {
-            "Content-Type": mime_type,
-            "Content-Length": str(len(cached_audio)),
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "public, max-age=3600",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-        }
+        response_headers = plane_audio_response_headers(mime_type, len(cached_audio))
 
         return StreamingResponse(
             iter([cached_audio]),
@@ -1141,16 +1158,7 @@ async def handle_plane_endpoint(
         track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=False)
 
         # Return audio with correct format
-        response_headers = {
-            "Content-Type": actual_mime_type,
-            "Content-Length": str(len(audio_content)),
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "public, max-age=3600",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-        }
+        response_headers = plane_audio_response_headers(actual_mime_type, len(audio_content))
 
         return StreamingResponse(
             iter([audio_content]),
@@ -1690,16 +1698,7 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
     return StreamingResponse(
         iter([combined]),
         media_type=mime_type,
-        headers={
-            "Content-Type": mime_type,
-            "Content-Length": str(len(combined)),
-            "Accept-Ranges": "bytes",
-            "Cache-Control": "public, max-age=3600",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-        }
+        headers=plane_audio_response_headers(mime_type, len(combined))
     )
 
 
