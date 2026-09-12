@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import httpx
 import os
 import sys
+import time
 import asyncio
 import logging
 from typing import List, Dict, Any, Optional
@@ -347,6 +348,22 @@ def _generate_distinct_id(client_ip: str, user_agent: str) -> str:
     return hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:16]
 
 
+# The "session_id" hashed into $insert_id is a stable device+location
+# fingerprint with nothing time-varying in it, so without a time component
+# Mixpanel deduped every same-day rescan down to one event per household -
+# undercounting exactly the repeat engagement we monitor (DOJP-41). Five
+# minutes matches the product's own freshness boundaries (3-minute audio TTL,
+# 5-minute fun-fact rotation): a rescan fresh enough to produce new content
+# counts as a new session, while Yoto client retries seconds apart still
+# collapse into one event.
+ANALYTICS_DEDUPE_BUCKET_S = 300
+
+
+def _analytics_dedupe_bucket() -> int:
+    """Coarse time bucket appended to every $insert_id"""
+    return int(time.time() // ANALYTICS_DEDUPE_BUCKET_S)
+
+
 def track_scan_complete(
     request: Request,
     lat: float,
@@ -391,7 +408,7 @@ def track_scan_complete(
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
-            "$insert_id": f"scan_complete_{subscription}_{session_id}",  # Prevents duplicates
+            "$insert_id": f"scan_complete_{subscription}_{session_id}_{_analytics_dedupe_bucket()}",
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
             "os": browser_info["os"],
@@ -452,7 +469,7 @@ def track_plane_request(
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
-            "$insert_id": f"plane_req_{subscription}_{session_id}_{plane_index}",  # Prevents duplicates
+            "$insert_id": f"plane_req_{subscription}_{session_id}_{plane_index}_{_analytics_dedupe_bucket()}",
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
             "os": browser_info["os"],
@@ -499,7 +516,7 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
-            "$insert_id": f"scan_start_{subscription}_{session_id}",
+            "$insert_id": f"scan_start_{subscription}_{session_id}_{_analytics_dedupe_bucket()}",
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
             "os": browser_info["os"],
@@ -561,7 +578,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "ip": client_ip,
             "$user_agent": user_agent,
             "$session_id": session_id,
-            "$insert_id": f"mp3_gen_{subscription}_{session_id}_{plane_index}",  # Prevents duplicates
+            "$insert_id": f"mp3_gen_{subscription}_{session_id}_{plane_index}_{_analytics_dedupe_bucket()}",
             "browser": browser_info["browser"],
             "browser_version": browser_info["browser_version"],
             "os": browser_info["os"],
@@ -792,7 +809,7 @@ async def get_nearby_aircraft(
     if not provider_sequence:
         logger.error("No aircraft providers are configured")
         if request:
-            track_scan_complete(request, lat, lng, "Unknown", from_cache=False, nearby_aircraft=0, provider="unknown")
+            track_scan_complete(request, lat, lng, user_city or "Unknown", from_cache=False, nearby_aircraft=0, provider="unknown")
         return [], "No aircraft providers configured"
 
     provider_errors: List[str] = []
@@ -830,7 +847,7 @@ async def get_nearby_aircraft(
                         request,
                         lat,
                         lng,
-                        "Unknown",
+                        user_city or "Unknown",
                         from_cache=True,
                         nearby_aircraft=len(full_aircraft_list),
                         provider=provider_name,
@@ -872,7 +889,7 @@ async def get_nearby_aircraft(
                     request,
                     lat,
                     lng,
-                    "Unknown",
+                    user_city or "Unknown",
                     from_cache=False,
                     nearby_aircraft=len(aircraft_list),
                     provider=provider_name,
@@ -895,7 +912,7 @@ async def get_nearby_aircraft(
             request,
             lat,
             lng,
-            "Unknown",
+            user_city or "Unknown",
             from_cache=False,
             nearby_aircraft=0,
             provider=fallback_provider,
