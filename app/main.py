@@ -75,50 +75,6 @@ if os.getenv("SENTRY_DSN"):
 
 app = FastAPI()
 
-# --- DOJP-34: device header sampling ---------------------------------------
-# Yoto passes no session/user id as far as we know, but nobody has ever looked
-# at what the player (or the Yoto mobile app) actually sends. This samples the
-# complete headers of the first few requests per client type per container so
-# the question can be answered from Railway logs:
-#   railway logs --filter "DOJP-34"
-# Env-tunable without a deploy: DEVICE_HEADER_LOG_SAMPLES=0 disables.
-DEVICE_HEADER_LOG_SAMPLES = int(os.getenv("DEVICE_HEADER_LOG_SAMPLES", "5"))
-DEVICE_HEADER_UA_MARKERS = [
-    marker.strip()
-    for marker in os.getenv(
-        # ESP32 = the player; the rest are likely mobile-app/HTTP-stack UAs
-        "DEVICE_HEADER_UA_MARKERS", "ESP32,Yoto,okhttp,CFNetwork,Dalvik"
-    ).split(",")
-    if marker.strip()
-]
-_REDACTED_HEADER_KEYS = {"authorization", "proxy-authorization", "cookie", "x-api-key"}
-_device_header_budget = {marker: DEVICE_HEADER_LOG_SAMPLES for marker in DEVICE_HEADER_UA_MARKERS}
-
-
-@app.middleware("http")
-async def _sample_device_headers(request: Request, call_next):
-    """Log full request headers for the first few non-browser clients seen"""
-    if any(_device_header_budget.values()):
-        user_agent = request.headers.get("user-agent", "")
-        for marker in DEVICE_HEADER_UA_MARKERS:
-            if _device_header_budget.get(marker, 0) > 0 and marker.lower() in user_agent.lower():
-                _device_header_budget[marker] -= 1
-                headers = {
-                    key: ("<redacted>" if key.lower() in _REDACTED_HEADER_KEYS else value)
-                    for key, value in request.headers.items()
-                }
-                logger.info(
-                    "DOJP-34 device headers (%s, %d samples left): %s %s -> %s",
-                    marker,
-                    _device_header_budget[marker],
-                    request.method,
-                    request.url.path,
-                    headers,
-                )
-                break
-    return await call_next(request)
-
-
 # Serve static assets
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
