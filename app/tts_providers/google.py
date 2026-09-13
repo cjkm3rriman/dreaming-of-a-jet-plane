@@ -101,9 +101,18 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-            return ffmpeg_process.communicate(input=pcm_data)
+            out, err = ffmpeg_process.communicate(input=pcm_data)
+            return out, err, ffmpeg_process.returncode
 
-        mp3_data, ffmpeg_error = await asyncio.to_thread(_convert_pcm_to_mp3)
+        mp3_data, ffmpeg_error, ffmpeg_rc = await asyncio.to_thread(_convert_pcm_to_mp3)
+
+        # ffmpeg failure used to yield (b"", "") - empty audio with an EMPTY
+        # error string, so callers saw a failure with no cause and a Google
+        # outage was undiagnosable (DOJP-43 / DOJP-47 item 7)
+        if ffmpeg_rc != 0 or not mp3_data:
+            error_detail = (ffmpeg_error or b"").decode("utf-8", errors="replace")[-300:]
+            logger.error(f"Gemini TTS ffmpeg failed (rc={ffmpeg_rc}): {error_detail}")
+            return b"", f"Gemini TTS ffmpeg conversion failed (rc={ffmpeg_rc}): {error_detail}"
 
         total_time = time.time() - start_time
         logger.info(f"Conversion complete: {len(mp3_data)} bytes MP3 in {total_time:.2f}s total")
