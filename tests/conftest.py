@@ -142,3 +142,27 @@ def duplicate_destination_aircraft():
             "distance_km": 400,
         },
     ]
+
+
+def pytest_collection_modifyitems(config, items):
+    """Every test must carry exactly one of @pytest.mark.unit or
+    @pytest.mark.integration.
+
+    This is the guard against marker rot: the suite once documented
+    `-m integration` commands while zero tests carried the marker, so the
+    command silently collected nothing (DOJP-47 item 6). Unmarked tests are
+    invisible to both marker filters; double-marked ones leak live-API tests
+    into the offline selection.
+    """
+    offenders = []
+    for item in items:
+        marks = {m.name for m in item.iter_markers()} & {"unit", "integration"}
+        if len(marks) != 1:
+            problem = "unmarked" if not marks else "marked both unit AND integration"
+            offenders.append(f"  {item.nodeid} ({problem})")
+
+    if offenders:
+        raise pytest.UsageError(
+            "Every test needs exactly one of @pytest.mark.unit / "
+            "@pytest.mark.integration:\n" + "\n".join(offenders)
+        )

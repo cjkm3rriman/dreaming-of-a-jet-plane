@@ -3,6 +3,8 @@
 import pytest
 from app.flight_text import generate_flight_text_for_aircraft, generate_flight_text
 
+pytestmark = pytest.mark.unit
+
 
 def test_text_generation_imperial_units(sample_aircraft):
     """Test flight text uses miles for US location"""
