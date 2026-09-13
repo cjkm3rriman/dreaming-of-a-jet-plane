@@ -580,8 +580,36 @@ bodies to break the import cycle. It appears throughout `intro.py`,
 ## Analytics
 
 Mixpanel, with a `distinct_id` of `md5(ip + user_agent)[:16]` and an `$insert_id`
-on every event for deduplication. Yoto Players are detected by their
-`ESP32 HTTP Client/1.0` user agent and relabelled from "Other" to "Yoto Player".
+on every event for deduplication (the `$insert_id` carries a 5-minute time
+bucket so same-day rescans count as separate sessions while client retries
+seconds apart still collapse).
+
+### What Yoto clients actually send (verified 2026-09-13)
+
+Complete request headers from every client type were sampled in production
+(DOJP-34, PR #50; the sampler was removed once the question was answered —
+resurrect it from git history if it's ever needed again). The finding:
+**no Yoto client sends any device or user identifier.** Every client is a bare
+media-player HTTP stack — UA, host, encoding, and CDN routing headers only.
+No serial, no MAC-derived id, no platform header, no auth. The "no user id"
+constraint is empirical fact, not assumption: per-family features need either
+a Yoto platform change or a parent-facing setup channel (see DOJP-30's preset
+locations), and `distinct_id` remains effectively a per-household IP hash —
+sound for daily actives, inflated by IP churn over months.
+
+| Client | User agent | Notes |
+|---|---|---|
+| Player, original FW (and v2's HEAD probes) | `ESP32 HTTP Client/1.0` | HEAD probes get 405 (GET-only routes) and never reach handlers — deliberate, keeps probes free |
+| Player, v2 FW streaming | `Yoto v2 FW; version v2.23.4` | The requests that fire analytics; carries the firmware version |
+| iOS app | `Yoto/21858 CFNetwork/... Darwin/...` | AVPlayer stack; sends `range` and `if-match`; several connections per track |
+| Android app | `Dalvik/2.1.0 (...; Android 16; ...)` | OS media stack; sends `icy-metadata`, `range` |
+
+Yoto Players are relabelled from "Other" to "Yoto Player" by matching **both**
+player user agents (`parse_user_agent` in `location_utils.py`) — matching only
+the ESP32 string mislabelled every v2-firmware streaming request while that
+rollout grows. For v2 players the firmware version is reported as
+`browser_version`, giving fleet visibility into the rollout. The mobile-app
+UAs are deliberately not treated as players.
 
 | Event | Fired when | Notable properties |
 |---|---|---|

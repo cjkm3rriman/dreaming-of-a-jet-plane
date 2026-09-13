@@ -256,17 +256,29 @@ def parse_user_agent(user_agent_string: str) -> dict:
             "device": parsed_ua.get('device', {}).get('family', 'Unknown')
         }
         
-        # Special handling for Yoto Player devices
-        if (user_agent_string == "ESP32 HTTP Client/1.0" and 
-            browser_info["browser"] == "Other" and 
-            browser_info["device"] == "Other" and 
-            browser_info["os"] == "Other"):
+        # Special handling for Yoto Player devices. The player uses two user
+        # agents (verified from sampled production headers, DOJP-34):
+        #   - "ESP32 HTTP Client/1.0"            original firmware, and v2's HEAD probes
+        #   - "Yoto v2 FW; version v2.23.4"      v2 firmware's streaming requests
+        # Only the exact ESP32 string was matched before, so every v2 streaming
+        # request - the ones that actually fire analytics - was labeled "Other".
+        # NOTE: the Yoto *mobile app* sends "Yoto/21858 CFNetwork/..." on iOS;
+        # the "Yoto v" + "FW" test below deliberately does not match it.
+        is_yoto_player = user_agent_string == "ESP32 HTTP Client/1.0" or (
+            user_agent_string.startswith("Yoto v") and "FW" in user_agent_string
+        )
+        if is_yoto_player and browser_info["browser"] in ("Other", "Unknown"):
             browser_info.update({
                 "browser": "Yoto",
                 "device": "Yoto Player",
                 "os": "Yoto"
             })
-        
+            # "Yoto v2 FW; version v2.23.4" -> firmware version as the browser
+            # version, a fleet dimension we never had (which firmwares are out
+            # there, which household is on the rollout)
+            if "version " in user_agent_string:
+                browser_info["browser_version"] = user_agent_string.split("version ", 1)[1].strip()
+
         return browser_info
     except Exception:
         # Fallback if parsing fails
