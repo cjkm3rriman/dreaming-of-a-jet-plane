@@ -50,9 +50,18 @@ IPAPI_RESPONSE = {
 }
 
 
+from functools import lru_cache
+
+
+@lru_cache(maxsize=1)
 def _tone_opus(ms=400, freq=440):
     """A genuinely playable Opus clip. A tone, not silence - the stitcher
-    trims silence, which would erase a silent stub entirely."""
+    trims silence, which would erase a silent stub entirely.
+
+    Deliberately lazy (and cached): exporting shells out to ffmpeg, and pytest
+    imports this module during collection even in environments that deselect
+    every test here. A module-level constant here aborted the integration
+    workflow's entire collection on a runner without ffmpeg."""
     seg = Sine(freq).to_audio_segment(duration=ms).set_channels(1)
     buf = io.BytesIO()
     seg.export(buf, format="ogg", codec="libopus")
@@ -112,9 +121,6 @@ class FakeS3:
         return [k for k in self.objects if k.startswith(prefix)]
 
 
-TONE = _tone_opus()
-
-
 @pytest.fixture
 def env(monkeypatch):
     """The full offline environment: fake S3, stubbed TTS, pinned provider"""
@@ -124,7 +130,7 @@ def env(monkeypatch):
 
     async def fake_tts(text, tts_override=None):
         assert text.strip(), "TTS must never be called with empty text"
-        return TONE, "", "inworld", "opus", "audio/opus"
+        return _tone_opus(), "", "inworld", "opus", "audio/opus"
 
     monkeypatch.setattr(main, "convert_text_to_speech", fake_tts)
     monkeypatch.setattr(main, "TTS_PROVIDER", "inworld")
@@ -147,7 +153,7 @@ def _mock_external(router):
         return_value=httpx.Response(200, json=_airlabs_payload()))
     # static voice clips proxied from the public bucket URL (/scanning etc.)
     router.get(url__regex=r"https://dreaming-of-a-jet-plane\.s3\..*").mock(
-        return_value=httpx.Response(200, content=TONE))
+        return_value=httpx.Response(200, content=_tone_opus()))
 
 
 @pytest.mark.unit
@@ -250,7 +256,7 @@ def test_free_plane_serves_playable_stitched_audio(env):
     """Free tier end to end: pre-gen populates the pool, a free user gets
     intro + body stitched into audio that plays"""
     for n in range(1, 7):
-        env.objects[f"free/intros/flight-intro-{n}.opus"] = TONE
+        env.objects[f"free/intros/flight-intro-{n}.opus"] = _tone_opus()
 
     with respx.mock as router:
         _mock_external(router)
