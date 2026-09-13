@@ -28,6 +28,7 @@ def _select(planes):
     return select_diverse_aircraft(planes, user_lat=None, user_lng=None)
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_nyc_aircraft_selection(nyc_location):
     """Test aircraft selection for NYC - should return up to 3 diverse aircraft"""
@@ -54,6 +55,7 @@ async def test_nyc_aircraft_selection(nyc_location):
         pytest.skip("No aircraft found near NYC at this time")
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_london_aircraft_selection(london_location):
     """Test aircraft selection for London - international hub"""
@@ -74,6 +76,7 @@ async def test_london_aircraft_selection(london_location):
         assert distances == sorted(distances), "Aircraft should be sorted by distance"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_tokyo_aircraft_selection(tokyo_location):
     """Test aircraft selection for Tokyo - Asia-Pacific hub"""
@@ -89,6 +92,7 @@ async def test_tokyo_aircraft_selection(tokyo_location):
     assert len(aircraft) <= 3, "Should return max 3 aircraft"
 
 
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_weston_ct_aircraft_selection(weston_ct_location):
     """Test aircraft selection for Weston CT - smaller area, may have fewer aircraft"""
@@ -100,6 +104,7 @@ async def test_weston_ct_aircraft_selection(weston_ct_location):
     assert error == "" or "no aircraft" in error.lower() or len(aircraft) >= 0
 
 
+@pytest.mark.unit
 def test_diversity_selection_prefers_different_destinations(sample_aircraft_list):
     """Test that select_diverse_aircraft prioritizes different destinations"""
     # Add some duplicate destinations
@@ -127,6 +132,7 @@ def test_diversity_selection_prefers_different_destinations(sample_aircraft_list
         assert unique_destinations >= len(destinations) * 0.5, "Should have diverse destinations"
 
 
+@pytest.mark.unit
 def test_diversity_selection_returns_limited_results(sample_aircraft_list):
     """Test that select_diverse_aircraft limits results to 5"""
     # Create list of 10+ aircraft
@@ -137,6 +143,7 @@ def test_diversity_selection_returns_limited_results(sample_aircraft_list):
     assert len(selected) <= 5, "Should limit to 5 aircraft"
 
 
+@pytest.mark.unit
 def test_diversity_selection_handles_empty_list():
     """Test that select_diverse_aircraft handles empty input"""
     selected = select_diverse_aircraft([], user_lat=40.0, user_lng=-74.0)

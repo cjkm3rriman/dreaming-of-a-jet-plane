@@ -3,6 +3,8 @@
 import pytest
 from app.flight_text import generate_flight_text_for_aircraft
 
+pytestmark = pytest.mark.unit
+
 
 def test_first_destination_uses_destination_fun_facts():
     """Test that the first occurrence uses destination fun facts"""

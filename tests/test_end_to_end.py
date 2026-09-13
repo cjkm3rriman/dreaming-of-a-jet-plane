@@ -4,6 +4,10 @@ import pytest
 from app.main import get_nearby_aircraft
 from app.flight_text import generate_flight_text_for_aircraft
 
+# Every test here fetches live aircraft; they skip without API keys and can
+# skip on an empty sky. Run via: railway run uv run pytest -m integration -rs
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_full_scan_flow_nyc(nyc_location):
