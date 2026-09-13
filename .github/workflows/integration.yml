@@ -35,6 +35,7 @@ jobs:
           LIVE_AIRCRAFT_PROVIDER: airlabs
           LIVE_AIRCRAFT_PROVIDER_FALLBACKS: fr24
         run: |
+          set -o pipefail  # a tee must never convert a pytest failure into success
           uv run pytest -m integration -v -rs | tee integration.log
 
       - name: Surface pass/skip counts in the job summary
