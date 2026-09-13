@@ -8,7 +8,14 @@ nothing could catch it. These tests run the REAL pipeline offline:
 - real IP geolocation code (ipapi.co mocked via respx)
 - real text generation, real pydub stitching with real Opus tone clips
 - real cache-key construction against an in-memory S3 double
-- only convert_text_to_speech is stubbed (returns a genuine playable clip)
+
+What is fake, precisely: convert_text_to_speech is stubbed (returning a
+genuinely playable clip); the s3_cache singleton's get/set/get_raw are an
+in-memory double that keeps the key/value contract but drops SigV4, the
+HEAD+Last-Modified TTL check, and retries (that transport layer is DOJP-47
+item 5's job); and get_live_aircraft_providers is pinned to airlabs, so the
+provider fallback chain is not exercised here. Within the generation
+pipeline itself, TTS is the only stubbed computation.
 
 Every audio response is decoded with pydub before passing. Pre-generation is
 awaited directly rather than left as a background task - under TestClient a
