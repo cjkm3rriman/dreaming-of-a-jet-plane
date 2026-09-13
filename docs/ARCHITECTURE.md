@@ -472,8 +472,8 @@ persistence layer.
 | `cache/{md5}_aircraft.json` | Selected flights for a location + provider | 3 min | `get(content_type="json")` |
 | `cache/{md5}_plane{n}_{provider}.{ext}` | Finished plane audio | 3 min | `get()` |
 | `cache/{md5}_plane{n}_body_{provider}.{ext}` | Body (+fact) audio, for free-tier reuse | 3 min, not enforced | `get_raw()` |
-| `cache/fun_facts/{hash}_{provider}.{ext}` | Fun fact audio | none — content-hashed | `get_raw()` |
-| `cache/fun_facts/openings/{hash}_{provider}.{ext}` | "Did you know?" etc. | none | `get_raw()` |
+| `tts-cache/fun_facts/{hash}_{provider}.{ext}` | Fun fact audio | none — content-hashed, permanent | `get_raw()` |
+| `tts-cache/fun_facts/openings/{hash}_{provider}.{ext}` | "Did you know?" etc. | none — permanent | `get_raw()` |
 | `free_pool/index.json` | Session index, max 100 FIFO | none | `get_raw()` |
 | `free_pool/{session}_plane{n}_body_{provider}.{ext}` | Free tier body audio | none | `get_raw()` |
 | `free/intros/flight-intro-{1..6}.{ext}` | Generic free openings | static | `get_raw()` |

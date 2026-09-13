@@ -3,8 +3,15 @@ Cache layer for fun fact audio segments.
 
 Fun fact audio is cached by content hash so that:
 - Adding/editing a fact naturally causes a cache miss
-- Removing a fact lets the old cache expire via S3 lifecycle rules
 - Different TTS providers have separate cache entries
+
+Keys deliberately live under tts-cache/, NOT cache/: the bucket's "Cache
+Clean Up" lifecycle rule expires everything under cache/ after one day,
+which silently wiped this supposedly-permanent cache nightly for months
+(DOJP-50). Do not move these keys back under cache/. The trade-off: audio
+for facts later removed from cities.json now persists as orphans - a few
+KB each, acceptable; add a long-dated lifecycle rule on tts-cache/ if it
+ever matters.
 
 Opening phrases ("Did you know?", "Guess what?", etc.) are cached
 separately since there are only 4 of them per provider.
@@ -33,9 +40,9 @@ def get_fun_fact_cache_key(fun_fact_text: str, tts_provider: str, audio_format: 
         audio_format: Audio file extension (e.g., "mp3", "opus")
 
     Returns:
-        S3 key like "cache/fun_facts/a1b2c3d4e5f67890_elevenlabs.opus"
+        S3 key like "tts-cache/fun_facts/a1b2c3d4e5f67890_elevenlabs.opus"
     """
-    return f"cache/fun_facts/{_content_hash(fun_fact_text)}_{tts_provider}.{audio_format}"
+    return f"tts-cache/fun_facts/{_content_hash(fun_fact_text)}_{tts_provider}.{audio_format}"
 
 
 def get_opening_phrase_cache_key(phrase_text: str, tts_provider: str, audio_format: str) -> str:
@@ -47,9 +54,9 @@ def get_opening_phrase_cache_key(phrase_text: str, tts_provider: str, audio_form
         audio_format: Audio file extension
 
     Returns:
-        S3 key like "cache/fun_facts/openings/abcd1234_google.mp3"
+        S3 key like "tts-cache/fun_facts/openings/abcd1234_google.mp3"
     """
-    return f"cache/fun_facts/openings/{_content_hash(phrase_text)}_{tts_provider}.{audio_format}"
+    return f"tts-cache/fun_facts/openings/{_content_hash(phrase_text)}_{tts_provider}.{audio_format}"
 
 
 async def get_cached_fun_fact_audio(fun_fact_text: str, tts_provider: str, audio_format: str) -> Optional[bytes]:
