@@ -468,10 +468,22 @@ def generate_flight_text_for_aircraft(
                     ]
                     eta_text = random.choice(eta_options)
                 else:
-                    # For very long flights, round to nearest hour
+                    # For very long flights, round to nearest hour. Buckets are
+                    # split so the comparison matches the duration: a 13-hour
+                    # flight used to be called "a whole day and night" (DOJP-40)
                     hours = round(total_minutes / 60)
-                    if hours <= 24:
-                        eta_text = f" landing in about {hours} hours - that's like a whole day and night"
+                    if hours <= 18:
+                        eta_options = [
+                            f" landing in about {hours} hours - that's even longer than a whole night's sleep",
+                            f" landing in about {hours} hours - that's like a school day and a sleepover put together"
+                        ]
+                        eta_text = random.choice(eta_options)
+                    elif hours <= 24:
+                        eta_options = [
+                            f" landing in about {hours} hours - that's like a whole day and night",
+                            f" landing in about {hours} hours - that's almost one whole spin of the Earth"
+                        ]
+                        eta_text = random.choice(eta_options)
                     else:
                         eta_text = " landing sometime tomorrow"
             else:
@@ -492,7 +504,7 @@ def generate_flight_text_for_aircraft(
         flight_number_tts = f"flight {format_flight_number_for_tts(flight_number)}"
 
     if (origin_city == "an unknown origin" or origin_location == "an unknown country") and (destination_city == "an unknown destination" or destination_location == "an unknown country"):
-        flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to somewhere exciting, It is not quite clear'."
+        flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to somewhere exciting, it is not quite clear."
     elif origin_city == "an unknown origin" or origin_location == "an unknown country":
         flight_sentence = f"This {flight_number_tts} belongs to {airline_name} and is {movement_word} all the way to {destination_city} in {destination_location}{eta_text}."
     elif destination_city == "an unknown destination" or destination_location == "an unknown country":
