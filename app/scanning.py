@@ -80,11 +80,12 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         for plane_index in range(1, 6):  # 1, 2, 3, 4, 5
             zero_based_index = plane_index - 1
 
-            # Check cache first for this specific plane (include TTS provider and format in cache key)
+            # Check cache first for this specific plane (include TTS provider and format in cache key).
+            # HEAD-only: pre-generation only needs to know the audio exists and is
+            # fresh; the old full get() downloaded up to ~500KB x5 planes just to
+            # throw the bytes away (DOJP-46)
             plane_cache_key = s3_cache.generate_cache_key(lat, lng, plane_index=plane_index, tts_provider=effective_provider, audio_format=file_ext)
-            cached_audio = await s3_cache.get(plane_cache_key)
-
-            if cached_audio:
+            if await s3_cache.exists_and_fresh(plane_cache_key):
                 # Skip if already cached
                 continue
 
@@ -106,19 +107,9 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                 else:
                     sentence = f"{opening_text} {body_text}"
             elif aircraft and len(aircraft) > 0:
-                # Not enough planes, generate appropriate message
-                plane_count = len(aircraft)
-                if plane_index == 2:
-                    sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try firing up the scanner again in a few minutes."
-                elif plane_index == 3:
-                    if plane_count == 1:
-                        sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try firing up the scanner again in a few minutes."
-                    else:
-                        sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try firing up the scanner again in a few minutes."
-                elif plane_index == 4:
-                    sentence = f"I'm sorry my old chum but scanner bot could only find {plane_count} jet plane{'s' if plane_count != 1 else ''} nearby. Try firing up the scanner again in a few minutes."
-                elif plane_index == 5:
-                    sentence = f"I'm sorry my old chum but scanner bot could only find {plane_count} jet plane{'s' if plane_count != 1 else ''} nearby. Try firing up the scanner again in a few minutes."
+                # Not enough planes - one canonical apology (DOJP-46)
+                from .flight_text import not_enough_planes_message
+                sentence = not_enough_planes_message(plane_index, len(aircraft))
             else:
                 # No aircraft found at all
                 sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code, user_city=city, user_region=region, user_country_name=country_name)
@@ -215,103 +206,31 @@ async def _generate_and_cache_plane_audio(
         bool: True if successful, False otherwise
     """
     try:
-        # Import here to avoid circular imports
-        from .main import convert_text_to_speech, track_audio_generation
-        from .free_pool import stitch_audio, stitch_audio_multi
-        from .fun_fact_cache import (
-            get_cached_fun_fact_audio, cache_fun_fact_audio,
-            get_cached_opening_phrase_audio, cache_opening_phrase_audio,
+        from .main import track_audio_generation
+        from .plane_audio import generate_plane_audio
+
+        result = await generate_plane_audio(
+            sentence,
+            opening_text=opening_text,
+            body_text=body_text,
+            fun_fact_opening_text=fun_fact_opening_text,
+            fun_fact_body_text=fun_fact_body_text,
+            location_hash=location_hash,
+            plane_index=plane_index,
+            tts_override=tts_override,
         )
-        import time
 
-        tts_start_time = time.time()
-        audio_content = None
-        tts_error = None
-        tts_provider_used = None
-        file_ext = None
-        mime_type = None
-        fun_fact_cache_hit = None
-
-        # Try split TTS if we have opening and body text
-        if opening_text and body_text and location_hash:
-            # Generate opening and body audio via TTS
-            opening_audio, opening_error, _, _, _ = await convert_text_to_speech(opening_text, tts_override=tts_override)
-            body_audio, body_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(body_text, tts_override=tts_override)
-
-            if opening_audio and body_audio and not opening_error and not body_error:
-                # Handle fun fact segments (opening phrase + fact body) separately
-                fun_fact_opening_audio = None
-                fun_fact_body_audio = None
-
-                fun_fact_cache_hit = None
-                if fun_fact_opening_text and fun_fact_body_text:
-                    # Check cache for fun fact opening phrase
-                    fun_fact_opening_audio = await get_cached_opening_phrase_audio(fun_fact_opening_text, tts_provider_used, file_ext)
-                    if not fun_fact_opening_audio:
-                        fun_fact_opening_audio, ff_open_err, _, _, _ = await convert_text_to_speech(fun_fact_opening_text, tts_override=tts_override)
-                        if fun_fact_opening_audio and not ff_open_err:
-                            asyncio.create_task(cache_opening_phrase_audio(fun_fact_opening_text, fun_fact_opening_audio, tts_provider_used, file_ext))
-
-                    # Check cache for fun fact body
-                    fun_fact_body_audio = await get_cached_fun_fact_audio(fun_fact_body_text, tts_provider_used, file_ext)
-                    if fun_fact_body_audio:
-                        fun_fact_cache_hit = True
-                    else:
-                        fun_fact_cache_hit = False
-                        fun_fact_body_audio, ff_body_err, _, _, _ = await convert_text_to_speech(fun_fact_body_text, tts_override=tts_override)
-                        if fun_fact_body_audio and not ff_body_err:
-                            asyncio.create_task(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, file_ext))
-
-                # Stitch all segments together
-                if fun_fact_opening_audio and fun_fact_body_audio:
-                    audio_content = await stitch_audio_multi(
-                        [opening_audio, body_audio, fun_fact_opening_audio, fun_fact_body_audio],
-                        add_silence=True, audio_format=file_ext,
-                        gap_durations=[1000, 1000, 500]
-                    )
-                    # Cache body+fact stitched together for free pool reuse
-                    body_with_fact = await stitch_audio_multi(
-                        [body_audio, fun_fact_opening_audio, fun_fact_body_audio],
-                        add_silence=False, audio_format=file_ext,
-                        gap_durations=[1000, 500]
-                    )
-                    body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
-                    await s3_cache.set(body_cache_key, body_with_fact)
-                    logger.info(f"Cached body+fact audio at {body_cache_key}")
-                else:
-                    audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=file_ext)
-                    # Cache body audio for free pool reuse (no fun fact)
-                    body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
-                    await s3_cache.set(body_cache_key, body_audio)
-                    logger.info(f"Cached body audio at {body_cache_key}")
-
-                tts_error = ""
-            else:
-                # Split TTS failed, fall through to single TTS
-                logger.warning(f"Split TTS failed for plane {plane_index}, falling back to single TTS. Opening error: {opening_error}, Body error: {body_error}")
-
-        # Fallback to single TTS if split didn't work or wasn't requested
-        if not audio_content:
-            audio_content, tts_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
-
-        tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
-
-        if audio_content and not tts_error:
-            # Cache the audio
-            success = await s3_cache.set(cache_key, audio_content)
+        if result["audio"] and not result["error"]:
+            success = await s3_cache.set(cache_key, result["audio"])
             if success:
-
-                # Track audio generation analytics if we have request and aircraft data
                 if request and aircraft:
-                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext, fun_fact_source, fun_fact_cache_hit=fun_fact_cache_hit)
-
+                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, result["generation_ms"], len(result["audio"]), result["provider"], result["file_ext"], fun_fact_source, fun_fact_cache_hit=result["fun_fact_cache_hit"])
                 return True
-            else:
-                logger.warning(f"Failed to cache pre-generated plane {plane_index} audio for location: lat={lat}, lng={lng}")
-                return False
-        else:
-            logger.warning(f"TTS generation failed for plane {plane_index} during pre-generation: {tts_error}")
+            logger.warning(f"Failed to cache pre-generated plane {plane_index} audio for location: lat={lat}, lng={lng}")
             return False
+
+        logger.warning(f"TTS generation failed for plane {plane_index} during pre-generation: {result['error']}")
+        return False
 
     except Exception as e:
         logger.error(f"Error generating plane {plane_index} audio: {e}")
@@ -319,66 +238,10 @@ async def _generate_and_cache_plane_audio(
 
 
 async def _stream_scanning_mp3_only(request: Request, tts_override: str = None):
-    """Stream scanning audio file from S3 without analytics or background processing"""
-    # Import here to avoid circular imports
-    from .main import get_voice_specific_s3_url, get_static_audio_mime_type
-    audio_url = get_voice_specific_s3_url("scanning.mp3", tts_override)
-    mime_type = get_static_audio_mime_type(tts_override)
-
-    try:
-        # Prepare headers for the S3 request
-        request_headers = {}
-
-        # Handle Range requests for seeking/partial content
-        range_header = request.headers.get("range")
-        if range_header:
-            request_headers["Range"] = range_header
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(audio_url, headers=request_headers)
-
-            if response.status_code in [200, 206]:
-                # Get content details
-                content = response.content
-                content_length = len(content)
-
-                # Build response headers
-                response_headers = {
-                    "Content-Type": mime_type,
-                    "Content-Length": str(content_length),
-                    "Accept-Ranges": "bytes",
-                    "Cache-Control": "public, max-age=3600",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-                    "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-                    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-                }
-
-                # Handle range requests
-                if range_header and response.status_code == 206:
-                    content_range = response.headers.get("content-range")
-                    if content_range:
-                        response_headers["Content-Range"] = content_range
-
-                # Copy important S3 headers if present
-                if response.headers.get("etag"):
-                    response_headers["ETag"] = response.headers["etag"]
-                if response.headers.get("last-modified"):
-                    response_headers["Last-Modified"] = response.headers["last-modified"]
-
-                return StreamingResponse(
-                    iter([content]),
-                    status_code=response.status_code,
-                    media_type=mime_type,
-                    headers=response_headers
-                )
-            else:
-                return {"error": f"Audio file not accessible. Status: {response.status_code}", "url": audio_url}
-
-    except httpx.TimeoutException:
-        return {"error": "Timeout accessing audio file", "url": audio_url}
-    except Exception as e:
-        return {"error": f"Failed to stream audio: {str(e)}", "url": audio_url}
+    """Stream scanning audio with no analytics or pre-generation - the
+    debounced-duplicate path. Pure proxy via the shared streamer (DOJP-46)."""
+    from .static_audio import stream_voice_clip
+    return await stream_voice_clip(request, "scanning.mp3", None, tts_override=tts_override)
 
 
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
@@ -420,67 +283,9 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     else:
         logger.warning("Could not determine location for audio pre-generation")
     
-    # Continue with normal scanning audio streaming
-    # Import here to avoid circular imports
-    from .main import get_voice_specific_s3_url, get_static_audio_mime_type
-    audio_url = get_voice_specific_s3_url("scanning.mp3", tts_override)
-    mime_type = get_static_audio_mime_type(tts_override)
-
-    try:
-        # Prepare headers for the S3 request
-        request_headers = {}
-
-        # Handle Range requests for seeking/partial content
-        range_header = request.headers.get("range")
-        if range_header:
-            request_headers["Range"] = range_header
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(audio_url, headers=request_headers)
-
-            if response.status_code in [200, 206]:
-                # Get content details
-                content = response.content
-                content_length = len(content)
-
-                # Build response headers
-                response_headers = {
-                    "Content-Type": mime_type,
-                    "Content-Length": str(content_length),
-                    "Accept-Ranges": "bytes",
-                    "Cache-Control": "public, max-age=3600",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-                    "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-                    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-                }
-
-                # Handle range requests
-                if range_header and response.status_code == 206:
-                    content_range = response.headers.get("content-range")
-                    if content_range:
-                        response_headers["Content-Range"] = content_range
-
-                # Copy important S3 headers if present
-                if response.headers.get("etag"):
-                    response_headers["ETag"] = response.headers["etag"]
-                if response.headers.get("last-modified"):
-                    response_headers["Last-Modified"] = response.headers["last-modified"]
-
-                # Return the content directly
-                return StreamingResponse(
-                    iter([content]),
-                    status_code=response.status_code,
-                    media_type=mime_type,
-                    headers=response_headers
-                )
-            else:
-                return {"error": f"Audio file not accessible. Status: {response.status_code}", "url": audio_url}
-
-    except httpx.TimeoutException:
-        return {"error": "Timeout accessing audio file", "url": audio_url}
-    except Exception as e:
-        return {"error": f"Failed to stream audio: {str(e)}", "url": audio_url}
+    # Continue with normal scanning audio streaming - same proxy as the
+    # debounced path (this tail used to duplicate it verbatim, DOJP-46)
+    return await _stream_scanning_mp3_only(request, tts_override)
 
 
 async def scanning_options():

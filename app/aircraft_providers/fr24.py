@@ -18,6 +18,35 @@ logger = logging.getLogger(__name__)
 
 FR24_API_KEY = os.getenv("FR24_API_KEY")
 FR24_BASE_URL = os.getenv("FR24_BASE_URL", "https://fr24api.flightradar24.com")
+API_TIMEOUT = 10.0
+
+# Shared HTTP client for connection pooling (lazy initialized) - the same
+# pattern airlabs.py uses; a fresh client per request paid a TLS handshake
+# on every fetch (DOJP-46)
+_client: Optional[httpx.AsyncClient] = None
+
+
+async def _get_client() -> httpx.AsyncClient:
+    """Get or create shared HTTP client for connection pooling"""
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.AsyncClient(
+            limits=httpx.Limits(
+                max_keepalive_connections=5,
+                max_connections=10,
+                keepalive_expiry=30.0
+            ),
+            timeout=httpx.Timeout(API_TIMEOUT)
+        )
+    return _client
+
+
+async def close_client():
+    """Close the shared HTTP client"""
+    global _client
+    if _client is not None and not _client.is_closed:
+        await _client.aclose()
+        _client = None
 
 
 def is_configured() -> Tuple[bool, Optional[str]]:
@@ -63,8 +92,8 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
     }
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(url, headers=headers, params=params)
+        client = await _get_client()
+        response = await client.get(url, headers=headers, params=params)
 
         if response.status_code != 200:
             error_msg = f"FlightRadar24 API returned HTTP {response.status_code}"

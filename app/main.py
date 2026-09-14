@@ -39,7 +39,11 @@ from .overandout import stream_overandout, overandout_options
 from .scanning_again import stream_scanning_again, scanning_again_options
 from .scanning import stream_scanning, scanning_options
 from .s3_cache import s3_cache
+from .plane_audio import generate_plane_audio
 from .flight_text import (
+    not_enough_planes_message,
+    FUN_FACT_OPENINGS,
+    us_state_for_airport,
     generate_flight_text,
     generate_flight_text_for_aircraft,
     get_plane_sentence_override,
@@ -364,6 +368,41 @@ def _analytics_dedupe_bucket() -> int:
     return int(time.time() // ANALYTICS_DEDUPE_BUCKET_S)
 
 
+def _analytics_context(request: Request, lat: Optional[float] = None, lng: Optional[float] = None, include_coords: bool = True) -> tuple[Dict[str, Any], str, str]:
+    """Shared per-event analytics context: ip/UA/browser properties plus the
+    session and distinct ids. This ~15-line block was copy-pasted into all
+    four trackers before DOJP-46. scan:start deliberately hashes its session
+    id without coordinates - preserved via include_coords so its historical
+    $session_id values stay stable.
+
+    Returns:
+        (base_properties, session_id, distinct_id)
+    """
+    import hashlib
+
+    client_ip = extract_client_ip(request)
+    user_agent = extract_user_agent(request)
+    browser_info = parse_user_agent(user_agent)
+    distinct_id = _generate_distinct_id(client_ip, user_agent)
+
+    hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}"
+    if include_coords:
+        hash_string += f":{lat or 0}:{lng or 0}"
+    session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+
+    base = {
+        "ip": client_ip,
+        "$user_agent": user_agent,
+        "$session_id": session_id,
+        "browser": browser_info["browser"],
+        "browser_version": browser_info["browser_version"],
+        "os": browser_info["os"],
+        "os_version": browser_info["os_version"],
+        "device": browser_info["device"],
+    }
+    return base, session_id, distinct_id
+
+
 def track_scan_complete(
     request: Request,
     lat: float,
@@ -393,27 +432,11 @@ def track_scan_complete(
             only appear on events where a live fetch actually ran.
     """
     try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-        distinct_id = _generate_distinct_id(client_ip, user_agent)
-
-        # Create consistent session ID
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        base, session_id, distinct_id = _analytics_context(request, lat, lng)
 
         properties = {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
+            **base,
             "$insert_id": f"scan_complete_{subscription}_{session_id}_{_analytics_dedupe_bucket()}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
             "user_lat": round(lat, 2),
             "user_lng": round(lng, 2),
             "user_city": city,
@@ -454,27 +477,11 @@ def track_plane_request(
         distance_miles: Calculated distance to flight (free tier plane 1 only)
     """
     try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-        distinct_id = _generate_distinct_id(client_ip, user_agent)
-
-        # Create consistent session ID
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        base, session_id, distinct_id = _analytics_context(request, lat, lng)
 
         properties = {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
+            **base,
             "$insert_id": f"plane_req_{subscription}_{session_id}_{plane_index}_{_analytics_dedupe_bucket()}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
             "user_lat": round(lat, 2),
             "user_lng": round(lng, 2),
             "user_city": city,
@@ -502,26 +509,11 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
         subscription: "yoto-club" for paid, "free" for free tier
     """
     try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-        distinct_id = _generate_distinct_id(client_ip, user_agent)
-
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        base, session_id, distinct_id = _analytics_context(request, include_coords=False)
 
         analytics.track_event("scan:start", {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
+            **base,
             "$insert_id": f"scan_start_{subscription}_{session_id}_{_analytics_dedupe_bucket()}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
             "subscription": subscription,
         }, distinct_id=distinct_id)
     except Exception as e:
@@ -530,16 +522,7 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
 def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None, subscription: str = "yoto-club", fun_fact_cache_hit: Optional[bool] = None):
     """Track generate:audio analytics event with flight and audio details"""
     try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-        distinct_id = _generate_distinct_id(client_ip, user_agent)
-
-        # Create consistent session ID
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        base, session_id, distinct_id = _analytics_context(request, lat, lng)
 
         # Extract destination information
         destination_city = aircraft.get("destination_city", "unknown")
@@ -548,11 +531,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
 
         # For US destinations, try to get state information
         if destination_country == "the United States":
-            destination_airport = aircraft.get("destination_airport")
-            if destination_airport:
-                airport_data = get_airport_by_iata(destination_airport)
-                if airport_data and airport_data.get("country") == "US":
-                    destination_state = airport_data.get("state")
+            destination_state = us_state_for_airport(aircraft.get("destination_airport"))
 
         # Extract origin information
         origin_city = aircraft.get("origin_city", "unknown")
@@ -561,29 +540,17 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
 
         # For US origins, try to get state information
         if origin_country == "the United States":
-            origin_airport = aircraft.get("origin_airport")
-            if origin_airport:
-                airport_data = get_airport_by_iata(origin_airport)
-                if airport_data and airport_data.get("country") == "US":
-                    origin_state = airport_data.get("state")
+            origin_state = us_state_for_airport(aircraft.get("origin_airport"))
 
         # Extract other flight information
         aircraft_name = aircraft.get("aircraft", "unknown")
 
         # Check if fun fact was included (look for fun fact openings in the sentence)
-        fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
-        has_fun_fact = any(opening in sentence for opening in fun_fact_openings)
+        has_fun_fact = any(opening in sentence for opening in FUN_FACT_OPENINGS)
 
         analytics.track_event("generate:audio", {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
+            **base,
             "$insert_id": f"mp3_gen_{subscription}_{session_id}_{plane_index}_{_analytics_dedupe_bucket()}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
             "user_lat": round(lat, 2),
             "user_lng": round(lng, 2),
             "user_city": city,
@@ -1062,15 +1029,9 @@ async def handle_plane_endpoint(
         use_split_tts = True
 
     elif aircraft and len(aircraft) > 0:
-        # Not enough planes, return an appropriate message for this plane index
-        if plane_index == 2:
-            sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
-        elif plane_index == 3:
-            sentence = "I'm sorry my old chum but I couldn't find any more jet planes. Try firing up the scanner again soon."
-        elif plane_index == 4:
-            sentence = "I'm sorry my old chum but there aren't enough jet planes up there right now. Try firing up the scanner again soon."
-        elif plane_index == 5:
-            sentence = "I'm sorry my old chum but the skies are a bit quiet right now. Try firing up the scanner again soon."
+        # Not enough planes - one canonical apology, shared with the pre-gen
+        # path so the child hears the same words whichever path won (DOJP-46)
+        sentence = not_enough_planes_message(plane_index, len(aircraft))
     else:
         # No aircraft found at all
         logger.warning(
@@ -1086,81 +1047,30 @@ async def handle_plane_endpoint(
         fun_fact_opening_text = None
         fun_fact_body_text = None
 
-    # Generate TTS
-    import time
-    tts_start_time = time.time()
-    fun_fact_cache_hit = None
+    # Generate TTS through the shared pipeline (DOJP-46); the split path
+    # handles fun-fact caching, stitching, and the free-pool body cache write.
+    # Same location-hash formula as pre-generation, so both paths write the
+    # identical body cache key.
+    import hashlib
+    location_hash = hashlib.md5(f"{round(user_lat, 2)},{round(user_lng, 2)}".encode()).hexdigest()
 
-    if use_split_tts and opening_text and body_text:
-        # Split TTS: generate opening and body separately for free pool support
-        from .fun_fact_cache import (
-            get_cached_fun_fact_audio, cache_fun_fact_audio,
-            get_cached_opening_phrase_audio, cache_opening_phrase_audio,
-        )
-
-        opening_audio, opening_error, _, _, _ = await convert_text_to_speech(opening_text, tts_override=tts_override)
-        body_audio, body_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(body_text, tts_override=tts_override)
-
-        if opening_audio and body_audio and not opening_error and not body_error:
-            # Handle fun fact segments separately for caching
-            fun_fact_opening_audio = None
-            fun_fact_body_audio = None
-
-            fun_fact_cache_hit = None
-            if fun_fact_opening_text and fun_fact_body_text:
-                # Check cache for fun fact opening phrase
-                fun_fact_opening_audio = await get_cached_opening_phrase_audio(fun_fact_opening_text, tts_provider_used, actual_file_ext)
-                if not fun_fact_opening_audio:
-                    fun_fact_opening_audio, ff_open_err, _, _, _ = await convert_text_to_speech(fun_fact_opening_text, tts_override=tts_override)
-                    if fun_fact_opening_audio and not ff_open_err:
-                        asyncio.create_task(cache_opening_phrase_audio(fun_fact_opening_text, fun_fact_opening_audio, tts_provider_used, actual_file_ext))
-
-                # Check cache for fun fact body
-                fun_fact_body_audio = await get_cached_fun_fact_audio(fun_fact_body_text, tts_provider_used, actual_file_ext)
-                if fun_fact_body_audio:
-                    fun_fact_cache_hit = True
-                else:
-                    fun_fact_cache_hit = False
-                    fun_fact_body_audio, ff_body_err, _, _, _ = await convert_text_to_speech(fun_fact_body_text, tts_override=tts_override)
-                    if fun_fact_body_audio and not ff_body_err:
-                        asyncio.create_task(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, actual_file_ext))
-
-            # Stitch all segments together
-            if fun_fact_opening_audio and fun_fact_body_audio:
-                audio_content = await stitch_audio_multi(
-                    [opening_audio, body_audio, fun_fact_opening_audio, fun_fact_body_audio],
-                    add_silence=True, audio_format=actual_file_ext,
-                    gap_durations=[1000, 1000, 500]
-                )
-                # Cache body+fact stitched for free pool reuse
-                body_with_fact = await stitch_audio_multi(
-                    [body_audio, fun_fact_opening_audio, fun_fact_body_audio],
-                    add_silence=False, audio_format=actual_file_ext,
-                    gap_durations=[1000, 500]
-                )
-                import hashlib
-                location_str = f"{round(user_lat, 2)},{round(user_lng, 2)}"
-                location_hash = hashlib.md5(location_str.encode()).hexdigest()
-                body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{actual_file_ext}"
-                asyncio.create_task(s3_cache.set(body_cache_key, body_with_fact))
-            else:
-                audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=actual_file_ext)
-                # Cache body audio for free pool reuse (no fun fact)
-                import hashlib
-                location_str = f"{round(user_lat, 2)},{round(user_lng, 2)}"
-                location_hash = hashlib.md5(location_str.encode()).hexdigest()
-                body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{actual_file_ext}"
-                asyncio.create_task(s3_cache.set(body_cache_key, body_audio))
-
-            tts_error = ""
-        else:
-            # Fallback to combined sentence if split fails
-            audio_content, tts_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
-    else:
-        # Single TTS call for non-split cases
-        audio_content, tts_error, tts_provider_used, actual_file_ext, actual_mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
-
-    tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
+    result = await generate_plane_audio(
+        sentence,
+        opening_text=opening_text if use_split_tts else None,
+        body_text=body_text if use_split_tts else None,
+        fun_fact_opening_text=fun_fact_opening_text if use_split_tts else None,
+        fun_fact_body_text=fun_fact_body_text if use_split_tts else None,
+        location_hash=location_hash,
+        plane_index=plane_index,
+        tts_override=tts_override,
+    )
+    audio_content = result["audio"]
+    tts_error = result["error"]
+    tts_provider_used = result["provider"]
+    actual_file_ext = result["file_ext"]
+    actual_mime_type = result["mime_type"]
+    fun_fact_cache_hit = result["fun_fact_cache_hit"]
+    tts_generation_time_ms = result["generation_ms"]
 
     if audio_content and not tts_error:
         # Cache the newly generated audio (don't await - do in background)
@@ -1277,17 +1187,28 @@ async def scanning_options_endpoint():
     return await scanning_options()
 
 
-@app.get("/plane/1")
-async def plane_1_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the closest aircraft
+# The five /plane/N routes (and their CORS preflights) are registered from
+# one factory: the handlers were identical except for the index and one
+# ordinal word in the docstring (DOJP-46). Paths stay literal - /plane/1..5 -
+# so player card configs and the OpenAPI surface are unchanged.
+_PLANE_ORDINALS = {1: "closest", 2: "second closest", 3: "third closest",
+                   4: "fourth closest", 5: "fifth closest"}
+
+
+def _make_plane_endpoint(n: int):
+    async def plane_endpoint(
+        request: Request,
+        lat: float = None,
+        lng: float = None,
+        tts: str = None,
+        secret: str = None,
+        provider: str = None,
+        country: str = None,
+    ):
+        return await handle_plane_endpoint(request, n, lat, lng, secret, provider, country, tts)
+
+    plane_endpoint.__name__ = f"plane_{n}_endpoint"
+    plane_endpoint.__doc__ = f"""Get MP3 for the {_PLANE_ORDINALS[n]} aircraft
 
     Query Parameters:
         lat: Optional latitude override (requires secret)
@@ -1297,160 +1218,22 @@ async def plane_1_endpoint(
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 1, lat, lng, secret, provider, country, tts)
+    return plane_endpoint
 
-@app.get("/plane/2")
-async def plane_2_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the second closest aircraft
 
-    Query Parameters:
-        lat: Optional latitude override (requires secret)
-        lng: Optional longitude override (requires secret)
-        tts: TTS provider override (requires secret)
-        provider: Aircraft data provider override (requires secret)
-        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
-        secret: Secret key for TTS/provider overrides
-    """
-    return await handle_plane_endpoint(request, 2, lat, lng, secret, provider, country, tts)
+def _make_cors_options_endpoint(name: str):
+    async def options_endpoint():
+        from .static_audio import static_audio_options
+        return await static_audio_options()
 
-@app.get("/plane/3")
-async def plane_3_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the third closest aircraft
+    options_endpoint.__name__ = name
+    options_endpoint.__doc__ = "Handle CORS preflight requests"
+    return options_endpoint
 
-    Query Parameters:
-        lat: Optional latitude override (requires secret)
-        lng: Optional longitude override (requires secret)
-        tts: TTS provider override (requires secret)
-        provider: Aircraft data provider override (requires secret)
-        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
-        secret: Secret key for TTS/provider overrides
-    """
-    return await handle_plane_endpoint(request, 3, lat, lng, secret, provider, country, tts)
 
-@app.get("/plane/4")
-async def plane_4_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the fourth closest aircraft
-
-    Query Parameters:
-        lat: Optional latitude override (requires secret)
-        lng: Optional longitude override (requires secret)
-        tts: TTS provider override (requires secret)
-        provider: Aircraft data provider override (requires secret)
-        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
-        secret: Secret key for TTS/provider overrides
-    """
-    return await handle_plane_endpoint(request, 4, lat, lng, secret, provider, country, tts)
-
-@app.get("/plane/5")
-async def plane_5_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the fifth closest aircraft
-
-    Query Parameters:
-        lat: Optional latitude override (requires secret)
-        lng: Optional longitude override (requires secret)
-        tts: TTS provider override (requires secret)
-        provider: Aircraft data provider override (requires secret)
-        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
-        secret: Secret key for TTS/provider overrides
-    """
-    return await handle_plane_endpoint(request, 5, lat, lng, secret, provider, country, tts)
-
-@app.options("/plane/1")
-async def plane_1_options():
-    """Handle CORS preflight requests for /plane/1 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-@app.options("/plane/2")
-async def plane_2_options():
-    """Handle CORS preflight requests for /plane/2 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-@app.options("/plane/3")
-async def plane_3_options():
-    """Handle CORS preflight requests for /plane/3 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-@app.options("/plane/4")
-async def plane_4_options():
-    """Handle CORS preflight requests for /plane/4 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-@app.options("/plane/5")
-async def plane_5_options():
-    """Handle CORS preflight requests for /plane/5 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
+for _n in range(1, 6):
+    app.get(f"/plane/{_n}")(_make_plane_endpoint(_n))
+    app.options(f"/plane/{_n}")(_make_cors_options_endpoint(f"plane_{_n}_options"))
 
 
 # =============================================================================
@@ -1484,62 +1267,8 @@ async def stream_free_static_audio(request: Request, filename: str):
     audio_url = f"{FREE_TIER_S3_BASE}/{filename}"
     mime_type = "audio/opus" if filename.endswith(".opus") else "audio/mpeg"
 
-    try:
-        # Prepare headers for the S3 request
-        request_headers = {}
-
-        # Handle Range requests for seeking/partial content
-        range_header = request.headers.get("range")
-        if range_header:
-            request_headers["Range"] = range_header
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(audio_url, headers=request_headers)
-
-            if response.status_code in [200, 206]:
-                content = response.content
-                content_length = len(content)
-
-                response_headers = {
-                    "Content-Type": mime_type,
-                    "Content-Length": str(content_length),
-                    "Accept-Ranges": "bytes",
-                    "Cache-Control": "public, max-age=3600",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-                    "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-                    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-                }
-
-                # Handle range requests
-                if range_header and response.status_code == 206:
-                    content_range = response.headers.get("content-range")
-                    if content_range:
-                        response_headers["Content-Range"] = content_range
-
-                # Copy important S3 headers if present
-                if response.headers.get("etag"):
-                    response_headers["ETag"] = response.headers["etag"]
-                if response.headers.get("last-modified"):
-                    response_headers["Last-Modified"] = response.headers["last-modified"]
-
-                return StreamingResponse(
-                    iter([content]),
-                    status_code=response.status_code,
-                    media_type=mime_type,
-                    headers=response_headers
-                )
-            else:
-                return JSONResponse(
-                    {"error": f"Audio file not accessible. Status: {response.status_code}"},
-                    status_code=response.status_code
-                )
-
-    except httpx.TimeoutException:
-        return JSONResponse({"error": "Timeout accessing audio file"}, status_code=504)
-    except Exception as e:
-        logger.error(f"Error streaming free tier audio {filename}: {e}")
-        return JSONResponse({"error": f"Failed to stream audio: {str(e)}"}, status_code=500)
+    from .static_audio import proxy_s3_audio
+    return await proxy_s3_audio(request, audio_url, mime_type, error_style="json")
 
 
 import random as _random
@@ -1574,6 +1303,22 @@ async def fetch_random_free_intro(audio_format: str = "mp3") -> Optional[bytes]:
     return None
 
 
+def _free_tier_rate_limited(client_ip: str) -> Optional[JSONResponse]:
+    """429 response if this IP is over the free-tier limit, else None.
+
+    Response shape is unchanged from the five copy-pasted blocks this
+    replaced - clients see the identical body and Retry-After header.
+    """
+    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
+    if is_allowed:
+        return None
+    return JSONResponse(
+        {"error": "Rate limit exceeded", "retry_after": retry_after},
+        status_code=429,
+        headers={"Retry-After": str(retry_after)}
+    )
+
+
 async def handle_free_plane_endpoint(request: Request, plane_index: int):
     """Handle free tier requests - planes 1, 2, and 3
 
@@ -1589,14 +1334,8 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
 
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     # Get free pool index
     index = await get_free_pool_index()
@@ -1728,14 +1467,8 @@ async def free_scan_endpoint(request: Request):
     """
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     # Track analytics using unified event with subscription=free
     track_scan_start(request, subscription="free")
@@ -1749,14 +1482,8 @@ async def free_scanning_endpoint(request: Request):
     """Free tier scanning audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     # Track analytics
     track_scan_start(request, subscription="free")
@@ -1769,14 +1496,8 @@ async def free_scanning_again_endpoint(request: Request):
     """Free tier scanning-again audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     return await stream_free_static_audio(request, "scanning-again.opus")
 
@@ -1786,14 +1507,8 @@ async def free_overandout_endpoint(request: Request):
     """Free tier overandout audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     return await stream_free_static_audio(request, "overandout.opus")
 
@@ -1812,74 +1527,24 @@ async def free_scan_options():
     )
 
 
-@app.get("/free/plane/1")
-async def free_plane_1_endpoint(request: Request):
-    """Get MP3 for free tier plane 1
+# /free/plane/1..3 registered from one factory, same as the paid routes.
+# (The old per-route docstring for free plane 1 described a dynamic distance
+# intro that was never shipped - all three serve pre-recorded intro + body.)
+def _make_free_plane_endpoint(n: int):
+    async def free_plane_endpoint(request: Request):
+        return await handle_free_plane_endpoint(request, n)
 
-    Free tier plane 1 includes a dynamic distance intro calculated from
-    the free user's location to the cached flight position.
-    """
-    return await handle_free_plane_endpoint(request, 1)
-
-
-@app.get("/free/plane/2")
-async def free_plane_2_endpoint(request: Request):
-    """Get MP3 for free tier plane 2
-
-    Free tier plane 2 includes a generic opening (no distance) + cached body.
-    """
-    return await handle_free_plane_endpoint(request, 2)
-
-
-@app.get("/free/plane/3")
-async def free_plane_3_endpoint(request: Request):
-    """Get MP3 for free tier plane 3
-
-    Free tier plane 3 includes a generic opening (no distance) + cached body.
-    """
-    return await handle_free_plane_endpoint(request, 3)
-
-
-@app.options("/free/plane/1")
-async def free_plane_1_options():
-    """Handle CORS preflight requests for /free/plane/1 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
+    free_plane_endpoint.__name__ = f"free_plane_{n}_endpoint"
+    free_plane_endpoint.__doc__ = (
+        f"Get audio for free tier plane {n}: a pre-recorded intro stitched "
+        f"to a body cached from a recent paid scan."
     )
+    return free_plane_endpoint
 
 
-@app.options("/free/plane/2")
-async def free_plane_2_options():
-    """Handle CORS preflight requests for /free/plane/2 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-
-@app.options("/free/plane/3")
-async def free_plane_3_options():
-    """Handle CORS preflight requests for /free/plane/3 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
+for _n in range(1, 4):
+    app.get(f"/free/plane/{_n}")(_make_free_plane_endpoint(_n))
+    app.options(f"/free/plane/{_n}")(_make_cors_options_endpoint(f"free_plane_{_n}_options"))
 
 
 @app.options("/free/scanning")

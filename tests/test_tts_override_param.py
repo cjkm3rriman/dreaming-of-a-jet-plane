@@ -38,8 +38,17 @@ def test_handler_accepts_a_tts_argument():
 @pytest.mark.unit
 @pytest.mark.parametrize("plane_index", [1, 2, 3, 4, 5])
 def test_every_plane_route_forwards_tts(plane_index):
-    """A route that declares tts but drops it is the bug this fixes"""
-    source = inspect.getsource(getattr(main, f"plane_{plane_index}_endpoint"))
+    """A route that declares tts but drops it is the bug this fixes.
+
+    The five routes are now factory-registered (DOJP-46), so the handler is
+    looked up from the app's route table rather than as a module attribute."""
+    route = next(
+        r for r in main.app.routes
+        if getattr(r, "path", None) == f"/plane/{plane_index}" and "GET" in getattr(r, "methods", set())
+    )
+    assert "tts" in inspect.signature(route.endpoint).parameters, \
+        f"/plane/{plane_index} no longer declares tts"
+    source = inspect.getsource(route.endpoint)
     assert "tts" in source.split("handle_plane_endpoint")[1], \
         f"/plane/{plane_index} declares tts but does not forward it"
 
