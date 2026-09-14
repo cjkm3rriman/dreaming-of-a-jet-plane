@@ -33,6 +33,8 @@ jobs:
         run: uv sync --frozen
 
       # -rs prints every skip and its reason, so tests silently skipping
-      # (the failure mode this suite is prone to) stay visible in the log
+      # (the failure mode this suite is prone to) stay visible in the log.
+      # Coverage is reported, not gated - the number is for watching trends,
+      # not for blocking PRs on an arbitrary threshold.
       - name: Run offline test suite
-        run: uv run pytest -v -rs
+        run: uv run pytest -v -rs --cov=app --cov-report=term

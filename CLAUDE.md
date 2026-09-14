@@ -98,102 +98,57 @@ This project uses Linear for issue tracking. When working on Linear issues:
 
 ## Testing
 
-The project has a comprehensive test suite covering aircraft selection, text generation, duplicate destination handling, and end-to-end workflows.
+The suite has two tiers, enforced by markers — a `conftest.py` collection hook
+requires every test to carry exactly one of `@pytest.mark.unit` /
+`@pytest.mark.integration`, and aborts collection naming any offender.
 
-### Running Tests
+- **unit** (~205 tests, fully offline, ~10s): no API keys, no live services.
+  Includes recorded-payload contract tests for both flight providers, an
+  offline full-flow test that decodes every audio response
+  (`tests/test_full_flow_offline.py`), real-ffmpeg stitching tests, SigV4/TTL
+  tests for the hand-rolled S3 client, and TTS provider tests via respx.
+  Requires `ffmpeg` installed locally.
+- **integration** (17 tests): fetch live aircraft. They skip themselves
+  without API keys and can skip on an empty sky — skips are normal, FAILED is
+  not.
 
-**Basic test runs:**
+### Commands
+
 ```bash
-# Run all tests (unit tests only, integration tests skip without API keys)
-uv run pytest -v
-
-# Run all tests with Railway environment variables (runs integration tests too)
-railway run uv run pytest -v
-
-# Run with verbose output showing print statements
-railway run uv run pytest -v -s
-
-# Run specific test file
-railway run uv run pytest tests/test_text_generation.py -v
-
-# Run tests matching a pattern
-railway run uv run pytest -k "duplicate" -v
+uv run pytest                                  # offline suite - run before every push
+uv run pytest tests/test_<area>.py -v          # while iterating on one area
+railway run uv run pytest                      # full suite incl. live integration tests
+railway run uv run pytest -m integration -rs   # just the live tests, with skip reasons
+railway run uv run pytest -m integration -k detailed_output -s   # eyeball generated text
 ```
 
-**Test categories:**
-```bash
-# Unit tests (no external APIs required)
-railway run uv run pytest -m unit -v
+`uv run pytest` is byte-for-byte what CI runs — green locally means a green
+required check.
 
-# Integration tests (require API keys)
-railway run uv run pytest -m integration -v
+### What runs automatically
 
-# Run tests by file:
-railway run uv run pytest tests/test_aircraft_selection.py -v    # Aircraft diversity and selection
-railway run uv run pytest tests/test_text_generation.py -v       # Text formatting and units
-railway run uv run pytest tests/test_duplicate_destinations.py -v # Duplicate detection logic
-railway run uv run pytest tests/test_end_to_end.py -v            # Full workflows
-```
+- **Every PR and push to main**: `.github/workflows/ci.yml` runs the offline
+  suite with coverage reporting (`--cov=app`, reported not gated). Branch
+  protection requires the `test` check, so nothing merges red.
+- **Mondays 06:00 UTC + manual dispatch**: `.github/workflows/integration.yml`
+  runs the 17 live tests with `-rs` and pipes skip/fail lines into the job
+  summary — chronic skipping is the alarm it exists to raise. Uses the
+  `FR24_API_KEY` and `AIRLABS_API_KEY` repository secrets.
 
-### Detailed Output Tests
+### Conventions
 
-The test suite includes detailed output tests for debugging and verification. These show:
-- Aircraft type, airline, flight number
-- Origin and destination cities
-- Distance from location
-- Fun fact source (destination/origin/none)
-- Complete generated flight text
-- Duplicate destination detection
-
-**Available locations:**
-```bash
-# Run all detailed output tests
-railway run uv run pytest tests/test_end_to_end.py -k "detailed_output" -v -s
-
-# Run specific locations
-railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_nyc -v -s
-railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_london -v -s
-railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_sydney -v -s
-railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_dublin -v -s
-railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_los_angeles -v -s
-railway run uv run pytest tests/test_end_to_end.py::test_detailed_output_weston_ct -v -s
-```
-
-### What to Run After Making Changes
-
-**After making local changes, run these tests before committing:**
-
-1. **Quick validation** (runs in <1 second):
-   ```bash
-   uv run pytest -v
-   ```
-   This runs unit tests that don't require API keys. Good for rapid iteration.
-
-2. **Full integration test** (runs in ~10 seconds):
-   ```bash
-   railway run uv run pytest -v
-   ```
-   This runs all 42 tests including integration tests with real API data.
-
-3. **Detailed verification** (for text generation changes):
-   ```bash
-   railway run uv run pytest tests/test_end_to_end.py -k "detailed_output" -v -s
-   ```
-   This shows the actual generated text for multiple locations to verify quality.
-
-**Expected results:**
-- ✅ 42 tests passing (with Railway env vars)
-- ✅ 28 tests passing, 8 skipped (without API keys locally)
-- ❌ 0 failures
-- ⚠️ 0 warnings
-
-### Test Coverage
-
-The test suite covers:
-- **Aircraft selection** (8 tests): Diversity, sorting, field validation
-- **Text generation** (14 tests): Imperial/metric units, content structure, private jets
-- **Duplicate destinations** (7 tests): Origin vs destination fun facts logic
-- **End-to-end workflows** (13 tests): Full scan flow, detailed output for 6 locations
+- Fixtures in `tests/fixtures/` are genuine recorded API responses. Refresh by
+  re-recording, never by hand editing — their value is that nobody chose their
+  contents.
+- Audio-producing tests decode output with pydub and assert audible content
+  (`dBFS`), not just byte length. "The bytes actually play" is the property
+  production cares about; silent-but-decodable output has slipped past
+  duration-only checks before.
+- Avoid module-level side effects in test files (network, subprocess, ffmpeg):
+  pytest imports every test file during collection, even when all of its tests
+  will be deselected in that environment.
+- Expected results: offline — everything passes, the 17 integration tests
+  skip. Any FAILED is a regression; do not merge it.
 
 ## Environment Variables
 
