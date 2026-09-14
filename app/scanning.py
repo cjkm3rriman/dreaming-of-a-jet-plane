@@ -320,66 +320,10 @@ async def _generate_and_cache_plane_audio(
 
 
 async def _stream_scanning_mp3_only(request: Request, tts_override: str = None):
-    """Stream scanning audio file from S3 without analytics or background processing"""
-    # Import here to avoid circular imports
-    from .main import get_voice_specific_s3_url, get_static_audio_mime_type
-    audio_url = get_voice_specific_s3_url("scanning.mp3", tts_override)
-    mime_type = get_static_audio_mime_type(tts_override)
-
-    try:
-        # Prepare headers for the S3 request
-        request_headers = {}
-
-        # Handle Range requests for seeking/partial content
-        range_header = request.headers.get("range")
-        if range_header:
-            request_headers["Range"] = range_header
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(audio_url, headers=request_headers)
-
-            if response.status_code in [200, 206]:
-                # Get content details
-                content = response.content
-                content_length = len(content)
-
-                # Build response headers
-                response_headers = {
-                    "Content-Type": mime_type,
-                    "Content-Length": str(content_length),
-                    "Accept-Ranges": "bytes",
-                    "Cache-Control": "public, max-age=3600",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-                    "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-                    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-                }
-
-                # Handle range requests
-                if range_header and response.status_code == 206:
-                    content_range = response.headers.get("content-range")
-                    if content_range:
-                        response_headers["Content-Range"] = content_range
-
-                # Copy important S3 headers if present
-                if response.headers.get("etag"):
-                    response_headers["ETag"] = response.headers["etag"]
-                if response.headers.get("last-modified"):
-                    response_headers["Last-Modified"] = response.headers["last-modified"]
-
-                return StreamingResponse(
-                    iter([content]),
-                    status_code=response.status_code,
-                    media_type=mime_type,
-                    headers=response_headers
-                )
-            else:
-                return {"error": f"Audio file not accessible. Status: {response.status_code}", "url": audio_url}
-
-    except httpx.TimeoutException:
-        return {"error": "Timeout accessing audio file", "url": audio_url}
-    except Exception as e:
-        return {"error": f"Failed to stream audio: {str(e)}", "url": audio_url}
+    """Stream scanning audio with no analytics or pre-generation - the
+    debounced-duplicate path. Pure proxy via the shared streamer (DOJP-46)."""
+    from .static_audio import stream_voice_clip
+    return await stream_voice_clip(request, "scanning.mp3", None, tts_override=tts_override)
 
 
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
@@ -421,67 +365,9 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     else:
         logger.warning("Could not determine location for audio pre-generation")
     
-    # Continue with normal scanning audio streaming
-    # Import here to avoid circular imports
-    from .main import get_voice_specific_s3_url, get_static_audio_mime_type
-    audio_url = get_voice_specific_s3_url("scanning.mp3", tts_override)
-    mime_type = get_static_audio_mime_type(tts_override)
-
-    try:
-        # Prepare headers for the S3 request
-        request_headers = {}
-
-        # Handle Range requests for seeking/partial content
-        range_header = request.headers.get("range")
-        if range_header:
-            request_headers["Range"] = range_header
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(audio_url, headers=request_headers)
-
-            if response.status_code in [200, 206]:
-                # Get content details
-                content = response.content
-                content_length = len(content)
-
-                # Build response headers
-                response_headers = {
-                    "Content-Type": mime_type,
-                    "Content-Length": str(content_length),
-                    "Accept-Ranges": "bytes",
-                    "Cache-Control": "public, max-age=3600",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-                    "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-                    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-                }
-
-                # Handle range requests
-                if range_header and response.status_code == 206:
-                    content_range = response.headers.get("content-range")
-                    if content_range:
-                        response_headers["Content-Range"] = content_range
-
-                # Copy important S3 headers if present
-                if response.headers.get("etag"):
-                    response_headers["ETag"] = response.headers["etag"]
-                if response.headers.get("last-modified"):
-                    response_headers["Last-Modified"] = response.headers["last-modified"]
-
-                # Return the content directly
-                return StreamingResponse(
-                    iter([content]),
-                    status_code=response.status_code,
-                    media_type=mime_type,
-                    headers=response_headers
-                )
-            else:
-                return {"error": f"Audio file not accessible. Status: {response.status_code}", "url": audio_url}
-
-    except httpx.TimeoutException:
-        return {"error": "Timeout accessing audio file", "url": audio_url}
-    except Exception as e:
-        return {"error": f"Failed to stream audio: {str(e)}", "url": audio_url}
+    # Continue with normal scanning audio streaming - same proxy as the
+    # debounced path (this tail used to duplicate it verbatim, DOJP-46)
+    return await _stream_scanning_mp3_only(request, tts_override)
 
 
 async def scanning_options():

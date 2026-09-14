@@ -1449,62 +1449,8 @@ async def stream_free_static_audio(request: Request, filename: str):
     audio_url = f"{FREE_TIER_S3_BASE}/{filename}"
     mime_type = "audio/opus" if filename.endswith(".opus") else "audio/mpeg"
 
-    try:
-        # Prepare headers for the S3 request
-        request_headers = {}
-
-        # Handle Range requests for seeking/partial content
-        range_header = request.headers.get("range")
-        if range_header:
-            request_headers["Range"] = range_header
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(audio_url, headers=request_headers)
-
-            if response.status_code in [200, 206]:
-                content = response.content
-                content_length = len(content)
-
-                response_headers = {
-                    "Content-Type": mime_type,
-                    "Content-Length": str(content_length),
-                    "Accept-Ranges": "bytes",
-                    "Cache-Control": "public, max-age=3600",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-                    "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-                    "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges"
-                }
-
-                # Handle range requests
-                if range_header and response.status_code == 206:
-                    content_range = response.headers.get("content-range")
-                    if content_range:
-                        response_headers["Content-Range"] = content_range
-
-                # Copy important S3 headers if present
-                if response.headers.get("etag"):
-                    response_headers["ETag"] = response.headers["etag"]
-                if response.headers.get("last-modified"):
-                    response_headers["Last-Modified"] = response.headers["last-modified"]
-
-                return StreamingResponse(
-                    iter([content]),
-                    status_code=response.status_code,
-                    media_type=mime_type,
-                    headers=response_headers
-                )
-            else:
-                return JSONResponse(
-                    {"error": f"Audio file not accessible. Status: {response.status_code}"},
-                    status_code=response.status_code
-                )
-
-    except httpx.TimeoutException:
-        return JSONResponse({"error": "Timeout accessing audio file"}, status_code=504)
-    except Exception as e:
-        logger.error(f"Error streaming free tier audio {filename}: {e}")
-        return JSONResponse({"error": f"Failed to stream audio: {str(e)}"}, status_code=500)
+    from .static_audio import proxy_s3_audio
+    return await proxy_s3_audio(request, audio_url, mime_type, error_style="json")
 
 
 import random as _random
