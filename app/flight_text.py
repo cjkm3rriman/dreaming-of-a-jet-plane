@@ -204,6 +204,91 @@ def format_speed(speed_kmh: float, use_metric: bool) -> tuple[int, str]:
         return int(round(speed_mph)), "miles per hour"
 
 
+# ETA phrasing: first bucket whose ceiling fits wins. Tuning copy or adding
+# a bucket is a data edit here, not another elif (this replaced a 13-branch
+# ladder). Strings are complete eta_text values, leading space included.
+ETA_BUCKETS = [
+    (7, [
+        " landing in just a few minutes",
+        " landing very soon",
+    ]),
+    (15, [
+        " landing in about 15 minutes - that's about the same time it takes to watch two episodes of Bluey",
+        " landing in about 15 minutes - that's about how long it takes to eat your dinner",
+    ]),
+    (20, [
+        " landing in about 20 minutes - that's about the time you spend in the water at bath time",
+        " landing in about 20 minutes - that's about how long it takes to walk to the park and back",
+    ]),
+    (30, [
+        " landing in about half an hour - that's about the length of a short car journey",
+        " landing in about half an hour - that's about how long it takes to read three bedtime stories",
+    ]),
+    (45, [
+        " landing in about 45 minutes - that's how long you usually spend at the playground",
+        " landing in about 45 minutes - that's about the time it takes for grown ups to cook dinner",
+    ]),
+    (60, [
+        " landing in about an hour - that's about the time it takes to do bath and bed time",
+        " landing in about an hour - that's about how long a short nap lasts",
+    ]),
+    (90, [
+        " landing in about an hour and a half - that's about the time it takes to watch a Disney movie",
+        " landing in about an hour and a half - that's about how long a fun play date lasts",
+    ]),
+    (120, [
+        " landing in about 2 hours - that's like watching eight of your favorite tv episodes in a row",
+        " landing in about 2 hours - that's about how long a soccer game lasts",
+    ]),
+    (180, [
+        " landing in about 3 hours - that's like watching a really long grown-ups movie",
+        " landing in about 3 hours - that's about how long it takes to walk around a big zoo",
+    ]),
+    (240, [
+        " landing in about 4 hours - that's time to watch two Disney movies back to back",
+        " landing in about 4 hours - that's about how long a really fun morning at the beach lasts",
+    ]),
+    (360, [
+        " landing in about 6 hours - that's about the time between breakfast and lunch",
+        " landing in about 6 hours - that's about how long you sleep during the night",
+    ]),
+    (480, [
+        " landing in about 8 hours - that's like a full day at school",
+        " landing in about 8 hours - that's about how long it would take to watch 30 tv episodes in a row!",
+    ]),
+    (720, [
+        " landing in about 12 hours - that's like a full night's sleep",
+        " landing in about 12 hours - that's like from breakfast to bedtime",
+    ]),
+]
+
+# Beyond 12 hours the phrase carries the rounded hour count; buckets are
+# split so the comparison matches the duration (DOJP-40)
+ETA_LONG_HAUL_BUCKETS = [
+    (18, [
+        " landing in about {hours} hours - that's even longer than a whole night's sleep",
+        " landing in about {hours} hours - that's like a school day and a sleepover put together",
+    ]),
+    (24, [
+        " landing in about {hours} hours - that's like a whole day and night",
+        " landing in about {hours} hours - that's almost one whole spin of the Earth",
+    ]),
+]
+
+
+def _eta_phrase(total_minutes: int) -> str:
+    """Pick the kid-scale ETA comparison for a flight this many minutes out"""
+    for max_minutes, options in ETA_BUCKETS:
+        if total_minutes <= max_minutes:
+            return random.choice(options)
+
+    hours = round(total_minutes / 60)
+    for max_hours, templates in ETA_LONG_HAUL_BUCKETS:
+        if hours <= max_hours:
+            return random.choice(templates).format(hours=hours)
+    return " landing sometime tomorrow"
+
+
 def generate_flight_text_for_aircraft(
     aircraft: Dict[str, Any],
     user_lat: float = None,
@@ -389,103 +474,7 @@ def generate_flight_text_for_aircraft(
             if time_diff.total_seconds() > 0:
                 total_minutes = int(time_diff.total_seconds() // 60)
                 
-                if total_minutes <= 7:
-                    eta_options = [
-                        " landing in just a few minutes",
-                        " landing very soon"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 15:
-                    eta_options = [
-                        " landing in about 15 minutes - that's about the same time it takes to watch two episodes of Bluey",
-                        " landing in about 15 minutes - that's about how long it takes to eat your dinner"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 20:
-                    eta_options = [
-                        " landing in about 20 minutes - that's about the time you spend in the water at bath time",
-                        " landing in about 20 minutes - that's about how long it takes to walk to the park and back"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 30:
-                    eta_options = [
-                        " landing in about half an hour - that's about the length of a short car journey",
-                        " landing in about half an hour - that's about how long it takes to read three bedtime stories"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 45:
-                    eta_options = [
-                        " landing in about 45 minutes - that's how long you usually spend at the playground",
-                        " landing in about 45 minutes - that's about the time it takes for grown ups to cook dinner"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 60:
-                    eta_options = [
-                        " landing in about an hour - that's about the time it takes to do bath and bed time",
-                        " landing in about an hour - that's about how long a short nap lasts"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 90:
-                    eta_options = [
-                        " landing in about an hour and a half - that's about the time it takes to watch a Disney movie",
-                        " landing in about an hour and a half - that's about how long a fun play date lasts"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 120:  # 2 hours
-                    eta_options = [
-                        " landing in about 2 hours - that's like watching eight of your favorite tv episodes in a row",
-                        " landing in about 2 hours - that's about how long a soccer game lasts"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 180:  # 3 hours
-                    eta_options = [
-                        " landing in about 3 hours - that's like watching a really long grown-ups movie",
-                        " landing in about 3 hours - that's about how long it takes to walk around a big zoo"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 240:  # 4 hours
-                    eta_options = [
-                        " landing in about 4 hours - that's time to watch two Disney movies back to back",
-                        " landing in about 4 hours - that's about how long a really fun morning at the beach lasts"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 360:  # 6 hours
-                    eta_options = [
-                        " landing in about 6 hours - that's about the time between breakfast and lunch",
-                        " landing in about 6 hours - that's about how long you sleep during the night"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 480:  # 8 hours
-                    eta_options = [
-                        " landing in about 8 hours - that's like a full day at school",
-                        " landing in about 8 hours - that's about how long it would take to watch 30 tv episodes in a row!"
-                    ]
-                    eta_text = random.choice(eta_options)
-                elif total_minutes <= 720:  # 12 hours
-                    eta_options = [
-                        " landing in about 12 hours - that's like a full night's sleep",
-                        " landing in about 12 hours - that's like from breakfast to bedtime"
-                    ]
-                    eta_text = random.choice(eta_options)
-                else:
-                    # For very long flights, round to nearest hour. Buckets are
-                    # split so the comparison matches the duration: a 13-hour
-                    # flight used to be called "a whole day and night" (DOJP-40)
-                    hours = round(total_minutes / 60)
-                    if hours <= 18:
-                        eta_options = [
-                            f" landing in about {hours} hours - that's even longer than a whole night's sleep",
-                            f" landing in about {hours} hours - that's like a school day and a sleepover put together"
-                        ]
-                        eta_text = random.choice(eta_options)
-                    elif hours <= 24:
-                        eta_options = [
-                            f" landing in about {hours} hours - that's like a whole day and night",
-                            f" landing in about {hours} hours - that's almost one whole spin of the Earth"
-                        ]
-                        eta_text = random.choice(eta_options)
-                    else:
-                        eta_text = " landing sometime tomorrow"
+                eta_text = _eta_phrase(total_minutes)
             else:
                 eta_text = " landing there very soon"
         except (ValueError, TypeError):
