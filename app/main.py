@@ -1187,17 +1187,28 @@ async def scanning_options_endpoint():
     return await scanning_options()
 
 
-@app.get("/plane/1")
-async def plane_1_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the closest aircraft
+# The five /plane/N routes (and their CORS preflights) are registered from
+# one factory: the handlers were identical except for the index and one
+# ordinal word in the docstring (DOJP-46). Paths stay literal - /plane/1..5 -
+# so player card configs and the OpenAPI surface are unchanged.
+_PLANE_ORDINALS = {1: "closest", 2: "second closest", 3: "third closest",
+                   4: "fourth closest", 5: "fifth closest"}
+
+
+def _make_plane_endpoint(n: int):
+    async def plane_endpoint(
+        request: Request,
+        lat: float = None,
+        lng: float = None,
+        tts: str = None,
+        secret: str = None,
+        provider: str = None,
+        country: str = None,
+    ):
+        return await handle_plane_endpoint(request, n, lat, lng, secret, provider, country, tts)
+
+    plane_endpoint.__name__ = f"plane_{n}_endpoint"
+    plane_endpoint.__doc__ = f"""Get MP3 for the {_PLANE_ORDINALS[n]} aircraft
 
     Query Parameters:
         lat: Optional latitude override (requires secret)
@@ -1207,160 +1218,22 @@ async def plane_1_endpoint(
         country: Country code override for testing metric/imperial units (e.g., "FR", "US")
         secret: Secret key for TTS/provider overrides
     """
-    return await handle_plane_endpoint(request, 1, lat, lng, secret, provider, country, tts)
+    return plane_endpoint
 
-@app.get("/plane/2")
-async def plane_2_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the second closest aircraft
 
-    Query Parameters:
-        lat: Optional latitude override (requires secret)
-        lng: Optional longitude override (requires secret)
-        tts: TTS provider override (requires secret)
-        provider: Aircraft data provider override (requires secret)
-        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
-        secret: Secret key for TTS/provider overrides
-    """
-    return await handle_plane_endpoint(request, 2, lat, lng, secret, provider, country, tts)
+def _make_cors_options_endpoint(name: str):
+    async def options_endpoint():
+        from .static_audio import static_audio_options
+        return await static_audio_options()
 
-@app.get("/plane/3")
-async def plane_3_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the third closest aircraft
+    options_endpoint.__name__ = name
+    options_endpoint.__doc__ = "Handle CORS preflight requests"
+    return options_endpoint
 
-    Query Parameters:
-        lat: Optional latitude override (requires secret)
-        lng: Optional longitude override (requires secret)
-        tts: TTS provider override (requires secret)
-        provider: Aircraft data provider override (requires secret)
-        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
-        secret: Secret key for TTS/provider overrides
-    """
-    return await handle_plane_endpoint(request, 3, lat, lng, secret, provider, country, tts)
 
-@app.get("/plane/4")
-async def plane_4_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the fourth closest aircraft
-
-    Query Parameters:
-        lat: Optional latitude override (requires secret)
-        lng: Optional longitude override (requires secret)
-        tts: TTS provider override (requires secret)
-        provider: Aircraft data provider override (requires secret)
-        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
-        secret: Secret key for TTS/provider overrides
-    """
-    return await handle_plane_endpoint(request, 4, lat, lng, secret, provider, country, tts)
-
-@app.get("/plane/5")
-async def plane_5_endpoint(
-    request: Request,
-    lat: float = None,
-    lng: float = None,
-    tts: str = None,
-    secret: str = None,
-    provider: str = None,
-    country: str = None,
-):
-    """Get MP3 for the fifth closest aircraft
-
-    Query Parameters:
-        lat: Optional latitude override (requires secret)
-        lng: Optional longitude override (requires secret)
-        tts: TTS provider override (requires secret)
-        provider: Aircraft data provider override (requires secret)
-        country: Country code override for testing metric/imperial units (e.g., "FR", "US")
-        secret: Secret key for TTS/provider overrides
-    """
-    return await handle_plane_endpoint(request, 5, lat, lng, secret, provider, country, tts)
-
-@app.options("/plane/1")
-async def plane_1_options():
-    """Handle CORS preflight requests for /plane/1 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-@app.options("/plane/2")
-async def plane_2_options():
-    """Handle CORS preflight requests for /plane/2 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-@app.options("/plane/3")
-async def plane_3_options():
-    """Handle CORS preflight requests for /plane/3 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-@app.options("/plane/4")
-async def plane_4_options():
-    """Handle CORS preflight requests for /plane/4 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-@app.options("/plane/5")
-async def plane_5_options():
-    """Handle CORS preflight requests for /plane/5 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
+for _n in range(1, 6):
+    app.get(f"/plane/{_n}")(_make_plane_endpoint(_n))
+    app.options(f"/plane/{_n}")(_make_cors_options_endpoint(f"plane_{_n}_options"))
 
 
 # =============================================================================
@@ -1654,74 +1527,24 @@ async def free_scan_options():
     )
 
 
-@app.get("/free/plane/1")
-async def free_plane_1_endpoint(request: Request):
-    """Get MP3 for free tier plane 1
+# /free/plane/1..3 registered from one factory, same as the paid routes.
+# (The old per-route docstring for free plane 1 described a dynamic distance
+# intro that was never shipped - all three serve pre-recorded intro + body.)
+def _make_free_plane_endpoint(n: int):
+    async def free_plane_endpoint(request: Request):
+        return await handle_free_plane_endpoint(request, n)
 
-    Free tier plane 1 includes a dynamic distance intro calculated from
-    the free user's location to the cached flight position.
-    """
-    return await handle_free_plane_endpoint(request, 1)
-
-
-@app.get("/free/plane/2")
-async def free_plane_2_endpoint(request: Request):
-    """Get MP3 for free tier plane 2
-
-    Free tier plane 2 includes a generic opening (no distance) + cached body.
-    """
-    return await handle_free_plane_endpoint(request, 2)
-
-
-@app.get("/free/plane/3")
-async def free_plane_3_endpoint(request: Request):
-    """Get MP3 for free tier plane 3
-
-    Free tier plane 3 includes a generic opening (no distance) + cached body.
-    """
-    return await handle_free_plane_endpoint(request, 3)
-
-
-@app.options("/free/plane/1")
-async def free_plane_1_options():
-    """Handle CORS preflight requests for /free/plane/1 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
+    free_plane_endpoint.__name__ = f"free_plane_{n}_endpoint"
+    free_plane_endpoint.__doc__ = (
+        f"Get audio for free tier plane {n}: a pre-recorded intro stitched "
+        f"to a body cached from a recent paid scan."
     )
+    return free_plane_endpoint
 
 
-@app.options("/free/plane/2")
-async def free_plane_2_options():
-    """Handle CORS preflight requests for /free/plane/2 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-
-@app.options("/free/plane/3")
-async def free_plane_3_options():
-    """Handle CORS preflight requests for /free/plane/3 endpoint"""
-    return StreamingResponse(
-        iter([b""]),
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Range, Content-Range, Content-Length",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
+for _n in range(1, 4):
+    app.get(f"/free/plane/{_n}")(_make_free_plane_endpoint(_n))
+    app.options(f"/free/plane/{_n}")(_make_cors_options_endpoint(f"free_plane_{_n}_options"))
 
 
 @app.options("/free/scanning")
