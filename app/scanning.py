@@ -5,7 +5,6 @@ Scanning endpoint for streaming MP3 file from S3 and pre-generating flight MP3
 import asyncio
 import logging
 import hashlib
-import uuid
 import time
 from fastapi import Request
 from fastapi.responses import StreamingResponse
@@ -249,7 +248,6 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
 
     # Get user location using shared function
     user_lat, user_lng, user_country_code, user_city, _, _, _ = await get_user_location(request, lat, lng)
-    country_code = user_country_code  # Keep for backwards compatibility
 
     # Get TTS provider override from query parameters
     from .main import get_tts_provider_override

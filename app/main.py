@@ -51,11 +51,10 @@ from .flight_text import (
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
 from .website_home import register_website_home_routes
-from .test_gemini_tts import register_test_gemini_tts_routes
-from .test_live_aircraft import register_test_live_aircraft_routes
+from .debug_gemini_tts import register_test_gemini_tts_routes
+from .debug_live_aircraft import register_test_live_aircraft_routes
 from .aircraft_providers import get_provider_definition, get_provider_names
 from .tts_providers import (
-    TTS_PROVIDERS,
     get_provider_definition as get_tts_provider_definition,
     get_audio_format as get_tts_audio_format,
     get_voice_folder as get_tts_voice_folder,
@@ -461,7 +460,6 @@ def track_plane_request(
     from_cache: bool,
     subscription: str = "yoto-club",
     free_pool_entry_id: str = None,
-    distance_miles: int = None,
 ):
     """Track plane:request analytics event for plane endpoint requests
 
@@ -474,7 +472,6 @@ def track_plane_request(
         from_cache: Whether audio was served from cache
         subscription: "yoto-club" for paid, "free" for free tier
         free_pool_entry_id: Free pool session ID (free tier only)
-        distance_miles: Calculated distance to flight (free tier plane 1 only)
     """
     try:
         base, session_id, distinct_id = _analytics_context(request, lat, lng)
@@ -493,8 +490,6 @@ def track_plane_request(
         # Add free tier specific properties
         if free_pool_entry_id:
             properties["free_pool_entry_id"] = free_pool_entry_id
-        if distance_miles is not None:
-            properties["distance_miles"] = distance_miles
 
         analytics.track_event("plane:request", properties, distinct_id=distinct_id)
     except Exception as e:

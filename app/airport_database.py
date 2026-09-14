@@ -97,20 +97,6 @@ class AirportDatabase:
                 return city, None
         return None, None
     
-    def get_airport_name(self, iata_code: str) -> Optional[str]:
-        """Get airport name by IATA code
-        
-        Args:
-            iata_code: 3-letter IATA airport code
-            
-        Returns:
-            Airport name or None if not found
-        """
-        airport = self.get_airport_by_iata(iata_code)
-        if airport:
-            return airport.get('name')
-        return None
-
 # Global instance for efficient reuse
 _airport_db = AirportDatabase()
 
@@ -121,7 +107,3 @@ def get_airport_by_iata(iata_code: str) -> Optional[Dict[str, Any]]:
 def get_city_country(iata_code: str) -> tuple[Optional[str], Optional[str]]:
     """Get city and country for an airport by IATA code"""
     return _airport_db.get_city_country(iata_code)
-
-def get_airport_name(iata_code: str) -> Optional[str]:
-    """Get airport name by IATA code"""
-    return _airport_db.get_airport_name(iata_code)

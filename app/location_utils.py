@@ -70,20 +70,10 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
     # Check cache first (skip for localhost)
     if not is_localhost and ip in _ip_cache:
         cached_data = _ip_cache[ip]
-        # Handle old cache formats and new 8-item cache
-        if len(cached_data) == 8:
-            lat, lng, country_code, city, region, country_name, is_fallback, timestamp = cached_data
-        elif len(cached_data) == 7:
-            lat, lng, country_code, city, region, country_name, timestamp = cached_data
-            is_fallback = False
-        elif len(cached_data) == 5:
-            lat, lng, country_code, city, timestamp = cached_data
-            region, country_name = "", ""
-            is_fallback = False
-        else:
-            lat, lng, country_code, timestamp = cached_data
-            city, region, country_name = "Unknown", "", ""
-            is_fallback = False
+        # The cache is in-process and written only below, always as 8-tuples;
+        # the legacy 7/5/4-tuple branches that used to live here were
+        # unreachable (DOJP-45)
+        lat, lng, country_code, city, region, country_name, is_fallback, timestamp = cached_data
         if current_time - timestamp < IP_CACHE_DURATION:
             logger.info(f"Using cached location for IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}, is_fallback={is_fallback}")
             return lat, lng, country_code, city, region, country_name, is_fallback
@@ -93,7 +83,6 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
     
     # Cache miss or expired - fetch from API with simple retry
     max_attempts = 2
-    last_exception = None
     for attempt in range(max_attempts):
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
@@ -176,7 +165,6 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                     _track_ip_geolocation_failure(request, ip, f"api_error_{response.status_code}", 0.0, 0.0)
 
         except Exception as e:
-            last_exception = e
             if attempt < max_attempts - 1:
                 logger.warning(f"IP geolocation API error for IP {ip} (attempt {attempt + 1}/{max_attempts}): {e}")
                 await asyncio.sleep(0.5)

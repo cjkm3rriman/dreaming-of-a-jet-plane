@@ -91,52 +91,6 @@ class CitiesDatabase:
             return city.get('fun_facts', [])
         return []
     
-    def get_city_info(self, city_name: str) -> tuple[Optional[str], Optional[str], Optional[str], Optional[int]]:
-        """Get city, state, country, and population for a city by name
-        
-        Args:
-            city_name: Name of the city
-            
-        Returns:
-            Tuple of (city, state, country, population) or (None, None, None, None) if not found
-        """
-        city = self.get_city_by_name(city_name)
-        if city:
-            return (
-                city.get('city'),
-                city.get('state'),
-                city.get('country'),
-                city.get('population')
-            )
-        return None, None, None, None
-    
-    def get_all_cities(self) -> List[str]:
-        """Get list of all city names in the database
-        
-        Returns:
-            List of city names
-        """
-        self._load_cities()
-        return list(self._cities.keys())
-    
-    def search_cities_by_country(self, country: str) -> List[str]:
-        """Get list of cities in a specific country
-        
-        Args:
-            country: Country name or code
-            
-        Returns:
-            List of city names in the country
-        """
-        self._load_cities()
-        cities = []
-        
-        for city_name, city_data in self._cities.items():
-            if city_data.get('country', '').lower() == country.lower():
-                cities.append(city_name)
-        
-        return cities
-
 # Global instance for efficient reuse
 _cities_db = CitiesDatabase()
 
@@ -147,15 +101,3 @@ def get_city_by_name(city_name: str, state: str = None, country: str = None) -> 
 def get_fun_facts(city_name: str, state: str = None, country: str = None) -> List[str]:
     """Get fun facts for a city by name"""
     return _cities_db.get_fun_facts(city_name, state, country)
-
-def get_city_info(city_name: str) -> tuple[Optional[str], Optional[str], Optional[str], Optional[int]]:
-    """Get city, state, country, and population for a city by name"""
-    return _cities_db.get_city_info(city_name)
-
-def get_all_cities() -> List[str]:
-    """Get list of all city names in the database"""
-    return _cities_db.get_all_cities()
-
-def search_cities_by_country(country: str) -> List[str]:
-    """Get list of cities in a specific country"""
-    return _cities_db.search_cities_by_country(country)

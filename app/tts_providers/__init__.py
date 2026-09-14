@@ -23,8 +23,8 @@ AudioGenerator = Callable[[str], Awaitable[AudioResult]]
 ProviderConfigCheck = Callable[[], Tuple[bool, Optional[str]]]
 
 
-class ProviderDefinition(Dict[str, Any]):
-    """Typed dict alias for provider metadata"""
+# Alias, not a runtime class: a provider definition is just a dict
+ProviderDefinition = Dict[str, Any]
 
 
 TTS_PROVIDERS: Dict[str, ProviderDefinition] = {
@@ -53,11 +53,6 @@ TTS_PROVIDERS: Dict[str, ProviderDefinition] = {
         "voice_folder": "ronald",
     },
 }
-
-
-def get_provider_names() -> list[str]:
-    """Return all registered provider keys"""
-    return list(TTS_PROVIDERS.keys())
 
 
 def get_provider_definition(name: str) -> Optional[ProviderDefinition]:
