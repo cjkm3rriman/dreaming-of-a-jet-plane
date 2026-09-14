@@ -80,11 +80,12 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         for plane_index in range(1, 6):  # 1, 2, 3, 4, 5
             zero_based_index = plane_index - 1
 
-            # Check cache first for this specific plane (include TTS provider and format in cache key)
+            # Check cache first for this specific plane (include TTS provider and format in cache key).
+            # HEAD-only: pre-generation only needs to know the audio exists and is
+            # fresh; the old full get() downloaded up to ~500KB x5 planes just to
+            # throw the bytes away (DOJP-46)
             plane_cache_key = s3_cache.generate_cache_key(lat, lng, plane_index=plane_index, tts_provider=effective_provider, audio_format=file_ext)
-            cached_audio = await s3_cache.get(plane_cache_key)
-
-            if cached_audio:
+            if await s3_cache.exists_and_fresh(plane_cache_key):
                 # Skip if already cached
                 continue
 

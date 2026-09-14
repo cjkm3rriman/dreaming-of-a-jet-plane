@@ -117,6 +117,10 @@ class FakeS3:
     async def get_raw(self, key):
         return self.objects.get(key)
 
+    async def exists_and_fresh(self, key, content_type="audio"):
+        # in-memory objects never expire; presence == fresh
+        return key in self.objects
+
     def keys(self, prefix=""):
         return [k for k in self.objects if k.startswith(prefix)]
 
@@ -125,7 +129,7 @@ class FakeS3:
 def env(monkeypatch):
     """The full offline environment: fake S3, stubbed TTS, pinned provider"""
     fake = FakeS3()
-    for method in ("get", "set", "get_raw"):
+    for method in ("get", "set", "get_raw", "exists_and_fresh"):
         monkeypatch.setattr(s3_cache, method, getattr(fake, method))
 
     async def fake_tts(text, tts_override=None):

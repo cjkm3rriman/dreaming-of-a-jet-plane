@@ -22,11 +22,12 @@ async def _reset_airlabs_client():
     forces a fresh client on the next test.
     """
     yield
-    try:
-        from app.aircraft_providers.airlabs import close_client
-        await close_client()
-    except Exception:
-        pass
+    for module in ("airlabs", "fr24"):
+        try:
+            provider = __import__(f"app.aircraft_providers.{module}", fromlist=["close_client"])
+            await provider.close_client()
+        except Exception:
+            pass
 
 
 # Test locations
