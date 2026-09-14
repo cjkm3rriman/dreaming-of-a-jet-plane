@@ -40,6 +40,8 @@ from .scanning_again import stream_scanning_again, scanning_again_options
 from .scanning import stream_scanning, scanning_options
 from .s3_cache import s3_cache
 from .flight_text import (
+    FUN_FACT_OPENINGS,
+    us_state_for_airport,
     generate_flight_text,
     generate_flight_text_for_aircraft,
     get_plane_sentence_override,
@@ -364,6 +366,41 @@ def _analytics_dedupe_bucket() -> int:
     return int(time.time() // ANALYTICS_DEDUPE_BUCKET_S)
 
 
+def _analytics_context(request: Request, lat: Optional[float] = None, lng: Optional[float] = None, include_coords: bool = True) -> tuple[Dict[str, Any], str, str]:
+    """Shared per-event analytics context: ip/UA/browser properties plus the
+    session and distinct ids. This ~15-line block was copy-pasted into all
+    four trackers before DOJP-46. scan:start deliberately hashes its session
+    id without coordinates - preserved via include_coords so its historical
+    $session_id values stay stable.
+
+    Returns:
+        (base_properties, session_id, distinct_id)
+    """
+    import hashlib
+
+    client_ip = extract_client_ip(request)
+    user_agent = extract_user_agent(request)
+    browser_info = parse_user_agent(user_agent)
+    distinct_id = _generate_distinct_id(client_ip, user_agent)
+
+    hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}"
+    if include_coords:
+        hash_string += f":{lat or 0}:{lng or 0}"
+    session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+
+    base = {
+        "ip": client_ip,
+        "$user_agent": user_agent,
+        "$session_id": session_id,
+        "browser": browser_info["browser"],
+        "browser_version": browser_info["browser_version"],
+        "os": browser_info["os"],
+        "os_version": browser_info["os_version"],
+        "device": browser_info["device"],
+    }
+    return base, session_id, distinct_id
+
+
 def track_scan_complete(
     request: Request,
     lat: float,
@@ -393,27 +430,11 @@ def track_scan_complete(
             only appear on events where a live fetch actually ran.
     """
     try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-        distinct_id = _generate_distinct_id(client_ip, user_agent)
-
-        # Create consistent session ID
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        base, session_id, distinct_id = _analytics_context(request, lat, lng)
 
         properties = {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
+            **base,
             "$insert_id": f"scan_complete_{subscription}_{session_id}_{_analytics_dedupe_bucket()}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
             "user_lat": round(lat, 2),
             "user_lng": round(lng, 2),
             "user_city": city,
@@ -454,27 +475,11 @@ def track_plane_request(
         distance_miles: Calculated distance to flight (free tier plane 1 only)
     """
     try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-        distinct_id = _generate_distinct_id(client_ip, user_agent)
-
-        # Create consistent session ID
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        base, session_id, distinct_id = _analytics_context(request, lat, lng)
 
         properties = {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
+            **base,
             "$insert_id": f"plane_req_{subscription}_{session_id}_{plane_index}_{_analytics_dedupe_bucket()}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
             "user_lat": round(lat, 2),
             "user_lng": round(lng, 2),
             "user_city": city,
@@ -502,26 +507,11 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
         subscription: "yoto-club" for paid, "free" for free tier
     """
     try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-        distinct_id = _generate_distinct_id(client_ip, user_agent)
-
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        base, session_id, distinct_id = _analytics_context(request, include_coords=False)
 
         analytics.track_event("scan:start", {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
+            **base,
             "$insert_id": f"scan_start_{subscription}_{session_id}_{_analytics_dedupe_bucket()}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
             "subscription": subscription,
         }, distinct_id=distinct_id)
     except Exception as e:
@@ -530,16 +520,7 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
 def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None, subscription: str = "yoto-club", fun_fact_cache_hit: Optional[bool] = None):
     """Track generate:audio analytics event with flight and audio details"""
     try:
-        import hashlib
-
-        client_ip = extract_client_ip(request)
-        user_agent = extract_user_agent(request)
-        browser_info = parse_user_agent(user_agent)
-        distinct_id = _generate_distinct_id(client_ip, user_agent)
-
-        # Create consistent session ID
-        hash_string = f"{client_ip or 'unknown'}:{user_agent or 'unknown'}:{lat or 0}:{lng or 0}"
-        session_id = hashlib.md5(hash_string.encode('utf-8')).hexdigest()[:8]
+        base, session_id, distinct_id = _analytics_context(request, lat, lng)
 
         # Extract destination information
         destination_city = aircraft.get("destination_city", "unknown")
@@ -548,11 +529,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
 
         # For US destinations, try to get state information
         if destination_country == "the United States":
-            destination_airport = aircraft.get("destination_airport")
-            if destination_airport:
-                airport_data = get_airport_by_iata(destination_airport)
-                if airport_data and airport_data.get("country") == "US":
-                    destination_state = airport_data.get("state")
+            destination_state = us_state_for_airport(aircraft.get("destination_airport"))
 
         # Extract origin information
         origin_city = aircraft.get("origin_city", "unknown")
@@ -561,29 +538,17 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
 
         # For US origins, try to get state information
         if origin_country == "the United States":
-            origin_airport = aircraft.get("origin_airport")
-            if origin_airport:
-                airport_data = get_airport_by_iata(origin_airport)
-                if airport_data and airport_data.get("country") == "US":
-                    origin_state = airport_data.get("state")
+            origin_state = us_state_for_airport(aircraft.get("origin_airport"))
 
         # Extract other flight information
         aircraft_name = aircraft.get("aircraft", "unknown")
 
         # Check if fun fact was included (look for fun fact openings in the sentence)
-        fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
-        has_fun_fact = any(opening in sentence for opening in fun_fact_openings)
+        has_fun_fact = any(opening in sentence for opening in FUN_FACT_OPENINGS)
 
         analytics.track_event("generate:audio", {
-            "ip": client_ip,
-            "$user_agent": user_agent,
-            "$session_id": session_id,
+            **base,
             "$insert_id": f"mp3_gen_{subscription}_{session_id}_{plane_index}_{_analytics_dedupe_bucket()}",
-            "browser": browser_info["browser"],
-            "browser_version": browser_info["browser_version"],
-            "os": browser_info["os"],
-            "os_version": browser_info["os_version"],
-            "device": browser_info["device"],
             "user_lat": round(lat, 2),
             "user_lng": round(lng, 2),
             "user_city": city,
@@ -1574,6 +1539,22 @@ async def fetch_random_free_intro(audio_format: str = "mp3") -> Optional[bytes]:
     return None
 
 
+def _free_tier_rate_limited(client_ip: str) -> Optional[JSONResponse]:
+    """429 response if this IP is over the free-tier limit, else None.
+
+    Response shape is unchanged from the five copy-pasted blocks this
+    replaced - clients see the identical body and Retry-After header.
+    """
+    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
+    if is_allowed:
+        return None
+    return JSONResponse(
+        {"error": "Rate limit exceeded", "retry_after": retry_after},
+        status_code=429,
+        headers={"Retry-After": str(retry_after)}
+    )
+
+
 async def handle_free_plane_endpoint(request: Request, plane_index: int):
     """Handle free tier requests - planes 1, 2, and 3
 
@@ -1589,14 +1570,8 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
 
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     # Get free pool index
     index = await get_free_pool_index()
@@ -1728,14 +1703,8 @@ async def free_scan_endpoint(request: Request):
     """
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     # Track analytics using unified event with subscription=free
     track_scan_start(request, subscription="free")
@@ -1749,14 +1718,8 @@ async def free_scanning_endpoint(request: Request):
     """Free tier scanning audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     # Track analytics
     track_scan_start(request, subscription="free")
@@ -1769,14 +1732,8 @@ async def free_scanning_again_endpoint(request: Request):
     """Free tier scanning-again audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     return await stream_free_static_audio(request, "scanning-again.opus")
 
@@ -1786,14 +1743,8 @@ async def free_overandout_endpoint(request: Request):
     """Free tier overandout audio - serves static file from S3"""
     client_ip = extract_client_ip(request)
 
-    # Check rate limit
-    is_allowed, retry_after = check_free_tier_rate_limit(client_ip)
-    if not is_allowed:
-        return JSONResponse(
-            {"error": "Rate limit exceeded", "retry_after": retry_after},
-            status_code=429,
-            headers={"Retry-After": str(retry_after)}
-        )
+    if (limited := _free_tier_rate_limited(client_ip)) is not None:
+        return limited
 
     return await stream_free_static_audio(request, "overandout.opus")
 

@@ -105,6 +105,20 @@ def is_location_in_us(lat: float, lng: float) -> bool:
     return False
 
 
+def us_state_for_airport(airport_iata: Optional[str]) -> Optional[str]:
+    """State name for a US airport's IATA code, else None.
+
+    This lookup chain was written out longhand in five places across
+    flight_text.py and main.py before DOJP-46 collapsed them here.
+    """
+    if not airport_iata:
+        return None
+    airport_data = get_airport_by_iata(airport_iata)
+    if airport_data and airport_data.get("country") == "US":
+        return airport_data.get("state")
+    return None
+
+
 # How often the fun fact rotation advances. Five minutes is longer than the audio
 # cache TTL in s3_cache.py, so any rescan fresh enough to regenerate audio also
 # lands in a new bucket. It also yields 288 buckets a day, so with the date term
@@ -202,6 +216,11 @@ def format_speed(speed_kmh: float, use_metric: bool) -> tuple[int, str]:
     else:
         speed_mph = km_to_miles(speed_kmh)
         return int(round(speed_mph)), "miles per hour"
+
+
+# Openers spoken before a fun fact. main.py imports this for its
+# has_fun_fact analytics flag - keep one list or that flag silently breaks.
+FUN_FACT_OPENINGS = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
 
 
 # ETA phrasing: first bucket whose ceiling fits wins. Tuning copy or adding
@@ -344,24 +363,10 @@ def generate_flight_text_for_aircraft(
     user_in_us = user_lat is not None and user_lng is not None and is_location_in_us(user_lat, user_lng)
     
     if user_in_us and destination_country == "the United States":
-        # Get destination airport data to find state
-        destination_airport = aircraft.get("destination_airport")
-        if destination_airport:
-            airport_data = get_airport_by_iata(destination_airport)
-            if airport_data and airport_data.get("country") == "US":
-                state = airport_data.get("state")
-                if state:
-                    destination_location = state
-    
+        destination_location = us_state_for_airport(aircraft.get("destination_airport")) or destination_location
+
     if user_in_us and origin_country == "the United States":
-        # Get origin airport data to find state
-        origin_airport = aircraft.get("origin_airport")
-        if origin_airport:
-            airport_data = get_airport_by_iata(origin_airport)
-            if airport_data and airport_data.get("country") == "US":
-                state = airport_data.get("state")
-                if state:
-                    origin_location = state
+        origin_location = us_state_for_airport(aircraft.get("origin_airport")) or origin_location
     
     
     # Build the descriptive sentences with different opening words based on plane index
@@ -531,26 +536,15 @@ def generate_flight_text_for_aircraft(
 
         # Get fun facts for the chosen city (using same logic as before)
         if country_for_facts == "the United States" and location_for_facts != "an unknown country":
-            # Use the actual state name if we have it, otherwise use location_for_facts
-            if airport_code_for_facts:
-                airport_data = get_airport_by_iata(airport_code_for_facts)
-                if airport_data and airport_data.get("country") == "US":
-                    state = airport_data.get("state")
-                    if state:
-                        fun_facts = get_fun_facts(city_for_facts, state, "United States")
-                    else:
-                        fun_facts = get_fun_facts(city_for_facts, location_for_facts, "United States")
-                else:
-                    fun_facts = get_fun_facts(city_for_facts, location_for_facts, "United States")
-            else:
-                fun_facts = get_fun_facts(city_for_facts, location_for_facts, "United States")
+            # Prefer the airport's actual state; fall back to location_for_facts
+            state = us_state_for_airport(airport_code_for_facts)
+            fun_facts = get_fun_facts(city_for_facts, state or location_for_facts, "United States")
         else:
             fun_facts = get_fun_facts(city_for_facts, country=country_for_facts)
 
         if fun_facts:
             selected_fact = select_rotating_fun_fact(fun_facts, plane_index)
-            fun_fact_openings = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
-            fun_fact_opening = random.choice(fun_fact_openings)
+            fun_fact_opening = random.choice(FUN_FACT_OPENINGS)
             fun_fact_opening_text = fun_fact_opening
             # Facts in cities.json carry their own terminal punctuation (see
             # tests/test_fun_fact_punctuation.py), so nothing is appended here.
