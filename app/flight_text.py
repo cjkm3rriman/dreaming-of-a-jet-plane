@@ -563,6 +563,24 @@ def generate_flight_text_for_aircraft(
         return full_response, fun_fact_source
 
 
+_COUNT_WORDS = {1: "one", 2: "two", 3: "three", 4: "four"}
+
+
+def not_enough_planes_message(plane_index: int, plane_count: int) -> str:
+    """The apology when a child asks for plane N but only plane_count exist.
+
+    One canonical message: the two generation paths used to carry drifted
+    copies, so a child heard different apology text depending on whether
+    pre-generation or the inline path produced the audio (DOJP-46).
+    """
+    count_word = _COUNT_WORDS.get(plane_count, str(plane_count))
+    plural = "s" if plane_count != 1 else ""
+    return (
+        f"I'm sorry my old chum but scanner bot could only find {count_word} "
+        f"jet plane{plural} nearby. Try firing up the scanner again in a few minutes."
+    )
+
+
 def make_error_message_friendly(error_message: str, user_location: str = "") -> str:
     """Convert technical error messages to friendly, kid-appropriate explanations
 

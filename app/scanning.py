@@ -107,19 +107,9 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                 else:
                     sentence = f"{opening_text} {body_text}"
             elif aircraft and len(aircraft) > 0:
-                # Not enough planes, generate appropriate message
-                plane_count = len(aircraft)
-                if plane_index == 2:
-                    sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try firing up the scanner again in a few minutes."
-                elif plane_index == 3:
-                    if plane_count == 1:
-                        sentence = "I'm sorry my old chum but scanner bot could only find one jet plane nearby. Try firing up the scanner again in a few minutes."
-                    else:
-                        sentence = "I'm sorry my old chum but scanner bot could only find two jet planes nearby. Try firing up the scanner again in a few minutes."
-                elif plane_index == 4:
-                    sentence = f"I'm sorry my old chum but scanner bot could only find {plane_count} jet plane{'s' if plane_count != 1 else ''} nearby. Try firing up the scanner again in a few minutes."
-                elif plane_index == 5:
-                    sentence = f"I'm sorry my old chum but scanner bot could only find {plane_count} jet plane{'s' if plane_count != 1 else ''} nearby. Try firing up the scanner again in a few minutes."
+                # Not enough planes - one canonical apology (DOJP-46)
+                from .flight_text import not_enough_planes_message
+                sentence = not_enough_planes_message(plane_index, len(aircraft))
             else:
                 # No aircraft found at all
                 sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code, user_city=city, user_region=region, user_country_name=country_name)
@@ -216,103 +206,31 @@ async def _generate_and_cache_plane_audio(
         bool: True if successful, False otherwise
     """
     try:
-        # Import here to avoid circular imports
-        from .main import convert_text_to_speech, track_audio_generation
-        from .free_pool import stitch_audio, stitch_audio_multi
-        from .fun_fact_cache import (
-            get_cached_fun_fact_audio, cache_fun_fact_audio,
-            get_cached_opening_phrase_audio, cache_opening_phrase_audio,
+        from .main import track_audio_generation
+        from .plane_audio import generate_plane_audio
+
+        result = await generate_plane_audio(
+            sentence,
+            opening_text=opening_text,
+            body_text=body_text,
+            fun_fact_opening_text=fun_fact_opening_text,
+            fun_fact_body_text=fun_fact_body_text,
+            location_hash=location_hash,
+            plane_index=plane_index,
+            tts_override=tts_override,
         )
-        import time
 
-        tts_start_time = time.time()
-        audio_content = None
-        tts_error = None
-        tts_provider_used = None
-        file_ext = None
-        mime_type = None
-        fun_fact_cache_hit = None
-
-        # Try split TTS if we have opening and body text
-        if opening_text and body_text and location_hash:
-            # Generate opening and body audio via TTS
-            opening_audio, opening_error, _, _, _ = await convert_text_to_speech(opening_text, tts_override=tts_override)
-            body_audio, body_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(body_text, tts_override=tts_override)
-
-            if opening_audio and body_audio and not opening_error and not body_error:
-                # Handle fun fact segments (opening phrase + fact body) separately
-                fun_fact_opening_audio = None
-                fun_fact_body_audio = None
-
-                fun_fact_cache_hit = None
-                if fun_fact_opening_text and fun_fact_body_text:
-                    # Check cache for fun fact opening phrase
-                    fun_fact_opening_audio = await get_cached_opening_phrase_audio(fun_fact_opening_text, tts_provider_used, file_ext)
-                    if not fun_fact_opening_audio:
-                        fun_fact_opening_audio, ff_open_err, _, _, _ = await convert_text_to_speech(fun_fact_opening_text, tts_override=tts_override)
-                        if fun_fact_opening_audio and not ff_open_err:
-                            asyncio.create_task(cache_opening_phrase_audio(fun_fact_opening_text, fun_fact_opening_audio, tts_provider_used, file_ext))
-
-                    # Check cache for fun fact body
-                    fun_fact_body_audio = await get_cached_fun_fact_audio(fun_fact_body_text, tts_provider_used, file_ext)
-                    if fun_fact_body_audio:
-                        fun_fact_cache_hit = True
-                    else:
-                        fun_fact_cache_hit = False
-                        fun_fact_body_audio, ff_body_err, _, _, _ = await convert_text_to_speech(fun_fact_body_text, tts_override=tts_override)
-                        if fun_fact_body_audio and not ff_body_err:
-                            asyncio.create_task(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, file_ext))
-
-                # Stitch all segments together
-                if fun_fact_opening_audio and fun_fact_body_audio:
-                    audio_content = await stitch_audio_multi(
-                        [opening_audio, body_audio, fun_fact_opening_audio, fun_fact_body_audio],
-                        add_silence=True, audio_format=file_ext,
-                        gap_durations=[1000, 1000, 500]
-                    )
-                    # Cache body+fact stitched together for free pool reuse
-                    body_with_fact = await stitch_audio_multi(
-                        [body_audio, fun_fact_opening_audio, fun_fact_body_audio],
-                        add_silence=False, audio_format=file_ext,
-                        gap_durations=[1000, 500]
-                    )
-                    body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
-                    await s3_cache.set(body_cache_key, body_with_fact)
-                    logger.info(f"Cached body+fact audio at {body_cache_key}")
-                else:
-                    audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=file_ext)
-                    # Cache body audio for free pool reuse (no fun fact)
-                    body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
-                    await s3_cache.set(body_cache_key, body_audio)
-                    logger.info(f"Cached body audio at {body_cache_key}")
-
-                tts_error = ""
-            else:
-                # Split TTS failed, fall through to single TTS
-                logger.warning(f"Split TTS failed for plane {plane_index}, falling back to single TTS. Opening error: {opening_error}, Body error: {body_error}")
-
-        # Fallback to single TTS if split didn't work or wasn't requested
-        if not audio_content:
-            audio_content, tts_error, tts_provider_used, file_ext, mime_type = await convert_text_to_speech(sentence, tts_override=tts_override)
-
-        tts_generation_time_ms = int((time.time() - tts_start_time) * 1000)
-
-        if audio_content and not tts_error:
-            # Cache the audio
-            success = await s3_cache.set(cache_key, audio_content)
+        if result["audio"] and not result["error"]:
+            success = await s3_cache.set(cache_key, result["audio"])
             if success:
-
-                # Track audio generation analytics if we have request and aircraft data
                 if request and aircraft:
-                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, file_ext, fun_fact_source, fun_fact_cache_hit=fun_fact_cache_hit)
-
+                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, result["generation_ms"], len(result["audio"]), result["provider"], result["file_ext"], fun_fact_source, fun_fact_cache_hit=result["fun_fact_cache_hit"])
                 return True
-            else:
-                logger.warning(f"Failed to cache pre-generated plane {plane_index} audio for location: lat={lat}, lng={lng}")
-                return False
-        else:
-            logger.warning(f"TTS generation failed for plane {plane_index} during pre-generation: {tts_error}")
+            logger.warning(f"Failed to cache pre-generated plane {plane_index} audio for location: lat={lat}, lng={lng}")
             return False
+
+        logger.warning(f"TTS generation failed for plane {plane_index} during pre-generation: {result['error']}")
+        return False
 
     except Exception as e:
         logger.error(f"Error generating plane {plane_index} audio: {e}")
