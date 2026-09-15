@@ -631,46 +631,6 @@ def make_error_message_friendly(error_message: str, user_location: str = "") -> 
     return "my scanner had a technical hiccup" + ending
 
 
-def generate_generic_opening(plane_index: int) -> str:
-    """Generate distance-free opening for free tier
-
-    Args:
-        plane_index: 1-based plane index (1, 2, 3)
-
-    Returns:
-        str: Generic opening text without distance reference (~80-100 chars)
-    """
-    # Ensure fresh random state
-    random.seed(time.time_ns())
-
-    opening_words = ["Marvelous!", "Good Heavens!", "Fantastic!", "Splendid!", "What Luck!", "Wow!", "Remarkable!", "Tremendous!", "Brilliant!", "By Jove!"]
-    word = random.choice(opening_words)
-
-    if plane_index == 2:
-        return f"{word} We've found another jet plane, flying high up in the sky!"
-    elif plane_index == 3:
-        return f"{word} We've identified one more jet plane up there in the clouds!"
-    elif plane_index == 4:
-        return f"{word} We've spotted yet another jet plane soaring through the sky!"
-    elif plane_index == 5:
-        return f"{word} Our scanner has locked on to one final jet plane!"
-    else:
-        # Default for plane 1 or any other index
-        return f"{word} We've detected a jet plane up in the sky!"
-
-
-def generate_free_tier_distance_intro(distance_miles: int) -> str:
-    """Generate intro text with distance to the flight for free tier plane 1
-
-    Args:
-        distance_miles: Distance in miles from free user to the flight
-
-    Returns:
-        str: Intro text with distance (~50-60 chars)
-    """
-    return f"We recently spotted a jet plane {distance_miles:,} miles from this Yoto!"
-
-
 # Static intro text for free tier /free/scan endpoint
 FREE_SCAN_INTRO = "Let's tune into some jet planes that have been spotted around the world! Ready? Here we go!"
 

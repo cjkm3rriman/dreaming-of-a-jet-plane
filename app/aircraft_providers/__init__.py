@@ -18,8 +18,8 @@ ProviderFetcher = Callable[[float, float, float, int], Awaitable[ProviderResult]
 ProviderConfigCheck = Callable[[], Tuple[bool, Optional[str]]]
 
 
-class ProviderDefinition(Dict[str, Any]):
-    """Typed dict alias for provider metadata"""
+# Alias, not a runtime class: a provider definition is just a dict
+ProviderDefinition = Dict[str, Any]
 
 
 AIRCRAFT_PROVIDERS: Dict[str, ProviderDefinition] = {

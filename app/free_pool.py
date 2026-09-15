@@ -35,7 +35,6 @@ FREE_TIER_RATE_WINDOW = 60  # seconds
 # Free pool configuration
 FREE_POOL_MAX_SESSIONS = 100
 FREE_POOL_INDEX_KEY = "free_pool/index.json"
-FREE_POOL_STATIC_INTRO_KEY = "free_pool/static_intro.mp3"
 
 
 async def get_free_pool_index() -> Optional[Dict]:
@@ -53,8 +52,6 @@ async def get_free_pool_index() -> Optional[Dict]:
                     "planes": [
                         {
                             "index": 1,
-                            "flight_lat": 51.5074,
-                            "flight_lng": -0.1278,
                             "origin_city": "New York",
                             "destination_city": "London",
                             "airline_name": "British Airways",
@@ -109,7 +106,6 @@ async def update_free_pool_index(
         session_id: Unique session identifier
         planes_data: List of plane data dicts with:
             - index: 1-based plane index
-            - flight_lat, flight_lng: Aircraft position
             - origin_city, destination_city, airline_name: Flight info
             - body_cache_key, generic_opening_cache_key: S3 keys
         tts_provider: TTS provider used
@@ -217,8 +213,6 @@ async def populate_free_pool(
             # Build plane data for index (no generic_opening_cache_key - free endpoints use pre-recorded intros)
             plane_data = {
                 "index": plane_index,
-                "flight_lat": aircraft.get("latitude"),
-                "flight_lng": aircraft.get("longitude"),
                 "origin_city": aircraft.get("origin_city", "Unknown"),
                 "destination_city": aircraft.get("destination_city", "Unknown"),
                 "airline_name": aircraft.get("airline_name", "Unknown"),
@@ -450,55 +444,6 @@ async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True, au
     except Exception as e:
         logger.error(f"Error stitching multiple audio segments: {e}", exc_info=True)
         raise
-
-
-async def get_static_intro_audio(convert_text_to_speech_fn, audio_format: str = "mp3") -> Optional[bytes]:
-    """Get or generate static intro audio for /free/scan
-
-    Args:
-        convert_text_to_speech_fn: Function to convert text to speech
-        audio_format: Audio format extension (e.g., "mp3", "opus")
-
-    Returns:
-        Audio bytes or None if error
-    """
-    from .flight_text import FREE_SCAN_INTRO
-
-    # Use format-specific cache key
-    static_intro_key = f"free_pool/static_intro.{audio_format}"
-
-    # Try to get from cache first
-    cached = await s3_cache.get_raw(static_intro_key)
-    if cached:
-        return cached
-
-    # Generate and cache
-    try:
-        audio, error, _, _, _ = await convert_text_to_speech_fn(FREE_SCAN_INTRO)
-        if audio and not error:
-            pydub_format = "ogg" if audio_format == "opus" else audio_format
-            export_format = "ogg" if audio_format == "opus" else audio_format
-            export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
-
-            # Add 1 second silence at start
-            silence = AudioSegment.silent(duration=1000)
-            intro_seg = AudioSegment.from_file(io.BytesIO(audio), format=pydub_format)
-            combined = silence + intro_seg
-
-            output = io.BytesIO()
-            combined.export(output, format=export_format, parameters=export_params)
-            final_audio = output.getvalue()
-
-            # Cache for future use
-            asyncio.create_task(s3_cache.set(static_intro_key, final_audio))
-
-            return final_audio
-        else:
-            logger.error(f"Failed to generate static intro: {error}")
-            return None
-    except Exception as e:
-        logger.error(f"Error generating static intro: {e}", exc_info=True)
-        return None
 
 
 async def get_empty_pool_audio(convert_text_to_speech_fn, audio_format: str = "mp3") -> Optional[bytes]:

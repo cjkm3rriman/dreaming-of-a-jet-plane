@@ -227,7 +227,6 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
 
     # Retry logic: retry on timeouts and connection errors with backoff
     max_attempts = 2
-    last_error = None
 
     for attempt in range(max_attempts):
         try:
@@ -235,7 +234,6 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
             response = await client.get(url, params=params)
             break  # Success, exit retry loop
         except (httpx.TimeoutException, httpx.RequestError) as e:
-            last_error = e
             error_type = "timeout" if isinstance(e, httpx.TimeoutException) else "connection error"
             if attempt < max_attempts - 1:
                 backoff = RETRY_BACKOFF * (2 ** attempt)  # 1s, 2s
@@ -279,7 +277,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                     continue
 
                 aircraft_lat = flight.get("lat")
-                aircraft_lon = flight.get("lng") if flight.get("lng") is not None else flight.get("lon")
+                aircraft_lon = flight.get("lng")
                 if aircraft_lat is None or aircraft_lon is None:
                     continue
 
@@ -317,12 +315,9 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                     )
                     continue
 
-                callsign = (
-                    flight.get("flight_icao")
-                    or flight.get("flight_number")
-                    or flight.get("hex")
-                    or "Unknown"
-                )
+                # _fields requests neither flight_icao nor hex, so the flight
+                # number is the only callsign the bulk endpoint can give us
+                callsign = flight.get("flight_number") or "Unknown"
                 origin_iata = flight.get("dep_iata")
                 dest_iata = flight.get("arr_iata")
 
@@ -366,7 +361,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                 # live after that block, so the first flight of every fetch raised a
                 # swallowed UnboundLocalError and later flights reused the previous
                 # flight's type for their cruise speed (DOJP-23)
-                aircraft_type = flight.get("aircraft_icao") or flight.get("aircraft_type") or ""
+                aircraft_type = flight.get("aircraft_icao") or ""
 
                 eta_estimate = None
                 if dest_iata and aircraft_lat is not None and aircraft_lon is not None:
@@ -389,7 +384,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                                     exc,
                                 )
 
-                airline_icao = flight.get("airline_icao") or flight.get("airline_code")
+                airline_icao = flight.get("airline_icao")
                 airline_iata = flight.get("airline_iata")
                 raw_flight_number = flight.get("flight_number")
 
@@ -413,23 +408,20 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                 is_cargo = is_cargo_airline(airline_icao) if airline_icao else False
                 is_private = is_private_airline(airline_icao) if airline_icao else False
 
-                flight_iata = flight.get("flight_iata")
-                if flight_iata:
-                    formatted_flight_number = flight_iata
-                elif airline_iata and raw_flight_number:
+                if airline_iata and raw_flight_number:
                     formatted_flight_number = f"{airline_iata}{raw_flight_number}"
                 else:
                     formatted_flight_number = raw_flight_number
 
                 aircraft_info = {
-                    "icao24": flight.get("hex"),
+                    "icao24": None,  # bulk /flights cannot return hex; key kept for provider shape parity
                     "callsign": callsign,
                     "flight_number": formatted_flight_number,
                     "airline_icao": airline_icao,
                     "airline_name": airline_name,
                     "is_cargo_operator": is_cargo,
                     "is_private_operator": is_private,
-                    "aircraft_registration": flight.get("reg_number") or flight.get("registration"),
+                    "aircraft_registration": flight.get("reg_number"),
                     "aircraft_icao": aircraft_type,
                     "aircraft": get_aircraft_name(aircraft_type),
                     "passenger_capacity": get_passenger_capacity(aircraft_type),
