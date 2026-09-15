@@ -75,7 +75,7 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
         # unreachable (DOJP-45)
         lat, lng, country_code, city, region, country_name, is_fallback, timestamp = cached_data
         if current_time - timestamp < IP_CACHE_DURATION:
-            logger.info(f"Using cached location for IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}, is_fallback={is_fallback}")
+            logger.debug(f"IP cache hit for {ip}")
             return lat, lng, country_code, city, region, country_name, is_fallback
         else:
             # Cache expired, remove entry
@@ -143,9 +143,9 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                 # Cache the result (skip for localhost)
                 if not is_localhost:
                     _ip_cache[ip] = (lat, lng, country_code, city, region, country_name, False, current_time)
-                    logger.info(f"Cached new location for IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
+                    logger.info(f"Cached new location for IP {ip}: {country_code}, {city}, {region}")
                 else:
-                    logger.info(f"Skipping cache for localhost IP {ip}: {lat}, {lng}, {country_code}, {city}, {region}, {country_name}")
+                    logger.debug(f"Skipping cache for localhost IP {ip}")
                 return lat, lng, country_code, city, region, country_name, False
 
             elif response.status_code == 429:
