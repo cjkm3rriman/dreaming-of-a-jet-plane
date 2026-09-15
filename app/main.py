@@ -26,6 +26,8 @@ logging.getLogger('httpx').setLevel(logging.WARNING)
 # Suppress verbose Google GenAI SDK logs (AFC notifications, etc.)
 logging.getLogger('google_genai').setLevel(logging.WARNING)
 
+
+
 # pydub's regexes trip SyntaxWarning on import under 3.13 - third-party
 # cosmetic noise at every boot
 import warnings
@@ -79,7 +81,26 @@ if os.getenv("SENTRY_DSN") and os.getenv("RAILWAY_REPLICA_ID"):
     )
     logger.info("Sentry error monitoring initialized (environment=production)")
 
-app = FastAPI()
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def _app_lifespan(app: FastAPI):
+    """uvicorn's per-request access lines duplicate Railway's structured HTTP
+    logs (railway logs --http has status, duration, request id).
+
+    Silenced at startup, not module level: `fastapi run` imports the app
+    first and uvicorn's dictConfig then resets this logger, so an
+    import-time setLevel is overwritten. And not via --no-access-log, which
+    is a uvicorn flag `fastapi run` rejects - passing it crashed the
+    container at boot (the DOJP-49 healthcheck caught it and kept the old
+    deployment serving).
+    """
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    yield
+
+
+app = FastAPI(lifespan=_app_lifespan)
 
 # Serve static assets
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")

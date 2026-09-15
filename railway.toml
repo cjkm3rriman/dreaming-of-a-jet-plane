@@ -2,9 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-# --no-access-log: uvicorn's per-request access lines duplicate Railway's own
-# structured HTTP logs (railway logs --http has status, duration, request id)
-startCommand = "uv run fastapi run app/main.py --host 0.0.0.0 --port $PORT --no-access-log"
+startCommand = "uv run fastapi run app/main.py --host 0.0.0.0 --port $PORT"
 # With a healthcheck, Railway keeps the old deployment serving until the new
 # one passes /health, giving zero-downtime cutover instead of a hard-down
 # window where players mid-session get 502s (DOJP-49). /health is
