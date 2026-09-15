@@ -197,15 +197,15 @@ async def test_content_type_selects_the_matching_ttl(creds):
 
 
 @pytest.mark.unit
-async def test_missing_last_modified_is_currently_treated_as_fresh(cache):
-    """Characterization of a known latent edge (DOJP-44 item 3): with no
-    Last-Modified header the TTL check is skipped and the object is served.
-    When DOJP-44 flips this to treat-as-expired, invert this test."""
+async def test_missing_last_modified_is_treated_as_expired(cache):
+    """No Last-Modified means freshness is unverifiable, so it's a miss and
+    the GET never fires - not served forever (DOJP-44 item 3, flipped)"""
     with respx.mock as router:
         router.head(URL).mock(return_value=httpx.Response(200))
-        router.get(URL).mock(return_value=httpx.Response(200, content=b"audio"))
+        get_route = router.get(URL).mock(return_value=httpx.Response(200, content=b"audio"))
 
-        assert await cache.get(KEY) == b"audio"
+        assert await cache.get(KEY) is None
+        assert get_route.call_count == 0
 
 
 @pytest.mark.unit

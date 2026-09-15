@@ -1,7 +1,7 @@
 [project]
 name = "dreaming-of-a-jet-plane"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI service that turns real overhead flights into narrated audio for Yoto players"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

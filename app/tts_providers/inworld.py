@@ -39,15 +39,24 @@ def _build_authorization_header() -> str:
     if not key:
         return ""
 
-    try:
-        base64.b64decode(key, validate=True)
-        is_base64 = True
-    except binascii.Error:
-        is_base64 = False
+    # INWORLD_API_KEY_PREENCODED forces the interpretation when set (true =
+    # already base64, false = raw needing encoding). Left unset, we fall back
+    # to a heuristic that can misfire on a raw key which happens to be valid
+    # base64 with no colon (DOJP-44) - set the env var to disambiguate.
+    preencoded = os.getenv("INWORLD_API_KEY_PREENCODED")
+    if preencoded is not None:
+        already_base64 = preencoded.strip().lower() in ("1", "true", "yes")
+    else:
+        try:
+            base64.b64decode(key, validate=True)
+            already_base64 = True
+        except binascii.Error:
+            already_base64 = False
+        if ":" in key:
+            already_base64 = False
 
-    if not is_base64 or ":" in key:
-        key_bytes = key.encode("utf-8")
-        key = base64.b64encode(key_bytes).decode("ascii")
+    if not already_base64:
+        key = base64.b64encode(key.encode("utf-8")).decode("ascii")
 
     return f"Basic {key}"
 
