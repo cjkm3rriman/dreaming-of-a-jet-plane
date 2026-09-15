@@ -40,6 +40,7 @@ from .scanning_again import stream_scanning_again, scanning_again_options
 from .scanning import stream_scanning, scanning_options
 from .s3_cache import s3_cache
 from .plane_audio import generate_plane_audio
+from .background import spawn
 from .flight_text import (
     not_enough_planes_message,
     FUN_FACT_OPENINGS,
@@ -820,7 +821,7 @@ async def get_nearby_aircraft(
             )
 
             cache_data = {"provider": provider_name, "aircraft": aircraft_list}
-            asyncio.create_task(s3_cache.set(cache_key, cache_data, content_type="json"))
+            spawn(s3_cache.set(cache_key, cache_data, content_type="json"), "cache flight json (found)")
             logger.info(
                 f"Cached {len(aircraft_list)} aircraft from {display_name} for lat={lat}, lng={lng}"
             )
@@ -841,7 +842,7 @@ async def get_nearby_aircraft(
 
         # No aircraft returned, cache the empty response to avoid rapid retries
         cache_data = {"provider": provider_name, "aircraft": []}
-        asyncio.create_task(s3_cache.set(cache_key, cache_data, content_type="json"))
+        spawn(s3_cache.set(cache_key, cache_data, content_type="json"), "cache flight json (empty)")
         logger.info(f"{display_name} returned no aircraft; trying next provider if available")
         provider_errors.append(provider_error or f"{display_name} returned no aircraft")
 
@@ -1048,7 +1049,7 @@ async def handle_plane_endpoint(
 
     if audio_content and not tts_error:
         # Cache the newly generated audio (don't await - do in background)
-        asyncio.create_task(s3_cache.set(cache_key, audio_content))
+        spawn(s3_cache.set(cache_key, audio_content), f"cache plane {plane_index} audio")
 
         # Track audio generation analytics if we have aircraft data
         if aircraft and len(aircraft) > zero_based_index:

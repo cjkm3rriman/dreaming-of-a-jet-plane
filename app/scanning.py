@@ -12,6 +12,7 @@ import httpx
 from .s3_cache import s3_cache
 from .flight_text import generate_flight_text, get_plane_sentence_override
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent
+from .background import spawn
 
 logger = logging.getLogger(__name__)
 
@@ -268,16 +269,21 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
             # Still stream the MP3, but skip analytics and background processing
             return await _stream_scanning_mp3_only(request, tts_override)
     
-    # Update cache with current request time
+    # Update cache with current request time, and opportunistically drop
+    # entries older than the debounce window - they can never match the check
+    # above again, so keeping them just grows the dict forever (DOJP-42)
+    cutoff = current_time - SCANNING_DEBOUNCE_SECONDS
+    for key in [k for k, t in _scanning_request_cache.items() if t < cutoff]:
+        del _scanning_request_cache[key]
     _scanning_request_cache[session_key] = current_time
-    
+
     # Track scan:start event using unified tracking function
     from .main import track_scan_start
     track_scan_start(request, subscription="yoto-club")
     
     # Start audio pre-generation in background (don't await)
     if user_lat != 0.0 or user_lng != 0.0:  # Only if we have a valid location
-        asyncio.create_task(pre_generate_flight_audio(user_lat, user_lng, request, tts_override))
+        spawn(pre_generate_flight_audio(user_lat, user_lng, request, tts_override), "pre-generate flight audio")
     else:
         logger.warning("Could not determine location for audio pre-generation")
     
