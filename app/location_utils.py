@@ -116,15 +116,18 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
                     return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True
 
-                lat = data.get("latitude", 0.0)
-                lng = data.get("longitude", 0.0)
+                lat = data.get("latitude")
+                lng = data.get("longitude")
                 country_code = data.get("country_code", "US")
                 city = data.get("city", "")
                 region = data.get("region", "")
                 country_name = data.get("country_name", "")
 
-                # Check if we got null/missing coordinates and use NYC fallback
-                if lat == 0.0 and lng == 0.0:
+                # NYC fallback for missing, null, or 0/0 coordinates. `null`
+                # in the JSON bypasses a `data.get(..., 0.0)` default, so an
+                # explicit None check is required or None reaches math.radians
+                # and crashes later (DOJP-44)
+                if lat is None or lng is None or (lat == 0.0 and lng == 0.0):
                     fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name = 40.7128, -74.0060, "US", "New York", "New York", "United States"
                     logger.warning(f"IP geolocation API returned 0.0,0.0 for IP {ip}, using NYC fallback")
 
@@ -216,10 +219,13 @@ def uses_metric_system(country_code: str) -> bool:
 
 def extract_client_ip(request: Request) -> str:
     """Extract client IP from request headers, handling proxies and CDNs"""
+    # cf-connecting-ip is set by our CDN and cannot be spoofed by the client;
+    # x-forwarded-for is client-appendable, so its first entry is attacker-
+    # controlled. Prefer the trustworthy headers first (DOJP-44).
     client_ip = (
-        request.headers.get("x-forwarded-for", "").split(",")[0].strip() or
+        request.headers.get("cf-connecting-ip") or  # Cloudflare, trusted
         request.headers.get("x-real-ip") or
-        request.headers.get("cf-connecting-ip") or  # Cloudflare
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip() or
         request.client.host
     )
     return client_ip

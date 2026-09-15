@@ -258,18 +258,23 @@ class S3MP3Cache:
             # Check if cached file is still valid - use appropriate TTL
             ttl_minutes = self.api_ttl_minutes if content_type == "json" else self.ttl_minutes
             last_modified_str = head_response.headers.get("last-modified")
-            if last_modified_str:
-                try:
-                    # Parse S3 date format: 'Wed, 21 Oct 2015 07:28:00 GMT'
-                    from email.utils import parsedate_to_datetime
-                    last_modified = parsedate_to_datetime(last_modified_str)
-                    now = datetime.now(last_modified.tzinfo)
+            # No Last-Modified means we cannot verify freshness; treat as a
+            # miss rather than serving it forever (DOJP-44). S3 always sets
+            # the header, so this only bites a misbehaving/proxied response.
+            if not last_modified_str:
+                logger.warning(f"No Last-Modified for {cache_key}; treating as expired")
+                return None
+            try:
+                # Parse S3 date format: 'Wed, 21 Oct 2015 07:28:00 GMT'
+                from email.utils import parsedate_to_datetime
+                last_modified = parsedate_to_datetime(last_modified_str)
+                now = datetime.now(last_modified.tzinfo)
 
-                    if now - last_modified > timedelta(minutes=ttl_minutes):
-                        return None
-                except Exception as e:
-                    logger.warning(f"Error parsing last-modified date: {e}")
+                if now - last_modified > timedelta(minutes=ttl_minutes):
                     return None
+            except Exception as e:
+                logger.warning(f"Error parsing last-modified date: {e}")
+                return None
 
             # File exists and is fresh, download it (longer timeout for actual data)
             get_headers = self._sign_request('GET', s3_url)

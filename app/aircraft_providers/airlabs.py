@@ -333,7 +333,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                         dest_lat = dest_airport.get("lat")
                         dest_lon = dest_airport.get("lon")
 
-                        if all([origin_lat, origin_lon, dest_lat, dest_lon]):
+                        if all(v is not None for v in (origin_lat, origin_lon, dest_lat, dest_lon)):
                             # Validate if the flight route could reasonably pass near the user
                             # Uses multiple checks: endpoint proximity, geographic bounds, and generous great circle tolerance
                             route_is_valid = is_point_near_route(

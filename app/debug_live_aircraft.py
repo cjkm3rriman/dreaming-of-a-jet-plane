@@ -168,8 +168,9 @@ def register_test_live_aircraft_routes(
                     return f'<span style="color: #388e3c; font-weight: bold;">{value} km ✅</span>'
             return html.escape(str(value or ""))
 
-        # Check if aircraft is selected by diversity algorithm
-        selected_ids = {plane.get("flight_id") for plane in selected_aircraft}
+        # Selected dicts are the same objects returned from the input list,
+        # so match by identity - no provider emits a "flight_id" field (DOJP-44)
+        selected_ids = {id(plane) for plane in selected_aircraft}
 
         def render_row(idx: int, plane: Dict[str, Any]) -> str:
             cells = []
@@ -179,7 +180,7 @@ def register_test_live_aircraft_routes(
                 cell_class = ' class="route-distance"' if column == "min_route_distance_km" else ''
                 cells.append(f"<td{cell_class}>{cell_content}</td>")
 
-            is_selected = plane.get("flight_id") in selected_ids
+            is_selected = id(plane) in selected_ids
             row_class = ' class="selected"' if is_selected else ''
             selection_marker = "✅ " if is_selected else ""
             return f"<tr{row_class}><td>{selection_marker}{idx}</td>{''.join(cells)}</tr>"
@@ -226,7 +227,7 @@ def register_test_live_aircraft_routes(
 
             selected_summary_html = f"""
             <div class="selected-summary">
-                <h2>🎯 Selected by Diversity Algorithm (3 aircraft)</h2>
+                <h2>🎯 Selected by Diversity Algorithm ({len(selected_aircraft)} aircraft)</h2>
                 <p>These aircraft would be presented to the user based on geographic diversity, cargo/private inclusion, and distance filtering:</p>
                 <ol>
                     {"".join(selected_items)}
