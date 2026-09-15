@@ -93,9 +93,9 @@ LIVE_AIRCRAFT_PROVIDER_FALLBACKS = [p.strip().lower() for p in os.getenv("LIVE_A
 PROVIDER_OVERRIDE_SECRET = os.getenv("PROVIDER_OVERRIDE_SECRET")
 
 # TTS Configuration
-TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "google", "inworld", "fallback"
+TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")  # Options: "elevenlabs", "google", "inworld"
 
-TTS_OVERRIDE_PROVIDERS = ["elevenlabs", "google", "inworld", "fallback"]
+TTS_OVERRIDE_PROVIDERS = ["elevenlabs", "google", "inworld"]
 
 
 def normalize_tts_provider_override(tts: Optional[str]) -> Optional[str]:
@@ -251,9 +251,6 @@ def get_voice_folder(tts_override: Optional[str] = None) -> str:
         str: "edward" for ElevenLabs, "sadachbia" for Google TTS, "ronald" for Inworld
     """
     provider = (tts_override or TTS_PROVIDER).lower()
-    # Handle "fallback" by defaulting to elevenlabs folder
-    if provider == "fallback":
-        provider = "elevenlabs"
     return get_tts_voice_folder(provider)
 
 def get_voice_specific_s3_url(filename: str, tts_override: Optional[str] = None) -> str:
@@ -288,11 +285,16 @@ def get_static_audio_mime_type(tts_override: Optional[str] = None) -> str:
 async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) -> tuple[bytes, str, str, str, str]:
     """Convert text to speech using configured or overridden TTS provider
 
-    Supports multiple providers based on TTS_PROVIDER environment variable:
-    - "elevenlabs": Use ElevenLabs (default)
-    - "google": Use Google Gemini Flash TTS
-    - "inworld": Use Inworld's TTS API
-    - "fallback": Try ElevenLabs first, fallback to Inworld on error
+    The provider is a single named entry in the TTS registry, from the
+    TTS_PROVIDER env var or a ?tts= override:
+    - "elevenlabs": ElevenLabs (opus) - default
+    - "google": Google Gemini Flash TTS (mp3)
+    - "inworld": Inworld's TTS API (opus)
+
+    There is deliberately no cross-provider "fallback" mode: switching voices
+    mid-session is bad UX, and the removed fallback conflated formats and
+    voices across providers (DOJP-43). Format and MIME always come from the
+    one provider that generated the audio, so they cannot disagree with it.
 
     Args:
         text: Text to convert to speech
@@ -303,46 +305,23 @@ async def convert_text_to_speech(text: str, tts_override: Optional[str] = None) 
         - audio_content: Audio bytes if successful, empty bytes if failed
         - error_message: Empty string if successful, error description if failed
         - provider_used: Which provider was actually used ("elevenlabs", "google", "inworld")
-        - file_extension: File extension for the audio format ("mp3" or "ogg")
-        - mime_type: MIME type for the audio format ("audio/mpeg" or "audio/ogg")
+        - file_extension: File extension for the audio format ("opus" or "mp3")
+        - mime_type: MIME type for the audio format ("audio/opus" or "audio/mpeg")
     """
     provider = tts_override.lower() if tts_override else TTS_PROVIDER.lower()
 
-    audio_content = b""
-    error = ""
-    provider_used = ""
+    provider_def = get_tts_provider_definition(provider)
+    if not provider_def:
+        error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'google', or 'inworld'"
+        logger.error(error_msg)
+        return b"", error_msg, "unknown", "mp3", "audio/mpeg"
 
-    if provider == "fallback":
-        # Try ElevenLabs first, fallback to Inworld on error
-        logger.info("Using fallback strategy: trying ElevenLabs first")
-        elevenlabs_def = get_tts_provider_definition("elevenlabs")
-        if elevenlabs_def:
-            audio_content, error = await elevenlabs_def["generate_audio"](text)
-            if audio_content and not error:
-                provider_used = "elevenlabs"
-            else:
-                logger.info(f"ElevenLabs failed ({error}), falling back to Inworld")
-                inworld_def = get_tts_provider_definition("inworld")
-                if inworld_def:
-                    audio_content, error = await inworld_def["generate_audio"](text)
-                    provider_used = "inworld"
-        if not provider_used:
-            error = "Fallback providers not available"
-            provider_used = "fallback"
-    else:
-        # Use specific provider
-        provider_def = get_tts_provider_definition(provider)
-        if provider_def:
-            audio_content, error = await provider_def["generate_audio"](text)
-            provider_used = provider
-        else:
-            error_msg = f"Unknown TTS provider: {provider}. Use 'elevenlabs', 'google', 'inworld', or 'fallback'"
-            logger.error(error_msg)
-            return b"", error_msg, "unknown", "mp3", "audio/mpeg"
+    audio_content, error = await provider_def["generate_audio"](text)
 
-    # Get format info for the provider that was used
-    file_ext, mime_type = get_audio_format_for_provider(provider_used)
-    return audio_content, error, provider_used, file_ext, mime_type
+    # Format and MIME come from the provider that actually ran, so a cache key
+    # or response header can never disagree with the bytes it describes
+    file_ext, mime_type = get_audio_format_for_provider(provider)
+    return audio_content, error, provider, file_ext, mime_type
 
 def _generate_distinct_id(client_ip: str, user_agent: str) -> str:
     """Generate a stable anonymous user ID from IP + user agent"""

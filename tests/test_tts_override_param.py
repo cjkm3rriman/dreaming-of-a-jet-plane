@@ -54,7 +54,7 @@ def test_every_plane_route_forwards_tts(plane_index):
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("provider", ["elevenlabs", "google", "inworld", "fallback"])
+@pytest.mark.parametrize("provider", ["elevenlabs", "google", "inworld"])
 def test_supported_providers_normalize(provider):
     assert normalize_tts_provider_override(provider.upper()) == provider
 
