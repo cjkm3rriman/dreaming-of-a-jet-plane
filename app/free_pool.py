@@ -85,7 +85,7 @@ async def get_free_pool_index() -> Optional[Dict]:
             index = json.loads(index_bytes.decode('utf-8'))
             _free_pool_index_cache = index
             _free_pool_index_timestamp = current_time
-            logger.info(f"Loaded free pool index with {len(index.get('entries', []))} sessions")
+            logger.debug(f"Loaded free pool index with {len(index.get('entries', []))} sessions")
             return index
         else:
             logger.info("Free pool index not found in S3")

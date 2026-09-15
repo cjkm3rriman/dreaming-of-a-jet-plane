@@ -17,19 +17,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Filter out HEAD requests from httpx logs to reduce noise
-class SupressHeadRequestsFilter(logging.Filter):
-    def filter(self, record):
-        # Suppress log records that contain "HEAD" HTTP requests
-        return 'HEAD' not in record.getMessage()
-
-# Apply filter to httpx logger
-httpx_logger = logging.getLogger('httpx')
-httpx_logger.addFilter(SupressHeadRequestsFilter())
+# httpx logs every request URL at INFO - a third of production log volume,
+# all duplicating information the app logs meaningfully itself (cache
+# decisions, provider errors with status+body). Warnings and errors still
+# surface; the old HEAD-suppression filter is obsolete with this.
+logging.getLogger('httpx').setLevel(logging.WARNING)
 
 # Suppress verbose Google GenAI SDK logs (AFC notifications, etc.)
-google_genai_logger = logging.getLogger('google_genai')
-google_genai_logger.setLevel(logging.WARNING)
+logging.getLogger('google_genai').setLevel(logging.WARNING)
+
+# pydub's regexes trip SyntaxWarning on import under 3.13 - third-party
+# cosmetic noise at every boot
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning, module="pydub.*")
 
 from .airport_database import get_airport_by_iata
 from .airline_database import AirlineDatabase
@@ -454,6 +454,7 @@ def track_plane_request(
     from_cache: bool,
     subscription: str = "yoto-club",
     free_pool_entry_id: str = None,
+    free_pool_size: int = None,
 ):
     """Track plane:request analytics event for plane endpoint requests
 
@@ -466,6 +467,8 @@ def track_plane_request(
         from_cache: Whether audio was served from cache
         subscription: "yoto-club" for paid, "free" for free tier
         free_pool_entry_id: Free pool session ID (free tier only)
+        free_pool_size: Number of sessions in the free pool at serve time
+            (free tier only) - the Mixpanel gauge for pool health
     """
     try:
         base, session_id, distinct_id = _analytics_context(request, lat, lng)
@@ -484,6 +487,10 @@ def track_plane_request(
         # Add free tier specific properties
         if free_pool_entry_id:
             properties["free_pool_entry_id"] = free_pool_entry_id
+        if free_pool_size is not None:
+            # Gauge of the free pool at serve time, for monitoring pool
+            # health in Mixpanel (chart avg/min over time)
+            properties["free_pool_size"] = free_pool_size
 
         analytics.track_event("plane:request", properties, distinct_id=distinct_id)
     except Exception as e:
@@ -1438,6 +1445,7 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
         from_cache=True,  # Free tier always serves cached content
         subscription="free",
         free_pool_entry_id=session.get("id"),
+        free_pool_size=len(index.get("entries", [])),
     )
 
     return StreamingResponse(
