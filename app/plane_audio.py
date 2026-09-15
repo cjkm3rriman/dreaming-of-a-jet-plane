@@ -12,6 +12,7 @@ import time
 from typing import Any, Dict, Optional
 
 from .s3_cache import s3_cache
+from .background import spawn
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ async def generate_plane_audio(
                 if not fun_fact_opening_audio:
                     fun_fact_opening_audio, ff_open_err, _, _, _ = await convert_text_to_speech(fun_fact_opening_text, tts_override=tts_override)
                     if fun_fact_opening_audio and not ff_open_err:
-                        asyncio.create_task(cache_opening_phrase_audio(fun_fact_opening_text, fun_fact_opening_audio, tts_provider_used, file_ext))
+                        spawn(cache_opening_phrase_audio(fun_fact_opening_text, fun_fact_opening_audio, tts_provider_used, file_ext), "cache fun-fact opener")
 
                 fun_fact_body_audio = await get_cached_fun_fact_audio(fun_fact_body_text, tts_provider_used, file_ext)
                 if fun_fact_body_audio:
@@ -81,7 +82,7 @@ async def generate_plane_audio(
                     fun_fact_cache_hit = False
                     fun_fact_body_audio, ff_body_err, _, _, _ = await convert_text_to_speech(fun_fact_body_text, tts_override=tts_override)
                     if fun_fact_body_audio and not ff_body_err:
-                        asyncio.create_task(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, file_ext))
+                        spawn(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, file_ext), "cache fun-fact body")
 
             body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
             if fun_fact_opening_audio and fun_fact_body_audio:

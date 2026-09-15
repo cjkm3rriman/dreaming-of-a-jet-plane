@@ -17,7 +17,10 @@ from typing import Any, Dict, List, Optional
 
 from pydub import AudioSegment
 
+import copy
+
 from .s3_cache import s3_cache
+from .background import spawn
 from .tts_providers import get_audio_format
 
 logger = logging.getLogger(__name__)
@@ -116,14 +119,19 @@ async def update_free_pool_index(
     global _free_pool_index_cache, _free_pool_index_timestamp
 
     try:
-        # Get current index or create new one
-        current_index = await get_free_pool_index()
-        if current_index is None:
+        # Work on a copy: get_free_pool_index() returns the live in-memory
+        # cache object, so mutating it directly would dirty the cache before
+        # the S3 write - and a failed write would leave memory and S3 diverged
+        # (DOJP-42). We only swap the cache in on success, below.
+        existing = await get_free_pool_index()
+        if existing is None:
             current_index = {
                 "version": 1,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
                 "entries": []
             }
+        else:
+            current_index = copy.deepcopy(existing)
 
         # Create new entry
         new_entry = {
@@ -279,6 +287,15 @@ def check_free_tier_rate_limit(client_ip: str) -> tuple[bool, Optional[int]]:
 
     current_time = time.time()
     window_start = current_time - FREE_TIER_RATE_WINDOW
+
+    # Opportunistically evict IPs whose entire history has aged out of the
+    # window. Pruning only happens per-IP on access otherwise, so a scraper's
+    # IP key lingers forever after its last request (DOJP-42). Bounded work:
+    # only sweeps once the dict is non-trivially large.
+    if len(_rate_limit_cache) > 256:
+        for ip in [ip for ip, ts in _rate_limit_cache.items()
+                   if not any(t > window_start for t in ts)]:
+            del _rate_limit_cache[ip]
 
     # Get or create request history for this IP
     if client_ip not in _rate_limit_cache:
@@ -482,7 +499,7 @@ async def get_empty_pool_audio(convert_text_to_speech_fn, audio_format: str = "m
             final_audio = output.getvalue()
 
             # Cache for future use
-            asyncio.create_task(s3_cache.set(empty_pool_key, final_audio))
+            spawn(s3_cache.set(empty_pool_key, final_audio), "cache empty-pool message")
 
             return final_audio
         else:
