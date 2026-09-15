@@ -65,17 +65,19 @@ from .tts_providers import (
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 
-if os.getenv("SENTRY_DSN"):
-    # Auto-detect environment: RAILWAY_REPLICA_ID is only set on deployed
-    # Railway containers, not via `railway run` locally
-    _sentry_env = "production" if os.getenv("RAILWAY_REPLICA_ID") else "development"
+# Initialize Sentry only on deployed Railway containers (RAILWAY_REPLICA_ID is
+# absent under `railway run` locally). Local runs previously reported as a
+# "development" environment nobody monitors - and the test suite's deliberately
+# mocked failures (401s, 503s, ffmpeg errors) landed in Sentry as phantom
+# unresolved issues that could bury a real production incident in noise.
+if os.getenv("SENTRY_DSN") and os.getenv("RAILWAY_REPLICA_ID"):
     sentry_sdk.init(
         dsn=os.getenv("SENTRY_DSN"),
-        environment=_sentry_env,
+        environment="production",
         traces_sample_rate=0.1,  # 10% of requests for performance monitoring
         integrations=[FastApiIntegration()],
     )
-    logger.info(f"Sentry error monitoring initialized (environment={_sentry_env})")
+    logger.info("Sentry error monitoring initialized (environment=production)")
 
 app = FastAPI()
 
