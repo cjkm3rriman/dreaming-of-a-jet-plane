@@ -88,6 +88,18 @@ register_website_home_routes(app)
 # Register test Gemini TTS routes
 register_test_gemini_tts_routes(app)
 
+
+@app.get("/health")
+async def health():
+    """Liveness probe for Railway's zero-downtime deploy cutover (DOJP-49).
+
+    Deliberately dependency-free - no S3, provider, or TTS calls - so a
+    degraded upstream can't fail the healthcheck and block a deploy. It only
+    answers "this process is up and serving HTTP", which is exactly what the
+    cutover needs to know.
+    """
+    return {"status": "ok"}
+
 # Live aircraft provider configuration
 LIVE_AIRCRAFT_PROVIDER = (os.getenv("LIVE_AIRCRAFT_PROVIDER") or "fr24").lower()
 LIVE_AIRCRAFT_PROVIDER_FALLBACKS = [p.strip().lower() for p in os.getenv("LIVE_AIRCRAFT_PROVIDER_FALLBACKS", "").split(",") if p.strip()]
