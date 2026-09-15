@@ -1,5 +1,16 @@
 """Pytest configuration and shared fixtures for tests"""
 
+import os
+
+# Strip real-service credentials BEFORE any app module is imported.
+# `railway run uv run pytest` injects the production env, and both analytics
+# (Mixpanel, token read at import) and Sentry init from env - test runs were
+# posting real Mixpanel events (found as phantom free_pool_size=1 breakdowns
+# on plane:request) and real Sentry issues. Tests never need either; anything
+# asserting on analytics mocks track_event directly.
+os.environ.pop("MIXPANEL_TOKEN", None)
+os.environ.pop("SENTRY_DSN", None)
+
 import pytest
 import asyncio
 
