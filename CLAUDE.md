@@ -162,7 +162,7 @@ The application requires several environment variables for full functionality:
 ### Required
 - `FR24_API_KEY`: Flightradar24 API key for live flight data
 - `GOOGLE_API_KEY`: Google API key for Gemini TTS
-- `TTS_PROVIDER`: TTS provider to use (options: `elevenlabs`, `google`, `inworld`, `fallback`)
+- `TTS_PROVIDER`: TTS provider to use (options: `elevenlabs`, `google`, `inworld`). Each is a single voice; there is no cross-provider fallback (DOJP-43).
 - `LIVE_AIRCRAFT_PROVIDER`: Primary live aircraft provider key (e.g., `fr24` or `airlabs`)
 
 ### Optional
