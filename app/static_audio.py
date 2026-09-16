@@ -6,6 +6,7 @@ and once (free-tier variant) in main.py. The whole surface now lives here;
 those modules are thin wrappers.
 """
 
+import asyncio
 import hashlib
 import logging
 from typing import Optional
@@ -83,7 +84,22 @@ async def proxy_s3_audio(request: Request, audio_url: str, mime_type: str,
             request_headers["Range"] = range_header
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(audio_url, headers=request_headers)
+            # One retry on transport errors (connection reset, read error):
+            # a transient blip on the Railway<->S3 path failed a real request
+            # once (Sentry DREAMING-OF-A-JETPLANE-21), where an immediate
+            # reconnect would almost certainly have served the clip
+            try:
+                response = await client.get(audio_url, headers=request_headers)
+            except httpx.TimeoutException:
+                # TimeoutException subclasses TransportError - re-raise so a
+                # 30s timeout keeps its historical 504 and never doubles
+                raise
+            except httpx.TransportError as e:
+                logger.warning(
+                    f"Transport error fetching {audio_url} ({type(e).__name__}: {e}), retrying once"
+                )
+                await asyncio.sleep(0.3)
+                response = await client.get(audio_url, headers=request_headers)
 
             if response.status_code in [200, 206]:
                 content = response.content
@@ -130,8 +146,11 @@ async def proxy_s3_audio(request: Request, audio_url: str, mime_type: str,
             return JSONResponse({"error": "Timeout accessing audio file"}, status_code=504)
         return {"error": "Timeout accessing audio file", "url": audio_url}
     except Exception as e:
+        # Always log the exception TYPE: httpx transport errors stringify to
+        # an empty message, which made the original Sentry event undiagnosable
+        # from its text alone
+        logger.error(f"Error streaming audio {audio_url}: {type(e).__name__}: {e}")
         if error_style == "json":
-            logger.error(f"Error streaming audio {audio_url}: {e}")
             return JSONResponse({"error": f"Failed to stream audio: {str(e)}"}, status_code=500)
         return {"error": f"Failed to stream audio: {str(e)}", "url": audio_url}
 
