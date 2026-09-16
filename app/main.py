@@ -49,8 +49,8 @@ from .flight_text import (
     us_state_for_airport,
     generate_flight_text,
     generate_flight_text_for_aircraft,
-    get_plane_sentence_override,
 )
+from .special_events import EVENTS, get_active_event, aircraft_slot_for_plane, ensure_event_audio
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
 from .website_home import register_website_home_routes
@@ -186,6 +186,27 @@ def get_tts_provider_override(request: Request) -> Optional[str]:
     if provider:
         logger.info(f"TTS provider override: {provider} from IP: {extract_client_ip(request)}")
     return provider
+
+
+def get_event_preview_override(request: Request) -> Optional[Dict[str, Any]]:
+    """Secret-gated preview of a Special Signal Event outside its window.
+
+    ?event_preview=santa&secret=... makes the named event active for this
+    request only, so an event can be heard end to end (slot shift included)
+    before its real date - the DOJP-33 manual-verification path.
+    """
+    if not PROVIDER_OVERRIDE_SECRET:
+        return None
+
+    name = request.query_params.get("event_preview")
+    secret_param = request.query_params.get("secret")
+    if not name or secret_param != PROVIDER_OVERRIDE_SECRET:
+        return None
+
+    event = next((e for e in EVENTS if e["name"] == name.lower()), None)
+    if event:
+        logger.info(f"Event preview override: {event['name']} from IP: {extract_client_ip(request)}")
+    return event
 
 
 def get_aircraft_provider_override(request: Optional[Request]) -> Optional[str]:
@@ -476,6 +497,7 @@ def track_plane_request(
     subscription: str = "yoto-club",
     free_pool_entry_id: str = None,
     free_pool_size: int = None,
+    event_name: str = None,
 ):
     """Track plane:request analytics event for plane endpoint requests
 
@@ -512,6 +534,10 @@ def track_plane_request(
             # Gauge of the free pool at serve time, for monitoring pool
             # health in Mixpanel (chart avg/min over time)
             properties["free_pool_size"] = free_pool_size
+        if event_name:
+            # Special Signal Event served on this track (DOJP-33) - the
+            # engagement measure for the events calendar
+            properties["event_name"] = event_name
 
         analytics.track_event("plane:request", properties, distinct_id=distinct_id)
     except Exception as e:
@@ -988,8 +1014,30 @@ async def handle_plane_endpoint(
     user_lat, user_lng, user_country_code, user_city, user_region, user_country_name, is_fallback_location = await get_user_location(request, lat, lng, country)
     country_code = user_country_code  # Keep for backwards compatibility
 
-    # Convert to 0-based index
-    zero_based_index = plane_index - 1
+    # Special Signal Events (DOJP-33): during an event window the event owns
+    # track 1 and real planes shift down a slot (the fifth aircraft drops).
+    event = get_event_preview_override(request) or get_active_event()
+    if event and plane_index == 1:
+        result = await ensure_event_audio(event, tts_override=tts_override)
+        if result["audio"]:
+            track_plane_request(
+                request, user_lat, user_lng, user_city, plane_index,
+                from_cache=result["from_cache"], event_name=event["name"],
+            )
+            response_headers = plane_audio_response_headers(result["mime_type"], len(result["audio"]))
+            return StreamingResponse(
+                iter([result["audio"]]),
+                status_code=200,
+                media_type=result["mime_type"],
+                headers=response_headers,
+            )
+        # Event TTS failed - degrade to a normal scan so the child still
+        # hears a plane rather than nothing
+        logger.error(f"Event '{event['name']}' audio unavailable, serving normal plane 1")
+        event = None
+
+    # Zero-based aircraft index for this track (shifted during an event)
+    zero_based_index = aircraft_slot_for_plane(plane_index, event is not None)
 
     # Get audio format for the effective provider
     file_ext, mime_type = get_audio_format_for_provider(effective_provider)
@@ -1048,7 +1096,7 @@ async def handle_plane_endpoint(
     elif aircraft and len(aircraft) > 0:
         # Not enough planes - one canonical apology, shared with the pre-gen
         # path so the child hears the same words whichever path won (DOJP-46)
-        sentence = not_enough_planes_message(plane_index, len(aircraft))
+        sentence = not_enough_planes_message(plane_index, len(aircraft) + (1 if event else 0))
     else:
         # No aircraft found at all
         logger.warning(
@@ -1056,13 +1104,6 @@ async def handle_plane_endpoint(
             plane_index, error_message, user_lat, user_lng, user_city,
         )
         sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code, user_city=user_city, user_region=user_region, user_country_name=user_country_name)
-
-    override_sentence = get_plane_sentence_override(plane_index)
-    if override_sentence:
-        sentence = override_sentence
-        use_split_tts = False  # Don't use split TTS for override sentences
-        fun_fact_opening_text = None
-        fun_fact_body_text = None
 
     # Generate TTS through the shared pipeline (DOJP-46); the split path
     # handles fun-fact caching, stitching, and the free-pool body cache write.

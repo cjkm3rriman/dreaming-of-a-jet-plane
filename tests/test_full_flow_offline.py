@@ -274,3 +274,51 @@ def test_free_plane_serves_playable_stitched_audio(env):
     clip = _decode(response.content)
     assert clip.duration_seconds > 0.8
     assert clip.dBFS > -50, "free plane audio is silent"
+
+
+@pytest.mark.unit
+def test_special_event_takes_track_one_and_shifts_planes(env, monkeypatch):
+    """DOJP-33 end to end with an active event: the event owns /plane/1
+    (served from its shared per-provider key, not a location key), the real
+    planes shift down one track, and the free pool's metadata follows the
+    shift while excluding the event track entirely."""
+    import app.special_events as se
+
+    # a window that is always active regardless of the wall clock
+    monkeypatch.setattr(se, "EVENTS", [
+        {"name": "test_event", "start": (1, 1, 0), "end": (12, 31, 23),
+         "text": "A magical craft is crossing the sky!"},
+    ])
+
+    import asyncio
+    with respx.mock as router:
+        _mock_external(router)
+        asyncio.run(pre_generate_flight_audio(NYC["lat"], NYC["lng"]))
+        with TestClient(main.app) as client:
+            event_response = client.get("/plane/1")
+            plane_response = client.get("/plane/2")
+
+    # pre-gen: tracks 2-5 got location-keyed audio; track 1 got none (the
+    # event key serves it), and the event audio landed under special-events/
+    plane_keys = [k for k in env.keys("cache/") if "_plane" in k and "_body_" not in k]
+    assert len(plane_keys) == 4, f"expected 4 shifted plane caches, got {plane_keys}"
+    assert not any("_plane1_" in k for k in plane_keys), "track 1 must not use a location key"
+    event_keys = env.keys("special-events/")
+    assert len(event_keys) == 1 and "test_event" in event_keys[0]
+
+    # both tracks serve playable audio. The event is one TTS call (the stub
+    # tone), so assert decode+audibility directly rather than the stitched-
+    # narration length floor _assert_narration applies.
+    assert event_response.status_code == 200
+    event_clip = _decode(event_response.content)
+    assert event_clip.duration_seconds > 0.2, "/plane/1 (event): implausibly short"
+    assert event_clip.dBFS > -40, "/plane/1 (event): silent audio"
+    assert plane_response.status_code == 200
+    _assert_narration(_decode(plane_response.content), "/plane/2 (shifted)")
+
+    # free pool: only shifted real planes, never the event
+    index = json.loads(env.objects["free_pool/index.json"])
+    planes = index["entries"][-1]["planes"]
+    assert sorted(p["index"] for p in planes) == [2, 3], \
+        "free pool must hold the two shifted tracks and never the event"
+    assert all(p["destination_city"] for p in planes)
