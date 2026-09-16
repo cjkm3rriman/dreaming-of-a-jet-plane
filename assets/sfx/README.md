@@ -11,30 +11,26 @@ the final mix.
 
 ## Inventory
 
-All seven clips are MP3, not WAV, because MP3 is the format they were added to
-iMovie in. No lossless originals were available at export time. Each pipeline
-render therefore decodes lossy sources and re-encodes the mix once, which is
-what the current iMovie exports already do.
+All seven clips are MP3. These are the original files as downloaded or
+generated, so no lossless masters exist. Each pipeline render decodes lossy
+sources and re-encodes the mix once, which is what the current iMovie exports
+already do.
 
 | File | Duration | Format | Provenance |
 | --- | --- | --- | --- |
-| `airport-call.mp3` | 4.8 s | 48 kHz stereo, 256 kbps | TBC |
-| `deep-scan.mp3` | 1.1 s | 44.1 kHz mono, 256 kbps | TBC |
-| `jazz-lounge-elevator-music.mp3` | 87.8 s | 44.1 kHz stereo, 256 kbps | TBC |
-| `radio-frequency.mp3` | 20.0 s | 44.1 kHz stereo, 256 kbps | TBC |
-| `robot-activate-scanning-module.mp3` | 2.8 s | 44.1 kHz mono, 128 kbps | TBC |
-| `robot-scanning-skies.mp3` | 2.5 s | 44.1 kHz mono, 128 kbps | TBC |
-| `robot-scanning-skies-more.mp3` | 3.1 s | 44.1 kHz mono, 166 kbps | TBC |
+| `airport-call.mp3` | 4.8 s | 48 kHz stereo, 256 kbps | Free stock SFX (internet download) |
+| `deep-scan.mp3` | 1.1 s | 44.1 kHz mono, 256 kbps | Free stock SFX (internet download) |
+| `jazz-lounge-elevator-music.mp3` | 87.8 s | 44.1 kHz stereo, 256 kbps | Free stock SFX (internet download) |
+| `radio-frequency.mp3` | 20.0 s | 44.1 kHz stereo, 256 kbps | Free stock SFX (internet download) |
+| `robot-activate-scanning-module.mp3` | 2.8 s | 44.1 kHz mono, 128 kbps | ElevenLabs sound generation (paid subscription) |
+| `robot-scanning-skies.mp3` | 2.5 s | 44.1 kHz mono, 128 kbps | ElevenLabs sound generation (paid subscription) |
+| `robot-scanning-skies-more.mp3` | 3.1 s | 44.1 kHz mono, 166 kbps | ElevenLabs sound generation (paid subscription) |
 
-Provenance (own recording, stock library and licence, or generated) has not
-been recorded yet and decides whether these stay in the repo or move to an S3
-`sfx/` prefix. Observations from the files themselves, for whoever fills the
-column in:
-
-- The three `robot-*` clips carry an ffmpeg `Lavf60.16.100` encoder tag and
-  variable bitrates, consistent with an export from a generator or editor.
-- The other four carry no metadata tags at all, consistent with a stock
-  library download.
+The `robot-*` clips were generated with ElevenLabs under a paid subscription,
+which grants a commercial licence to the output. The other four are free stock
+effects downloaded from the internet; the specific sites were not recorded.
+Both categories are treated as cleared for repo check-in. If a stock source
+turns out to need attribution, add it to this table.
 
 ## Current deliverables
 
