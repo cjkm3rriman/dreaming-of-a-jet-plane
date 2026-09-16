@@ -560,7 +560,7 @@ graph LR
 | `main.py` | Routes, TTS dispatch, aircraft fetch + selection, analytics helpers, free tier handlers |
 | `scanning.py` | `/scanning` endpoint, debounce, background pre-generation of all 5 planes |
 | `flight_text.py` | All user-facing text; unit localisation; TTS-friendly number spelling |
-| `flight_text_seasonal.py` | Date-driven sentence overrides (e.g. holiday messages) |
+| `special_events.py` | Special Signal Events calendar (DOJP-33): date-windowed events that take over track 1 and shift real planes down a slot; event audio cached once per event+provider under `special-events/` |
 | `free_pool.py` | Free tier index, rate limiting, and all pydub audio stitching |
 | `s3_cache.py` | Hand-rolled SigV4 S3 client, key generation, TTL, retries |
 | `fun_fact_cache.py` | Content-hashed fun fact audio caching |

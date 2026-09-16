@@ -11,7 +11,6 @@ from .cities_database import get_fun_facts
 from .airport_database import get_airport_by_iata
 from .location_utils import uses_metric_system
 from .aircraft_database import get_phonetic_name
-from .flight_text_seasonal import get_plane_sentence_override  # noqa: F401 — re-exported for callers
 
 
 # Mapping for converting digits to English words for TTS

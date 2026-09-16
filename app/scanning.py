@@ -10,7 +10,8 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
 from .s3_cache import s3_cache
-from .flight_text import generate_flight_text, get_plane_sentence_override
+from .flight_text import generate_flight_text
+from .special_events import get_active_event, aircraft_slot_for_plane, ensure_event_audio
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent
 from .background import spawn
 
@@ -22,6 +23,12 @@ _scanning_request_cache = {}
 SCANNING_DEBOUNCE_SECONDS = 30  # Prevent duplicate requests within 30 seconds
 
 
+
+
+async def _ensure_event_audio_ok(event, tts_override) -> bool:
+    """Pre-warm the event's shared audio key; True on success (for gather counts)"""
+    result = await ensure_event_audio(event, tts_override=tts_override)
+    return bool(result["audio"]) and not result["error"]
 
 
 async def pre_generate_flight_audio(lat: float, lng: float, request: Request = None, tts_override: str = None):
@@ -75,10 +82,19 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # Track destination cities across all 5 planes for diversity
         used_destinations = set()
 
+        # Special Signal Events (DOJP-33): during an event the event owns
+        # track 1 (pre-warmed once into its shared per-provider key) and the
+        # real planes shift down a slot
+        event = get_active_event()
+
         # Pre-generate audio for up to 5 planes
         tasks = []
+        if event:
+            tasks.append(asyncio.create_task(_ensure_event_audio_ok(event, tts_override)))
         for plane_index in range(1, 6):  # 1, 2, 3, 4, 5
-            zero_based_index = plane_index - 1
+            zero_based_index = aircraft_slot_for_plane(plane_index, event is not None)
+            if zero_based_index is None:
+                continue  # the event track; its audio is handled above
 
             # Check cache first for this specific plane (include TTS provider and format in cache key).
             # HEAD-only: pre-generation only needs to know the audio exists and is
@@ -109,18 +125,10 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes - one canonical apology (DOJP-46)
                 from .flight_text import not_enough_planes_message
-                sentence = not_enough_planes_message(plane_index, len(aircraft))
+                sentence = not_enough_planes_message(plane_index, len(aircraft) + (1 if event else 0))
             else:
                 # No aircraft found at all
                 sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code, user_city=city, user_region=region, user_country_name=country_name)
-
-            override_sentence = get_plane_sentence_override(plane_index)
-            if override_sentence:
-                sentence = override_sentence
-                opening_text = None  # Don't use split TTS for overrides
-                body_text = None
-                fun_fact_opening_text = None
-                fun_fact_body_text = None
 
             # Create task to generate and cache this plane's audio
             selected_aircraft = aircraft[zero_based_index] if aircraft and len(aircraft) > zero_based_index else None
@@ -157,6 +165,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # endpoints exist, so populate_free_pool consumes at most three.
         if aircraft and len(aircraft) >= 2:
             await populate_free_pool(
+                slot_offset=1 if event else 0,
                 aircraft_list=aircraft[:3],
                 location_hash=location_hash,
                 tts_provider=effective_provider,

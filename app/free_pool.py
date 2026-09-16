@@ -178,6 +178,7 @@ async def populate_free_pool(
     aircraft_list: List[Dict[str, Any]],
     location_hash: str,
     tts_provider: str,
+    slot_offset: int = 0,
 ) -> bool:
     """Copy body audio to free pool for reuse with pre-recorded intros
 
@@ -199,10 +200,16 @@ async def populate_free_pool(
 
         # Process all 3 planes for free tier
         for plane_index in [1, 2, 3]:
-            if plane_index > len(aircraft_list):
+            # slot_offset=1 during a Special Signal Event (DOJP-33): track 1
+            # is the event (Club-only, no body cache, skipped here) and the
+            # shifted tracks' metadata must come from the shifted aircraft,
+            # or the index would label plane 2's audio with plane 2's flight
+            # while the audio describes aircraft 1
+            aircraft_index = plane_index - 1 - slot_offset
+            if aircraft_index < 0 or aircraft_index >= len(aircraft_list):
                 continue
 
-            aircraft = aircraft_list[plane_index - 1]  # 0-indexed
+            aircraft = aircraft_list[aircraft_index]
 
             # Get body audio key from paid cache
             file_ext, _ = get_audio_format(tts_provider)
