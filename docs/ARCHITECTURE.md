@@ -72,7 +72,7 @@ graph TB
 
 | Group | Paths | Behaviour |
 |---|---|---|
-| Static audio | `/intro`, `/scanning-again`, `/overandout` (+ `.mp3` aliases) | Proxy a pre-recorded file from the voice's S3 folder |
+| Static audio | `/scanning-again`, `/overandout` (+ `.mp3` aliases) | Proxy a pre-recorded file from the voice's S3 folder |
 | Scan trigger | `/scanning` | Streams `scanning.mp3` **and** kicks off pre-generation in the background |
 | Content | `/plane/1` … `/plane/5` | Serve cached audio, or generate it on the spot |
 | Free tier | `/free/scan`, `/free/scanning`, `/free/scanning-again`, `/free/overandout`, `/free/plane/1-3` | Replay audio generated for a paying user, rate-limited |
@@ -413,7 +413,7 @@ depends on which route and which parameter:
 | Route | Parameters | Behaviour with a missing or wrong secret |
 |---|---|---|
 | `/plane/N` | `lat`, `lng`, `provider`, `tts` | **403** — rejected before any geolocation or flight lookup |
-| `/scanning`, `/scanning-again`, `/intro`, `/overandout` | `tts`, `provider` | Silently ignored; a wrong secret is logged with the client IP |
+| `/scanning`, `/scanning-again`, `/overandout` | `tts`, `provider` | Silently ignored; a wrong secret is logged with the client IP |
 
 The split is because the `/plane/N` routes declare their overrides as real
 parameters and validate them in the handler, while the other endpoints do not
@@ -477,7 +477,7 @@ persistence layer.
 | `free_pool/index.json` | Session index, max 100 FIFO | none | `get_raw()` |
 | `free_pool/{session}_plane{n}_body_{provider}.{ext}` | Free tier body audio | none | `get_raw()` |
 | `free/intros/flight-intro-{1..6}.{ext}` | Generic free openings | static | `get_raw()` |
-| `{voice}/intro.mp3`, `scanning.mp3`, … | Per-voice static clips | static | Public HTTPS GET |
+| `{voice}/scanning.mp3`, `overandout.mp3`, … | Per-voice static clips | static | Public HTTPS GET |
 
 **The audio TTL must not exceed the flight-data TTL, and they are equal for that
 reason.** `/plane/N` checks the audio cache before it consults flight data, so
@@ -572,8 +572,8 @@ graph LR
 | `website_home.py` | Marketing page, robots.txt, sitemap |
 
 The dotted arrow is real: `scanning.py` imports from `main.py` inside function
-bodies to break the import cycle. It appears throughout `intro.py`,
-`overandout.py`, and `scanning_again.py` too.
+bodies to break the import cycle. It appears in `overandout.py` and
+`scanning_again.py` too.
 
 ---
 

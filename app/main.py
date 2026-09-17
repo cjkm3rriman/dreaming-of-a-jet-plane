@@ -36,7 +36,6 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pydub.*")
 from .airport_database import get_airport_by_iata
 from .airline_database import AirlineDatabase
 from .location_utils import calculate_distance, calculate_min_distance_to_route
-from .intro import stream_intro, intro_options
 from .overandout import stream_overandout, overandout_options
 from .scanning_again import stream_scanning_again, scanning_again_options
 from .scanning import stream_scanning, scanning_options
@@ -157,7 +156,7 @@ def get_tts_provider_override(request: Request) -> Optional[str]:
     Example: ?tts=google&secret=your_secret_key
 
     Used by endpoints that do not declare tts/secret in their own signature
-    (/scanning, /scanning-again, /intro, /overandout). The /plane/N routes
+    (/scanning, /scanning-again, /overandout). The /plane/N routes
     declare the parameters and pass them to handle_plane_endpoint instead.
 
     Args:
@@ -1159,26 +1158,6 @@ async def handle_plane_endpoint(
         )
         return {"message": sentence, "tts_error": tts_error}
 
-
-@app.get("/intro")
-async def intro_endpoint_clean(request: Request, lat: float = None, lng: float = None):
-    """Stream intro audio from S3"""
-    return await stream_intro(request, lat, lng)
-
-@app.get("/intro.mp3")
-async def intro_endpoint(request: Request, lat: float = None, lng: float = None):
-    """Stream intro audio from S3 (legacy .mp3 URL)"""
-    return await stream_intro(request, lat, lng)
-
-@app.options("/intro")
-async def intro_options_endpoint_clean():
-    """Handle CORS preflight requests for /intro endpoint"""
-    return await intro_options()
-
-@app.options("/intro.mp3")
-async def intro_options_endpoint():
-    """Handle CORS preflight requests for /intro.mp3 endpoint"""
-    return await intro_options()
 
 @app.get("/overandout")
 async def overandout_endpoint_clean(request: Request, lat: float = None, lng: float = None):

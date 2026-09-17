@@ -58,11 +58,6 @@ class TestPremiumEndpoints:
         response = client.get("/scanning.mp3")
         assert response.status_code != 500, f"Server error: {response.text}"
 
-    def test_intro_mp3_endpoint_no_500(self, client):
-        """Test /intro.mp3 doesn't return 500 error"""
-        response = client.get("/intro.mp3")
-        assert response.status_code != 500, f"Server error: {response.text}"
-
     def test_scanning_again_mp3_endpoint_no_500(self, client):
         """Test /scanning-again.mp3 doesn't return 500 error"""
         response = client.get("/scanning-again.mp3")
