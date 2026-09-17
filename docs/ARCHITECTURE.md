@@ -618,7 +618,7 @@ UAs are deliberately not treated as players.
 | `plane:request` | Any `/plane/N` or `/free/plane/N` | `plane_index`, `from_cache`, `free_pool_entry_id` |
 | `generate:audio` | TTS produces a plane's audio | `generation_time_ms`, `tts_provider`, `fun_fact_source`, `fun_fact_cache_hit`, origin/destination |
 | `error:location` | IP geolocation fails or falls back | `failure_type`, `fallback_location` |
-| `intro`, `scanning-again`, `overandout` | Static clip streamed | Location, device |
+| `scanning-again`, `overandout` | Static clip streamed | Location, device |
 
 Every tracking call is wrapped in `try/except` — analytics failures never reach
 the user. Sentry sits alongside it for exceptions, sampling 10% of traces, with
