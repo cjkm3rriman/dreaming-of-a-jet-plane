@@ -1,6 +1,6 @@
 """Shared streaming for pre-recorded audio clips proxied from S3 (DOJP-46).
 
-intro.py, overandout.py and scanning_again.py were ~140-line clones of each
+overandout.py and scanning_again.py were ~140-line clones of each
 other, and the same ~55-line proxy block appeared twice more in scanning.py
 and once (free-tier variant) in main.py. The whole surface now lives here;
 those modules are thin wrappers.
@@ -157,7 +157,7 @@ async def proxy_s3_audio(request: Request, audio_url: str, mime_type: str,
 
 async def stream_voice_clip(request: Request, filename: str, event_name: Optional[str],
                             lat: float = None, lng: float = None, tts_override=_UNSET):
-    """Stream a per-voice static clip (intro.mp3, scanning.mp3, ...).
+    """Stream a per-voice static clip (scanning.mp3, overandout.mp3, ...).
 
     With an event_name, geolocates the listener and fires the clip's
     analytics event on success; with None (scanning's debounced replays),
