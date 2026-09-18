@@ -1,0 +1,14 @@
+{
+  "_comment": "Static audio build manifest (DOJP-35). One entry per deliverable. Timeline steps: {sfx, gain_db?, fade_out_ms?} | {tts, gain_db?} | {silence_ms}. Optional bed: an SFX looped/trimmed under the whole timeline at bed.gain_db. Rendered per voice by scripts/build_static_audio.py; mastered to the app's TARGET_DBFS so statics match generated plane audio.",
+  "entries": {
+    "scanning-again": {
+      "description": "Interstitial when the child asks for another scan. Structure reverse-engineered from the production ronald file (7.2s): short lead-in, robot stinger, one voice line.",
+      "timeline": [
+        {"silence_ms": 300},
+        {"sfx": "robot-scanning-skies-more.mp3", "gain_db": -2},
+        {"silence_ms": 150},
+        {"tts": "Let's scan the skies again, and see what else is flying up there!"}
+      ]
+    }
+  }
+}

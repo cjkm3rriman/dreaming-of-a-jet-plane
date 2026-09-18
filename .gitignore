@@ -19,3 +19,4 @@ wheels/
 
 # Local scripts
 generate_static.py
+audio_build/out/
