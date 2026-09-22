@@ -72,12 +72,13 @@ graph TB
 
 | Group | Paths | Behaviour |
 |---|---|---|
-| Static audio | `/scanning-again`, `/overandout` (+ `.mp3` aliases) | Proxy a pre-recorded file from the voice's S3 folder |
-| Scan trigger | `/scanning` | Streams `scanning.mp3` **and** kicks off pre-generation in the background |
+| Static audio | `/scanning-again`, `/overandout` (+ `.mp3` aliases) | Proxy a pre-recorded clip from the voice's S3 folder |
+| Scan trigger | `/scanning` | Streams the voice's scanning clip **and** kicks off pre-generation in the background |
 | Content | `/plane/1` … `/plane/5` | Serve cached audio, or generate it on the spot |
 | Free tier | `/free/scan`, `/free/scanning`, `/free/scanning-again`, `/free/overandout`, `/free/plane/1-3` | Replay audio generated for a paying user, rate-limited |
 | Site | `/`, `/robots.txt`, `/sitemap.xml`, `/assets/*` | Marketing page (`website_home.py`) |
 | Debug | `/test/live-aircraft`, `/test-gemini-tts` | Provider inspection pages |
+| Ops | `/health` | Dependency-free liveness probe; Railway holds the old deployment until the new one passes it (zero-downtime cutover) |
 
 Every audio endpoint also has an `@app.options` twin returning permissive CORS
 headers.
@@ -104,7 +105,7 @@ sequenceDiagram
     Y->>A: GET /scanning
     A->>A: Resolve location (IP → lat/lng)
     A->>A: Debounce check (30s per session key)
-    A-)BG: create_task(pre_generate_flight_audio)
+    A-)BG: spawn(pre_generate_flight_audio)
     A->>S3: GET scanning.mp3
     A-->>Y: stream scanning audio
 
@@ -140,6 +141,12 @@ several seconds slower but produces the same output.
 The 30-second debounce in `scanning.py` exists because the Yoto client is prone to
 re-requesting; a duplicate request inside the window still gets its audio but
 skips the background work and the analytics event.
+
+During a Special Signal Event window (`special_events.py` — Santa on Christmas
+Eve is the first entry), the event takes over `/plane/1` and the real planes
+shift down one track, with the fifth dropping. Event audio is
+location-independent, generated once per event + provider into the durable
+`special-events/` prefix, and never enters the free pool.
 
 ---
 
@@ -193,13 +200,10 @@ cruise speed each minute of staleness is ~14 km of position error. **Plausibilit
 consistency** (`is_point_near_route`): reject if the user is near neither
 endpoint and sits more than 1,500 km from the sampled geodesic, or if the
 closest approach exceeds 50% of the route length — the ratio catches short
-private-jet hops reporting implausible positions. There was once a lat/lng
-bounding-box pre-filter here too; it was removed because the geodesic check
-already rejected everything it caught, while the box wrongly rejected users
-under date-line routes (Fiji beneath SYD→LAX) and polar great circles
-(Fairbanks beneath JFK→NRT). Rejection counts are emitted on the
-`scan:complete` analytics event, so gate thresholds are tuned from Mixpanel
-rather than guessed.
+private-jet hops reporting implausible positions. (A lat/lng bounding-box
+pre-filter was removed: redundant with the geodesic check, and wrong under
+date-line and polar routes.) Rejection counts are emitted on `scan:complete`,
+so gate thresholds are tuned from Mixpanel rather than guessed.
 
 ### Selection rules
 
@@ -308,15 +312,11 @@ Multiplied out, one flight to one city yields roughly **7.4 million** distinct
 scripts. The point isn't the number — it's that a child scanning the same busy
 airport corridor every morning shouldn't recognise the wording.
 
-One caveat on that arithmetic: every pool except the last is sampled per call, so
-its variation is available at any instant. The fun fact is fixed by the clock, so
-at a given moment only one of a city's facts can appear — that axis is reached
-over time rather than per request.
-
-Randomisation is reseeded per call with `random.seed(time.time_ns())`, so
-repeated requests for the same flight vary. This also means most of the text is
-**not** reproducible from the aircraft data alone, which matters when debugging a
-complaint about a specific phrasing.
+Two caveats: the fun-fact axis is clock-fixed (only one of a city's facts can
+appear at a given moment — that variation is reached over time, not per
+request), and everything else is reseeded per call from the clock, so most of
+the text is **not** reproducible from the aircraft data alone — which matters
+when debugging a complaint about a specific phrasing.
 
 ### Fun facts are the exception: they rotate, they don't roll
 
@@ -393,15 +393,20 @@ flowchart TD
         B1{"?tts= + valid ?secret= ?"}
         B1 -->|yes| B2["Use that provider"]
         B1 -->|no| B3["TTS_PROVIDER env var"]
-        B3 --> B4{"= 'fallback'?"}
-        B4 -->|yes| B5["ElevenLabs, then Inworld on error"]
-        B4 -->|no| B6["Named provider only, no fallback"]
+        B3 --> B4["That provider only — one voice,<br/>no cross-provider fallback"]
     end
 ```
 
-The TTS provider choice cascades further than it looks. It determines the audio
-format (`opus` for ElevenLabs and Inworld, `mp3` for Google), the MIME type, the
-S3 folder for static clips (`edward` / `sadachbia` / `ronald`), and it is baked
+Each TTS provider is a single voice (`edward` / `sadachbia` / `ronald`), and
+there is deliberately **no cross-provider fallback**: switching voices
+mid-session is worse UX than a failed track, so a provider outage surfaces as
+an error rather than a different narrator (DOJP-43). Format and MIME always
+come from the one provider that generated the audio.
+
+The TTS provider choice cascades further than it looks (production currently
+runs Inworld — voice `ronald`, opus). It determines the audio format (`opus`
+for ElevenLabs and Inworld, `mp3` for Google), the MIME type, the S3 folder for
+static clips (`edward` / `sadachbia` / `ronald`), and it is baked
 into every cache key — so switching providers invalidates the entire audio cache
 by construction. The format is read from the registry in `tts_providers/` at
 every point that needs it, including `s3_cache.generate_cache_key`; a second copy
@@ -415,11 +420,9 @@ depends on which route and which parameter:
 | `/plane/N` | `lat`, `lng`, `provider`, `tts` | **403** — rejected before any geolocation or flight lookup |
 | `/scanning`, `/scanning-again`, `/overandout` | `tts`, `provider` | Silently ignored; a wrong secret is logged with the client IP |
 
-The split is because the `/plane/N` routes declare their overrides as real
-parameters and validate them in the handler, while the other endpoints do not
-declare them and re-read the query string via `get_tts_provider_override()`. Both
-paths share one list of valid provider names through
-`normalize_tts_provider_override()`.
+The split exists because `/plane/N` declares its overrides as real parameters
+and validates in the handler, while the other endpoints re-read the query
+string via `get_tts_provider_override()`. Both share one valid-provider list.
 
 ---
 
@@ -436,7 +439,7 @@ flowchart TD
         P2 --> P3["Copy to free_pool/{session}_plane{n}_body_{provider}"]
         P3 --> P4["Append entry to free_pool/index.json"]
         P4 --> P5{"More than 100 entries?"}
-        P5 -->|yes| P6["Drop oldest (FIFO); S3 objects left to expire"]
+        P5 -->|yes| P6["Drop oldest (FIFO); S3 objects orphaned (DOJP-54)"]
     end
 
     subgraph Consume["Consumer — /free/plane/N"]
@@ -477,6 +480,7 @@ persistence layer.
 | `free_pool/index.json` | Session index, max 100 FIFO | none | `get_raw()` |
 | `free_pool/{session}_plane{n}_body_{provider}.{ext}` | Free tier body audio | none | `get_raw()` |
 | `free/intros/flight-intro-{1..6}.{ext}` | Generic free openings | static | `get_raw()` |
+| `special-events/{name}_{hash}_{provider}.{ext}` | Event audio (e.g. Santa), one per event + provider | none — content-hashed | `get_raw()` |
 | `{voice}/scanning.mp3`, `overandout.mp3`, … | Per-voice static clips | static | Public HTTPS GET |
 
 **The audio TTL must not exceed the flight-data TTL, and they are equal for that
@@ -498,8 +502,10 @@ while a real download gets room. Uploads retry with jittered exponential backoff
 on 503 `SlowDown`. A shared `httpx` client (100 connections, 50 keep-alive) is
 reused across the process.
 
-Writes are almost always `asyncio.create_task(...)` — fire-and-forget, so a slow
-S3 PUT never delays the audio stream.
+Writes are almost always fire-and-forget via `background.spawn(...)`, so a slow
+S3 PUT never delays the audio stream. `spawn` holds a strong reference until the
+task finishes (the event loop only keeps weak ones) and logs any exception —
+a bare `create_task` could be garbage-collected mid-write and swallow its error.
 
 ### In-memory state
 
@@ -510,9 +516,10 @@ S3 PUT never delays the audio stream.
 | `free_pool._free_pool_index_cache` | Parsed index | 60s |
 | `free_pool._rate_limit_cache` | IP → request timestamps | 60s window |
 
-All four are plain module-level dicts. They are per-container and unbounded — fine
-for one Railway replica, but they would need rethinking before scaling out, and
-the rate limiter in particular becomes per-replica rather than global.
+All four are plain module-level dicts, bounded by opportunistic eviction of
+aged-out entries (DOJP-42). They remain per-container: fine for one Railway
+replica, but the rate limiter becomes per-replica rather than global if the
+app ever scales out.
 
 ---
 
@@ -555,10 +562,17 @@ graph LR
     ff --> s3
 ```
 
+Support modules (`plane_audio`, `static_audio`, `background`,
+`special_events`, `fun_fact_cache` helpers) are omitted from the graph for
+legibility; the table below is complete.
+
 | Module | Responsibility |
 |---|---|
 | `main.py` | Routes, TTS dispatch, aircraft fetch + selection, analytics helpers, free tier handlers |
 | `scanning.py` | `/scanning` endpoint, debounce, background pre-generation of all 5 planes |
+| `plane_audio.py` | The one shared split-TTS / stitch / cache generator both generation paths call |
+| `static_audio.py` | The one shared S3→client proxy for every pre-recorded clip (`intro.py`, `overandout.py`, `scanning_again.py` are thin wrappers over it) |
+| `background.py` | `spawn()` — tracked fire-and-forget tasks with exception logging |
 | `flight_text.py` | All user-facing text; unit localisation; TTS-friendly number spelling |
 | `special_events.py` | Special Signal Events calendar (DOJP-33): date-windowed events that take over track 1 and shift real planes down a slot; event audio cached once per event+provider under `special-events/` |
 | `free_pool.py` | Free tier index, rate limiting, and all pydub audio stitching |
@@ -569,11 +583,12 @@ graph LR
 | `tts_providers/` | `elevenlabs.py`, `google.py`, `inworld.py` + registry — text → audio bytes |
 | `*_database.py` | Read-only JSON lookups: airports, airlines, aircraft, cities |
 | `analytics.py` | Thin Mixpanel wrapper; swallows its own failures |
+| `debug_gemini_tts.py`, `debug_live_aircraft.py` | Manual provider-inspection pages (secret-gated; not pytest tests) |
 | `website_home.py` | Marketing page, robots.txt, sitemap |
 
 The dotted arrow is real: `scanning.py` imports from `main.py` inside function
-bodies to break the import cycle. It appears in `overandout.py` and
-`scanning_again.py` too.
+bodies to break the import cycle; `plane_audio.py`, `static_audio.py`, and
+`special_events.py` use the same pattern.
 
 ---
 
@@ -583,6 +598,17 @@ Mixpanel, with a `distinct_id` of `md5(ip + user_agent)[:16]` and an `$insert_id
 on every event for deduplication (the `$insert_id` carries a 5-minute time
 bucket so same-day rescans count as separate sessions while client retries
 seconds apart still collapse).
+
+Two identity caveats with a hard date attached. **Before 2026-09-15, ~80% of
+requests were attributed to Cloudflare edge IPs**, not clients: the domain is
+proxied through Cloudflare, Railway rebuilds `x-forwarded-for` with the edge
+IP, and the old header order trusted XFF first. `extract_client_ip` now
+prefers `cf-connecting-ip` (the true client), so sessions, `distinct_id`, and
+geolocation are correct from that date — and pre/post series are not
+comparable (prior sessions overcounted; prior `user_city` was often a
+Cloudflare PoP). Second, local test runs posted real events until the same
+date; `tests/conftest.py` now strips `MIXPANEL_TOKEN`/`SENTRY_DSN` before any
+app import, so test traffic (`ip = "testclient"`) is impossible after it.
 
 ### What Yoto clients actually send (verified 2026-09-13)
 
@@ -615,14 +641,15 @@ UAs are deliberately not treated as players.
 |---|---|---|
 | `scan:start` | `/scanning` or a `/free/*` entry point | `subscription` |
 | `scan:complete` | Aircraft fetch resolves | `nearby_aircraft`, `aircraft_provider`, `from_cache`; on live Airlabs fetches also `rejected_stale`, `rejected_route`, `rejected_implausible`, `accepted_no_route`, `oldest_signal_age_s`, `stale_threshold_s` |
-| `plane:request` | Any `/plane/N` or `/free/plane/N` | `plane_index`, `from_cache`, `free_pool_entry_id` |
+| `plane:request` | Any `/plane/N` or `/free/plane/N` | `plane_index`, `from_cache`, `free_pool_entry_id`, `free_pool_size` (free: pool-health gauge), `event_name` (event tracks) |
 | `generate:audio` | TTS produces a plane's audio | `generation_time_ms`, `tts_provider`, `fun_fact_source`, `fun_fact_cache_hit`, origin/destination |
 | `error:location` | IP geolocation fails or falls back | `failure_type`, `fallback_location` |
 | `scanning-again`, `overandout` | Static clip streamed | Location, device |
 
 Every tracking call is wrapped in `try/except` — analytics failures never reach
-the user. Sentry sits alongside it for exceptions, sampling 10% of traces, with
-the environment inferred from `RAILWAY_REPLICA_ID`.
+the user. Sentry sits alongside it for exceptions, sampling 10% of traces; it
+initializes only on deployed Railway containers (`RAILWAY_REPLICA_ID` present),
+so local runs and tests can never report.
 
 ---
 
@@ -633,11 +660,6 @@ Things that are true today and would surprise a reader of the code.
 - **Cargo flights are excluded entirely.** `select_diverse_aircraft` drops them
   with a `TODO` saying it's temporary; only private operators reach the
   cargo/private slot.
-- **A NameError is being swallowed in the Airlabs ETA path.**
-  `aircraft_providers/airlabs.py:313` uses `aircraft_type` before it is assigned
-  at line 353. The surrounding `try/except Exception` catches it, so ETA
-  estimation silently yields `None` for the first flight and reuses the previous
-  flight's type thereafter.
 - **Fallback location is New York City.** A genuine geolocation failure puts the
   child over NYC, and plane 1 says so out loud. The `is_fallback_location` flag
   that triggers that line means *"we do not trust this location"*, not *"this
@@ -650,8 +672,17 @@ Things that are true today and would surprise a reader of the code.
 - **The free tier only ever uses three planes.** `populate_free_pool` is passed
   `aircraft[:3]` and loops over planes 1-3, matching the three free endpoints,
   even though a paid scan generates five.
+- **A total TTS failure returns JSON, not audio.** `/plane/N`'s last resort is
+  a JSON body on a URL the player expects to be audio — a dead track for the
+  child. The planned fix is a pre-recorded same-voice fallback clip (DOJP-51).
+- **Evicted free-pool sessions leave their S3 audio behind.** The FIFO trims
+  the index only; no lifecycle rule covers `free_pool/`, so orphaned files
+  accumulate (~258k as of 2026-09-15). Cleanup is DOJP-54 — and the fix must
+  move `free_pool/index.json` out of the prefix first.
 
 ---
 
-*Written against the code on `main`, last revised after DOJP-24, DOJP-26, DOJP-27
-and DOJP-28 (PRs #38-#41). Diagrams are Mermaid and render natively on GitHub.*
+*Written against the code on `main`, last revised 2026-09-21 after the Sep 26
+review project (DOJP-42..47), the fallback-TTS removal (DOJP-43), the Special
+Signal Events calendar (DOJP-33), and the client-IP identity fix (DOJP-44).
+Diagrams are Mermaid and render natively on GitHub.*
