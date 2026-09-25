@@ -230,6 +230,59 @@ def test_plane_endpoints_serve_playable_audio_from_cache(env):
 
 
 @pytest.mark.unit
+def test_plane_endpoint_serves_stereo_and_honours_range_requests(env):
+    """What the new Yoto players need from a dynamic track (DOJP-56): the
+    Opus is stereo like the static clips, and a Range request gets a real
+    206 slice of the same bytes - including the tail probe an Ogg player
+    uses to find the duration - rather than a 200 with the whole file."""
+    import asyncio
+
+    with respx.mock as router:
+        _mock_external(router)
+        asyncio.run(pre_generate_flight_audio(NYC["lat"], NYC["lng"]))
+        with TestClient(main.app) as client:
+            full = client.get("/plane/1")
+            assert full.status_code == 200
+            assert full.headers["accept-ranges"] == "bytes"
+            assert _decode(full.content).channels == 2
+
+            size = len(full.content)
+            tail = client.get("/plane/1", headers={"Range": "bytes=-1024"})
+            assert tail.status_code == 206
+            assert tail.content == full.content[-1024:]
+            assert tail.headers["content-range"] == f"bytes {size - 1024}-{size - 1}/{size}"
+            assert tail.headers["content-length"] == "1024"
+
+            head = client.get("/plane/1", headers={"Range": "bytes=0-4095"})
+            assert head.status_code == 206
+            assert head.content == full.content[:4096]
+
+            beyond = client.get("/plane/1", headers={"Range": f"bytes={size + 10}-"})
+            assert beyond.status_code == 416
+            assert beyond.headers["content-range"] == f"bytes */{size}"
+
+
+@pytest.mark.unit
+def test_free_plane_range_slices_come_from_one_stitched_track(env):
+    """Free tracks are stitched from a random intro per request; the range
+    slices of one play must still reassemble into one track (DOJP-56)"""
+    import asyncio
+
+    with respx.mock as router:
+        _mock_external(router)
+        asyncio.run(pre_generate_flight_audio(NYC["lat"], NYC["lng"]))
+        with TestClient(main.app) as client:
+            full = client.get("/free/plane/1")
+            assert full.status_code == 200
+            assert _decode(full.content).channels == 2
+            size = len(full.content)
+            first = client.get("/free/plane/1", headers={"Range": f"bytes=0-{size // 2}"})
+            rest = client.get("/free/plane/1", headers={"Range": f"bytes={size // 2 + 1}-"})
+            assert first.status_code == rest.status_code == 206
+            assert first.content + rest.content == full.content
+
+
+@pytest.mark.unit
 def test_plane_endpoint_generates_inline_on_cold_cache(env):
     """No warm-up at all: /plane/2 runs the whole inline pipeline and the
     result still plays. This is the skipped-ahead-child path."""

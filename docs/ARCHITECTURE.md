@@ -507,6 +507,40 @@ S3 PUT never delays the audio stream. `spawn` holds a strong reference until the
 task finishes (the event loop only keeps weak ones) and logs any exception —
 a bare `create_task` could be garbage-collected mid-write and swallow its error.
 
+### Serving dynamic audio to the player
+
+`/plane/N` and `/free/plane/N` answer through `audio_response.plane_audio_response`,
+which honours single byte ranges (206 with `Content-Range`, 416 when
+unsatisfiable, 200 otherwise) from the bytes already in memory, and advertises
+`Accept-Ranges: bytes`. The dynamic and static tracks therefore present the
+same HTTP contract to the player. That matters for Opus specifically: an Ogg
+container carries no duration in its header, so a player that wants the track
+length seeks to the last Ogg page with a tail range request — which is what
+the new Yoto players do, and why they played the static Opus clips but not the
+dynamic ones while the dynamic handlers were answering every Range with a 200
+and the whole file (DOJP-56).
+
+Range support was deliberately removed once before (DOJP-22): the handlers
+advertised it without honouring it, and newer firmware answered by fetching
+the whole track several times per play — the origin amplification behind the
+July 2026 connection-pool exhaustion. What makes it safe now is that the
+amplification is stopped at the source rather than by refusing ranges:
+
+- `recent_plane_audio` keeps recently served tracks in process memory for the
+  same 3-minute TTL as S3, populated by pre-generation, cache hits, and inline
+  generation alike, so the several requests one play issues cost one S3 fetch.
+- `plane_generation` is single-flight: concurrent cache misses for one key
+  share one TTS run instead of each starting their own.
+- `recent_free_audio` memoises a free track per client + plane for two
+  minutes, because each free request stitches a *random* intro — without it,
+  the range slices of one play would come from different tracks.
+
+Every dynamic track is also exported **stereo** (`free_pool.export_audio_segment`
+and the Inworld provider's own export). Inworld returns mono, the static
+clips are stereo, and mono was the other measured difference between the
+tracks the new players played and the ones they refused. A cached mono
+fun-fact segment is upmixed on its way out, so nothing was regenerated.
+
 ### In-memory state
 
 | Where | What | Lifetime |
@@ -515,11 +549,15 @@ a bare `create_task` could be garbage-collected mid-write and swallow its error.
 | `scanning._scanning_request_cache` | Session key → last scan time | 30s debounce window |
 | `free_pool._free_pool_index_cache` | Parsed index | 60s |
 | `free_pool._rate_limit_cache` | IP → request timestamps | 60s window |
+| `audio_response.recent_plane_audio` | Cache key → served plane/event audio bytes | 3 min (= S3 audio TTL), max 64 entries |
+| `audio_response.recent_free_audio` | Client IP + plane → stitched free track | 2 min, max 128 entries |
+| `audio_response.plane_generation` | Cache key → in-flight generation future | Until the generation finishes |
 
-All four are plain module-level dicts, bounded by opportunistic eviction of
-aged-out entries (DOJP-42). They remain per-container: fine for one Railway
-replica, but the rate limiter becomes per-replica rather than global if the
-app ever scales out.
+The first four are plain module-level dicts, bounded by opportunistic eviction
+of aged-out entries (DOJP-42); the audio caches are bounded LRUs with a TTL.
+All remain per-container: fine for one Railway replica, but the rate limiter
+becomes per-replica rather than global if the app ever scales out, and a
+range burst split across replicas costs one S3 fetch per replica.
 
 ---
 
@@ -562,7 +600,7 @@ graph LR
     ff --> s3
 ```
 
-Support modules (`plane_audio`, `static_audio`, `background`,
+Support modules (`plane_audio`, `audio_response`, `static_audio`, `background`,
 `special_events`, `fun_fact_cache` helpers) are omitted from the graph for
 legibility; the table below is complete.
 
@@ -571,6 +609,7 @@ legibility; the table below is complete.
 | `main.py` | Routes, TTS dispatch, aircraft fetch + selection, analytics helpers, free tier handlers |
 | `scanning.py` | `/scanning` endpoint, debounce, background pre-generation of all 5 planes |
 | `plane_audio.py` | The one shared split-TTS / stitch / cache generator both generation paths call |
+| `audio_response.py` | Range-aware responses for dynamic audio, the in-memory recent-audio caches, single-flight generation (DOJP-56) |
 | `static_audio.py` | The one shared S3→client proxy for every pre-recorded clip (`intro.py`, `overandout.py`, `scanning_again.py` are thin wrappers over it) |
 | `background.py` | `spawn()` — tracked fire-and-forget tasks with exception logging |
 | `flight_text.py` | All user-facing text; unit localisation; TTS-friendly number spelling |
@@ -682,7 +721,8 @@ Things that are true today and would surprise a reader of the code.
 
 ---
 
-*Written against the code on `main`, last revised 2026-09-21 after the Sep 26
+*Written against the code on `main`, last revised 2026-09-25 after the Sep 26
 review project (DOJP-42..47), the fallback-TTS removal (DOJP-43), the Special
-Signal Events calendar (DOJP-33), and the client-IP identity fix (DOJP-44).
+Signal Events calendar (DOJP-33), the client-IP identity fix (DOJP-44), and
+the new-player fix — stereo dynamic tracks with real Range support (DOJP-56).
 Diagrams are Mermaid and render natively on GitHub.*

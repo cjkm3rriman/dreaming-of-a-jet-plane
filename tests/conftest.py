@@ -41,6 +41,23 @@ async def _reset_airlabs_client():
             pass
 
 
+
+@pytest.fixture(autouse=True)
+def _reset_recent_audio_caches():
+    """Empty the in-process plane-audio caches before every test.
+
+    They are module-level and outlive a test's fake S3 bucket, so a track
+    served in one test would otherwise satisfy the next test's "cold cache"
+    request from memory (DOJP-56).
+    """
+    from app.audio_response import recent_plane_audio, recent_free_audio
+    recent_plane_audio.clear()
+    recent_free_audio.clear()
+    yield
+    recent_plane_audio.clear()
+    recent_free_audio.clear()
+
+
 # Test locations
 @pytest.fixture
 def nyc_location():

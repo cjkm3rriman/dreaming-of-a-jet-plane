@@ -134,9 +134,11 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
                     silence = AudioSegment.silent(duration=1000)  # 1000ms = 1 second
                     audio_with_pause = silence + audio
 
-                    # Export back to bytes
+                    # Export back to bytes - always stereo. Inworld returns mono;
+                    # the static clips are stereo, and the new Yoto players do
+                    # not play the mono dynamic tracks (DOJP-56)
                     output_buffer = io.BytesIO()
-                    audio_with_pause.export(output_buffer, format="ogg", codec="libopus")
+                    audio_with_pause.set_channels(2).export(output_buffer, format="ogg", codec="libopus")
                     return output_buffer.getvalue(), ""
 
                 except binascii.Error as exc:

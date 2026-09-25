@@ -45,6 +45,33 @@ def _decode(audio_bytes, fmt="mp3"):
 # ---------------------------------------------------------------------------
 
 
+def _opus(segment):
+    buf = io.BytesIO()
+    segment.export(buf, format="ogg", codec="libopus")
+    return buf.getvalue()
+
+
+@pytest.mark.unit
+async def test_stitched_opus_is_stereo_even_from_mono_segments():
+    """Inworld segments (and cached mono fun facts) are mono; every dynamic
+    track must leave the stitcher stereo like the static clips, or the new
+    Yoto players will not play it (DOJP-56)"""
+    out = await stitch_audio(_opus(_tone(300)), _opus(_tone(300)), add_silence=True, audio_format="opus")
+    clip = _decode(out, "ogg")
+    assert clip.channels == 2
+    assert clip.dBFS > -40  # audible, not just decodable
+
+    out = await stitch_audio_multi([_opus(_tone(300))] * 3, add_silence=False, audio_format="opus")
+    assert _decode(out, "ogg").channels == 2
+
+
+@pytest.mark.unit
+async def test_stitched_mp3_is_stereo_too():
+    out = await stitch_audio(_mp3(_tone(300)), _mp3(_tone(300)), add_silence=False)
+    assert _decode(out).channels == 2
+
+
+
 @pytest.mark.unit
 async def test_stitch_audio_duration_is_lead_opening_gap_body_tail():
     """add_silence=True wraps in 1s lead + 1s tail, with a 1s gap between:

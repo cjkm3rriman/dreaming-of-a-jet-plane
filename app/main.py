@@ -41,6 +41,14 @@ from .scanning_again import stream_scanning_again, scanning_again_options
 from .scanning import stream_scanning, scanning_options
 from .s3_cache import s3_cache
 from .plane_audio import generate_plane_audio
+from .audio_response import (
+    PLANE_AUDIO_CACHE_MAX_AGE_S,
+    plane_audio_response,
+    plane_audio_response_headers,
+    recent_plane_audio,
+    recent_free_audio,
+    plane_generation,
+)
 from .background import spawn
 from .flight_text import (
     not_enough_planes_message,
@@ -942,30 +950,9 @@ register_test_live_aircraft_routes(
 )
 
 
-# Client-side caching of dynamic plane audio must not outlive the server's own
-# S3 TTL, or any intermediary that honors the header re-creates the rescan
-# staleness DOJP-27 fixed. Derived, so the two can never drift apart (DOJP-39).
-PLANE_AUDIO_CACHE_MAX_AGE_S = s3_cache.ttl_minutes * 60
-
-
-def plane_audio_response_headers(mime_type: str, content_length: int) -> Dict[str, str]:
-    """Response headers for dynamically generated plane audio.
-
-    Deliberately no Accept-Ranges: StreamingResponse ignores Range headers and
-    returns the full body regardless, and advertising ranges we don't serve
-    made newer Yoto firmware issue multiple range requests per play — the
-    origin amplification behind the July 2026 outage (DOJP-22). Static clips
-    keep their own headers; this is only for /plane/N and /free/plane/N.
-    """
-    return {
-        "Content-Type": mime_type,
-        "Content-Length": str(content_length),
-        "Cache-Control": f"public, max-age={PLANE_AUDIO_CACHE_MAX_AGE_S}",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Length",
-        "Access-Control-Expose-Headers": "Content-Length",
-    }
+# Dynamic plane-audio responses (Range support, memory cache, single-flight)
+# live in audio_response.py; the names are re-exported here for the handlers
+# and tests.
 
 
 async def handle_plane_endpoint(
@@ -1017,19 +1004,20 @@ async def handle_plane_endpoint(
     # track 1 and real planes shift down a slot (the fifth aircraft drops).
     event = get_event_preview_override(request) or get_active_event()
     if event and plane_index == 1:
+        event_memo_key = f"event/{event['name']}/{effective_provider}"
+        event_audio = recent_plane_audio.get(event_memo_key)
+        if event_audio:
+            _, event_mime = get_audio_format_for_provider(effective_provider)
+            return plane_audio_response(request, event_audio, event_mime)
+
         result = await ensure_event_audio(event, tts_override=tts_override)
         if result["audio"]:
+            recent_plane_audio.put(event_memo_key, result["audio"])
             track_plane_request(
                 request, user_lat, user_lng, user_city, plane_index,
                 from_cache=result["from_cache"], event_name=event["name"],
             )
-            response_headers = plane_audio_response_headers(result["mime_type"], len(result["audio"]))
-            return StreamingResponse(
-                iter([result["audio"]]),
-                status_code=200,
-                media_type=result["mime_type"],
-                headers=response_headers,
-            )
+            return plane_audio_response(request, result["audio"], result["mime_type"])
         # Event TTS failed - degrade to a normal scan so the child still
         # hears a plane rather than nothing
         logger.error(f"Event '{event['name']}' audio unavailable, serving normal plane 1")
@@ -1043,120 +1031,129 @@ async def handle_plane_endpoint(
 
     # Check cache first for the specific plane (include TTS provider and format in cache key)
     cache_key = s3_cache.generate_cache_key(user_lat, user_lng, plane_index=plane_index, tts_provider=effective_provider, audio_format=file_ext)
+
+    # A player issues several requests per play (range probes, retries); the
+    # in-memory cache answers all but the first without touching S3 (DOJP-56)
+    cached_audio = recent_plane_audio.get(cache_key)
+    if cached_audio:
+        return plane_audio_response(request, cached_audio, mime_type)
+
     cached_audio = await s3_cache.get(cache_key)
 
     if cached_audio:
         logger.info(f"Serving cached audio for plane {plane_index} at location: lat={user_lat}, lng={user_lng}, format={file_ext}")
+        recent_plane_audio.put(cache_key, cached_audio)
 
         # Track plane request analytics for cache hit
         track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=True)
 
-        response_headers = plane_audio_response_headers(mime_type, len(cached_audio))
+        return plane_audio_response(request, cached_audio, mime_type)
 
-        return StreamingResponse(
-            iter([cached_audio]),
-            status_code=200,
-            media_type=mime_type,
-            headers=response_headers
+    async def produce() -> Dict[str, Any]:
+        """Cache miss: look up aircraft, write the narration, run TTS.
+
+        Runs once per cache key at a time (single-flight): the requests that
+        arrive while it is running - the July 2026 amplification pattern -
+        share this result instead of each starting their own TTS call.
+        Returns {"audio", "mime_type"} on success or {"message", "tts_error"}
+        for the text fallback.
+        """
+        # Get aircraft data (this will use cached API data if available)
+        aircraft, error_message = await get_nearby_aircraft(
+            user_lat,
+            user_lng,
+            limit=max(5, plane_index),
+            request=request,
+            provider_override=forced_provider,
+            user_city=user_city,
         )
 
-    # Cache miss - get aircraft data (this will use cached API data if available)
-    aircraft, error_message = await get_nearby_aircraft(
-        user_lat,
-        user_lng,
-        limit=max(5, plane_index),
-        request=request,
-        provider_override=forced_provider,
-        user_city=user_city,
-    )
+        # Check if we have the requested plane
+        fun_fact_source = None  # Initialize for all cases
+        opening_text = None
+        body_text = None
+        fun_fact_opening_text = None
+        fun_fact_body_text = None
+        use_split_tts = False  # Flag to track if we can use split TTS
 
-
-    # Check if we have the requested plane
-    fun_fact_source = None  # Initialize for all cases
-    opening_text = None
-    body_text = None
-    fun_fact_opening_text = None
-    fun_fact_body_text = None
-    use_split_tts = False  # Flag to track if we can use split TTS
-
-    if aircraft and len(aircraft) > zero_based_index:
-        selected_aircraft = aircraft[zero_based_index]
-        # Use split text generation for free pool support
-        opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, fun_fact_source = generate_flight_text_for_aircraft(
-            selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True,
-            is_fallback_location=is_fallback_location,
-        )
-        if fun_fact_opening_text and fun_fact_body_text:
-            sentence = f"{opening_text} {body_text} {fun_fact_opening_text} {fun_fact_body_text}"
-        else:
-            sentence = f"{opening_text} {body_text}"
-        use_split_tts = True
-
-    elif aircraft and len(aircraft) > 0:
-        # Not enough planes - one canonical apology, shared with the pre-gen
-        # path so the child hears the same words whichever path won (DOJP-46)
-        sentence = not_enough_planes_message(plane_index, len(aircraft) + (1 if event else 0))
-    else:
-        # No aircraft found at all
-        logger.warning(
-            "No aircraft found for /plane/%s: error=%s, lat=%s, lng=%s, city=%s",
-            plane_index, error_message, user_lat, user_lng, user_city,
-        )
-        sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code, user_city=user_city, user_region=user_region, user_country_name=user_country_name)
-
-    # Generate TTS through the shared pipeline (DOJP-46); the split path
-    # handles fun-fact caching, stitching, and the free-pool body cache write.
-    # Same location-hash formula as pre-generation, so both paths write the
-    # identical body cache key.
-    import hashlib
-    location_hash = hashlib.md5(f"{round(user_lat, 2)},{round(user_lng, 2)}".encode()).hexdigest()
-
-    result = await generate_plane_audio(
-        sentence,
-        opening_text=opening_text if use_split_tts else None,
-        body_text=body_text if use_split_tts else None,
-        fun_fact_opening_text=fun_fact_opening_text if use_split_tts else None,
-        fun_fact_body_text=fun_fact_body_text if use_split_tts else None,
-        location_hash=location_hash,
-        plane_index=plane_index,
-        tts_override=tts_override,
-    )
-    audio_content = result["audio"]
-    tts_error = result["error"]
-    tts_provider_used = result["provider"]
-    actual_file_ext = result["file_ext"]
-    actual_mime_type = result["mime_type"]
-    fun_fact_cache_hit = result["fun_fact_cache_hit"]
-    tts_generation_time_ms = result["generation_ms"]
-
-    if audio_content and not tts_error:
-        # Cache the newly generated audio (don't await - do in background)
-        spawn(s3_cache.set(cache_key, audio_content), f"cache plane {plane_index} audio")
-
-        # Track audio generation analytics if we have aircraft data
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext, fun_fact_source, fun_fact_cache_hit=fun_fact_cache_hit)
+            # Use split text generation for free pool support
+            opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, fun_fact_source = generate_flight_text_for_aircraft(
+                selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True,
+                is_fallback_location=is_fallback_location,
+            )
+            if fun_fact_opening_text and fun_fact_body_text:
+                sentence = f"{opening_text} {body_text} {fun_fact_opening_text} {fun_fact_body_text}"
+            else:
+                sentence = f"{opening_text} {body_text}"
+            use_split_tts = True
 
-        # Track plane request analytics for cache miss
-        track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=False)
+        elif aircraft and len(aircraft) > 0:
+            # Not enough planes - one canonical apology, shared with the pre-gen
+            # path so the child hears the same words whichever path won (DOJP-46)
+            sentence = not_enough_planes_message(plane_index, len(aircraft) + (1 if event else 0))
+        else:
+            # No aircraft found at all
+            logger.warning(
+                "No aircraft found for /plane/%s: error=%s, lat=%s, lng=%s, city=%s",
+                plane_index, error_message, user_lat, user_lng, user_city,
+            )
+            sentence = generate_flight_text([], error_message, user_lat, user_lng, country_code=country_code, user_city=user_city, user_region=user_region, user_country_name=user_country_name)
 
-        # Return audio with correct format
-        response_headers = plane_audio_response_headers(actual_mime_type, len(audio_content))
+        # Generate TTS through the shared pipeline (DOJP-46); the split path
+        # handles fun-fact caching, stitching, and the free-pool body cache write.
+        # Same location-hash formula as pre-generation, so both paths write the
+        # identical body cache key.
+        import hashlib
+        location_hash = hashlib.md5(f"{round(user_lat, 2)},{round(user_lng, 2)}".encode()).hexdigest()
 
-        return StreamingResponse(
-            iter([audio_content]),
-            status_code=200,
-            media_type=actual_mime_type,
-            headers=response_headers
+        result = await generate_plane_audio(
+            sentence,
+            opening_text=opening_text if use_split_tts else None,
+            body_text=body_text if use_split_tts else None,
+            fun_fact_opening_text=fun_fact_opening_text if use_split_tts else None,
+            fun_fact_body_text=fun_fact_body_text if use_split_tts else None,
+            location_hash=location_hash,
+            plane_index=plane_index,
+            tts_override=tts_override,
         )
-    else:
+        audio_content = result["audio"]
+        tts_error = result["error"]
+        tts_provider_used = result["provider"]
+        actual_file_ext = result["file_ext"]
+        actual_mime_type = result["mime_type"]
+        fun_fact_cache_hit = result["fun_fact_cache_hit"]
+        tts_generation_time_ms = result["generation_ms"]
+
+        if audio_content and not tts_error:
+            # Hot in memory immediately, so the range requests that follow
+            # this one are served before the S3 write has even landed
+            recent_plane_audio.put(cache_key, audio_content)
+            # Cache the newly generated audio (don't await - do in background)
+            spawn(s3_cache.set(cache_key, audio_content), f"cache plane {plane_index} audio")
+
+            # Track audio generation analytics if we have aircraft data
+            if aircraft and len(aircraft) > zero_based_index:
+                selected_aircraft = aircraft[zero_based_index]
+                track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext, fun_fact_source, fun_fact_cache_hit=fun_fact_cache_hit)
+
+            # Track plane request analytics for cache miss
+            track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=False)
+
+            return {"audio": audio_content, "mime_type": actual_mime_type}
+
         # Fall back to text if TTS fails
         logger.error(
             "TTS generation failed for /plane/%s: error=%s, provider=%s, lat=%s, lng=%s, city=%s, text_length=%d",
             plane_index, tts_error, effective_provider, user_lat, user_lng, user_city, len(sentence),
         )
         return {"message": sentence, "tts_error": tts_error}
+
+    outcome = await plane_generation.run(cache_key, produce)
+    if "audio" in outcome:
+        return plane_audio_response(request, outcome["audio"], outcome["mime_type"])
+    return outcome
 
 
 @app.get("/overandout")
@@ -1374,6 +1371,14 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
     if (limited := _free_tier_rate_limited(client_ip)) is not None:
         return limited
 
+    # Each play is stitched from a random intro, so the several requests one
+    # player makes for one play (range probes, retries) must all be answered
+    # from the same bytes - memoised per client and plane (DOJP-56)
+    memo_key = f"free/{client_ip or 'unknown'}/{plane_index}"
+    memoised = recent_free_audio.get(memo_key)
+    if memoised:
+        return plane_audio_response(request, memoised["audio"], memoised["mime_type"])
+
     # Get free pool index
     index = await get_free_pool_index()
     if not index or not index.get("entries"):
@@ -1381,16 +1386,7 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
         default_ext, default_mime = get_audio_format_for_provider(TTS_PROVIDER)
         empty_audio = await get_empty_pool_audio(convert_text_to_speech, audio_format=default_ext)
         if empty_audio:
-            return StreamingResponse(
-                iter([empty_audio]),
-                media_type=default_mime,
-                headers={
-                    "Content-Type": default_mime,
-                    "Content-Length": str(len(empty_audio)),
-                    "Access-Control-Allow-Origin": "*",
-                    "Cache-Control": "public, max-age=60"
-                }
-            )
+            return plane_audio_response(request, empty_audio, default_mime)
         return JSONResponse(
             {"error": "Free pool is warming up, check back soon"},
             status_code=503
@@ -1419,14 +1415,7 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
         # This plane not available in this session
         empty_audio = await get_empty_pool_audio(convert_text_to_speech, audio_format=file_ext)
         if empty_audio:
-            return StreamingResponse(
-                iter([empty_audio]),
-                media_type=mime_type,
-                headers={
-                    "Content-Type": mime_type,
-                    "Access-Control-Allow-Origin": "*"
-                }
-            )
+            return plane_audio_response(request, empty_audio, mime_type)
         return JSONResponse(
             {"error": f"Plane {plane_index} not available in this session"},
             status_code=404
@@ -1439,14 +1428,7 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
         logger.warning(f"Free pool body audio missing for session {session.get('id')}, plane {plane_index}")
         empty_audio = await get_empty_pool_audio(convert_text_to_speech, audio_format=file_ext)
         if empty_audio:
-            return StreamingResponse(
-                iter([empty_audio]),
-                media_type=mime_type,
-                headers={
-                    "Content-Type": mime_type,
-                    "Access-Control-Allow-Origin": "*"
-                }
-            )
+            return plane_audio_response(request, empty_audio, mime_type)
         return JSONResponse(
             {"error": "Audio temporarily unavailable"},
             status_code=503
@@ -1459,19 +1441,17 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
         # No intro available, just return body with silence
         logger.warning("No free intro audio available, serving body only")
         from pydub import AudioSegment
+        from .free_pool import export_audio_segment
         import io
         pydub_format = "ogg" if file_ext == "opus" else file_ext
-        export_format = "ogg" if file_ext == "opus" else file_ext
-        export_params = ["-acodec", "libopus"] if file_ext == "opus" else []
         silence = AudioSegment.silent(duration=1000)
         body_seg = AudioSegment.from_file(io.BytesIO(body_audio), format=pydub_format)
-        combined_seg = silence + body_seg
-        output = io.BytesIO()
-        combined_seg.export(output, format=export_format, parameters=export_params)
-        combined = output.getvalue()
+        combined = export_audio_segment(silence + body_seg, file_ext)
     else:
         # Stitch: silence + random intro + body
         combined = await stitch_audio(intro_audio, body_audio, add_silence=True, audio_format=file_ext)
+
+    recent_free_audio.put(memo_key, {"audio": combined, "mime_type": mime_type})
 
     # Get user location for tracking
     user_lat, user_lng, _, user_city, _, _, _ = await get_user_location(request)
@@ -1489,11 +1469,7 @@ async def handle_free_plane_endpoint(request: Request, plane_index: int):
         free_pool_size=len(index.get("entries", [])),
     )
 
-    return StreamingResponse(
-        iter([combined]),
-        media_type=mime_type,
-        headers=plane_audio_response_headers(mime_type, len(combined))
-    )
+    return plane_audio_response(request, combined, mime_type)
 
 
 @app.get("/free/scan")

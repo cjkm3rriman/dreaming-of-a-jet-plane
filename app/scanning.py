@@ -10,6 +10,7 @@ from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
 from .s3_cache import s3_cache
+from .audio_response import recent_plane_audio
 from .flight_text import generate_flight_text
 from .special_events import get_active_event, aircraft_slot_for_plane, ensure_event_audio
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent
@@ -232,6 +233,10 @@ async def _generate_and_cache_plane_audio(
         if result["audio"] and not result["error"]:
             success = await s3_cache.set(cache_key, result["audio"])
             if success:
+                # Same container will most likely serve the play that follows
+                # this scan; keep the bytes hot so its range requests never
+                # touch S3 (DOJP-56)
+                recent_plane_audio.put(cache_key, result["audio"])
                 if request and aircraft:
                     track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, result["generation_ms"], len(result["audio"]), result["provider"], result["file_ext"], fun_fact_source, fun_fact_cache_hit=result["fun_fact_cache_hit"])
                 return True
