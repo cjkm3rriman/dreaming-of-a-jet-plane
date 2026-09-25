@@ -369,6 +369,24 @@ def _trim_silence(audio_segment: AudioSegment, silence_threshold: int = -50, min
     return audio_segment[start_trim:duration - end_trim]
 
 
+def export_audio_segment(segment: AudioSegment, audio_format: str) -> bytes:
+    """Export a pydub segment as `audio_format` bytes - always stereo.
+
+    Every dynamic track goes through here (or the Inworld provider's own
+    export), so the channel count can never depend on which segments were
+    stitched. Inworld returns mono, the static clips are stereo, and the new
+    Yoto players do not play the mono dynamic tracks (DOJP-56). A cached mono
+    fun-fact segment is upmixed here on its way out, so nothing needs
+    regenerating.
+    """
+    # pydub uses "ogg" for both .ogg and .opus files
+    export_format = "ogg" if audio_format == "opus" else audio_format
+    export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
+    output = io.BytesIO()
+    segment.set_channels(2).export(output, format=export_format, parameters=export_params)
+    return output.getvalue()
+
+
 async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True, audio_format: str = "mp3") -> bytes:
     """Combine opening + body audio using pydub
 
@@ -406,12 +424,7 @@ async def stitch_audio(opening: bytes, body: bytes, add_silence: bool = True, au
             combined = opening_trimmed + gap + body_trimmed
 
         combined = _normalize_loudness(combined)
-
-        output = io.BytesIO()
-        export_format = "ogg" if audio_format == "opus" else audio_format
-        export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
-        combined.export(output, format=export_format, parameters=export_params)
-        return output.getvalue()
+        return export_audio_segment(combined, audio_format)
 
     except Exception as e:
         logger.error(f"Error stitching audio: {e}", exc_info=True)
@@ -458,12 +471,7 @@ async def stitch_audio_multi(segments: List[bytes], add_silence: bool = True, au
             combined += AudioSegment.silent(duration=1000)
 
         combined = _normalize_loudness(combined)
-
-        output = io.BytesIO()
-        export_format = "ogg" if audio_format == "opus" else audio_format
-        export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
-        combined.export(output, format=export_format, parameters=export_params)
-        return output.getvalue()
+        return export_audio_segment(combined, audio_format)
 
     except Exception as e:
         logger.error(f"Error stitching multiple audio segments: {e}", exc_info=True)
@@ -493,17 +501,11 @@ async def get_empty_pool_audio(convert_text_to_speech_fn, audio_format: str = "m
         audio, error, _, _, _ = await convert_text_to_speech_fn(empty_pool_text)
         if audio and not error:
             pydub_format = "ogg" if audio_format == "opus" else audio_format
-            export_format = "ogg" if audio_format == "opus" else audio_format
-            export_params = ["-acodec", "libopus"] if audio_format == "opus" else []
 
             # Add 1 second silence at start
             silence = AudioSegment.silent(duration=1000)
             msg_seg = AudioSegment.from_file(io.BytesIO(audio), format=pydub_format)
-            combined = silence + msg_seg
-
-            output = io.BytesIO()
-            combined.export(output, format=export_format, parameters=export_params)
-            final_audio = output.getvalue()
+            final_audio = export_audio_segment(silence + msg_seg, audio_format)
 
             # Cache for future use
             spawn(s3_cache.set(empty_pool_key, final_audio), "cache empty-pool message")

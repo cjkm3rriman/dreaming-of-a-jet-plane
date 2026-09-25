@@ -116,6 +116,9 @@ async def test_inworld_success_returns_playable_audio_with_leading_silence(inwor
     clip = AudioSegment.from_file(io.BytesIO(audio), format="ogg")
     # 1s prepended silence + ~0.3s tone
     assert clip.duration_seconds == pytest.approx(1.3, abs=0.2)
+    # Inworld returns mono; the export must be stereo like the static clips,
+    # or the new Yoto players do not play the track (DOJP-56)
+    assert clip.channels == 2
 
     request = route.calls[0].request
     body = json.loads(request.content)
