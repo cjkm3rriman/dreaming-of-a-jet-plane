@@ -27,7 +27,7 @@ sys.path.insert(0, str(REPO))
 
 from pydub import AudioSegment
 
-from app.free_pool import TARGET_DBFS, _normalize_loudness, _trim_silence
+from app.free_pool import TARGET_DBFS, _normalize_loudness, _trim_silence, export_audio_segment
 from app.tts_providers import TTS_PROVIDERS
 
 MANIFEST = REPO / "audio_build" / "static_audio.json"
@@ -79,14 +79,18 @@ async def render_entry(name: str, entry: dict, provider: str) -> AudioSegment:
 
 
 def export(audio: AudioSegment, out_base: Path) -> list[Path]:
-    """Export mp3 + opus with the app's own parameters; return written paths."""
+    """Export mp3 + opus through the app's own exporter; return written paths.
+
+    free_pool.export_audio_segment is the single export point DOJP-56
+    introduced - it forces stereo, which the new Yoto players require. Going
+    through it keeps statics byte-compatible with dynamic tracks by
+    construction, including any future export changes.
+    """
     out_base.parent.mkdir(parents=True, exist_ok=True)
     written = []
     for ext in ("opus", "mp3"):
-        export_format = "ogg" if ext == "opus" else ext
-        export_params = ["-acodec", "libopus"] if ext == "opus" else []
         path = out_base.with_suffix(f".{ext}")
-        audio.export(path, format=export_format, parameters=export_params)
+        path.write_bytes(export_audio_segment(audio, ext))
         written.append(path)
     return written
 
