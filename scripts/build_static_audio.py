@@ -30,6 +30,13 @@ from pydub import AudioSegment
 from app.free_pool import TARGET_DBFS, _normalize_loudness, _trim_silence, export_audio_segment
 from app.tts_providers import TTS_PROVIDERS
 
+# Statics render with a code-pinned Inworld model, independent of the
+# INWORLD_MODEL_ID env var that steers dynamic plane audio. Deliberate split
+# (Callum, 2026-10-02): dynamic tracks chase latency/cost (tts-2-flash
+# planned), statics render once and keep the normal model. Change it here,
+# not in Railway.
+STATIC_INWORLD_MODEL = "inworld-tts-2"
+
 MANIFEST = REPO / "audio_build" / "static_audio.json"
 SFX_DIR = REPO / "assets" / "sfx"
 OUT_DIR = REPO / "audio_build" / "out"
@@ -167,6 +174,14 @@ async def main() -> None:
     parser.add_argument("--upload", action="store_true",
                         help="PUT rendered files to S3 voice folders")
     args = parser.parse_args()
+
+    import os
+    import app.tts_providers.inworld as inworld
+    live_model = os.getenv("INWORLD_MODEL_ID", "(unset; code default)")
+    inworld.INWORLD_MODEL_ID = STATIC_INWORLD_MODEL
+    marker = "same as" if live_model == STATIC_INWORLD_MODEL else "differs from"
+    print(f"static Inworld model: {STATIC_INWORLD_MODEL} (code-pinned) - "
+          f"{marker} live INWORLD_MODEL_ID={live_model} (dynamic tracks)")
 
     manifest_doc = json.loads(MANIFEST.read_text())
     manifest = manifest_doc["entries"]

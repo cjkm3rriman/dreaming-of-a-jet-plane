@@ -47,6 +47,16 @@ anything new or re-worded.
    the new file up on their next fetch (clips are client-cached up to 1h).
    Never pass `--upload` in the same run that first renders a new script.
 
+## Models
+
+The **static** Inworld model is pinned in code (`STATIC_INWORLD_MODEL` in
+`scripts/build_static_audio.py`, currently `inworld-tts-2`); the Railway env
+var `INWORLD_MODEL_ID` steers **dynamic** plane audio only (tts-2-flash
+planned there). The renderer prints both at the start of every run — always
+relay that line to the user so drift between the two is visible. They are
+expected to differ; a surprise is the static pin silently changing, not the
+pair disagreeing.
+
 ## Gotchas
 
 - TTS reads differ per render — re-rendering an approved entry produces a

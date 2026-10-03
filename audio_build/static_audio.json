@@ -11,7 +11,7 @@
         {
           "tts": "Air Traffic Controller Hugo here, once more keeping a watchful eye on the skies. Hamish is still enjoying the tranquil shores of the Maldives, but do not fret - his holiday is nearing its end. Until then, the scanner remains under my expert guidance. Shall we see what jet planes are cruising through the clouds today?",
           "speed": 1.1,
-          "overlap_ms": 700
+          "overlap_ms": 1400
         },
         {
           "silence_ms": 350
