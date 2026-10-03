@@ -193,7 +193,10 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict, vo
         bed_audio = bed_audio[:bed_end]
         if bed.get("fade_out_ms"):
             bed_audio = bed_audio.fade_out(bed["fade_out_ms"])
-        combined = bed_audio.overlay(combined)
+        # overlay returns audio the length of its BASE - the full mix must be
+        # the base, or a bed ending early truncates the clip's tail (this cut
+        # off the closing deep-scan before the fix)
+        combined = combined.overlay(bed_audio)
 
     return _normalize_loudness(combined)
 
