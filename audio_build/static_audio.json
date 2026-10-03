@@ -130,7 +130,7 @@
       ],
       "bed": {
         "sfx": "jazz-lounge-elevator-music.mp3",
-        "start_ms": 3000,
+        "start_ms": 500,
         "fade_in_ms": 1200,
         "fade_out_ms": 1200,
         "gain_db": -14
@@ -225,7 +225,7 @@
       ],
       "bed": {
         "sfx": "jazz-lounge-elevator-music.mp3",
-        "start_ms": 3000,
+        "start_ms": 500,
         "fade_in_ms": 1200,
         "fade_out_ms": 1200,
         "gain_db": -14
