@@ -9,7 +9,7 @@
           "gain_db": -4
         },
         {
-          "tts": "Air Traffic Controller Hugo here, and how splendid - my trusty co-pilot has reported for duty! Here's the wonderful thing about the sky, old chum: it's never, ever quite the same. Every scan finds new jet planes, dashing off to new corners of the world on adventures all of their own. Shall we discover who's soaring overhead today?",
+          "tts": "Air Traffic Controller Hugo here, and how splendid - my trusty co-pilot has reported for duty! Here's the wonderful thing about the sky, old chum: it's never, ever quite the same. Every scan finds new jet planes, dashing off to new corners of the world on adventures all of their own. Shall we see who's soaring overhead today?",
           "speed": 1.05,
           "overlap_ms": 1400,
           "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot, warm and theatrical, brimming with delight, crisp consonants]"
