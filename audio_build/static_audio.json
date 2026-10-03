@@ -127,7 +127,14 @@
         {
           "silence_ms": 400
         }
-      ]
+      ],
+      "bed": {
+        "sfx": "jazz-lounge-elevator-music.mp3",
+        "start_ms": 3000,
+        "fade_in_ms": 1200,
+        "fade_out_ms": 1200,
+        "gain_db": -14
+      }
     },
     "free-scanning": {
       "upload_prefix": "free",
@@ -215,7 +222,14 @@
         {
           "silence_ms": 300
         }
-      ]
+      ],
+      "bed": {
+        "sfx": "jazz-lounge-elevator-music.mp3",
+        "start_ms": 3000,
+        "fade_in_ms": 1200,
+        "fade_out_ms": 1200,
+        "gain_db": -14
+      }
     },
     "flight-intro-1": {
       "upload_prefix": "free/intros",

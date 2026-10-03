@@ -180,11 +180,17 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict, vo
     bed = entry.get("bed")
     if bed:
         bed_audio = AudioSegment.from_file(SFX_DIR / bed["sfx"]).apply_gain(bed.get("gain_db", -18))
+        if bed.get("fade_in_ms"):
+            bed_audio = bed_audio.fade_in(bed["fade_in_ms"])
+        # start_ms delays the bed's entry; fades apply to the BED ONLY, so
+        # the voice and any closing sting stay at full level
+        bed_audio = AudioSegment.silent(duration=bed.get("start_ms", 0)) + bed_audio
         while len(bed_audio) < len(combined):
             bed_audio += bed_audio
-        combined = bed_audio[: len(combined)].overlay(combined)
+        bed_audio = bed_audio[: len(combined)]
         if bed.get("fade_out_ms"):
-            combined = combined.fade_out(bed["fade_out_ms"])
+            bed_audio = bed_audio.fade_out(bed["fade_out_ms"])
+        combined = bed_audio.overlay(combined)
 
     return _normalize_loudness(combined)
 
