@@ -128,6 +128,202 @@
           "silence_ms": 400
         }
       ]
+    },
+    "free-scanning": {
+      "upload_prefix": "free",
+      "s3_name": "scanning",
+      "description": "Free-tier scan intro. Transcribed from production 2026-10-02; dial-tuning finale.",
+      "timeline": [
+        {
+          "silence_ms": 250
+        },
+        {
+          "tts": "Roger that. Air Traffic Controller {narrator} here. We've got some top secret flight paths cleared for us today. I've locked onto a few recently spotted jet planes from across the globe, just for you. Hold steady while I tune these dials and bring them onto your Yoto, okay?",
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot, warm and theatrical, brimming with delight, crisp consonants]",
+          "speed": 1.05
+        },
+        {
+          "silence_ms": 300
+        },
+        {
+          "sfx": "radio-frequency.mp3",
+          "trim_ms": 6000,
+          "gain_db": -6,
+          "fade_out_ms": 1200,
+          "overlay": [
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 500,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 2300,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 4100,
+              "gain_db": -6
+            }
+          ]
+        }
+      ]
+    },
+    "free-scanning-again": {
+      "upload_prefix": "free",
+      "s3_name": "scanning-again",
+      "description": "Free-tier rescan interstitial: robot line, then the narrator.",
+      "timeline": [
+        {
+          "silence_ms": 400
+        },
+        {
+          "robot_tts": "Scanning the skies for more jet planes",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 250
+        },
+        {
+          "tts": "Let's tune into another one, shall we?",
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and inviting]",
+          "speed": 1.05
+        }
+      ]
+    },
+    "free-overandout": {
+      "upload_prefix": "free",
+      "s3_name": "overandout",
+      "description": "Free-tier sign-off with the Club pitch; one deep-scan sting.",
+      "timeline": [
+        {
+          "silence_ms": 400
+        },
+        {
+          "tts": "Splendidly done, old sport! Those were some delightful jet planes we tuned into just now. If you are a Yoto Club member, head to the Club Collection area in the Yoto app to activate your own personal jet plane scanner. Or listen in again with me soon. {narrator}, out for now.",
+          "prompt": "[speak as an eccentric elderly British gentleman with a posh RP accent - a retired pilot signing off, warm and satisfied, gently theatrical]",
+          "speed": 1.05
+        },
+        {
+          "silence_ms": 500
+        },
+        {
+          "sfx": "deep-scan.mp3",
+          "gain_db": -4
+        },
+        {
+          "silence_ms": 300
+        }
+      ]
+    },
+    "flight-intro-1": {
+      "upload_prefix": "free/intros",
+      "s3_name": "flight-intro-1",
+      "description": "Free-tier plane intro (stitched before a pooled body).",
+      "timeline": [
+        {
+          "silence_ms": 250
+        },
+        {
+          "tts": "Here is a quite stupendous jet plane I just helped another junior air traffic controller spot. Let's take a listen!",
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and enthusiastic]",
+          "speed": 1.05
+        },
+        {
+          "silence_ms": 200
+        }
+      ]
+    },
+    "flight-intro-2": {
+      "upload_prefix": "free/intros",
+      "s3_name": "flight-intro-2",
+      "description": "Free-tier plane intro (stitched before a pooled body).",
+      "timeline": [
+        {
+          "silence_ms": 250
+        },
+        {
+          "tts": "Here is a magnificent jet plane that recently appeared on my scanner. Shall we listen in?",
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and enthusiastic]",
+          "speed": 1.05
+        },
+        {
+          "silence_ms": 200
+        }
+      ]
+    },
+    "flight-intro-3": {
+      "upload_prefix": "free/intros",
+      "s3_name": "flight-intro-3",
+      "description": "Free-tier plane intro (stitched before a pooled body).",
+      "timeline": [
+        {
+          "silence_ms": 250
+        },
+        {
+          "tts": "The jet plane scanner recently picked up this beauty. Let's have a listen, shall we?",
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and enthusiastic]",
+          "speed": 1.05
+        },
+        {
+          "silence_ms": 200
+        }
+      ]
+    },
+    "flight-intro-4": {
+      "upload_prefix": "free/intros",
+      "s3_name": "flight-intro-4",
+      "description": "Free-tier plane intro (stitched before a pooled body).",
+      "timeline": [
+        {
+          "silence_ms": 250
+        },
+        {
+          "tts": "My scanner just went off for this monster of a jet plane. Let's hear it for ourselves!",
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and enthusiastic]",
+          "speed": 1.05
+        },
+        {
+          "silence_ms": 200
+        }
+      ]
+    },
+    "flight-intro-5": {
+      "upload_prefix": "free/intros",
+      "s3_name": "flight-intro-5",
+      "description": "Free-tier plane intro (stitched before a pooled body).",
+      "timeline": [
+        {
+          "silence_ms": 250
+        },
+        {
+          "tts": "Another Yoto out there just picked up this jet plane. Let's roll the audio!",
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and enthusiastic]",
+          "speed": 1.05
+        },
+        {
+          "silence_ms": 200
+        }
+      ]
+    },
+    "flight-intro-6": {
+      "upload_prefix": "free/intros",
+      "s3_name": "flight-intro-6",
+      "description": "Free-tier plane intro (stitched before a pooled body).",
+      "timeline": [
+        {
+          "silence_ms": 250
+        },
+        {
+          "tts": "This jet plane was just spotted by another junior air traffic controller. Time to listen in on the action!",
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and enthusiastic]",
+          "speed": 1.05
+        },
+        {
+          "silence_ms": 200
+        }
+      ]
     }
   },
   "robot_voice_id": "weA4Q36twV5kwSaTEL0Q",

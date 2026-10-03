@@ -206,11 +206,15 @@ def export(audio: AudioSegment, out_base: Path) -> list[Path]:
     return written
 
 
-async def upload(paths: list[Path], voice: str) -> None:
+async def upload(paths: list[Path], voice: str, entry: dict) -> None:
     from app.s3_cache import s3_cache
 
     for path in paths:
-        key = f"{voice}/{path.name}"
+        # free-tier deliverables are voice-independent single files under
+        # their own prefix; everything else goes to the voice folder
+        prefix = entry.get("upload_prefix", voice)
+        name = entry.get("s3_name", path.stem) + path.suffix
+        key = f"{prefix}/{name}"
         ok = await s3_cache.set(key, path.read_bytes())
         print(f"  {'uploaded' if ok else 'UPLOAD FAILED'}: {key}")
         if not ok:
@@ -255,7 +259,7 @@ async def main() -> None:
                   f"{audio.dBFS:.1f} dBFS (target {TARGET_DBFS}) -> "
                   + ", ".join(str(p.relative_to(REPO)) for p in paths))
             if args.upload:
-                await upload(paths, voice)
+                await upload(paths, voice, manifest[entry_name])
 
 
 if __name__ == "__main__":
