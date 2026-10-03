@@ -146,7 +146,7 @@
           "silence_ms": 250
         },
         {
-          "tts": "Roger, roger. Air Traffic Controller {narrator} here. We've got some top secret flight paths cleared for us today. I've locked onto a few recently spotted jet planes from across the globe just for you. Hold steady while I tune these dials and bring them onto your Yoto, okay?",
+          "tts": "Roger, roger. Air Traffic Controller {narrator} here. [chuckle] We've got some top secret flight paths cleared for us today. I've locked onto a few recently spotted jet planes from across the globe just for you. Hold steady while I tune these dials and bring them onto your Yoto, okay?",
           "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot, warm and theatrical, brimming with delight, crisp consonants]",
           "speed": 1.05
         },
@@ -170,7 +170,7 @@
           "silence_ms": 400
         },
         {
-          "tts": "Let's tune into another one, shall we?",
+          "tts": "Let's tune into another one, shall we? [chuckle]",
           "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and inviting]",
           "speed": 1.05
         },
@@ -194,7 +194,7 @@
           "silence_ms": 400
         },
         {
-          "tts": "Those were some delightful jet planes from across the globe we tuned into. And remember, if you are a Yoto Club member, head to the Club Collection area in the Yoto app to find your own personal jet plane scanner that spots planes in the skies above your Yoto. Or listen in again with me soon to tune in to some other planes. {narrator}, over and out.",
+          "tts": "Splendidly done, old sport. [laugh] Those were some delightful jet planes from across the globe we tuned into. And remember, if you are a Yoto Club member, head to the Club Collection area in the Yoto app to find your own personal jet plane scanner that spots planes in the skies above your Yoto. Or listen in again with me soon to tune in to some other planes. {narrator}, over and out.",
           "prompt": "[speak as an eccentric elderly British gentleman with a posh RP accent - a retired pilot signing off, warm and satisfied, gently theatrical]",
           "speed": 1.05
         },
@@ -274,7 +274,7 @@
           "silence_ms": 250
         },
         {
-          "tts": "My scanner just went off for this monster of a jet plane. Let's hear it for ourselves.",
+          "tts": "[gasp] My scanner just went off for this monster of a jet plane. Let's hear it for ourselves.",
           "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and enthusiastic]",
           "speed": 1.05
         },
