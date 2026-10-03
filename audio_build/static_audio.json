@@ -133,7 +133,8 @@
         "start_ms": 500,
         "fade_in_ms": 1200,
         "fade_out_ms": 1200,
-        "gain_db": -14
+        "gain_db": -14,
+        "end_before_ms": 1000
       }
     },
     "free-scanning": {
@@ -228,7 +229,8 @@
         "start_ms": 500,
         "fade_in_ms": 1200,
         "fade_out_ms": 1200,
-        "gain_db": -14
+        "gain_db": -14,
+        "end_before_ms": 1000
       }
     },
     "flight-intro-1": {

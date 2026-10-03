@@ -187,7 +187,10 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict, vo
         bed_audio = AudioSegment.silent(duration=bed.get("start_ms", 0)) + bed_audio
         while len(bed_audio) < len(combined):
             bed_audio += bed_audio
-        bed_audio = bed_audio[: len(combined)]
+        # end_before_ms stops the bed early so the clip's tail (a closing
+        # sting, final words) plays clean of it
+        bed_end = max(0, len(combined) - bed.get("end_before_ms", 0))
+        bed_audio = bed_audio[:bed_end]
         if bed.get("fade_out_ms"):
             bed_audio = bed_audio.fade_out(bed["fade_out_ms"])
         combined = bed_audio.overlay(combined)
