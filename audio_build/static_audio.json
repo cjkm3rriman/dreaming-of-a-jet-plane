@@ -106,13 +106,14 @@
       ]
     },
     "overandout": {
-      "description": "Session sign-off: Hugo's farewell, one deep-scan sting. Transcribed from the production ronald file 2026-10-02.",
+      "description": "Session sign-off: Hugo's farewell (rewritten 2026-10-02, 'over and out' close), one deep-scan sting.",
       "timeline": [
         {
           "silence_ms": 600
         },
         {
-          "tts": "Great job my old chum, we spotted some absolutely delightful jet planes just now. Start up your Yoto jet plane scanner again soon, because you never know what celestial surprises we might find up there. Hugo, standing by."
+          "tts": "My word, that was a fantastic session of jet plane spotting! We found some truly beautiful birds up there - that's pilot-talk for jet planes, you know. Start up your Yoto jet plane scanner again soon, because one never knows what celestial surprises await. Hugo... over and out.",
+          "speed": 1.05
         },
         {
           "silence_ms": 700
