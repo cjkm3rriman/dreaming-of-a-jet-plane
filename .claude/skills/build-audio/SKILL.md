@@ -6,9 +6,17 @@ description: Render a static audio deliverable from the manifest (DOJP-35) — e
 # Build static audio
 
 The static clips are built from `audio_build/static_audio.json` (one entry per
-deliverable: a timeline of `sfx` / `tts` / `silence_ms` steps, optional looped
-`bed`) by `scripts/build_static_audio.py`. This replaces the old iMovie
-workflow. SFX sources live in `assets/sfx/`.
+deliverable: a timeline of `sfx` / `tts` / `robot_tts` / `silence_ms` steps,
+optional looped `bed`) by `scripts/build_static_audio.py`. This replaces the
+old iMovie workflow. SFX sources live in `assets/sfx/`.
+
+Two kinds of speech: `tts` renders in the entry's **narrator** voice (one per
+voice folder), while `robot_tts` always renders in the **scanner-robot**
+ElevenLabs voice (`robot_voice_id` in the manifest, currently
+`weA4Q36twV5kwSaTEL0Q`) regardless of narrator — the robot is the same
+character in every voice cast. The `robot-*.mp3` files in `assets/sfx/` are
+recordings of that same voice from the iMovie era; prefer `robot_tts` for
+anything new or re-worded.
 
 ## Procedure
 

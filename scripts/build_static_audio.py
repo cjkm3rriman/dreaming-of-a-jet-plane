@@ -38,7 +38,26 @@ OUT_DIR = REPO / "audio_build" / "out"
 VOICES = {defn["voice_folder"]: name for name, defn in TTS_PROVIDERS.items()}
 
 
-async def render_entry(name: str, entry: dict, provider: str) -> AudioSegment:
+async def _robot_tts(text: str, manifest: dict) -> AudioSegment:
+    """The scanner-robot voice: a fixed ElevenLabs voice, independent of which
+    narrator voice is being rendered. Mirrors app/tts_providers/elevenlabs.py's
+    request shape with the robot's voice_id from the manifest."""
+    import os
+    import httpx
+
+    voice_id = manifest["robot_voice_id"]
+    api_key = os.environ["ELEVENLABS_TEXT_TO_VOICE_API_KEY"]
+    url = (f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+           f"?output_format=opus_48000_64")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.post(url, headers={"xi-api-key": api_key},
+                              json={"text": text, "model_id": "eleven_multilingual_v2"})
+    if r.status_code != 200:
+        raise RuntimeError(f"robot_tts failed: ElevenLabs {r.status_code}: {r.text[:200]}")
+    return AudioSegment.from_file(io.BytesIO(r.content), format="ogg")
+
+
+async def render_entry(name: str, entry: dict, provider: str, manifest: dict) -> AudioSegment:
     """Compose one manifest entry's timeline for one TTS provider."""
     from app.main import convert_text_to_speech
 
@@ -48,6 +67,8 @@ async def render_entry(name: str, entry: dict, provider: str) -> AudioSegment:
             segment = AudioSegment.silent(duration=step["silence_ms"])
         elif "sfx" in step:
             segment = AudioSegment.from_file(SFX_DIR / step["sfx"])
+        elif "robot_tts" in step:
+            segment = _normalize_loudness(_trim_silence(await _robot_tts(step["robot_tts"], manifest)))
         elif "tts" in step:
             audio, error, used, ext, _mime = await convert_text_to_speech(step["tts"], provider)
             if error or not audio:
@@ -115,7 +136,8 @@ async def main() -> None:
                         help="PUT rendered files to S3 voice folders")
     args = parser.parse_args()
 
-    manifest = json.loads(MANIFEST.read_text())["entries"]
+    manifest_doc = json.loads(MANIFEST.read_text())
+    manifest = manifest_doc["entries"]
     entries = args.entry or sorted(manifest)
     voices = args.voice or sorted(VOICES)
 
@@ -124,7 +146,7 @@ async def main() -> None:
             raise SystemExit(f"unknown entry '{entry_name}'; manifest has: {sorted(manifest)}")
         for voice in voices:
             provider = VOICES[voice]
-            audio = await render_entry(entry_name, manifest[entry_name], provider)
+            audio = await render_entry(entry_name, manifest[entry_name], provider, manifest_doc)
             paths = export(audio, OUT_DIR / voice / entry_name)
             print(f"{entry_name} [{voice}/{provider}]: {audio.duration_seconds:.2f}s "
                   f"{audio.dBFS:.1f} dBFS (target {TARGET_DBFS}) -> "

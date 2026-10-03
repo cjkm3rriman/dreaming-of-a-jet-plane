@@ -1,14 +1,24 @@
 {
-  "_comment": "Static audio build manifest (DOJP-35). One entry per deliverable. Timeline steps: {sfx, gain_db?, fade_out_ms?} | {tts, gain_db?} | {silence_ms}. Optional bed: an SFX looped/trimmed under the whole timeline at bed.gain_db. Rendered per voice by scripts/build_static_audio.py; mastered to the app's TARGET_DBFS so statics match generated plane audio.",
+  "_comment": "Static audio build manifest (DOJP-35). One entry per deliverable. Timeline steps: {sfx} | {tts} | {robot_tts} | {silence_ms}, each with optional gain_db / fade_out_ms. Optional bed: an SFX looped under the whole timeline. {tts} renders in the entry's narrator voice (per voice folder); {robot_tts} always renders in the scanner-robot ElevenLabs voice (robot_voice_id below) regardless of narrator. Mastered to the app's TARGET_DBFS; exported stereo via free_pool.export_audio_segment (DOJP-56).",
   "entries": {
     "scanning-again": {
-      "description": "Interstitial when the child asks for another scan. Structure reverse-engineered from the production ronald file (7.2s): short lead-in, robot stinger, one voice line.",
+      "description": "Interstitial when the child asks for another scan: robot scanner line, then the narrator. Replaces the iMovie original (7.2s).",
       "timeline": [
-        {"silence_ms": 300},
-        {"sfx": "robot-scanning-skies-more.mp3", "gain_db": -2},
-        {"silence_ms": 150},
-        {"tts": "Let's scan the skies again, and see what else is flying up there!"}
+        {
+          "silence_ms": 300
+        },
+        {
+          "robot_tts": "Scanning the skies for jet planes",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 150
+        },
+        {
+          "tts": "Let's scan the skies again, and see what else is flying up there!"
+        }
       ]
     }
-  }
+  },
+  "robot_voice_id": "weA4Q36twV5kwSaTEL0Q"
 }
