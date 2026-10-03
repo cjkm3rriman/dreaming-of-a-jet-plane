@@ -9,7 +9,7 @@
           "gain_db": -4
         },
         {
-          "tts": "Air Traffic Controller Hugo here, and how splendid - my trusty co-pilot has reported for duty! Now, I'll let you in on a little secret, old chum: no two skies are ever quite the same. Every scan finds new jet planes, dashing off to new corners of the world on adventures all of their own. So - ears sharp, eyes to the heavens, and let us see who's up there today!",
+          "tts": "Air Traffic Controller Hugo here, and how splendid - my trusty co-pilot has reported for duty! Here's the wonderful thing about the sky, old chum: it's never, ever quite the same. Every scan finds new jet planes, dashing off to new corners of the world on adventures all of their own. Shall we discover who's soaring overhead today?",
           "speed": 1.05,
           "overlap_ms": 1400
         },
