@@ -2,14 +2,14 @@
   "_comment": "Static audio build manifest (DOJP-35). One entry per deliverable. Timeline steps: {sfx} | {tts} | {robot_tts} | {silence_ms}, each with optional gain_db / fade_out_ms. Optional bed: an SFX looped under the whole timeline. {tts} renders in the entry's narrator voice (per voice folder); {robot_tts} always renders in the scanner-robot ElevenLabs voice (robot_voice_id below) regardless of narrator. Mastered to the app's TARGET_DBFS; exported stereo via free_pool.export_audio_segment (DOJP-56).",
   "entries": {
     "scanning": {
-      "description": "The /scanning warm-up clip. Airport-call opener, Hugo's monologue, robot activation + one deep-scan, robot scan line, then radio static with five deep-scans layered over it. Structure per Callum 2026-10-02.",
+      "description": "The /scanning warm-up clip. Airport call under Hugo's deputy/new-sky monologue, robot activation + deep-scan, robot scan line, radio static with five deep-scans. Script rewritten 2026-10-02 (Hamish reference removed - evergreen).",
       "timeline": [
         {
           "sfx": "airport-call.mp3",
           "gain_db": -4
         },
         {
-          "tts": "Air Traffic Controller Hugo here, once more keeping a watchful eye on the skies. Hamish is still enjoying the tranquil shores of the Maldives, but do not fret - his holiday is nearing its end. Until then, the scanner remains under my expert guidance. Shall we see what jet planes are cruising through the clouds today?",
+          "tts": "Air Traffic Controller Hugo here, and how splendid - my trusty co-pilot has reported for duty! Now, I'll let you in on a little secret, old chum: no two skies are ever quite the same. Every scan finds new jet planes, dashing off to new corners of the world on adventures all of their own. So - ears sharp, eyes to the heavens, and let us see who's up there today!",
           "speed": 1.05,
           "overlap_ms": 1400
         },
