@@ -170,7 +170,7 @@
           "silence_ms": 400
         },
         {
-          "tts": "Let's tune into another one, shall we? [chuckle]",
+          "tts": "Let's tune into another one, shall we?",
           "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent, warm and inviting]",
           "speed": 1.05
         },
