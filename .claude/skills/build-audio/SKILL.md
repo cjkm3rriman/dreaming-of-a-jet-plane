@@ -89,6 +89,17 @@ Inworld ([laughs] vs [laugh]); canonical manifest tags are Inworld-style and
 `INWORLD_TO_ELEVENLABS_TAGS` translates them per render. The renderer prints
 all pins vs the live env at the start of every run - relay that line.
 
+## Free tier has ONE voice, tied to the dynamic provider
+
+Free deliverables (`upload_prefix: free`/`free/intros`) are voice-independent
+single files - there is exactly one live copy, and it must be the voice of
+the production `TTS_PROVIDER`, because the six intros are stitched onto
+free-pool plane bodies that provider generates. **If the dynamic TTS provider
+ever changes, re-render and re-upload the whole free set in the new voice**
+(`--voice edward ...free entries... --upload` - the narrator binding makes
+the scripts say the right name automatically). Skipping this gives free
+listeners a narrator switch mid-track on every pooled plane.
+
 ## Gotchas
 
 - TTS reads differ per render — re-rendering an approved entry produces a
