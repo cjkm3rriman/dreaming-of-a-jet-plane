@@ -78,6 +78,17 @@ for any other model or provider the renderer strips every [tag] from the text
 so brackets are never spoken. Use them sparingly - these clips play every
 session, so one well-placed sound beats three.
 
+## Model pins
+
+Both static speech models are code-pinned in `scripts/build_static_audio.py`
+and independent of the Railway env vars that steer dynamic tracks:
+`STATIC_INWORLD_MODEL` (currently `inworld-tts-2`) and
+`STATIC_ELEVENLABS_MODEL` (currently `eleven_v4`, used for Hamish AND the
+robot). eleven_v4/v3 support audio tags with a DIFFERENT vocabulary from
+Inworld ([laughs] vs [laugh]); canonical manifest tags are Inworld-style and
+`INWORLD_TO_ELEVENLABS_TAGS` translates them per render. The renderer prints
+all pins vs the live env at the start of every run - relay that line.
+
 ## Gotchas
 
 - TTS reads differ per render — re-rendering an approved entry produces a

@@ -49,6 +49,17 @@ PROMPT_CAPABLE_MODELS = {"inworld-tts-2"}
 # the renderer strips every [tag] from the text for non-capable models.
 NONVERBAL_CAPABLE_MODELS = {"inworld-tts-2", "inworld-tts-2-flash"}
 
+# Statics render ElevenLabs speech (Hamish + the robot) on eleven_v4, pinned
+# in code like the Inworld model. v4 (and v3) support audio tags, but with a
+# DIFFERENT vocabulary from Inworld's ([laughs] vs [laugh]) - canonical tags
+# in the manifest are Inworld-style and translated per provider below.
+STATIC_ELEVENLABS_MODEL = "eleven_v4"
+ELEVENLABS_TAG_MODELS = {"eleven_v4", "eleven_v3"}
+INWORLD_TO_ELEVENLABS_TAGS = {
+    "chuckle": "laughs", "laugh": "laughs", "sigh": "sighs",
+    "clear throat": "clears throat", "breathe": "exhales", "gasp": "gasps",
+}
+
 MANIFEST = REPO / "audio_build" / "static_audio.json"
 SFX_DIR = REPO / "assets" / "sfx"
 OUT_DIR = REPO / "audio_build" / "out"
@@ -70,7 +81,7 @@ async def _robot_tts(text: str, manifest: dict) -> AudioSegment:
            f"?output_format=opus_48000_64")
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.post(url, headers={"xi-api-key": api_key},
-                              json={"text": text, "model_id": "eleven_multilingual_v2"})
+                              json={"text": text, "model_id": STATIC_ELEVENLABS_MODEL})
     if r.status_code != 200:
         raise RuntimeError(f"robot_tts failed: ElevenLabs {r.status_code}: {r.text[:200]}")
     return AudioSegment.from_file(io.BytesIO(r.content), format="ogg")
@@ -114,11 +125,18 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict, vo
                 if voice not in narrators:
                     raise RuntimeError(f"{name}: no narrator name mapped for voice '{voice}'")
                 text = text.replace("{narrator}", narrators[voice])
-            if not (provider == "inworld" and STATIC_INWORLD_MODEL in NONVERBAL_CAPABLE_MODELS):
+            if provider == "inworld" and STATIC_INWORLD_MODEL in NONVERBAL_CAPABLE_MODELS:
+                pass  # canonical tags are Inworld-style already
+            elif provider == "elevenlabs" and STATIC_ELEVENLABS_MODEL in ELEVENLABS_TAG_MODELS:
+                def _translate(match):
+                    tag = match.group(1).strip().lower()
+                    return f"[{INWORLD_TO_ELEVENLABS_TAGS[tag]}]" if tag in INWORLD_TO_ELEVENLABS_TAGS else ""
+                text = re.sub(r"\[([^\]]*)\]", _translate, text)
+                text = re.sub(r"  +", " ", text).strip()
+            else:
                 stripped = re.sub(r"\s*\[[^\]]*\]", "", text)
                 if stripped != text:
-                    print(f"  note: stripping inline non-verbal tags for {provider}/"
-                          f"{STATIC_INWORLD_MODEL} (would be spoken aloud)")
+                    print(f"  note: stripping inline non-verbal tags for {provider} (would be spoken aloud)")
                     text = re.sub(r"  +", " ", stripped).strip()
             if "prompt" in step:
                 if provider == "inworld" and STATIC_INWORLD_MODEL in PROMPT_CAPABLE_MODELS:
@@ -210,11 +228,16 @@ async def main() -> None:
 
     import os
     import app.tts_providers.inworld as inworld
+    import app.tts_providers.elevenlabs as elevenlabs
     live_model = os.getenv("INWORLD_MODEL_ID", "(unset; code default)")
     inworld.INWORLD_MODEL_ID = STATIC_INWORLD_MODEL
     marker = "same as" if live_model == STATIC_INWORLD_MODEL else "differs from"
     print(f"static Inworld model: {STATIC_INWORLD_MODEL} (code-pinned) - "
           f"{marker} live INWORLD_MODEL_ID={live_model} (dynamic tracks)")
+    live_el = os.getenv("ELEVENLABS_MODEL_ID", "(unset; code default eleven_turbo_v2)")
+    elevenlabs.ELEVENLABS_MODEL_ID = STATIC_ELEVENLABS_MODEL
+    print(f"static ElevenLabs model: {STATIC_ELEVENLABS_MODEL} (code-pinned, narrator+robot) - "
+          f"live ELEVENLABS_MODEL_ID={live_el} (dynamic tracks)")
 
     manifest_doc = json.loads(MANIFEST.read_text())
     manifest = manifest_doc["entries"]

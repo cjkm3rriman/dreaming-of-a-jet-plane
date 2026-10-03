@@ -11,6 +11,9 @@ DISPLAY_NAME = "ElevenLabs"
 logger = logging.getLogger(__name__)
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_TEXT_TO_VOICE_API_KEY")
+# Dynamic tracks keep turbo_v2 unless the env says otherwise; the static
+# build pipeline pins its own model by overriding this module attribute
+ELEVENLABS_MODEL_ID = os.getenv("ELEVENLABS_MODEL_ID", "eleven_turbo_v2")
 ELEVENLABS_BASE_URL = "https://api.elevenlabs.io/v1"
 DEFAULT_VOICE_ID = "goT3UYdM9bhm0n2lmKQx"  # Edward voice - British, Dark, Seductive, Low
 DEFAULT_OUTPUT_FORMAT = "opus_48000_64"  # Opus at 48kHz, 64kbps
@@ -50,7 +53,7 @@ async def generate_audio(text: str) -> Tuple[bytes, str]:
 
         payload = {
             "text": text_with_pause,
-            "model_id": "eleven_turbo_v2",
+            "model_id": ELEVENLABS_MODEL_ID,
             "voice_settings": {
                 "stability": 0.6,
                 "similarity_boost": 0.5
