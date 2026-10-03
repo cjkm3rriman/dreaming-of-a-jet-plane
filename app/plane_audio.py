@@ -9,12 +9,29 @@ was pasted into both). One implementation now serves both paths (DOJP-46).
 import asyncio
 import logging
 import time
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from .s3_cache import s3_cache
 from .background import spawn
 
 logger = logging.getLogger(__name__)
+
+FANFARE_PATH = Path(__file__).resolve().parent.parent / "assets" / "sfx" / "fanfare-legendary.mp3"
+_fanfare_cache: Dict[str, bytes] = {}
+
+
+def _fanfare_bytes(file_ext: str) -> bytes:
+    """The legendary fanfare, trimmed/faded/levelled and exported in the
+    plane audio's own format so stitch_audio_multi can decode it alongside
+    the TTS segments. Loaded from the repo (ships with the app), cached per
+    format for the process lifetime."""
+    if file_ext not in _fanfare_cache:
+        from pydub import AudioSegment
+        from .free_pool import export_audio_segment
+        seg = AudioSegment.from_file(FANFARE_PATH)[:3000].fade_out(300).apply_gain(-4)
+        _fanfare_cache[file_ext] = export_audio_segment(seg, file_ext)
+    return _fanfare_cache[file_ext]
 
 
 async def generate_plane_audio(
@@ -26,6 +43,7 @@ async def generate_plane_audio(
     location_hash: Optional[str] = None,
     plane_index: Optional[int] = None,
     tts_override: Optional[str] = None,
+    rarity: str = "common",
 ) -> Dict[str, Any]:
     """Generate one plane's narration audio.
 
@@ -85,11 +103,21 @@ async def generate_plane_audio(
                         spawn(cache_fun_fact_audio(fun_fact_body_text, fun_fact_body_audio, tts_provider_used, file_ext), "cache fun-fact body")
 
             body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider_used}.{file_ext}"
+            # Legendary spot (DOJP-32): the fanfare sits between the opening and
+            # the body - "we've detected a jet plane" -> fanfare -> "hold on, my
+            # scanner is going wild". Separate from the body, so it never
+            # reaches the free pool.
+            lead = [opening_audio]
+            lead_gaps = [1000]
+            if rarity == "legendary":
+                lead = [opening_audio, _fanfare_bytes(file_ext)]
+                lead_gaps = [300, 300]
+
             if fun_fact_opening_audio and fun_fact_body_audio:
                 audio_content = await stitch_audio_multi(
-                    [opening_audio, body_audio, fun_fact_opening_audio, fun_fact_body_audio],
+                    lead + [body_audio, fun_fact_opening_audio, fun_fact_body_audio],
                     add_silence=True, audio_format=file_ext,
-                    gap_durations=[1000, 1000, 500]
+                    gap_durations=lead_gaps + [1000, 500]
                 )
                 # Cache body+fact stitched together for free pool reuse
                 body_with_fact = await stitch_audio_multi(
@@ -99,6 +127,12 @@ async def generate_plane_audio(
                 )
                 await s3_cache.set(body_cache_key, body_with_fact)
                 logger.info(f"Cached body+fact audio at {body_cache_key}")
+            elif rarity == "legendary":
+                audio_content = await stitch_audio_multi(
+                    lead + [body_audio], add_silence=True, audio_format=file_ext, gap_durations=lead_gaps
+                )
+                await s3_cache.set(body_cache_key, body_audio)
+                logger.info(f"Cached body audio at {body_cache_key}")
             else:
                 audio_content = await stitch_audio(opening_audio, body_audio, add_silence=True, audio_format=file_ext)
                 await s3_cache.set(body_cache_key, body_audio)

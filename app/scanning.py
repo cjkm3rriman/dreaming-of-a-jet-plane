@@ -12,6 +12,7 @@ import httpx
 from .s3_cache import s3_cache
 from .audio_response import recent_plane_audio
 from .flight_text import generate_flight_text
+from .aircraft_database import get_rarity
 from .special_events import get_active_event, aircraft_slot_for_plane, ensure_event_audio
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent
 from .background import spawn
@@ -228,6 +229,7 @@ async def _generate_and_cache_plane_audio(
             location_hash=location_hash,
             plane_index=plane_index,
             tts_override=tts_override,
+            rarity=get_rarity(aircraft.get("aircraft_icao")) if aircraft else "common",
         )
 
         if result["audio"] and not result["error"]:

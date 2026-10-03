@@ -34,6 +34,7 @@ import warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pydub.*")
 
 from .airport_database import get_airport_by_iata
+from .aircraft_database import get_rarity
 from .airline_database import AirlineDatabase
 from .location_utils import calculate_distance, calculate_min_distance_to_route
 from .overandout import stream_overandout, overandout_options
@@ -606,6 +607,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "user_city": city,
             "plane_index": plane_index,
             "aircraft_name": aircraft_name,
+            "rarity": get_rarity(aircraft.get("aircraft_icao")),
             "origin_city": origin_city,
             "origin_state": origin_state,
             "origin_country": origin_country,
@@ -718,6 +720,22 @@ def select_diverse_aircraft(
         else:
             # No passenger flights at all: use up to 5 cargo/private
             selected = cargo_private[:5]
+
+    # Rarity (DOJP-32): a rare/legendary passenger candidate that passed the
+    # quality gates must make the cut - a legendary in the sky that doesn't
+    # get narrated is a wasted lottery win. Replaces the farthest common pick.
+    for candidate in aircraft_list:
+        if candidate in selected or candidate.get("is_cargo_operator"):
+            continue
+        if get_rarity(candidate.get("aircraft_icao")) == "common":
+            continue
+        if len(selected) < 5:
+            selected.append(candidate)
+            continue
+        for i in range(len(selected) - 1, -1, -1):
+            if get_rarity(selected[i].get("aircraft_icao")) == "common":
+                selected[i] = candidate
+                break
 
     final_selection = selected[:5]
     dest_iatas = [plane.get("destination_airport") or "UNK" for plane in final_selection]
@@ -1076,8 +1094,10 @@ async def handle_plane_endpoint(
         fun_fact_body_text = None
         use_split_tts = False  # Flag to track if we can use split TTS
 
+        plane_rarity = "common"
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
+            plane_rarity = get_rarity(selected_aircraft.get("aircraft_icao"))
             # Use split text generation for free pool support
             opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, fun_fact_source = generate_flight_text_for_aircraft(
                 selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True,
@@ -1117,6 +1137,7 @@ async def handle_plane_endpoint(
             location_hash=location_hash,
             plane_index=plane_index,
             tts_override=tts_override,
+            rarity=plane_rarity,
         )
         audio_content = result["audio"]
         tts_error = result["error"]

@@ -1,7 +1,9 @@
 {
   "A124": {
     "technical_name": "Antonov An-124 Ruslan",
-    "simple_name": "Antonov An-124"
+    "simple_name": "Antonov An-124",
+    "rarity": "legendary",
+    "rarity_blurb": "one of the biggest cargo planes ever built, with a nose that opens like a giant mouth"
   },
   "A140": {
     "technical_name": "Antonov An-140",
@@ -38,7 +40,9 @@
   },
   "A225": {
     "technical_name": "Antonov An-225 Mriya",
-    "simple_name": "Antonov An-225 Mriya"
+    "simple_name": "Antonov An-225 Mriya",
+    "rarity": "legendary",
+    "rarity_blurb": "the biggest aeroplane that has ever flown"
   },
   "A306": {
     "technical_name": "Airbus A300-600 Freighter",
@@ -104,7 +108,9 @@
     "technical_name": "Airbus A330-700 BelugaXL",
     "simple_name": "Airbus A330",
     "passenger_capacity": 332,
-    "phonetic_name": "Airbus A three thirty"
+    "phonetic_name": "Airbus A three thirty",
+    "rarity": "legendary",
+    "rarity_blurb": "the Beluga, a plane shaped like a whale that carries other aeroplanes' wings in its tummy"
   },
   "A338": {
     "technical_name": "Airbus A330-800",
@@ -125,28 +131,32 @@
     "simple_name": "Airbus A340",
     "passenger_capacity": 263,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Airbus A three forty"
+    "phonetic_name": "Airbus A three forty",
+    "rarity": "rare"
   },
   "A343": {
     "technical_name": "Airbus A340-300",
     "simple_name": "Airbus A340",
     "passenger_capacity": 303,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Airbus A three forty"
+    "phonetic_name": "Airbus A three forty",
+    "rarity": "rare"
   },
   "A345": {
     "technical_name": "Airbus A340-500",
     "simple_name": "Airbus A340",
     "passenger_capacity": 316,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Airbus A three forty"
+    "phonetic_name": "Airbus A three forty",
+    "rarity": "rare"
   },
   "A346": {
     "technical_name": "Airbus A340-600",
     "simple_name": "Airbus A340",
     "passenger_capacity": 372,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Airbus A three forty"
+    "phonetic_name": "Airbus A three forty",
+    "rarity": "rare"
   },
   "A359": {
     "technical_name": "Airbus A350-900",
@@ -167,13 +177,17 @@
     "simple_name": "Airbus A380 Super Jumbo",
     "passenger_capacity": 525,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Airbus A three eighty Super Jumbo"
+    "phonetic_name": "Airbus A three eighty Super Jumbo",
+    "rarity": "legendary",
+    "rarity_blurb": "the biggest passenger plane in the whole wide world"
   },
   "A3ST": {
     "technical_name": "Airbus A300-600ST \"Super Transporter\" / \"Beluga\"",
     "simple_name": "Airbus A300",
     "passenger_capacity": 0,
-    "phonetic_name": "Airbus A three hundred"
+    "phonetic_name": "Airbus A three hundred",
+    "rarity": "legendary",
+    "rarity_blurb": "the Beluga, a plane shaped like a whale that carries other aeroplanes' wings in its tummy"
   },
   "A400": {
     "technical_name": "Airbus A400M Atlas",
@@ -319,7 +333,8 @@
     "simple_name": "Boeing 717",
     "passenger_capacity": 134,
     "cruise_speed_kmh": 840,
-    "phonetic_name": "Boeing seven one seven"
+    "phonetic_name": "Boeing seven one seven",
+    "rarity": "rare"
   },
   "B720": {
     "technical_name": "Boeing 720B",
@@ -337,7 +352,8 @@
     "technical_name": "Boeing 727-200",
     "simple_name": "Boeing 727-200",
     "passenger_capacity": 189,
-    "phonetic_name": "Boeing seven two seven"
+    "phonetic_name": "Boeing seven two seven",
+    "rarity": "rare"
   },
   "B732": {
     "technical_name": "Boeing 737-200 Combi",
@@ -400,61 +416,77 @@
     "simple_name": "Boeing 747 Jumbo Jet",
     "passenger_capacity": 366,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Boeing seven four seven Jumbo Jet"
+    "phonetic_name": "Boeing seven four seven Jumbo Jet",
+    "rarity": "legendary",
+    "rarity_blurb": "the original Queen of the Skies, with that famous hump on her back"
   },
   "B742": {
     "technical_name": "Boeing 747-200F",
     "simple_name": "Boeing 747 Jumbo Jet",
     "passenger_capacity": 366,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Boeing seven four seven Jumbo Jet"
+    "phonetic_name": "Boeing seven four seven Jumbo Jet",
+    "rarity": "legendary",
+    "rarity_blurb": "the original Queen of the Skies, with that famous hump on her back"
   },
   "B743": {
     "technical_name": "Boeing 747-300M",
     "simple_name": "Boeing 747 Jumbo Jet",
     "passenger_capacity": 366,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Boeing seven four seven Jumbo Jet"
+    "phonetic_name": "Boeing seven four seven Jumbo Jet",
+    "rarity": "legendary",
+    "rarity_blurb": "the original Queen of the Skies, with that famous hump on her back"
   },
   "B744": {
     "technical_name": "Boeing 747-400F / Boeing 747-400ERF",
     "simple_name": "Boeing 747 Jumbo Jet",
     "passenger_capacity": 366,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Boeing seven four seven Jumbo Jet"
+    "phonetic_name": "Boeing seven four seven Jumbo Jet",
+    "rarity": "legendary",
+    "rarity_blurb": "the original Queen of the Skies, with that famous hump on her back"
   },
   "B748": {
     "technical_name": "Boeing 747-8F",
     "simple_name": "Boeing 747 Jumbo Jet",
     "passenger_capacity": 467,
     "cruise_speed_kmh": 905,
-    "phonetic_name": "Boeing seven four seven Jumbo Jet"
+    "phonetic_name": "Boeing seven four seven Jumbo Jet",
+    "rarity": "legendary",
+    "rarity_blurb": "the newest and longest Queen of the Skies, with that famous hump on her back"
   },
   "B74R": {
     "technical_name": "Boeing 747SR Freighter",
     "simple_name": "Boeing 747 Jumbo Jet",
     "passenger_capacity": 366,
-    "phonetic_name": "Boeing seven four seven Jumbo Jet"
+    "phonetic_name": "Boeing seven four seven Jumbo Jet",
+    "rarity": "legendary",
+    "rarity_blurb": "the original Queen of the Skies, with that famous hump on her back"
   },
   "B74S": {
     "technical_name": "Boeing 747SP",
     "simple_name": "Boeing 747 Jumbo Jet",
     "passenger_capacity": 366,
-    "phonetic_name": "Boeing seven four seven Jumbo Jet"
+    "phonetic_name": "Boeing seven four seven Jumbo Jet",
+    "rarity": "legendary",
+    "rarity_blurb": "a rare short-bodied Queen of the Skies, with that famous hump on her back"
   },
   "B752": {
     "technical_name": "Boeing 757-200 Winglets",
     "simple_name": "Boeing 757",
     "passenger_capacity": 200,
     "cruise_speed_kmh": 840,
-    "phonetic_name": "Boeing seven five seven"
+    "phonetic_name": "Boeing seven five seven",
+    "rarity": "rare"
   },
   "B753": {
     "technical_name": "Boeing 757-300",
     "simple_name": "Boeing 757",
     "passenger_capacity": 243,
     "cruise_speed_kmh": 840,
-    "phonetic_name": "Boeing seven five seven"
+    "phonetic_name": "Boeing seven five seven",
+    "rarity": "rare"
   },
   "B762": {
     "technical_name": "Boeing 767-200 Freighter / Boeing 767-200ER",
@@ -579,7 +611,9 @@
     "technical_name": "Boeing 747-400 LCF Dreamlifter",
     "simple_name": "Boeing 747 Dreamlifter",
     "passenger_capacity": 2,
-    "phonetic_name": "Boeing seven four seven"
+    "phonetic_name": "Boeing seven four seven",
+    "rarity": "legendary",
+    "rarity_blurb": "a giant jumbo with a swollen belly, built to carry whole aeroplane wings inside it"
   },
   "C130": {
     "technical_name": "Lockheed L-182 / 282 / 382 (L-100) Hercules",
@@ -895,7 +929,8 @@
   },
   "F100": {
     "technical_name": "Fokker 100",
-    "simple_name": "Fokker 100"
+    "simple_name": "Fokker 100",
+    "rarity": "rare"
   },
   "F27": {
     "technical_name": "Fokker F27 Friendship",
@@ -920,7 +955,8 @@
   },
   "F70": {
     "technical_name": "Fokker 70",
-    "simple_name": "Fokker 70"
+    "simple_name": "Fokker 70",
+    "rarity": "rare"
   },
   "F900": {
     "technical_name": "Dassault Falcon 900",
@@ -1067,11 +1103,13 @@
   },
   "MD82": {
     "technical_name": "McDonnell Douglas MD-82",
-    "simple_name": "McDonnell Douglas MD-82"
+    "simple_name": "McDonnell Douglas MD-82",
+    "rarity": "rare"
   },
   "MD83": {
     "technical_name": "McDonnell Douglas MD-83",
-    "simple_name": "McDonnell Douglas MD-83"
+    "simple_name": "McDonnell Douglas MD-83",
+    "rarity": "rare"
   },
   "MD87": {
     "technical_name": "McDonnell Douglas MD-87",
@@ -1079,7 +1117,8 @@
   },
   "MD88": {
     "technical_name": "McDonnell Douglas MD-88",
-    "simple_name": "McDonnell Douglas MD-88"
+    "simple_name": "McDonnell Douglas MD-88",
+    "rarity": "rare"
   },
   "MD90": {
     "technical_name": "McDonnell Douglas MD-90",

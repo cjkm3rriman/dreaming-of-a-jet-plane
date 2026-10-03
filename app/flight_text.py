@@ -10,7 +10,7 @@ import re
 from .cities_database import get_fun_facts
 from .airport_database import get_airport_by_iata
 from .location_utils import uses_metric_system
-from .aircraft_database import get_phonetic_name
+from .aircraft_database import get_phonetic_name, get_rarity, get_rarity_blurb
 
 
 # Mapping for converting digits to English words for TTS
@@ -219,6 +219,23 @@ def format_speed(speed_kmh: float, use_metric: bool) -> tuple[int, str]:
 
 # Openers spoken before a fun fact. main.py imports this for its
 # has_fun_fact analytics flag - keep one list or that flag silently breaks.
+# Rarity interjections (DOJP-32). Human-written; kept clear of the opening
+# exclamation pool so an opener is never echoed one sentence later.
+RARE_INTROS = [
+    "Ooh - now here's a rare one on my radar!",
+    "Well I say - we don't spot one of these every day!",
+    "Hold the phone - a rare sighting, old chum!",
+]
+LEGENDARY_INTROS = [
+    "Hold on... hold on! My scanner is going absolutely wild!",
+    "Stop everything! My radar is doing somersaults!",
+    "Oh my giddy aunt - the scanner has never beeped so loudly!",
+]
+LEGENDARY_CLOSERS = [
+    "That, old chum, is a LEGENDARY spot!",
+    "A LEGENDARY spot, if ever there was one!",
+]
+
 FUN_FACT_OPENINGS = ["Fun fact.", "Guess what?", "Did you know?", "A tidbit for you."]
 
 
@@ -433,6 +450,7 @@ def generate_flight_text_for_aircraft(
     if passenger_capacity and passenger_capacity <= 50:
         descriptor_pool = small_aircraft_descriptors
     aircraft_descriptor = random.choice(descriptor_pool)
+    rarity = get_rarity(aircraft_icao)
     scanner_info = (
         f"Captain {captain_name} is piloting this "
         f"{aircraft_descriptor} {aircraft_name_with_digits}"
@@ -458,11 +476,34 @@ def generate_flight_text_for_aircraft(
         available_info.append(f"{altitude_word} at {altitude_feet:,} feet")
     
     # Randomly select one piece of additional info if available
-    if available_info:
-        selected_info = random.choice(available_info)
-        scanner_info += f" {selected_info}"
-        
-    scanner_sentence = scanner_info + "."
+    selected_info = random.choice(available_info) if available_info else None
+
+    # Rarity tiers (DOJP-32). The rarity line REPLACES the lead-in rather than
+    # bolting onto it, so the aircraft is named once. Lives in the scanner
+    # sentence (body segment) so the free tier inherits the words via pooled
+    # bodies; the legendary fanfare is stitched separately on the paid path.
+    if rarity == "legendary":
+        article = "an" if aircraft_name_with_digits[:1].lower() in "aeiou" else "a"
+        blurb = get_rarity_blurb(aircraft_icao) or "one of the rarest planes in all the sky"
+        at_controls = f"Captain {captain_name} is at the controls"
+        if selected_info and selected_info.startswith("carrying "):
+            # "at the controls, carrying 525 passengers" reads as if the
+            # captain is doing the carrying - rephrase the passenger stat
+            at_controls += f" with {passenger_capacity} passengers aboard"
+        elif selected_info:
+            at_controls += f", {selected_info}"
+        scanner_sentence = (
+            f"{random.choice(LEGENDARY_INTROS)} That is {article} {aircraft_name_with_digits}, "
+            f"{blurb}, and {at_controls}! {random.choice(LEGENDARY_CLOSERS)}"
+        )
+    elif rarity == "rare":
+        if selected_info:
+            scanner_info += f" {selected_info}"
+        scanner_sentence = f"{random.choice(RARE_INTROS)} {scanner_info}."
+    else:
+        if selected_info:
+            scanner_info += f" {selected_info}"
+        scanner_sentence = scanner_info + "."
     
     # Build flight details sentence with ETA
     eta_string = aircraft.get("eta")
