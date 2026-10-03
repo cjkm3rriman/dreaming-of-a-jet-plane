@@ -9,7 +9,7 @@
           "gain_db": -4
         },
         {
-          "tts": "Air Traffic Controller Hugo here, and how splendid - [chuckle] my trusty co-pilot has reported for duty! Here's the wonderful thing about the sky, old chum: it's never, ever quite the same. Every scan finds new jet planes, dashing off to new corners of the world on adventures all of their own. Shall we see who's soaring overhead today?",
+          "tts": "Air Traffic Controller {narrator} here, and how splendid - [chuckle] my trusty co-pilot has reported for duty! Here's the wonderful thing about the sky, old chum: it's never, ever quite the same. Every scan finds new jet planes, dashing off to new corners of the world on adventures all of their own. Shall we see who's soaring overhead today?",
           "speed": 1.05,
           "overlap_ms": 1400,
           "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot, warm and theatrical, brimming with delight, crisp consonants]"
@@ -113,7 +113,7 @@
           "silence_ms": 600
         },
         {
-          "tts": "My word, that was a fantastic session of jet plane spotting! [laugh] We found some magnificent flying machines up there. Start up your Yoto jet plane scanner again soon, because one never knows what celestial surprises await. Hugo... over and out.",
+          "tts": "My word, that was a fantastic session of jet plane spotting! [laugh] We found some magnificent flying machines up there. Start up your Yoto jet plane scanner again soon, because one never knows what celestial surprises await. {narrator}... over and out.",
           "speed": 1.05,
           "prompt": "[speak as an eccentric elderly British gentleman with a posh RP accent - a retired pilot signing off, warm and satisfied, gently theatrical, fond and unhurried]"
         },
@@ -130,5 +130,9 @@
       ]
     }
   },
-  "robot_voice_id": "weA4Q36twV5kwSaTEL0Q"
+  "robot_voice_id": "weA4Q36twV5kwSaTEL0Q",
+  "narrators": {
+    "ronald": "Hugo",
+    "edward": "Hamish"
+  }
 }

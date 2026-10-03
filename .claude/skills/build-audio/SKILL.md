@@ -12,7 +12,10 @@ old iMovie workflow. SFX sources live in `assets/sfx/`.
 
 Two kinds of speech: `tts` renders in the entry's **narrator** voice (one per
 voice folder), while `robot_tts` always renders in the **scanner-robot**
-ElevenLabs voice (`robot_voice_id` in the manifest, currently
+ElevenLabs voice. **The narrator's NAME is bound to the voice** - scripts use
+the `{narrator}` token and the manifest's `narrators` map (Hugo = Inworld/
+`ronald`, Hamish = ElevenLabs/`edward`), so a render can never say the wrong
+character's name; an unmapped voice fails loudly rather than guessing (`robot_voice_id` in the manifest, currently
 `weA4Q36twV5kwSaTEL0Q`) regardless of narrator — the robot is the same
 character in every voice cast. The `robot-*.mp3` files in `assets/sfx/` are
 recordings of that same voice from the iMovie era; prefer `robot_tts` for

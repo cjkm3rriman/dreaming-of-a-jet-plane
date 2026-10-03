@@ -90,7 +90,7 @@ def _change_speed(segment: AudioSegment, speed: float) -> AudioSegment:
         return AudioSegment.from_file(dst)
 
 
-async def render_entry(name: str, entry: dict, provider: str, manifest: dict) -> AudioSegment:
+async def render_entry(name: str, entry: dict, provider: str, manifest: dict, voice: str) -> AudioSegment:
     """Compose one manifest entry's timeline for one TTS provider."""
     from app.main import convert_text_to_speech
 
@@ -107,6 +107,13 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict) ->
         elif "tts" in step:
             import re
             text = step["tts"]
+            if "{narrator}" in text:
+                # The narrator NAME is bound to the voice (Hamish = ElevenLabs,
+                # Hugo = Inworld) - a script can never say the wrong name
+                narrators = manifest.get("narrators", {})
+                if voice not in narrators:
+                    raise RuntimeError(f"{name}: no narrator name mapped for voice '{voice}'")
+                text = text.replace("{narrator}", narrators[voice])
             if not (provider == "inworld" and STATIC_INWORLD_MODEL in NONVERBAL_CAPABLE_MODELS):
                 stripped = re.sub(r"\s*\[[^\]]*\]", "", text)
                 if stripped != text:
@@ -219,7 +226,7 @@ async def main() -> None:
             raise SystemExit(f"unknown entry '{entry_name}'; manifest has: {sorted(manifest)}")
         for voice in voices:
             provider = VOICES[voice]
-            audio = await render_entry(entry_name, manifest[entry_name], provider, manifest_doc)
+            audio = await render_entry(entry_name, manifest[entry_name], provider, manifest_doc, voice)
             paths = export(audio, OUT_DIR / voice / entry_name)
             print(f"{entry_name} [{voice}/{provider}]: {audio.duration_seconds:.2f}s "
                   f"{audio.dBFS:.1f} dBFS (target {TARGET_DBFS}) -> "
