@@ -11,7 +11,8 @@
         {
           "tts": "Air Traffic Controller Hugo here, and how splendid - my trusty co-pilot has reported for duty! Here's the wonderful thing about the sky, old chum: it's never, ever quite the same. Every scan finds new jet planes, dashing off to new corners of the world on adventures all of their own. Shall we discover who's soaring overhead today?",
           "speed": 1.05,
-          "overlap_ms": 1400
+          "overlap_ms": 1400,
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot, warm and theatrical, brimming with delight, crisp consonants]"
         },
         {
           "silence_ms": 350
@@ -113,7 +114,8 @@
         },
         {
           "tts": "My word, that was a fantastic session of jet plane spotting! We found some magnificent flying machines up there. Start up your Yoto jet plane scanner again soon, because one never knows what celestial surprises await. Hugo... over and out.",
-          "speed": 1.05
+          "speed": 1.05,
+          "prompt": "[speak as an eccentric elderly British gentleman with a posh RP accent - a retired pilot signing off, warm and satisfied, gently theatrical, fond and unhurried]"
         },
         {
           "silence_ms": 700

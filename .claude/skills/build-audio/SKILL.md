@@ -57,6 +57,17 @@ relay that line to the user so drift between the two is visible. They are
 expected to differ; a surprise is the static pin silently changing, not the
 pair disagreeing.
 
+## Voice steering (prompts)
+
+A `"prompt"` on a `tts` step is an Inworld **inline instruction tag** (e.g.
+`[speak as a jolly elderly British gentleman...]`) prepended to the text.
+**Only non-flash tts-2 supports it** - flash silently ignores tags and older
+models speak the brackets aloud - so the renderer attaches it strictly when
+`STATIC_INWORLD_MODEL` is in `PROMPT_CAPABLE_MODELS` and drops it with a
+printed note otherwise (including for non-Inworld narrator renders). After
+any steered render, spot-check the first seconds (whisper or ears) to confirm
+the tag was performed, not spoken.
+
 ## Gotchas
 
 - TTS reads differ per render — re-rendering an approved entry produces a

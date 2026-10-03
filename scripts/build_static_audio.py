@@ -37,6 +37,12 @@ from app.tts_providers import TTS_PROVIDERS
 # not in Railway.
 STATIC_INWORLD_MODEL = "inworld-tts-2"
 
+# Voice steering ("prompting") is inline [instruction tags] prepended to the
+# text - supported ONLY by non-flash tts-2. Flash ignores the tags and older
+# models speak the brackets aloud, so a prompt is attached strictly when the
+# rendering model is in this set and dropped (with a warning) otherwise.
+PROMPT_CAPABLE_MODELS = {"inworld-tts-2"}
+
 MANIFEST = REPO / "audio_build" / "static_audio.json"
 SFX_DIR = REPO / "assets" / "sfx"
 OUT_DIR = REPO / "audio_build" / "out"
@@ -93,7 +99,14 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict) ->
         elif "robot_tts" in step:
             segment = _normalize_loudness(_trim_silence(await _robot_tts(step["robot_tts"], manifest)))
         elif "tts" in step:
-            audio, error, used, ext, _mime = await convert_text_to_speech(step["tts"], provider)
+            text = step["tts"]
+            if "prompt" in step:
+                if provider == "inworld" and STATIC_INWORLD_MODEL in PROMPT_CAPABLE_MODELS:
+                    text = f"{step['prompt']} {text}"
+                else:
+                    print(f"  note: dropping steering prompt for {provider}/"
+                          f"{STATIC_INWORLD_MODEL} (tags are tts-2 non-flash only)")
+            audio, error, used, ext, _mime = await convert_text_to_speech(text, provider)
             if error or not audio:
                 raise RuntimeError(f"{name}: TTS failed for {provider}: {error}")
             fmt = "ogg" if ext == "opus" else ext
