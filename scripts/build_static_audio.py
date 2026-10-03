@@ -240,6 +240,10 @@ async def main() -> None:
                         help="voice folder(s); default: all")
     parser.add_argument("--upload", action="store_true",
                         help="PUT rendered files to S3 voice folders")
+    parser.add_argument("--upload-only", action="store_true",
+                        help="upload the EXISTING files in audio_build/out/ without re-rendering - "
+                             "the only way to ship the exact take that was auditioned, since TTS "
+                             "reads differ on every render")
     args = parser.parse_args()
 
     import os
@@ -265,6 +269,14 @@ async def main() -> None:
             raise SystemExit(f"unknown entry '{entry_name}'; manifest has: {sorted(manifest)}")
         for voice in voices:
             provider = VOICES[voice]
+            if args.upload_only:
+                paths = [OUT_DIR / voice / f"{entry_name}.{ext}" for ext in ("opus", "mp3")]
+                missing = [p for p in paths if not p.exists()]
+                if missing:
+                    raise SystemExit(f"{entry_name} [{voice}]: no existing render to upload ({missing[0]})")
+                print(f"{entry_name} [{voice}]: uploading existing render")
+                await upload(paths, voice, manifest[entry_name])
+                continue
             audio = await render_entry(entry_name, manifest[entry_name], provider, manifest_doc, voice)
             paths = export(audio, OUT_DIR / voice / entry_name)
             print(f"{entry_name} [{voice}/{provider}]: {audio.duration_seconds:.2f}s "
