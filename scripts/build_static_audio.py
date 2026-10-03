@@ -57,6 +57,20 @@ async def _robot_tts(text: str, manifest: dict) -> AudioSegment:
     return AudioSegment.from_file(io.BytesIO(r.content), format="ogg")
 
 
+def _change_speed(segment: AudioSegment, speed: float) -> AudioSegment:
+    """Pitch-preserving tempo change via ffmpeg atempo (pydub's speedup
+    chops frames and audibly stutters on speech)."""
+    import subprocess
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as td:
+        src, dst = f"{td}/in.wav", f"{td}/out.wav"
+        segment.export(src, format="wav")
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", src,
+                        "-filter:a", f"atempo={speed}", dst], check=True)
+        return AudioSegment.from_file(dst)
+
+
 async def render_entry(name: str, entry: dict, provider: str, manifest: dict) -> AudioSegment:
     """Compose one manifest entry's timeline for one TTS provider."""
     from app.main import convert_text_to_speech
@@ -83,6 +97,8 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict) ->
         else:
             raise ValueError(f"{name}: unknown step {step}")
 
+        if "speed" in step:
+            segment = _change_speed(segment, step["speed"])
         if "gain_db" in step:
             segment = segment.apply_gain(step["gain_db"])
         if "fade_out_ms" in step:
@@ -92,7 +108,16 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict) ->
             if "gain_db" in over:
                 over_seg = over_seg.apply_gain(over["gain_db"])
             segment = segment.overlay(over_seg, position=over["at_ms"])
-        combined += segment
+
+        if "overlap_ms" in step and len(combined) > 0:
+            # crosslap: this step starts overlap_ms before the previous audio
+            # ends (e.g. the narrator entering under the airport call's tail)
+            pos = max(0, len(combined) - step["overlap_ms"])
+            total = max(len(combined), pos + len(segment))
+            base = combined + AudioSegment.silent(duration=total - len(combined))
+            combined = base.overlay(segment, position=pos)
+        else:
+            combined += segment
 
     bed = entry.get("bed")
     if bed:

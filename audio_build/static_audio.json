@@ -9,10 +9,9 @@
           "gain_db": -4
         },
         {
-          "silence_ms": 300
-        },
-        {
-          "tts": "Air Traffic Controller Hugo here, once more keeping a watchful eye on the skies. Hamish is still enjoying the tranquil shores of the Maldives, but do not fret - his holiday is nearing its end. Until then, the scanner remains under my expert guidance. Shall we see what jet planes are cruising through the clouds today?"
+          "tts": "Air Traffic Controller Hugo here, once more keeping a watchful eye on the skies. Hamish is still enjoying the tranquil shores of the Maldives, but do not fret - his holiday is nearing its end. Until then, the scanner remains under my expert guidance. Shall we see what jet planes are cruising through the clouds today?",
+          "speed": 1.1,
+          "overlap_ms": 700
         },
         {
           "silence_ms": 350
@@ -40,9 +39,9 @@
         },
         {
           "sfx": "radio-frequency.mp3",
-          "trim_ms": 10000,
+          "trim_ms": 8900,
           "gain_db": -6,
-          "fade_out_ms": 1500,
+          "fade_out_ms": 400,
           "overlay": [
             {
               "sfx": "deep-scan.mp3",
