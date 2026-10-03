@@ -68,6 +68,13 @@ printed note otherwise (including for non-Inworld narrator renders). After
 any steered render, spot-check the first seconds (whisper or ears) to confirm
 the tag was performed, not spoken.
 
+**Non-verbals** ([chuckle], [sigh], [gasp], [clear throat], ...) are one-shot
+sounds written INLINE in the `tts` text exactly where the moment happens.
+Wider support than steering: both tts-2 models render them (flash included);
+for any other model or provider the renderer strips every [tag] from the text
+so brackets are never spoken. Use them sparingly - these clips play every
+session, so one well-placed sound beats three.
+
 ## Gotchas
 
 - TTS reads differ per render — re-rendering an approved entry produces a

@@ -43,6 +43,12 @@ STATIC_INWORLD_MODEL = "inworld-tts-2"
 # rendering model is in this set and dropped (with a warning) otherwise.
 PROMPT_CAPABLE_MODELS = {"inworld-tts-2"}
 
+# Non-verbals ([chuckle], [sigh], ...) are one-shot sounds written INLINE in
+# the script text where the moment happens. Wider support than steering:
+# both tts-2 models render them; anything else would speak the brackets, so
+# the renderer strips every [tag] from the text for non-capable models.
+NONVERBAL_CAPABLE_MODELS = {"inworld-tts-2", "inworld-tts-2-flash"}
+
 MANIFEST = REPO / "audio_build" / "static_audio.json"
 SFX_DIR = REPO / "assets" / "sfx"
 OUT_DIR = REPO / "audio_build" / "out"
@@ -99,7 +105,14 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict) ->
         elif "robot_tts" in step:
             segment = _normalize_loudness(_trim_silence(await _robot_tts(step["robot_tts"], manifest)))
         elif "tts" in step:
+            import re
             text = step["tts"]
+            if not (provider == "inworld" and STATIC_INWORLD_MODEL in NONVERBAL_CAPABLE_MODELS):
+                stripped = re.sub(r"\s*\[[^\]]*\]", "", text)
+                if stripped != text:
+                    print(f"  note: stripping inline non-verbal tags for {provider}/"
+                          f"{STATIC_INWORLD_MODEL} (would be spoken aloud)")
+                    text = re.sub(r"  +", " ", stripped).strip()
             if "prompt" in step:
                 if provider == "inworld" and STATIC_INWORLD_MODEL in PROMPT_CAPABLE_MODELS:
                     text = f"{step['prompt']} {text}"
