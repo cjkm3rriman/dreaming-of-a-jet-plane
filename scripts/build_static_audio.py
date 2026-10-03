@@ -67,6 +67,8 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict) ->
             segment = AudioSegment.silent(duration=step["silence_ms"])
         elif "sfx" in step:
             segment = AudioSegment.from_file(SFX_DIR / step["sfx"])
+            if "trim_ms" in step:
+                segment = segment[: step["trim_ms"]]
         elif "robot_tts" in step:
             segment = _normalize_loudness(_trim_silence(await _robot_tts(step["robot_tts"], manifest)))
         elif "tts" in step:
