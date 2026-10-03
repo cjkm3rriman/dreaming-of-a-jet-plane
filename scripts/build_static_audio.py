@@ -87,6 +87,11 @@ async def render_entry(name: str, entry: dict, provider: str, manifest: dict) ->
             segment = segment.apply_gain(step["gain_db"])
         if "fade_out_ms" in step:
             segment = segment.fade_out(step["fade_out_ms"])
+        for over in step.get("overlay", []):
+            over_seg = AudioSegment.from_file(SFX_DIR / over["sfx"])
+            if "gain_db" in over:
+                over_seg = over_seg.apply_gain(over["gain_db"])
+            segment = segment.overlay(over_seg, position=over["at_ms"])
         combined += segment
 
     bed = entry.get("bed")
