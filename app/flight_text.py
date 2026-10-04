@@ -228,7 +228,7 @@ RARE_INTROS = [
 ]
 LEGENDARY_INTROS = [
     "Hold on... hold on! My scanner is going absolutely wild!",
-    "Stop everything! My radar is doing somersaults!",
+    "Hold on... my radar is going haywire!",
     "Oh my giddy aunt - the scanner has never beeped so loudly!",
 ]
 LEGENDARY_CLOSERS = [
