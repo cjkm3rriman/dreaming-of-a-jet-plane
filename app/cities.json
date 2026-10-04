@@ -5130,5 +5130,147 @@
             "Innsbruck has a colorful Old Town filled with medieval houses painted in beautiful pastel colors like pink, yellow, and light blue that look like a giant box of crayons!",
             "Innsbruck also hosted the very first Winter Youth Olympics in 2012, making it one of the most decorated Olympic cities for winter sports in the entire world!"
         ]
+    },
+    "Billings, Montana": {
+        "city": "Billings",
+        "state": "Montana",
+        "country": "United States",
+        "population": 119434,
+        "fun_facts": [
+            "Billings is the biggest city in all of Montana, and it is nicknamed the Magic City because it grew so fast when the railroad arrived that it seemed to appear like magic!",
+            "Billings is wrapped in giant sandstone cliffs called the Rimrocks that drop 70 feet straight down - they are the leftover edge of an ancient sea that covered the land millions of years ago!",
+            "Billings is home to the tallest brick building in the whole world that holds itself up without a steel skeleton - it is 22 stories of bricks stacked on bricks!",
+            "Billings has the Yellowstone River flowing right through town - it stretches nearly 700 miles, which is about as long as driving for 11 hours without ever stopping!",
+            "Billings has a mysterious cave nearby called Pictograph Cave where people painted pictures on the rock walls more than 2,000 years ago!"
+        ]
+    },
+    "Teterboro, New Jersey": {
+        "city": "Teterboro",
+        "state": "New Jersey",
+        "country": "United States",
+        "population": 71,
+        "fun_facts": [
+            "Teterboro has far more airplanes than people, because almost the entire town is one giant airport full of private jets zooming in and out of New York City!",
+            "Teterboro has the oldest working airport in the whole New York area, and famous pilots like Amelia Earhart and Charles Lindbergh took off from its runways!",
+            "Teterboro is where a plane called the Josephine Ford was built in 1925 and then flew all the way to the North Pole the very next year!",
+            "Teterboro has its own Aviation Hall of Fame where kids can climb inside real helicopters and cockpits and pretend to be pilots!"
+        ]
+    },
+    "Providence, Rhode Island": {
+        "city": "Providence",
+        "state": "Rhode Island",
+        "country": "United States",
+        "population": 193252,
+        "fun_facts": [
+            "Providence is the capital of Rhode Island, the smallest state in America - you could fit Rhode Island inside Texas more than 200 times!",
+            "Providence was formed way back in 1636 by a man named Roger Williams who wanted a place where everyone was free to believe whatever they wished!",
+            "Providence has the world's biggest bug - a giant blue termite statue 58 feet long perched on a rooftop by the highway!",
+            "Providence hosts WaterFire, where almost one hundred bonfires are lit on floating braziers right in the middle of the rivers downtown as music plays and the flames crackle!",
+            "Providence has a State House topped with one of the largest marble domes in the entire world, with a golden statue called the Independent Man standing on the very top!"
+        ]
+    },
+    "Knoxville, Tennessee": {
+        "city": "Knoxville",
+        "state": "Tennessee",
+        "country": "United States",
+        "population": 198162,
+        "fun_facts": [
+            "Knoxville has a giant golden ball on a tower called the Sunsphere that is 266 feet tall - its glass windows are coated in real 24-karat gold!",
+            "Knoxville hosted the World's Fair in 1982 and more than 11 million people came to visit - that is more than the whole population of Tennessee!",
+            "Knoxville still has one of the world's largest Rubik's Cubes left over from the World's Fair - it is taller than a grown-up and used to spin around!",
+            "Knoxville is where the mighty Tennessee River is born, right where two smaller rivers join together in the middle of the city!",
+            "Knoxville is the gateway to the Great Smoky Mountains, the most visited national park in all of America, where black bears and fireflies that blink in unison live!"
+        ]
+    },
+    "St. John's": {
+        "city": "St. John's",
+        "state": "Newfoundland and Labrador",
+        "country": "Canada",
+        "population": 110525,
+        "fun_facts": [
+            "St. John's is one of the oldest cities in all of North America - European fishermen were sailing into its harbor more than 500 years ago!",
+            "St. John's has streets full of houses painted in bright candy colors called Jellybean Row - legend says they were painted so fishermen could find home in the thick fog!",
+            "St. John's is where the very first wireless message ever sent across the Atlantic Ocean was received on top of Signal Hill in 1901!",
+            "St. John's is so far east that it has its own special time zone that is half an hour different from everywhere else in Canada!",
+            "St. John's has giant icebergs floating past its coast every spring, and nearby you can watch thousands of puffins and humpback whales!"
+        ]
+    },
+    "Bozeman, Montana": {
+        "city": "Bozeman",
+        "state": "Montana",
+        "country": "United States",
+        "population": 56123,
+        "fun_facts": [
+            "Bozeman has the Museum of the Rockies, home to one of the biggest collections of Tyrannosaurus rex fossils in the whole world, including the largest T. rex skull ever found!",
+            "Bozeman sits in a valley that Native American tribes called the Valley of the Flowers because of all the wildflowers blooming in summer!",
+            "Bozeman is one of the gateways to Yellowstone, the very first national park in the world, where geysers shoot boiling water hundreds of feet into the air!",
+            "Bozeman is surrounded by so many mountains that you can go skiing in the morning and hiking past rushing rivers in the afternoon!",
+            "Bozeman was one of the fastest growing small cities in America for three years in a row because so many people want to live near its mountains!"
+        ]
+    },
+    "Bilbao": {
+        "city": "Bilbao",
+        "state": null,
+        "country": "Spain",
+        "population": 346000,
+        "fun_facts": [
+            "Bilbao has a shimmering silver museum called the Guggenheim that looks like a ship made of giant metal ribbons, wrapped in thousands of titanium tiles!",
+            "Bilbao has a 12-meter-tall puppy statue made out of 40,000 real living flowers that gets replanted twice a year to match the seasons!",
+            "Bilbao is in the Basque Country where people speak Euskara, one of the oldest languages in Europe that is not related to any other language on Earth!",
+            "Bilbao has the world's first hanging transporter bridge, built in 1893, that carries cars and people across the river in a gondola dangling from cables!",
+            "Bilbao is famous for pintxos - tiny snacks on toothpicks lined up on bars, where you pay by counting how many toothpicks are left on your plate!"
+        ]
+    },
+    "Eugene, Oregon": {
+        "city": "Eugene",
+        "state": "Oregon",
+        "country": "United States",
+        "population": 179887,
+        "fun_facts": [
+            "Eugene is nicknamed TrackTown USA because it hosts the biggest running races in America, with thousands of athletes sprinting around its famous Hayward Field!",
+            "Eugene is where the sports company Nike got started - a running coach there made the very first pair of shoes using his wife's waffle iron!",
+            "Eugene is called the Emerald City because it is surrounded by so many green forests, parks, and the winding Willamette River!",
+            "Eugene has one of the oldest outdoor craft markets in America, open every Saturday since 1970, full of handmade toys, music, and food!",
+            "Eugene has so many bike paths that you can pedal for miles along the river without ever having to share the road with a car!"
+        ]
+    },
+    "Midland, Texas": {
+        "city": "Midland",
+        "state": "Texas",
+        "country": "United States",
+        "population": 138549,
+        "fun_facts": [
+            "Midland sits on top of the Permian Basin, an enormous underground treasure of oil that produces about 40 percent of all the oil in the United States!",
+            "Midland got its name because it is exactly halfway between Fort Worth and El Paso on the old railroad line that crossed Texas!",
+            "Midland is called the Tall City because its skyscrapers rise out of the flat desert plains and can be seen from many miles away!",
+            "Midland is where two American presidents, George H.W. Bush and George W. Bush, lived - you can still visit the small house where the family grew up!",
+            "Midland has an airport that is also a licensed spaceport - the first commercial airport in America allowed to launch spacecraft!"
+        ]
+    },
+    "Billund": {
+        "city": "Billund",
+        "state": null,
+        "country": "Denmark",
+        "population": 7446,
+        "fun_facts": [
+            "Billund is the hometown of LEGO - the colorful bricks were invented here, and the name comes from the Danish words leg godt which means play well!",
+            "Billund has the very first Legoland park, opened in 1968, with a Miniland of tiny cities built from more than 20 million LEGO bricks!",
+            "Billund has an airport that was built by the LEGO company itself in 1964, so that visitors could fly straight to the home of the bricks!",
+            "Billund has LEGO House, a giant building shaped like stacked bricks where you can play with millions of LEGO pieces all day long!",
+            "Billund was named the first Child Friendly City in Denmark, and it also has Lalandia, the biggest indoor waterpark in all of Scandinavia!"
+        ]
+    },
+    "Tunis": {
+        "city": "Tunis",
+        "state": null,
+        "country": "Tunisia",
+        "population": 693210,
+        "fun_facts": [
+            "Tunis is built right next to the ruins of Carthage, an ancient city whose general Hannibal famously marched war elephants across the Alps more than 2,000 years ago!",
+            "Tunis has a medina, an old walled city with twisting alleys full of markets and palaces, that is so special it is protected as a World Heritage Site!",
+            "Tunis has the Bardo Museum with one of the largest collections of Roman mosaics in the world - pictures made from millions of tiny colored stones!",
+            "Tunis is in Tunisia, where the Star Wars movies filmed Luke Skywalker's desert home, and his planet Tatooine was named after a real Tunisian town!",
+            "Tunis is near a village called Sidi Bou Said where every single building is painted bright white with blue doors and windows, perched above the sparkling sea!"
+        ]
     }
 }
