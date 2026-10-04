@@ -128,6 +128,28 @@ class AircraftDatabase:
 # Global instance for efficient reuse
 _aircraft_db = AircraftDatabase()
 
+# ICAO assigns ZZZZ to any aircraft without a type designator
+NO_TYPE_CODES = {"ZZZZ"}
+
+
+def is_narratable_type(icao_code: Optional[str]) -> bool:
+    """Whether this type can be narrated as a jet plane (DOJP-58).
+
+    Helicopters, ICAO's no-designator code and a missing code are skipped at
+    selection: every script says "jet plane", and "this unknown aircraft" is a
+    dull moment. Unlisted fixed-wing codes stay narratable so new gaps keep
+    surfacing in analytics as "Unknown Aircraft (XXXX)".
+    """
+    if not icao_code or not icao_code.strip():
+        return False
+    code = icao_code.strip().upper()
+    if code in NO_TYPE_CODES:
+        return False
+    _aircraft_db._load_aircraft()
+    entry = _aircraft_db._aircraft.get(code) or {}
+    return entry.get("category") != "helicopter"
+
+
 def get_rarity(icao_code: Optional[str]) -> str:
     """Rarity tier for an aircraft type: "common", "rare", or "legendary".
 

@@ -13,6 +13,7 @@ def _plane(city, *, airline_icao="DAL", distance_km=100):
     destination-diversity pass keeps all of them"""
     return {
         "aircraft": "Boeing 737",
+        "aircraft_icao": "B738",
         "airline_icao": airline_icao,
         "origin_city": "Boston",
         "destination_city": city,
