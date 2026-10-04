@@ -35,6 +35,7 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pydub.*")
 
 from .airport_database import get_airport_by_iata
 from .aircraft_database import get_rarity
+from .rarity import effective_rarity
 from .airline_database import AirlineDatabase
 from .location_utils import calculate_distance, calculate_min_distance_to_route
 from .overandout import stream_overandout, overandout_options
@@ -570,7 +571,7 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
     except Exception as e:
         logger.error(f"Failed to track scan:start event: {e}", exc_info=True)
 
-def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None, subscription: str = "yoto-club", fun_fact_cache_hit: Optional[bool] = None):
+def track_audio_generation(request: Request, lat: float, lng: float, city: str, plane_index: int, aircraft: Dict[str, Any], sentence: str, generation_time_ms: int, audio_size_bytes: int, tts_provider: str = "elevenlabs", audio_format: str = "mp3", fun_fact_source: Optional[str] = None, subscription: str = "yoto-club", fun_fact_cache_hit: Optional[bool] = None, rarity_served: Optional[str] = None):
     """Track generate:audio analytics event with flight and audio details"""
     try:
         base, session_id, distinct_id = _analytics_context(request, lat, lng)
@@ -595,6 +596,7 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
 
         # Extract other flight information
         aircraft_name = aircraft.get("aircraft", "unknown")
+        base_rarity = get_rarity(aircraft.get("aircraft_icao"))
 
         # Check if fun fact was included (look for fun fact openings in the sentence)
         has_fun_fact = any(opening in sentence for opening in FUN_FACT_OPENINGS)
@@ -607,7 +609,11 @@ def track_audio_generation(request: Request, lat: float, lng: float, city: str, 
             "user_city": city,
             "plane_index": plane_index,
             "aircraft_name": aircraft_name,
-            "rarity": get_rarity(aircraft.get("aircraft_icao")),
+            # rarity = what the child heard; base_rarity = the type's tier; they
+            # differ when the per-location legendary cooldown downgraded a spot
+            "rarity": rarity_served or base_rarity,
+            "base_rarity": base_rarity,
+            "rarity_downgraded": bool(rarity_served) and rarity_served != base_rarity,
             "origin_city": origin_city,
             "origin_state": origin_state,
             "origin_country": origin_country,
@@ -1094,14 +1100,19 @@ async def handle_plane_endpoint(
         fun_fact_body_text = None
         use_split_tts = False  # Flag to track if we can use split TTS
 
+        # Same location-hash formula as pre-generation, so both paths write the
+        # identical body cache key (and share the legendary cooldown marker)
+        import hashlib
+        location_hash = hashlib.md5(f"{round(user_lat, 2)},{round(user_lng, 2)}".encode()).hexdigest()
+
         plane_rarity = "common"
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            plane_rarity = get_rarity(selected_aircraft.get("aircraft_icao"))
+            plane_rarity, _ = await effective_rarity(selected_aircraft.get("aircraft_icao"), location_hash)
             # Use split text generation for free pool support
             opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, fun_fact_source = generate_flight_text_for_aircraft(
                 selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True,
-                is_fallback_location=is_fallback_location,
+                is_fallback_location=is_fallback_location, rarity_override=plane_rarity,
             )
             if fun_fact_opening_text and fun_fact_body_text:
                 sentence = f"{opening_text} {body_text} {fun_fact_opening_text} {fun_fact_body_text}"
@@ -1123,10 +1134,6 @@ async def handle_plane_endpoint(
 
         # Generate TTS through the shared pipeline (DOJP-46); the split path
         # handles fun-fact caching, stitching, and the free-pool body cache write.
-        # Same location-hash formula as pre-generation, so both paths write the
-        # identical body cache key.
-        import hashlib
-        location_hash = hashlib.md5(f"{round(user_lat, 2)},{round(user_lng, 2)}".encode()).hexdigest()
 
         result = await generate_plane_audio(
             sentence,
@@ -1157,7 +1164,7 @@ async def handle_plane_endpoint(
             # Track audio generation analytics if we have aircraft data
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
-                track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext, fun_fact_source, fun_fact_cache_hit=fun_fact_cache_hit)
+                track_audio_generation(request, user_lat, user_lng, user_city, plane_index, selected_aircraft, sentence, tts_generation_time_ms, len(audio_content), tts_provider_used, actual_file_ext, fun_fact_source, fun_fact_cache_hit=fun_fact_cache_hit, rarity_served=plane_rarity)
 
             # Track plane request analytics for cache miss
             track_plane_request(request, user_lat, user_lng, user_city, plane_index, from_cache=False)

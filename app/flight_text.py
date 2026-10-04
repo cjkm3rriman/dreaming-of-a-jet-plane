@@ -333,6 +333,7 @@ def generate_flight_text_for_aircraft(
     used_destinations: set = None,
     split_text: bool = False,
     is_fallback_location: bool = False,
+    rarity_override: Optional[str] = None,
 ) -> tuple[str, Optional[str]] | tuple[str, str, Optional[str]]:
     """Generate descriptive text for a specific aircraft
 
@@ -450,7 +451,8 @@ def generate_flight_text_for_aircraft(
     if passenger_capacity and passenger_capacity <= 50:
         descriptor_pool = small_aircraft_descriptors
     aircraft_descriptor = random.choice(descriptor_pool)
-    rarity = get_rarity(aircraft_icao)
+    # rarity_override carries the per-location cooldown decision (app/rarity.py)
+    rarity = rarity_override or get_rarity(aircraft_icao)
     scanner_info = (
         f"Captain {captain_name} is piloting this "
         f"{aircraft_descriptor} {aircraft_name_with_digits}"

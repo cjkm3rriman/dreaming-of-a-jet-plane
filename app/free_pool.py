@@ -22,6 +22,7 @@ import copy
 from .s3_cache import s3_cache
 from .background import spawn
 from .tts_providers import get_audio_format
+from .aircraft_database import get_rarity
 
 logger = logging.getLogger(__name__)
 
@@ -210,6 +211,13 @@ async def populate_free_pool(
                 continue
 
             aircraft = aircraft_list[aircraft_index]
+
+            # Legendary spots are Club-only (DOJP-32): their bodies carry the
+            # "scanner going wild" script, which belongs with the fanfare and
+            # the live scan, not a free-tier replay
+            if get_rarity(aircraft.get("aircraft_icao")) == "legendary":
+                logger.info(f"Free pool: skipping legendary {aircraft.get('aircraft_icao')} (Club-only)")
+                continue
 
             # Get body audio key from paid cache
             file_ext, _ = get_audio_format(tts_provider)

@@ -274,3 +274,111 @@ def test_selection_unchanged_when_everything_is_common():
     planes = [_aircraft("B738", "Boeing 737") | {"distance_km": d} for d in (5, 9, 14, 20, 27, 33)]
     chosen = main.select_diverse_aircraft(planes, 40.7, -74.0, "New York City")
     assert [p["distance_km"] for p in chosen] == [5, 9, 14, 20, 27]
+
+
+# ---------------------------------------------------------------------------
+# Per-location legendary cooldown (hub families must not hear it daily)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+async def test_first_legendary_at_a_location_is_awarded_and_marked(monkeypatch):
+    import app.rarity as rarity
+    writes = []
+
+    async def not_fresh(key, content_type="audio", ttl_minutes=None):
+        return False
+
+    async def fake_set(key, data, content_type="audio"):
+        writes.append(key); return True
+
+    monkeypatch.setattr(rarity.s3_cache, "exists_and_fresh", not_fresh)
+    monkeypatch.setattr(rarity.s3_cache, "set", fake_set)
+
+    served, base = await rarity.effective_rarity("A388", "loc123")
+    assert (served, base) == ("legendary", "legendary")
+    assert writes == ["rarity/legendary_loc123"], "the award must write the cooldown marker"
+
+
+@pytest.mark.unit
+async def test_legendary_inside_cooldown_is_served_as_rare(monkeypatch):
+    import app.rarity as rarity
+    seen_ttl = {}
+
+    async def fresh(key, content_type="audio", ttl_minutes=None):
+        seen_ttl["ttl"] = ttl_minutes; return True
+
+    async def fake_set(key, data, content_type="audio"):
+        raise AssertionError("no marker write on a downgrade")
+
+    monkeypatch.setattr(rarity.s3_cache, "exists_and_fresh", fresh)
+    monkeypatch.setattr(rarity.s3_cache, "set", fake_set)
+
+    served, base = await rarity.effective_rarity("A388", "loc123")
+    assert (served, base) == ("rare", "legendary")
+    assert seen_ttl["ttl"] == rarity.LEGENDARY_COOLDOWN_MINUTES == 3 * 24 * 60
+
+
+@pytest.mark.unit
+async def test_cooldown_never_touches_rare_or_common(monkeypatch):
+    import app.rarity as rarity
+
+    async def boom(*a, **k):
+        raise AssertionError("S3 must not be consulted for non-legendary types")
+
+    monkeypatch.setattr(rarity.s3_cache, "exists_and_fresh", boom)
+    monkeypatch.setattr(rarity.s3_cache, "set", boom)
+    assert await rarity.effective_rarity("B752", "loc") == ("rare", "rare")
+    assert await rarity.effective_rarity("B738", "loc") == ("common", "common")
+    # no location hash -> no cooldown possible, legendary stands
+    assert await rarity.effective_rarity("A388", None) == ("legendary", "legendary")
+
+
+@pytest.mark.unit
+def test_downgraded_legendary_reads_as_rare_text():
+    """An A380 under cooldown gets the rare script - no fanfare words, no
+    LEGENDARY - while still naming the aircraft"""
+    random.seed(3)
+    opening, body, *_ = ft.generate_flight_text_for_aircraft(
+        _aircraft("A388", "Airbus A380 Super Jumbo", capacity=525), 40.7, -74.0, 1, "US",
+        split_text=True, rarity_override="rare")
+    scanner = body.split(" This flight ")[0]
+    assert "LEGENDARY" not in scanner and "going absolutely wild" not in scanner
+    assert any(scanner.startswith(i) for i in ft.RARE_INTROS)
+    assert "A three eighty" in scanner and "piloting this" in scanner
+
+
+# ---------------------------------------------------------------------------
+# Free tier: legendary is Club-only
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+async def test_free_pool_skips_legendary_planes(monkeypatch):
+    import app.free_pool as fp
+    reads = []
+
+    async def fake_get_raw(key):
+        reads.append(key); return b"body"
+
+    async def fake_set(key, data, content_type="audio"):
+        return True
+
+    captured = {}
+
+    async def fake_update_index(session_id, planes_data, tts_provider):
+        captured["planes"] = planes_data; return True
+
+    monkeypatch.setattr(fp.s3_cache, "get_raw", fake_get_raw)
+    monkeypatch.setattr(fp.s3_cache, "set", fake_set)
+    monkeypatch.setattr(fp, "update_free_pool_index", fake_update_index)
+
+    aircraft_list = [
+        _aircraft("A388", "Airbus A380 Super Jumbo"),   # plane 1: legendary -> skipped
+        _aircraft("B752", "Boeing 757"),                # plane 2: rare -> shared
+        _aircraft("B738", "Boeing 737"),                # plane 3: common
+    ]
+    assert await fp.populate_free_pool(aircraft_list, "abc", "inworld")
+    indexes = sorted(p["index"] for p in captured["planes"])
+    assert indexes == [2, 3], f"legendary must not enter the free pool: {indexes}"
+    assert not any("plane1_body" in k for k in reads)
