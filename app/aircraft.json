@@ -1206,7 +1206,8 @@
     "simple_name": "Bombardier Global 7500",
     "passenger_capacity": 19,
     "cruise_speed_kmh": 900,
-    "phonetic_name": "Bombardier Global seventy five hundred"
+    "phonetic_name": "Bombardier Global seventy five hundred",
+    "rarity": "rare"
   },
   "GLEX": {
     "technical_name": "Bombardier Global Express / Raytheon Sentinel",
