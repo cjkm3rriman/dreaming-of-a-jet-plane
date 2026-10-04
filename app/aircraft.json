@@ -1,9 +1,31 @@
 {
+  "320": {
+    "technical_name": "Airbus A320 (sharklets)",
+    "simple_name": "Airbus A320",
+    "passenger_capacity": 180,
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A three twenty"
+  },
+  "A109": {
+    "technical_name": "Leonardo AW109",
+    "simple_name": "Leonardo AW109",
+    "category": "helicopter"
+  },
+  "A119": {
+    "technical_name": "Leonardo AW119 Koala",
+    "simple_name": "Leonardo Koala",
+    "category": "helicopter"
+  },
   "A124": {
     "technical_name": "Antonov An-124 Ruslan",
     "simple_name": "Antonov An-124",
     "rarity": "legendary",
     "rarity_blurb": "one of the biggest cargo planes ever built, with a nose that opens like a giant mouth"
+  },
+  "A139": {
+    "technical_name": "Leonardo AW139",
+    "simple_name": "Leonardo AW139",
+    "category": "helicopter"
   },
   "A140": {
     "technical_name": "Antonov An-140",
@@ -16,6 +38,11 @@
   "A158": {
     "technical_name": "Antonov An-158",
     "simple_name": "Antonov An-158"
+  },
+  "A169": {
+    "technical_name": "Leonardo AW169",
+    "simple_name": "Leonardo AW169",
+    "category": "helicopter"
   },
   "A19N": {
     "technical_name": "Airbus A319neo",
@@ -235,6 +262,23 @@
     "technical_name": "Antonov An-72 / An-74",
     "simple_name": "Antonov An-72 / An-74"
   },
+  "AS50": {
+    "technical_name": "Airbus Helicopters H125 (AS350 Écureuil)",
+    "simple_name": "Airbus H125",
+    "category": "helicopter"
+  },
+  "AS65": {
+    "technical_name": "Airbus Helicopters AS365 Dauphin",
+    "simple_name": "Airbus Dauphin",
+    "category": "helicopter"
+  },
+  "ASTR": {
+    "technical_name": "IAI Astra / Gulfstream G100",
+    "simple_name": "Gulfstream G100",
+    "passenger_capacity": 8,
+    "cruise_speed_kmh": 850,
+    "phonetic_name": "Gulfstream G one hundred"
+  },
   "AT43": {
     "technical_name": "Aerospatiale/Alenia ATR 42-300 / 320",
     "simple_name": "ATR 42",
@@ -273,9 +317,21 @@
     "technical_name": "British Aerospace ATP",
     "simple_name": "British Aerospace ATP"
   },
+  "B06": {
+    "technical_name": "Bell 206 JetRanger",
+    "simple_name": "Bell JetRanger",
+    "category": "helicopter"
+  },
   "B190": {
     "technical_name": "Beechcraft 1900",
     "simple_name": "Beechcraft 1900"
+  },
+  "B350": {
+    "technical_name": "Beechcraft King Air 350",
+    "simple_name": "Beechcraft King Air 350",
+    "passenger_capacity": 9,
+    "cruise_speed_kmh": 550,
+    "phonetic_name": "Beechcraft King Air three fifty"
   },
   "B37M": {
     "technical_name": "Boeing 737 MAX 7",
@@ -305,6 +361,21 @@
     "cruise_speed_kmh": 840,
     "phonetic_name": "Boeing seven three seven"
   },
+  "B407": {
+    "technical_name": "Bell 407",
+    "simple_name": "Bell 407",
+    "category": "helicopter"
+  },
+  "B412": {
+    "technical_name": "Bell 412",
+    "simple_name": "Bell 412",
+    "category": "helicopter"
+  },
+  "B429": {
+    "technical_name": "Bell 429 GlobalRanger",
+    "simple_name": "Bell 429",
+    "category": "helicopter"
+  },
   "B461": {
     "technical_name": "BAe 146-100",
     "simple_name": "BAe 146-100"
@@ -316,6 +387,11 @@
   "B463": {
     "technical_name": "BAe 146-300",
     "simple_name": "BAe 146-300"
+  },
+  "B505": {
+    "technical_name": "Bell 505 Jet Ranger X",
+    "simple_name": "Bell 505",
+    "category": "helicopter"
   },
   "B52": {
     "technical_name": "Boeing B-52 Stratofortress",
@@ -581,6 +657,12 @@
     "cruise_speed_kmh": 840,
     "phonetic_name": "Airbus A two twenty"
   },
+  "BCS2": {
+    "technical_name": "Bombardier CSeries CS100 / Airbus A220-100",
+    "simple_name": "Airbus A220",
+    "cruise_speed_kmh": 840,
+    "phonetic_name": "Airbus A two twenty"
+  },
   "BCS3": {
     "technical_name": "Bombardier CSeries CS300 / Airbus A220-300",
     "simple_name": "Airbus A220",
@@ -591,9 +673,21 @@
     "technical_name": "Beechcraft (Super) King Air 200",
     "simple_name": "Beechcraft (Super) King Air 200"
   },
+  "BE36": {
+    "technical_name": "Beechcraft 36 Bonanza",
+    "simple_name": "Beechcraft Bonanza",
+    "passenger_capacity": 5,
+    "cruise_speed_kmh": 320
+  },
   "BE40": {
     "technical_name": "Hawker 400",
     "simple_name": "Hawker 400"
+  },
+  "BE65": {
+    "technical_name": "Beechcraft 65 Queen Air",
+    "simple_name": "Beechcraft Queen Air",
+    "passenger_capacity": 7,
+    "cruise_speed_kmh": 340
   },
   "BE99": {
     "technical_name": "Beechcraft Model 99",
@@ -615,9 +709,21 @@
     "rarity": "legendary",
     "rarity_blurb": "a giant jumbo with a swollen belly, built to carry whole aeroplane wings inside it"
   },
+  "BN2P": {
+    "technical_name": "Britten-Norman BN-2 Islander",
+    "simple_name": "Britten-Norman Islander",
+    "passenger_capacity": 9,
+    "cruise_speed_kmh": 250
+  },
   "C130": {
     "technical_name": "Lockheed L-182 / 282 / 382 (L-100) Hercules",
     "simple_name": "Lockheed Hercules"
+  },
+  "C172": {
+    "technical_name": "Cessna 172 Skyhawk",
+    "simple_name": "Cessna Skyhawk",
+    "passenger_capacity": 3,
+    "cruise_speed_kmh": 230
   },
   "C208": {
     "technical_name": "Cessna 208 Caravan",
@@ -651,10 +757,30 @@
     "technical_name": "Lockheed Martin C-130J Hercules",
     "simple_name": "Lockheed Martin C-130J Hercules"
   },
+  "C340": {
+    "technical_name": "Cessna 340",
+    "simple_name": "Cessna 340",
+    "passenger_capacity": 5,
+    "cruise_speed_kmh": 400,
+    "phonetic_name": "Cessna three forty"
+  },
+  "C402": {
+    "technical_name": "Cessna 402",
+    "simple_name": "Cessna 402",
+    "passenger_capacity": 9,
+    "cruise_speed_kmh": 350,
+    "phonetic_name": "Cessna four oh two"
+  },
   "C408": {
     "technical_name": "Cessna 408 SkyCourier",
     "simple_name": "Cessna SkyCourier",
     "passenger_capacity": 19
+  },
+  "C441": {
+    "technical_name": "Cessna 441 Conquest II",
+    "simple_name": "Cessna Conquest",
+    "passenger_capacity": 8,
+    "cruise_speed_kmh": 500
   },
   "C500": {
     "technical_name": "Cessna Citation I",
@@ -732,6 +858,13 @@
     "simple_name": "Bombardier Challenger",
     "cruise_speed_kmh": 850
   },
+  "CL35": {
+    "technical_name": "Bombardier Challenger 350",
+    "simple_name": "Bombardier Challenger 350",
+    "passenger_capacity": 10,
+    "cruise_speed_kmh": 850,
+    "phonetic_name": "Bombardier Challenger three fifty"
+  },
   "CL60": {
     "technical_name": "Canadair Challenger 600",
     "simple_name": "Canadair Challenger",
@@ -740,6 +873,11 @@
   "CN35": {
     "technical_name": "CASA/IPTN CN-235",
     "simple_name": "CASA/IPTN CN-235"
+  },
+  "CR9": {
+    "technical_name": "Canadair Regional Jet 900",
+    "simple_name": "Canadair Regional Jet 900",
+    "cruise_speed_kmh": 760
   },
   "CRJ1": {
     "technical_name": "Canadair Regional Jet 100",
@@ -777,6 +915,12 @@
     "technical_name": "Fairchild Dornier Do.328",
     "simple_name": "Fairchild Dornier Do.328"
   },
+  "DA40": {
+    "technical_name": "Diamond DA40 Star",
+    "simple_name": "Diamond Star",
+    "passenger_capacity": 3,
+    "cruise_speed_kmh": 280
+  },
   "DC10": {
     "technical_name": "Douglas DC-10-30 / -40 Freighter",
     "simple_name": "Douglas DC-10-30 / -40 Freighter"
@@ -812,6 +956,12 @@
   "DC95": {
     "technical_name": "Douglas DC-9-50",
     "simple_name": "Douglas DC-9-50"
+  },
+  "DH3T": {
+    "technical_name": "De Havilland Canada DHC-3T Turbo Otter",
+    "simple_name": "De Havilland Turbo Otter",
+    "passenger_capacity": 10,
+    "cruise_speed_kmh": 250
   },
   "DH8A": {
     "technical_name": "De Havilland Canada DHC-8-100 Dash 8 / 8Q",
@@ -897,7 +1047,7 @@
   },
   "E50P": {
     "technical_name": "Embraer Phenom 100",
-    "simple_name": "Embraer Phenom ",
+    "simple_name": "Embraer Phenom",
     "cruise_speed_kmh": 850
   },
   "E545": {
@@ -926,6 +1076,42 @@
   "EA50": {
     "technical_name": "Eclipse 500",
     "simple_name": "Eclipse 500"
+  },
+  "EC20": {
+    "technical_name": "Airbus Helicopters H120 (EC120)",
+    "simple_name": "Airbus H120",
+    "category": "helicopter"
+  },
+  "EC30": {
+    "technical_name": "Airbus Helicopters H130 (EC130)",
+    "simple_name": "Airbus H130",
+    "category": "helicopter"
+  },
+  "EC35": {
+    "technical_name": "Airbus Helicopters H135 (EC135)",
+    "simple_name": "Airbus H135",
+    "category": "helicopter"
+  },
+  "EC45": {
+    "technical_name": "Airbus Helicopters H145 (EC145)",
+    "simple_name": "Airbus H145",
+    "category": "helicopter"
+  },
+  "EC55": {
+    "technical_name": "Airbus Helicopters H155 (EC155)",
+    "simple_name": "Airbus H155",
+    "category": "helicopter"
+  },
+  "EC75": {
+    "technical_name": "Airbus Helicopters H175 (EC175)",
+    "simple_name": "Airbus H175",
+    "category": "helicopter"
+  },
+  "EXEC": {
+    "technical_name": "Executive jet (type not reported by provider)",
+    "simple_name": "Executive Jet",
+    "passenger_capacity": 8,
+    "cruise_speed_kmh": 850
   },
   "F100": {
     "technical_name": "Fokker 100",
@@ -974,6 +1160,19 @@
     "technical_name": "Dassault Falcon 7X",
     "simple_name": "Dassault Falcon 7X"
   },
+  "G115": {
+    "technical_name": "Grob G115 Tutor",
+    "simple_name": "Grob Tutor",
+    "passenger_capacity": 2,
+    "cruise_speed_kmh": 200
+  },
+  "G150": {
+    "technical_name": "Gulfstream G150",
+    "simple_name": "Gulfstream G150",
+    "passenger_capacity": 7,
+    "cruise_speed_kmh": 850,
+    "phonetic_name": "Gulfstream G one fifty"
+  },
   "G159": {
     "technical_name": "Gulfstream Aerospace G-159 Gulfstream I",
     "simple_name": "Gulfstream Aerospace G-159 Gulfstream I"
@@ -986,6 +1185,13 @@
     "technical_name": "Grumman G-73 Turbo Mallard",
     "simple_name": "Grumman G-73 Turbo Mallard"
   },
+  "GA6C": {
+    "technical_name": "Gulfstream G600",
+    "simple_name": "Gulfstream G600",
+    "passenger_capacity": 19,
+    "cruise_speed_kmh": 900,
+    "phonetic_name": "Gulfstream G six hundred"
+  },
   "GA7C": {
     "technical_name": "Gulfstream G700",
     "simple_name": "Gulfstream G700"
@@ -994,6 +1200,14 @@
     "technical_name": "Bombardier BD-700 Global 5000",
     "simple_name": "Bombardier Global 5000",
     "cruise_speed_kmh": 850
+  },
+  "GL7T": {
+    "technical_name": "Bombardier Global 7500",
+    "simple_name": "Bombardier Global 7500",
+    "passenger_capacity": 19,
+    "cruise_speed_kmh": 900,
+    "phonetic_name": "Bombardier Global seventy five hundred",
+    "rarity": "rare"
   },
   "GLEX": {
     "technical_name": "Bombardier Global Express / Raytheon Sentinel",
@@ -1022,6 +1236,16 @@
   "H25C": {
     "technical_name": "British Aerospace 125-1000 series / Hawker/Raytheon 1000",
     "simple_name": "British Aerospace 125-1000 series / Hawker/Raytheon 1000"
+  },
+  "H500": {
+    "technical_name": "MD Helicopters MD 500",
+    "simple_name": "MD 500",
+    "category": "helicopter"
+  },
+  "H60": {
+    "technical_name": "Sikorsky H-60 Black Hawk",
+    "simple_name": "Black Hawk",
+    "category": "helicopter"
   },
   "HDJT": {
     "technical_name": "Honda HA-420",
@@ -1088,9 +1312,23 @@
     "technical_name": "Learjet 35 / 36 / C-21A",
     "simple_name": "Learjet 35 / 36 / C-21A"
   },
+  "LJ45": {
+    "technical_name": "Learjet 45",
+    "simple_name": "Learjet 45",
+    "passenger_capacity": 8,
+    "cruise_speed_kmh": 850,
+    "phonetic_name": "Learjet forty five"
+  },
   "LJ60": {
     "technical_name": "Learjet 60",
     "simple_name": "Learjet 60"
+  },
+  "M600": {
+    "technical_name": "Piper M600",
+    "simple_name": "Piper M600",
+    "passenger_capacity": 5,
+    "cruise_speed_kmh": 500,
+    "phonetic_name": "Piper M six hundred"
   },
   "MD11": {
     "technical_name": "McDonnell Douglas MD-11C",
@@ -1140,14 +1378,44 @@
     "technical_name": "Piaggio P.180 Avanti",
     "simple_name": "Piaggio P.180 Avanti"
   },
+  "P212": {
+    "technical_name": "Tecnam P2012 Traveller",
+    "simple_name": "Tecnam Traveller",
+    "passenger_capacity": 9,
+    "cruise_speed_kmh": 300
+  },
+  "P28A": {
+    "technical_name": "Piper PA-28 Cherokee",
+    "simple_name": "Piper Cherokee",
+    "passenger_capacity": 3,
+    "cruise_speed_kmh": 230
+  },
   "P8": {
     "technical_name": "Boeing P-8 Poseidon",
     "simple_name": "Boeing P-8 Poseidon",
     "passenger_capacity": 0
   },
+  "PA31": {
+    "technical_name": "Piper PA-31 Navajo",
+    "simple_name": "Piper Navajo",
+    "passenger_capacity": 7,
+    "cruise_speed_kmh": 380
+  },
+  "PA34": {
+    "technical_name": "Piper PA-34 Seneca",
+    "simple_name": "Piper Seneca",
+    "passenger_capacity": 5,
+    "cruise_speed_kmh": 330
+  },
   "PAY2": {
     "technical_name": "PIPER Cheyenne 2",
     "simple_name": "PIPER Cheyenne 2"
+  },
+  "PAY3": {
+    "technical_name": "Piper PA-42 Cheyenne III",
+    "simple_name": "Piper Cheyenne",
+    "passenger_capacity": 8,
+    "cruise_speed_kmh": 500
   },
   "PC24": {
     "technical_name": "Pilatus PC-24",
@@ -1157,6 +1425,16 @@
     "technical_name": "Pilatus PC-12",
     "simple_name": "Pilatus PC-12",
     "passenger_capacity": 8
+  },
+  "R44": {
+    "technical_name": "Robinson R44",
+    "simple_name": "Robinson R44",
+    "category": "helicopter"
+  },
+  "R66": {
+    "technical_name": "Robinson R66",
+    "simple_name": "Robinson R66",
+    "category": "helicopter"
   },
   "RJ1H": {
     "technical_name": "Avro RJ100",
@@ -1173,6 +1451,21 @@
   "S601": {
     "technical_name": "Aerospatiale SN.601 Corvette",
     "simple_name": "Aerospatiale SN.601 Corvette"
+  },
+  "S61": {
+    "technical_name": "Sikorsky S-61",
+    "simple_name": "Sikorsky S-61",
+    "category": "helicopter"
+  },
+  "S76": {
+    "technical_name": "Sikorsky S-76",
+    "simple_name": "Sikorsky S-76",
+    "category": "helicopter"
+  },
+  "S92": {
+    "technical_name": "Sikorsky S-92",
+    "simple_name": "Sikorsky S-92",
+    "category": "helicopter"
   },
   "SB20": {
     "technical_name": "Saab 2000",
@@ -1214,6 +1507,13 @@
   "T204": {
     "technical_name": "Tupolev Tu-204 / Tu-214",
     "simple_name": "Tupolev Tu-204 / Tu-214"
+  },
+  "TBM8": {
+    "technical_name": "Daher-Socata TBM 850",
+    "simple_name": "TBM 850",
+    "passenger_capacity": 5,
+    "cruise_speed_kmh": 500,
+    "phonetic_name": "T B M eight fifty"
   },
   "WW24": {
     "technical_name": "Israel Aircraft Industries 1124 Westwind",

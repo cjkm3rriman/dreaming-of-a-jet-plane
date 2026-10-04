@@ -34,7 +34,7 @@ import warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pydub.*")
 
 from .airport_database import get_airport_by_iata
-from .aircraft_database import get_rarity
+from .aircraft_database import get_rarity, is_narratable_type
 from .rarity import effective_rarity, cooldown_scope
 from .airline_database import AirlineDatabase
 from .location_utils import calculate_distance, calculate_min_distance_to_route
@@ -674,6 +674,11 @@ def select_diverse_aircraft(
 
     for aircraft in aircraft_list:
         airline_icao = aircraft.get("airline_icao")
+
+        # Helicopters, ZZZZ and missing type codes can't be narrated as a
+        # "jet plane" (DOJP-58)
+        if not is_narratable_type(aircraft.get("aircraft_icao")):
+            continue
 
         # TODO: Remove this skip once cargo testing is complete
         # Currently excluding cargo aircraft completely for testing purposes
