@@ -411,8 +411,12 @@ class S3MP3Cache:
             logger.warning(f"S3 error fetching free pool audio {cache_key}: {e}")
             return None
 
-    async def exists_and_fresh(self, cache_key: str, content_type: str = "audio") -> bool:
-        """Check if cached file exists and is still fresh"""
+    async def exists_and_fresh(self, cache_key: str, content_type: str = "audio", ttl_minutes: int = None) -> bool:
+        """Check if cached file exists and is still fresh
+
+        ttl_minutes overrides the content-type default - used for markers with
+        their own lifetime (e.g. the legendary-spot cooldown, DOJP-32).
+        """
         if not self.enabled:
             return False
 
@@ -425,8 +429,9 @@ class S3MP3Cache:
             if head_response.status_code != 200:
                 return False
 
-            # Check freshness - use appropriate TTL
-            ttl_minutes = self.api_ttl_minutes if content_type == "json" else self.ttl_minutes
+            # Check freshness - use appropriate TTL unless the caller set one
+            if ttl_minutes is None:
+                ttl_minutes = self.api_ttl_minutes if content_type == "json" else self.ttl_minutes
             last_modified_str = head_response.headers.get("last-modified")
             if last_modified_str:
                 try:

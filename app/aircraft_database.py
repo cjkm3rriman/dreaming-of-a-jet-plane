@@ -128,6 +128,27 @@ class AircraftDatabase:
 # Global instance for efficient reuse
 _aircraft_db = AircraftDatabase()
 
+def get_rarity(icao_code: Optional[str]) -> str:
+    """Rarity tier for an aircraft type: "common", "rare", or "legendary".
+
+    Only non-common entries carry a `rarity` field in aircraft.json; everything
+    else - including unknown codes - is common (DOJP-32).
+    """
+    if not icao_code:
+        return "common"
+    _aircraft_db._load_aircraft()
+    entry = _aircraft_db._aircraft.get(icao_code.upper()) or {}
+    return entry.get("rarity", "common")
+
+
+def get_rarity_blurb(icao_code: Optional[str]) -> Optional[str]:
+    """Kid-facing one-liner for a legendary type ("the biggest passenger plane...")"""
+    if not icao_code:
+        return None
+    _aircraft_db._load_aircraft()
+    return (_aircraft_db._aircraft.get(icao_code.upper()) or {}).get("rarity_blurb")
+
+
 def get_aircraft_name(icao_code: str, use_simple_name: bool = True) -> str:
     """Get aircraft name by ICAO code"""
     return _aircraft_db.get_aircraft_name(icao_code, use_simple_name)

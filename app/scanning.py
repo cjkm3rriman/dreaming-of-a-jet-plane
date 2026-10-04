@@ -12,6 +12,7 @@ import httpx
 from .s3_cache import s3_cache
 from .audio_response import recent_plane_audio
 from .flight_text import generate_flight_text
+from .rarity import effective_rarity, cooldown_scope
 from .special_events import get_active_event, aircraft_slot_for_plane, ensure_event_audio
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent
 from .background import spawn
@@ -108,6 +109,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
 
 
             # Generate appropriate text for this plane
+            plane_rarity = "common"
             current_fun_fact_source = None
             opening_text = None
             body_text = None
@@ -115,9 +117,12 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             fun_fact_body_text = None
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
+                # Sequential await: two legendaries in one scan can't both win
+                plane_rarity, _ = await effective_rarity(selected_aircraft.get("aircraft_icao"), cooldown_scope(request, location_hash))
                 # Use split_text=True to get opening and body separately for free pool support
                 opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, current_fun_fact_source = generate_flight_text_for_aircraft(
-                    selected_aircraft, lat, lng, plane_index, country_code, used_destinations, split_text=True
+                    selected_aircraft, lat, lng, plane_index, country_code, used_destinations, split_text=True,
+                    rarity_override=plane_rarity,
                 )
                 if fun_fact_opening_text and fun_fact_body_text:
                     sentence = f"{opening_text} {body_text} {fun_fact_opening_text} {fun_fact_body_text}"
@@ -150,6 +155,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
                     aircraft=selected_aircraft,
                     tts_override=tts_override,
                     fun_fact_source=current_fun_fact_source,
+                    rarity=plane_rarity,
                 )
             )
             tasks.append(task)
@@ -192,6 +198,7 @@ async def _generate_and_cache_plane_audio(
     aircraft: dict = None,
     tts_override: str = None,
     fun_fact_source: str = None,
+    rarity: str = "common",
 ) -> bool:
     """Helper function to generate and cache audio for a specific plane
 
@@ -228,6 +235,7 @@ async def _generate_and_cache_plane_audio(
             location_hash=location_hash,
             plane_index=plane_index,
             tts_override=tts_override,
+            rarity=rarity,
         )
 
         if result["audio"] and not result["error"]:
@@ -238,7 +246,7 @@ async def _generate_and_cache_plane_audio(
                 # touch S3 (DOJP-56)
                 recent_plane_audio.put(cache_key, result["audio"])
                 if request and aircraft:
-                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, result["generation_ms"], len(result["audio"]), result["provider"], result["file_ext"], fun_fact_source, fun_fact_cache_hit=result["fun_fact_cache_hit"])
+                    track_audio_generation(request, lat, lng, city, plane_index, aircraft, sentence, result["generation_ms"], len(result["audio"]), result["provider"], result["file_ext"], fun_fact_source, fun_fact_cache_hit=result["fun_fact_cache_hit"], rarity_served=rarity)
                 return True
             logger.warning(f"Failed to cache pre-generated plane {plane_index} audio for location: lat={lat}, lng={lng}")
             return False

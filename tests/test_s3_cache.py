@@ -375,3 +375,16 @@ async def test_get_raw_404_is_none(cache):
     with respx.mock as router:
         router.get(URL).mock(return_value=httpx.Response(404))
         assert await cache.get_raw(KEY) is None
+
+
+@pytest.mark.unit
+async def test_exists_and_fresh_honours_a_caller_ttl(cache):
+    """A marker two days old is stale under the 3-minute audio TTL but fresh
+    under a caller-supplied 3-day TTL (the legendary cooldown, DOJP-32)"""
+    from email.utils import format_datetime
+    from datetime import datetime, timedelta, timezone
+    two_days_ago = format_datetime(datetime.now(timezone.utc) - timedelta(days=2))
+    with respx.mock as router:
+        router.head(URL).mock(return_value=httpx.Response(200, headers={"last-modified": two_days_ago}))
+        assert await cache.exists_and_fresh(KEY) is False
+        assert await cache.exists_and_fresh(KEY, ttl_minutes=3 * 24 * 60) is True
