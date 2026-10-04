@@ -335,6 +335,26 @@ async def test_cooldown_never_touches_rare_or_common(monkeypatch):
 
 
 @pytest.mark.unit
+def test_cooldown_scope_is_the_hashed_household_ip():
+    """Per household (public IP), not per geocoded cell: IP geolocation maps
+    whole neighbourhoods to one centroid and would share the cooldown"""
+    import app.rarity as rarity
+    from starlette.requests import Request
+
+    def req(ip):
+        return Request({"type": "http", "method": "GET", "path": "/", "query_string": b"",
+                        "headers": [(b"cf-connecting-ip", ip.encode())], "client": ("10.0.0.1", 1)})
+
+    a = rarity.cooldown_scope(req("203.0.113.5"), "cell-hash")
+    b = rarity.cooldown_scope(req("203.0.113.5"), "other-cell")
+    c = rarity.cooldown_scope(req("198.51.100.9"), "cell-hash")
+    assert a == b, "same household, different geocoded cell -> same scope"
+    assert a != c, "different households sharing a cell -> different scopes"
+    assert a.startswith("ip-") and "203.0.113.5" not in a, "IP is hashed, never a raw key"
+    assert rarity.cooldown_scope(None, "cell-hash") == "cell-hash", "no request -> coordinate cell fallback"
+
+
+@pytest.mark.unit
 def test_downgraded_legendary_reads_as_rare_text():
     """An A380 under cooldown gets the rare script - no fanfare words, no
     LEGENDARY - while still naming the aircraft"""

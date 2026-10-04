@@ -12,7 +12,7 @@ import httpx
 from .s3_cache import s3_cache
 from .audio_response import recent_plane_audio
 from .flight_text import generate_flight_text
-from .rarity import effective_rarity
+from .rarity import effective_rarity, cooldown_scope
 from .special_events import get_active_event, aircraft_slot_for_plane, ensure_event_audio
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent
 from .background import spawn
@@ -118,7 +118,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             if aircraft and len(aircraft) > zero_based_index:
                 selected_aircraft = aircraft[zero_based_index]
                 # Sequential await: two legendaries in one scan can't both win
-                plane_rarity, _ = await effective_rarity(selected_aircraft.get("aircraft_icao"), location_hash)
+                plane_rarity, _ = await effective_rarity(selected_aircraft.get("aircraft_icao"), cooldown_scope(request, location_hash))
                 # Use split_text=True to get opening and body separately for free pool support
                 opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, current_fun_fact_source = generate_flight_text_for_aircraft(
                     selected_aircraft, lat, lng, plane_index, country_code, used_destinations, split_text=True,

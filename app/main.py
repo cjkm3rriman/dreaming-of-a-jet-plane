@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pydub.*")
 
 from .airport_database import get_airport_by_iata
 from .aircraft_database import get_rarity
-from .rarity import effective_rarity
+from .rarity import effective_rarity, cooldown_scope
 from .airline_database import AirlineDatabase
 from .location_utils import calculate_distance, calculate_min_distance_to_route
 from .overandout import stream_overandout, overandout_options
@@ -1108,7 +1108,7 @@ async def handle_plane_endpoint(
         plane_rarity = "common"
         if aircraft and len(aircraft) > zero_based_index:
             selected_aircraft = aircraft[zero_based_index]
-            plane_rarity, _ = await effective_rarity(selected_aircraft.get("aircraft_icao"), location_hash)
+            plane_rarity, _ = await effective_rarity(selected_aircraft.get("aircraft_icao"), cooldown_scope(request, location_hash))
             # Use split text generation for free pool support
             opening_text, body_text, fun_fact_opening_text, fun_fact_body_text, fun_fact_source = generate_flight_text_for_aircraft(
                 selected_aircraft, user_lat, user_lng, plane_index, country_code, split_text=True,
