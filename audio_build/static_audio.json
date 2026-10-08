@@ -1,5 +1,5 @@
 {
-  "_comment": "Static audio build manifest (DOJP-35). One entry per deliverable. Timeline steps: {sfx} | {tts} | {robot_tts} | {silence_ms}, each with optional gain_db / fade_out_ms. Optional bed: an SFX looped under the whole timeline. {tts} renders in the entry's narrator voice (per voice folder); {robot_tts} always renders in the scanner-robot ElevenLabs voice (robot_voice_id below) regardless of narrator. Mastered to the app's TARGET_DBFS; exported stereo via free_pool.export_audio_segment (DOJP-56).",
+  "_comment": "Static audio build manifest (DOJP-35). One entry per deliverable. Timeline steps: {sfx} | {tts} | {robot_tts} | {silence_ms}, each with optional gain_db / fade_out_ms. Optional bed: an SFX looped under the whole timeline. {tts} renders in the entry's narrator voice (per voice folder); {robot_tts} always renders in the scanner-robot ElevenLabs voice (robot_voice_id below) regardless of narrator. Mastered to the app's TARGET_DBFS; exported stereo via free_pool.export_audio_segment (DOJP-56). Robot lines spell the brand 'Yo-toe' (phonetic respelling so ElevenLabs says Yoh-Toe; Callum picked it by ear 2026-10-08) - Hugo's tts lines keep 'Yoto'.",
   "entries": {
     "scanning": {
       "description": "The /scanning warm-up clip. Airport call under Hugo's deputy/new-sky monologue, robot activation + deep-scan, robot scan line, radio static with five deep-scans. Script rewritten 2026-10-02 (Hamish reference removed - evergreen).",
@@ -18,7 +18,7 @@
           "silence_ms": 350
         },
         {
-          "robot_tts": "Activating Yoto scanning module",
+          "robot_tts": "Activating Yo-toe scanning module",
           "gain_db": -2
         },
         {
@@ -316,6 +316,294 @@
         },
         {
           "silence_ms": 200
+        }
+      ]
+    },
+    "scanning-morning": {
+      "description": "Club intro variant, local 05:00-11:00 (DOJP-31 daypart picker). Same robot tail as `scanning`; only Hugo's monologue changes. Non-verbal: [clear throat] opener instead of [chuckle] (Callum 2026-10-08: chuckle repetitive across variants).",
+      "timeline": [
+        {
+          "sfx": "airport-call.mp3",
+          "gain_db": -4
+        },
+        {
+          "tts": "[clear throat] Good morning, good morning! Air Traffic Controller {narrator} here, and what a fine time for you to be at the controls with me, old chum. The skies are waking up: the very first jet planes of the day are stretching their wings, warming up their engines, and lifting off runways all over the world. Shall we see who's up bright and early today?",
+          "speed": 1.05,
+          "overlap_ms": 1400,
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot, warm and theatrical, brimming with delight, crisp consonants]"
+        },
+        {
+          "silence_ms": 350
+        },
+        {
+          "robot_tts": "Activating Yo-toe scanning module",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 200
+        },
+        {
+          "sfx": "deep-scan.mp3",
+          "gain_db": -8
+        },
+        {
+          "silence_ms": 250
+        },
+        {
+          "robot_tts": "Scanning the skies for jet planes",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 300
+        },
+        {
+          "sfx": "radio-frequency.mp3",
+          "trim_ms": 7300,
+          "gain_db": -6,
+          "fade_out_ms": 400,
+          "overlay": [
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 500,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 1900,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 3300,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 4700,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 6100,
+              "gain_db": -6
+            }
+          ]
+        }
+      ]
+    },
+    "scanning-evening": {
+      "description": "Club intro variant, local 17:00-23:00 (DOJP-31 daypart picker). No mention of darkness - 5pm in June is daylight. Same robot tail as `scanning`. Non-verbal: contented [sigh] instead of [chuckle] (Callum 2026-10-08).",
+      "timeline": [
+        {
+          "sfx": "airport-call.mp3",
+          "gain_db": -4
+        },
+        {
+          "tts": "Good evening, old chum. Air Traffic Controller {narrator} here, and you're on the night watch with me tonight, co-pilot, how splendid! [sigh] Here's a secret about the evening sky: it never goes to bed. Right now there are jet planes full of sleepy passengers, and great big cargo planes stuffed with parcels, humming along into the night. Shall we see who's flying as the day winds down?",
+          "speed": 1.05,
+          "overlap_ms": 1400,
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot settling in for the evening, warm and theatrical, a contented sigh, crisp consonants]"
+        },
+        {
+          "silence_ms": 350
+        },
+        {
+          "robot_tts": "Activating Yo-toe scanning module",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 200
+        },
+        {
+          "sfx": "deep-scan.mp3",
+          "gain_db": -8
+        },
+        {
+          "silence_ms": 250
+        },
+        {
+          "robot_tts": "Scanning the skies for jet planes",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 300
+        },
+        {
+          "sfx": "radio-frequency.mp3",
+          "trim_ms": 7300,
+          "gain_db": -6,
+          "fade_out_ms": 400,
+          "overlay": [
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 500,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 1900,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 3300,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 4700,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 6100,
+              "gain_db": -6
+            }
+          ]
+        }
+      ]
+    },
+    "scanning-weekend": {
+      "description": "Club intro variant, Saturday and Sunday local (DOJP-31). Outranks daypart. Same robot tail as `scanning`.",
+      "timeline": [
+        {
+          "sfx": "airport-call.mp3",
+          "gain_db": -4
+        },
+        {
+          "tts": "Air Traffic Controller {narrator} here, and [chuckle] no school, no work, it's the weekend, old chum, and you've reported for duty at the controls anyway, bravo! The sky is absolutely teeming: weekends are when families fly off on holiday, when grandparents come to visit, and when the big holiday jets are packed to the rafters with suitcases and stuffies. Shall we see who's off on an adventure today?",
+          "speed": 1.05,
+          "overlap_ms": 1400,
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot, warm and theatrical, brimming with delight, crisp consonants]"
+        },
+        {
+          "silence_ms": 350
+        },
+        {
+          "robot_tts": "Activating Yo-toe scanning module",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 200
+        },
+        {
+          "sfx": "deep-scan.mp3",
+          "gain_db": -8
+        },
+        {
+          "silence_ms": 250
+        },
+        {
+          "robot_tts": "Scanning the skies for jet planes",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 300
+        },
+        {
+          "sfx": "radio-frequency.mp3",
+          "trim_ms": 7300,
+          "gain_db": -6,
+          "fade_out_ms": 400,
+          "overlay": [
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 500,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 1900,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 3300,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 4700,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 6100,
+              "gain_db": -6
+            }
+          ]
+        }
+      ]
+    },
+    "scanning-friday": {
+      "description": "Club intro variant, Friday local AND the listener's region has a bird with written lines (DOJP-52 Animal Friday). Teases the bird without naming it (option B, Callum 2026-10-06). Same robot tail as `scanning`.",
+      "timeline": [
+        {
+          "sfx": "airport-call.mp3",
+          "gain_db": -4
+        },
+        {
+          "tts": "Air Traffic Controller {narrator} here, and how splendid, you've reported for duty with me on a Friday, co-pilot! [chuckle] Between you and me, old chum, this scanner gets a touch mischievous at the end of the week. It's meant to find jet planes, and it will, but don't be surprised if something rather smaller and flappier sneaks onto the radar. Shall we see who's soaring overhead today?",
+          "speed": 1.05,
+          "overlap_ms": 1400,
+          "prompt": "[speak as a jolly, eccentric elderly British gentleman with a posh RP accent - a retired pilot, warm and theatrical, brimming with delight, crisp consonants]"
+        },
+        {
+          "silence_ms": 350
+        },
+        {
+          "robot_tts": "Activating Yo-toe scanning module",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 200
+        },
+        {
+          "sfx": "deep-scan.mp3",
+          "gain_db": -8
+        },
+        {
+          "silence_ms": 250
+        },
+        {
+          "robot_tts": "Scanning the skies for jet planes",
+          "gain_db": -2
+        },
+        {
+          "silence_ms": 300
+        },
+        {
+          "sfx": "radio-frequency.mp3",
+          "trim_ms": 7300,
+          "gain_db": -6,
+          "fade_out_ms": 400,
+          "overlay": [
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 500,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 1900,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 3300,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 4700,
+              "gain_db": -6
+            },
+            {
+              "sfx": "deep-scan.mp3",
+              "at_ms": 6100,
+              "gain_db": -6
+            }
+          ]
         }
       ]
     }
