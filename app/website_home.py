@@ -256,6 +256,12 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
                     border-top: 1px solid #eee;
                 }
 
+                .footer-credit {
+                    font-size: 0.8rem;
+                    opacity: 0.7;
+                    margin-top: 1rem;
+                }
+                .footer-credit a { color: inherit; }
                 .footer-logo {
                     height: 70px;
                     width: auto;
@@ -1005,6 +1011,7 @@ Sitemap: https://dreamingofajetplane.com/sitemap.xml"""
 
             <footer class="footer">
                 <img src="/assets/img/raccoonresearchlabs.png" alt="Raccoon Research Labs" class="footer-logo">
+                <p class="footer-credit">Bird sightings from the <a href="https://www.gbif.org/dataset/4fa7b334-ce0d-4e88-aaae-2e0c138d049e">eBird Observation Dataset</a> (Cornell Lab of Ornithology) via GBIF, CC BY 4.0.</p>
             </footer>
 
             <div id="comingSoonModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">

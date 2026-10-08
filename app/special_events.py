@@ -78,13 +78,17 @@ def get_active_event(now: Optional[datetime] = None) -> Optional[Dict[str, Any]]
     return None
 
 
-def aircraft_slot_for_plane(plane_index: int, event_active: bool) -> Optional[int]:
+def aircraft_slot_for_plane(plane_index: int, event_active: bool, bird_active: bool = False) -> Optional[int]:
     """Map a plane track (1-based) to its zero-based aircraft index.
 
     Without an event, track N serves aircraft N-1. During an event the event
     owns track 1, so track N serves aircraft N-2 and the fifth aircraft
-    drops. Returns None for the event track itself.
+    drops. On Animal Friday (DOJP-52) the bird owns track 5, so the fifth
+    aircraft drops (the fourth too, if an event is also running). Returns
+    None for the event track and the bird track themselves.
     """
+    if bird_active and plane_index == 5:
+        return None
     if not event_active:
         return plane_index - 1
     if plane_index == 1:

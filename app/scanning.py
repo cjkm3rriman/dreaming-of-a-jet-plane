@@ -17,6 +17,7 @@ from .rarity import effective_rarity, cooldown_scope
 from .special_events import get_active_event, aircraft_slot_for_plane, ensure_event_audio
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, get_timezone_for_request
 from .intro_picker import SCANNING_DEFAULT, pick_scanning_variant, variant_filename
+from .animal_friday import animal_friday_bird, ensure_bird_audio
 from .background import spawn
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,12 @@ SCANNING_DEBOUNCE_SECONDS = 30  # Prevent duplicate requests within 30 seconds
 async def _ensure_event_audio_ok(event, tts_override) -> bool:
     """Pre-warm the event's shared audio key; True on success (for gather counts)"""
     result = await ensure_event_audio(event, tts_override=tts_override)
+    return bool(result["audio"]) and not result["error"]
+
+
+async def _ensure_bird_audio_ok(bird, tts_override) -> bool:
+    """Pre-warm the Animal Friday track's shared key; True on success"""
+    result = await ensure_bird_audio(bird, tts_override=tts_override)
     return bool(result["audio"]) and not result["error"]
 
 
@@ -54,9 +61,12 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
 
         # Get country code and city for metric/imperial units and analytics
         # We already have lat/lng
+        is_fallback = True
+        tz_name = None
         if request:
             client_ip = extract_client_ip(request)
-            _, _, country_code, city, region, country_name, _ = await get_location_from_ip(client_ip, request)
+            _, _, country_code, city, region, country_name, is_fallback = await get_location_from_ip(client_ip, request)
+            tz_name = get_timezone_for_request(request)
         else:
             country_code = "US"  # Default fallback if no request
             city = "Unknown"
@@ -90,15 +100,20 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # track 1 (pre-warmed once into its shared per-provider key) and the
         # real planes shift down a slot
         event = get_active_event()
+        # Animal Friday (DOJP-52): the bird owns track 5, pre-warmed once
+        # into its shared per-text key
+        bird = animal_friday_bird(datetime.now(timezone.utc), tz_name, is_fallback, country_code, region)
 
         # Pre-generate audio for up to 5 planes
         tasks = []
         if event:
             tasks.append(asyncio.create_task(_ensure_event_audio_ok(event, tts_override)))
+        if bird:
+            tasks.append(asyncio.create_task(_ensure_bird_audio_ok(bird, tts_override)))
         for plane_index in range(1, 6):  # 1, 2, 3, 4, 5
-            zero_based_index = aircraft_slot_for_plane(plane_index, event is not None)
+            zero_based_index = aircraft_slot_for_plane(plane_index, event is not None, bird is not None)
             if zero_based_index is None:
-                continue  # the event track; its audio is handled above
+                continue  # the event / bird track; its audio is handled above
 
             # Check cache first for this specific plane (include TTS provider and format in cache key).
             # HEAD-only: pre-generation only needs to know the audio exists and is
@@ -133,7 +148,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
             elif aircraft and len(aircraft) > 0:
                 # Not enough planes - one canonical apology (DOJP-46)
                 from .flight_text import not_enough_planes_message
-                sentence = not_enough_planes_message(plane_index, len(aircraft) + (1 if event else 0))
+                sentence = not_enough_planes_message(plane_index, len(aircraft) + (1 if event else 0) + (1 if bird else 0))
             else:
                 # No aircraft found at all
                 sentence = generate_flight_text([], error_message, lat, lng, country_code=country_code, user_city=city, user_region=region, user_country_name=country_name)
@@ -278,12 +293,16 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     """Stream scanning MP3 file from S3 and trigger audio pre-generation"""
 
     # Get user location using shared function
-    user_lat, user_lng, user_country_code, user_city, _, _, is_fallback = await get_user_location(request, lat, lng)
+    user_lat, user_lng, user_country_code, user_city, user_region, _, is_fallback = await get_user_location(request, lat, lng)
 
     # Which pre-rendered intro to stream (DOJP-61): deterministic from the
     # listener's local day/hour, so the debounced replay below picks the same
     tz_name = get_timezone_for_request(request, lat, lng)
-    variant = pick_scanning_variant(datetime.now(timezone.utc), tz_name, is_fallback)
+    now_utc = datetime.now(timezone.utc)
+    # The Friday intro promises a bird on track 5, so it plays only when
+    # Animal Friday will actually deliver one for this listener (DOJP-52)
+    friday_ok = animal_friday_bird(now_utc, tz_name, is_fallback, user_country_code, user_region) is not None
+    variant = pick_scanning_variant(now_utc, tz_name, is_fallback, friday_enabled=friday_ok)
     logger.info(f"Scanning intro variant: {variant} (tz={tz_name}, fallback_location={is_fallback})")
 
     # Get TTS provider override from query parameters
