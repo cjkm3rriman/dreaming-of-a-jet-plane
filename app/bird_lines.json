@@ -1,5 +1,14 @@
 {
   "_comment": "Hand-written Animal Friday lines (DOJP-52), keyed by the English vernacular name GBIF reports for the species in birds.json. House style: start with the bird's name, 1-2 sentences, kid-friendly, exclamation marks welcome. A species with no entry here is never narrated. Lines rotate by ISO week.",
+  "_aliases": {
+    "_comment": "GBIF vernacular name -> the bird_lines key whose lines (and spoken name) to use. For GBIF's slash names (a species it labels as a pair) and regional spellings.",
+    "Great Blue/Cocoi Heron": "Great Blue Heron",
+    "Gray/Purple Heron": "Grey Heron",
+    "Snow/Ross's Goose": "Snow Goose",
+    "California/Woodhouse's Scrub-Jay": "California Scrub-Jay",
+    "Australian Ibis": "Australian White Ibis",
+    "Mew Gull": "Common Gull"
+  },
   "Northern Cardinal": [
     "Northern Cardinals are bright red all over, like a little flying fire engine, and they sing their cheer-cheer-cheer song even in the snow!",
     "Northern Cardinals do not fly south for the winter, so a red cardinal on a white snowy branch is one of the prettiest sights in the whole sky!"
@@ -27,10 +36,6 @@
   "European Starling": [
     "European Starlings look black from far away, but up close their feathers shimmer purple and green like oil on a puddle!",
     "European Starlings fly together in gigantic swirling clouds called murmurations that twist and turn across the sky like one giant creature!"
-  ],
-  "Common Starling": [
-    "Common Starlings look black from far away, but up close their feathers shimmer purple and green like oil on a puddle!",
-    "Common Starlings fly together in gigantic swirling clouds called murmurations that twist and turn across the evening sky like one giant creature!"
   ],
   "Red-winged Blackbird": [
     "Red-winged Blackbirds are glossy black with a bright red and yellow patch on each shoulder, like a little soldier wearing badges!",
@@ -192,10 +197,6 @@
     "Eurasian Blackbirds sing one of the most beautiful songs of any bird, a slow flute-like tune from the rooftops at dawn and dusk!",
     "Eurasian Blackbird dads are jet black with a bright orange beak, while the mums are brown, and both hop across lawns listening for worms!"
   ],
-  "Common Blackbird": [
-    "Common Blackbirds sing one of the most beautiful songs of any bird, a slow flute-like tune from the rooftops at dawn and dusk!",
-    "Common Blackbird dads are jet black with a bright orange beak, while the mums are brown, and both hop across lawns listening for worms!"
-  ],
   "Black-headed Gull": [
     "Black-headed Gulls wear a chocolate brown hood in summer that vanishes in winter, leaving just a little dark smudge behind each eye!",
     "Black-headed Gulls follow tractors across fields in noisy flocks, snapping up worms turned over by the plough!"
@@ -203,10 +204,6 @@
   "Herring Gull": [
     "Herring Gulls are the big noisy seaside gulls with a red spot on their beak that their chicks tap to ask for dinner!",
     "Herring Gulls stamp their feet on wet grass to trick worms into thinking it is raining, and up they come!"
-  ],
-  "European Herring Gull": [
-    "European Herring Gulls are the big noisy seaside gulls with a red spot on their beak that their chicks tap to ask for dinner!",
-    "European Herring Gulls stamp their feet on wet grass to trick worms into thinking it is raining, and up they come!"
   ],
   "Eurasian Wren": [
     "Eurasian Wrens are one of the tiniest birds in Europe, yet their song is so loud it can be heard right across a wood!",
@@ -224,17 +221,9 @@
     "European Goldfinches have a bright red face and golden wing bars, and a flock of them is called a charm!",
     "European Goldfinches have beaks so pointy they can pull seeds out of prickly thistles and teasels that other birds cannot reach!"
   ],
-  "Eurasian Jackdaw": [
-    "Eurasian Jackdaws are small crows with pale silvery eyes and a grey hood, and they love to nest in chimneys and church towers!",
-    "Eurasian Jackdaws say their own name, jack, and they pair up for life, often cuddling side by side on a rooftop!"
-  ],
   "Western Jackdaw": [
     "Western Jackdaws are small crows with pale silvery eyes and a grey hood, and they love to nest in chimneys and church towers!",
     "Western Jackdaws say their own name, jack, and they pair up for life, often cuddling side by side on a rooftop!"
-  ],
-  "Common Moorhen": [
-    "Common Moorhens have a bright red and yellow beak and huge green feet, and they bob their heads as they paddle across ponds!",
-    "Common Moorhen chicks from the first brood help feed their younger brothers and sisters later in the summer!"
   ],
   "Eurasian Coot": [
     "Eurasian Coots are round black waterbirds with a white forehead, and they have the strangest lobed toes, like leaves on the end of each foot!",
@@ -247,10 +236,6 @@
   "Common Buzzard": [
     "Common Buzzards soar in slow circles over fields, mewing like a cat, and they are the most common bird of prey in Britain!",
     "Common Buzzards can spot a beetle crawling in the grass from high above, and they will happily walk about a field hunting for worms!"
-  ],
-  "Pied Wagtail": [
-    "Pied Wagtails are little black and white birds that never stop wagging their long tails up and down, even when standing still!",
-    "Pied Wagtails gather in huge roosts on winter nights, sometimes hundreds of them snuggled in one tree in the middle of a shopping centre!"
   ],
   "White Wagtail": [
     "White Wagtails are little black, white and grey birds that never stop wagging their long tails up and down, even when standing still!",
@@ -348,10 +333,6 @@
     "Common Mynas are brown birds with a yellow mask around their eyes, and they strut about on their yellow legs like busy little bosses!",
     "Common Mynas are talented mimics that can copy other birds, and some pet mynas even learn to say words!"
   ],
-  "Grey Butcherbird": [
-    "Grey Butcherbirds sing one of the loveliest songs in Australia, a rolling flute-like tune, and the whole family joins in the chorus!",
-    "Grey Butcherbirds have a hooked beak and hang their food on thorns to save it for later, which is how they got their name!"
-  ],
   "Barn Swallow": [
     "Barn Swallows have a deeply forked tail and a shiny blue back, and they swoop low over fields catching bugs on the wing!",
     "Barn Swallows build cup-shaped nests out of mud, carrying hundreds of tiny mouthfuls of it to stick together under a barn roof!"
@@ -448,10 +429,6 @@
     "Grey Herons stand as still as statues at the edge of ponds, then stab down with their dagger beak faster than you can blink!",
     "Grey Herons fly with their necks tucked in and their long legs trailing behind, flapping slowly like a prehistoric pterodactyl!"
   ],
-  "Common Kestrel": [
-    "Common Kestrels hover in one spot over fields with their tails fanned out, holding their heads perfectly still while hunting for voles!",
-    "Common Kestrels can see ultraviolet light, which shows up the glowing trails that mice leave in the grass!"
-  ],
   "Eurasian Sparrowhawk": [
     "Eurasian Sparrowhawks dash through gardens at top speed, twisting between fences and bushes to surprise small birds at the feeder!",
     "Eurasian Sparrowhawk mums are much bigger than the dads, nearly twice the size, and they have fierce yellow eyes!"
@@ -480,10 +457,6 @@
     "Coal Tits are tiny birds with a black cap and a white patch on the back of their neck, and they hide seeds all over the place for later!",
     "Coal Tits are so small that they can squeeze into holes other birds cannot, and they love to flit around the tops of fir trees!"
   ],
-  "Greenfinch": [
-    "Greenfinches are chunky olive green finches with flashes of yellow on their wings, and they wheeze a buzzy call from the treetops!",
-    "Greenfinches do a special butterfly flight in spring, flapping slowly in circles above the trees to show off!"
-  ],
   "European Greenfinch": [
     "European Greenfinches are chunky olive green finches with flashes of yellow on their wings, and they wheeze a buzzy call from the treetops!",
     "European Greenfinches do a special butterfly flight in spring, flapping slowly in circles above the trees to show off!"
@@ -503,10 +476,6 @@
   "Great Spotted Woodpecker": [
     "Great Spotted Woodpeckers are black and white with a splash of red, and their drumming on a dead branch is the sound of early spring!",
     "Great Spotted Woodpeckers have a tongue so long it wraps around the inside of their skull, perfect for hooking grubs out of deep holes!"
-  ],
-  "Green Woodpecker": [
-    "Green Woodpeckers have a red cap and a loud laughing call called a yaffle, and they spend most of their time on the ground eating ants!",
-    "Green Woodpeckers have a sticky tongue that stretches out four inches to slurp up ants from deep inside their nests!"
   ],
   "Eurasian Jay": [
     "Eurasian Jays are pinkish brown with a flash of electric blue on their wings, and their screech is one of the loudest sounds in the woods!",
@@ -547,5 +516,181 @@
   "Hooded Crow": [
     "Hooded Crows are grey with a black head, wings and tail, as if a crow put on a grey jumper!",
     "Hooded Crows drop shellfish from high up onto rocks to crack them open, and they are clever enough to pull up fishing lines for the catch!"
+  ],
+  "Eurasian Moorhen": [
+    "Eurasian Moorhens have a bright red and yellow beak and huge green feet, and they bob their heads as they paddle across ponds!",
+    "Eurasian Moorhen chicks from the first brood help feed their younger brothers and sisters later in the summer!"
+  ],
+  "Eurasian Kestrel": [
+    "Eurasian Kestrels hover in one spot over fields with their tails fanned out, holding their heads perfectly still while hunting for voles!",
+    "Eurasian Kestrels can see ultraviolet light, which shows up the glowing trails that mice leave in the grass!"
+  ],
+  "Eurasian Green Woodpecker": [
+    "Eurasian Green Woodpeckers have a red cap and a loud laughing call called a yaffle, and they spend most of their time on the ground eating ants!",
+    "Eurasian Green Woodpeckers have a sticky tongue that stretches out four inches to slurp up ants from deep inside their nests!"
+  ],
+  "Gray Butcherbird": [
+    "Gray Butcherbirds sing one of the loveliest songs in Australia, a rolling flute-like tune, and the whole family joins in the chorus!",
+    "Gray Butcherbirds have a hooked beak and hang their food on thorns to save it for later, which is how they got their name!"
+  ],
+  "Common Bulbul": [
+    "Common Bulbuls are cheerful brown birds with a dark head and a yellow patch under the tail, and they chatter from every garden and rooftop across Africa!",
+    "Common Bulbuls are among the first birds singing at dawn, a bubbly tune that sounds like quick quick doctor quick!"
+  ],
+  "Pied Crow": [
+    "Pied Crows wear a crisp white collar and chest on an otherwise black body, like a crow dressed up for a party!",
+    "Pied Crows are bold enough to strut through markets and towns, and clever enough to drop hard nuts on the road for cars to crack!"
+  ],
+  "Bananaquit": [
+    "Bananaquits are tiny birds with a bright yellow belly and a curved beak for sipping nectar, and they will happily steal sugar from a cafe table!",
+    "Bananaquits poke holes in the side of flowers to drink the nectar from the bottom, a sneaky shortcut that skips the pollen!"
+  ],
+  "Red-eyed Dove": [
+    "Red-eyed Doves have a ring of bright red skin around each eye and a black collar on the neck, and they coo a rhythm that sounds like I am a red-eyed dove!",
+    "Red-eyed Doves are big gentle doves found all across Africa, bobbing their heads as they walk and clapping their wings when they take off!"
+  ],
+  "Laughing Dove": [
+    "Laughing Doves are small pinkish doves with a speckled copper patch on the chest, and their soft cooing really does sound like a chuckle!",
+    "Laughing Doves are so tame they wander around gardens and city squares, pecking for seeds right next to people's feet!"
+  ],
+  "Black Kite": [
+    "Black Kites have a forked tail and soar in lazy circles over towns and rivers, sometimes in flocks of hundreds!",
+    "Black Kites are the most common bird of prey in the whole world, and they are cheeky enough to snatch a sandwich from a picnic!"
+  ],
+  "Great Kiskadee": [
+    "Great Kiskadees have a bright yellow belly and a bold black and white striped head, and they shout their own name, kis-ka-dee!",
+    "Great Kiskadees eat almost anything: bugs, fruit, lizards, and even small fish they dive for like a kingfisher!"
+  ],
+  "Ring-necked Dove": [
+    "Ring-necked Doves have a thin black collar and coo a three-note song all day, work-har-der, work-har-der!",
+    "Ring-necked Doves are the most common doves across southern Africa, and they clap their wings loudly as they fly up from the ground!"
+  ],
+  "Gray Kingbird": [
+    "Gray Kingbirds perch on wires and treetops across the Caribbean, darting out to snap up flying insects with a loud click of the beak!",
+    "Gray Kingbirds are fearless and will chase away hawks and crows many times their size to protect their nest!"
+  ],
+  "Tropical Kingbird": [
+    "Tropical Kingbirds have a lemon yellow belly and a grey head, and they sit on wires calling a high twittering trill at dawn!",
+    "Tropical Kingbirds hunt by waiting on a perch, then zooming out to grab a bug in mid-air and swooping right back to the same spot!"
+  ],
+  "Village Weaver": [
+    "Village Weavers are bright yellow birds with a black face, and the males weave round hanging nests out of grass, hundreds in one tree!",
+    "Village Weaver dads build a nest and hang upside down flapping to show it off, and if the mum does not like it, he tears it down and starts again!"
+  ],
+  "Cattle Egret": [
+    "Cattle Egrets are small white herons that follow cows and tractors, snapping up the grasshoppers the big animals stir up!",
+    "Cattle Egrets grow fluffy orange feathers on their heads and backs in spring, as if someone sprinkled them with cinnamon!"
+  ],
+  "Fork-tailed Drongo": [
+    "Fork-tailed Drongos are glossy black with a tail shaped like a fish, and they are brave enough to mob eagles that fly too close!",
+    "Fork-tailed Drongos can imitate the alarm calls of other animals to scare them off their food, then swoop in and steal it!"
+  ],
+  "Blue-gray Tanager": [
+    "Blue-gray Tanagers are soft powder blue all over, like a little piece of morning sky hopping through the fruit trees!",
+    "Blue-gray Tanagers love bananas and papayas and will visit fruit left out in gardens all over Central and South America!"
+  ],
+  "Black Vulture": [
+    "Black Vultures soar on wide black wings with silver tips, and they often ride the warm air in big groups called kettles!",
+    "Black Vultures do not have a strong sense of smell, so they follow Turkey Vultures around and let them find dinner first!"
+  ],
+  "Tropical Mockingbird": [
+    "Tropical Mockingbirds are grey and white with a long tail they flick about, and they sing all day from the tops of bushes and roofs!",
+    "Tropical Mockingbirds copy the songs of other birds and even the beeps of car alarms, mixing them into one long tune!"
+  ],
+  "Zenaida Dove": [
+    "Zenaida Doves are warm brown doves with a white tip on the tail and a purple shimmer on the neck, cooing softly across the Caribbean islands!",
+    "Zenaida Doves nest on the ground among rocks and shrubs near the beach, which is unusual for a dove!"
+  ],
+  "White Tern": [
+    "White Terns are pure white seabirds with big dark eyes that look almost too large for their heads, and they hover like angels over tropical islands!",
+    "White Terns do not build a nest at all; they balance a single egg on a bare branch and somehow it stays put!"
+  ],
+  "Speckled Mousebird": [
+    "Speckled Mousebirds have a long tail and a scruffy crest, and they scurry along branches and hang upside down like a mouse with feathers!",
+    "Speckled Mousebirds snuggle together in a tight bundle on cold nights, sometimes a dozen in one fluffy heap!"
+  ],
+  "Lesser Antillean Bullfinch": [
+    "Lesser Antillean Bullfinches are little black birds with a red throat patch, and they hop boldly onto cafe tables across the Caribbean looking for crumbs!",
+    "Lesser Antillean Bullfinches have a thick stubby beak perfect for cracking seeds and nibbling fruit!"
+  ],
+  "Speckled Pigeon": [
+    "Speckled Pigeons have bright red skin around their eyes and white spots on their wings, and they strut about African towns and cliffs!",
+    "Speckled Pigeons nest on buildings and rocky ledges, and their wings whistle as they take off in a flurry!"
+  ],
+  "Hooded Vulture": [
+    "Hooded Vultures have a pinkish bald head with a downy hood on the back, and they tidy up towns and villages across Africa!",
+    "Hooded Vultures soar high above markets and farms, and their bald heads keep them clean when they eat!"
+  ],
+  "Palm Tanager": [
+    "Palm Tanagers are olive green birds that love palm trees, hopping among the fronds in pairs across towns in South America!",
+    "Palm Tanagers have a shimmering look in the sunlight, and they chatter in high squeaky voices as they hunt bugs and fruit!"
+  ],
+  "Carib Grackle": [
+    "Carib Grackles are glossy black with pale yellow eyes and a tail folded like a boat keel, and they strut around Caribbean cafes hoping for crumbs!",
+    "Carib Grackles squeak, whistle and rattle in a chatter that fills every square and beach across the islands!"
+  ],
+  "Black-faced Grassquit": [
+    "Black-faced Grassquits are tiny olive birds with a black face, and the males buzz a little song while fluttering in front of the females!",
+    "Black-faced Grassquits hop around in grass and roadside weeds all across the Caribbean, nibbling tiny seeds!"
+  ],
+  "Southern Cordonbleu": [
+    "Southern Cordonbleus are tiny finches with a sky blue face and belly, like a little drop of blue paint hopping across the ground!",
+    "Southern Cordonbleu dads dance for the mums while holding a piece of grass in their beak and bobbing up and down!"
+  ],
+  "Rufous Hornero": [
+    "Rufous Horneros build nests out of mud that look exactly like little clay ovens, which is how they got their name, the oven bird!",
+    "Rufous Horneros are the national bird of Argentina, and pairs sing loud rattling duets together from rooftops and fence posts!"
+  ],
+  "Western Plantain-eater": [
+    "Western Plantain-eaters are big grey birds with a shaggy crest and a loud laughing call that rings out across West African gardens!",
+    "Western Plantain-eaters bound along branches and love fruit, but despite their name they are not that fond of plantains!"
+  ],
+  "Eurasian Tree Sparrow": [
+    "Eurasian Tree Sparrows have a chestnut cap and a neat black spot on each cheek, and they chirp in busy flocks around farms and villages!",
+    "Eurasian Tree Sparrows nest in holes in trees and walls, and both mum and dad look exactly the same, unlike house sparrows!"
+  ],
+  "Hadada Ibis": [
+    "Hadada Ibises have a long curved beak and shiny green wings, and they shout haa-haa-de-dah so loudly at dawn that they wake up whole neighbourhoods!",
+    "Hadada Ibises probe lawns and sports fields with their long beaks, pulling up worms and grubs like a feathered garden fork!"
+  ],
+  "Southern House Wren": [
+    "Southern House Wrens are little brown birds that bubble out a loud cheerful song from fences and porches all across South America!",
+    "Southern House Wrens will build a nest in almost anything, from a flower pot to an old boot to a hole in a wall!"
+  ],
+  "Southern Lapwing": [
+    "Southern Lapwings have a wispy black crest and bright red eyes, and they scream tero-tero at anyone who walks across their field!",
+    "Southern Lapwings have sharp pink spurs on their wings and will dive at dogs, horses and people to protect their eggs!"
+  ],
+  "Rufous-collared Sparrow": [
+    "Rufous-collared Sparrows have a stripy grey head and a rusty orange collar, and they sing a sweet whistle from gardens all across Latin America!",
+    "Rufous-collared Sparrows hop around on the ground in towns and parks, and each region's birds sing the song with their own accent!"
+  ],
+  "Silver-beaked Tanager": [
+    "Silver-beaked Tanagers are deep velvety red with a beak that shines silver white, and they flit through gardens in little chattering groups!",
+    "Silver-beaked Tanagers love ripe fruit so much that gardeners in South America hang bananas out just to watch them visit!"
+  ],
+  "Senegal Coucal": [
+    "Senegal Coucals are big birds with a black cap, chestnut wings and a long tail, and their call sounds like water glugging out of a bottle!",
+    "Senegal Coucals creep through thick bushes hunting for insects and lizards, and they are too clumsy to fly very far!"
+  ],
+  "African Palm-Swift": [
+    "African Palm Swifts are slim grey birds that zip around palm trees all day and glue their nests to the underside of palm leaves with their own spit!",
+    "African Palm Swifts even glue their eggs into the nest so they do not fall out when the palm leaf sways in the wind!"
+  ],
+  "Northern Gray-headed Sparrow": [
+    "Northern Gray-headed Sparrows have a soft grey head and a rusty brown back, and they chirp around villages and gardens across Africa!",
+    "Northern Gray-headed Sparrows nest in holes in trees, walls and even old swallow nests, and they are happy living right next to people!"
+  ],
+  "Micronesian Myzomela": [
+    "Micronesian Myzomelas are tiny bright red honeyeaters that zip between coconut flowers sipping nectar on the Pacific islands!",
+    "Micronesian Myzomelas are so small and quick that they look like little red sparks flashing through the palm trees!"
+  ],
+  "Micronesian Starling": [
+    "Micronesian Starlings are glossy black with bright yellow eyes, and they chatter and whistle from the treetops of Pacific islands!",
+    "Micronesian Starlings eat fruit and spread the seeds of island trees, helping new forests grow!"
+  ],
+  "Red-cheeked Cordonbleu": [
+    "Red-cheeked Cordonbleus are tiny blue finches, and the dads have a bright red spot on each cheek like they have been kissed!",
+    "Red-cheeked Cordonbleus hop around African villages picking up tiny seeds, and they tap-dance for each other when they are courting!"
   ]
 }

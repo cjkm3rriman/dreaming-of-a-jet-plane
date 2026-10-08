@@ -340,3 +340,52 @@ def test_real_bird_lines_follow_the_style_guide():
         for line in entries:
             assert opens_with(line, name), f"{name!r}: {line[:60]!r}"
             assert line.endswith("!"), f"{name!r}: line should end with an exclamation mark"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("gbif_name, key", [
+    ("Sandhill crane", "sandhill crane"),
+    ("Willie-wagtail", "willie wagtail"),
+    ("Canada Goose (canadensis Group)", "canada goose"),
+    ("American herring gull, Smithsonian Gull", "american herring gull"),
+    ("California/Woodhouse's Scrub-Jay", "california/woodhouse's scrub jay"),
+    (None, ""),
+])
+def test_gbif_names_are_matched_loosely(gbif_name, key):
+    assert af._name_key(gbif_name) == key
+
+
+@pytest.mark.unit
+def test_child_hears_our_spelling_not_gbifs(tmp_path, monkeypatch):
+    data = {"regions": {"FR": {"country": "FR", "name": "France", "aliases": [], "months": {"10": [9]}}},
+            "species": {"9": {"name": "Sandhill crane (lower-case group)", "scientific": "Antigone canadensis"}}}
+    (tmp_path / "b.json").write_text(json.dumps(data))
+    (tmp_path / "l.json").write_text(json.dumps({"Sandhill Crane": ["Sandhill Cranes dance!"]}))
+    monkeypatch.setattr(af, "BIRDS_PATH", tmp_path / "b.json")
+    monkeypatch.setattr(af, "LINES_PATH", tmp_path / "l.json")
+    af.reset_cache()
+    try:
+        bird = af.pick_bird("FR", "", date(2026, 10, 9))
+        assert bird["name"] == "Sandhill Crane"
+        assert "it is a Sandhill Crane!" in af.bird_track_text(bird)
+    finally:
+        af.reset_cache()
+
+
+@pytest.mark.unit
+def test_aliases_map_gbif_slash_names_to_our_entry(tmp_path, monkeypatch):
+    data = {"regions": {"FR": {"country": "FR", "name": "France", "aliases": [], "months": {"10": [7]}}},
+            "species": {"7": {"name": "Great Blue/Cocoi Heron", "scientific": "Ardea herodias"}}}
+    (tmp_path / "b.json").write_text(json.dumps(data))
+    (tmp_path / "l.json").write_text(json.dumps({
+        "_aliases": {"Great Blue/Cocoi Heron": "Great Blue Heron"},
+        "Great Blue Heron": ["Great Blue Herons stand very still!"],
+    }))
+    monkeypatch.setattr(af, "BIRDS_PATH", tmp_path / "b.json")
+    monkeypatch.setattr(af, "LINES_PATH", tmp_path / "l.json")
+    af.reset_cache()
+    try:
+        bird = af.pick_bird("FR", "", date(2026, 10, 9))
+        assert bird["name"] == "Great Blue Heron"
+    finally:
+        af.reset_cache()

@@ -11,7 +11,8 @@ Data:
                          Observation Dataset, CC BY 4.0): per region and
                          calendar month, the most-recorded species.
   app/bird_lines.json  - hand-written kid lines keyed by the species' English
-                         name. A species with no lines is never narrated.
+                         name (plus "_aliases" from GBIF's spelling to ours).
+                         A species with no lines is never narrated.
 
 Region keys follow what ipapi.co reports for the listener: `{ISO2}` for most
 countries, `{ISO2}-{subdivision}` for the US, Canada, the UK and Australia,
@@ -32,6 +33,7 @@ the Friday intro's promise is never broken.
 import hashlib
 import json
 import logging
+import re
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
@@ -58,7 +60,28 @@ def _load() -> None:
         _birds = json.loads(BIRDS_PATH.read_text()) if BIRDS_PATH.exists() else {"regions": {}, "species": {}}
     if _lines is None:
         raw = json.loads(LINES_PATH.read_text()) if LINES_PATH.exists() else {}
-        _lines = {k: v for k, v in raw.items() if not k.startswith("_") and v}
+        # keyed by the normalised name; the value keeps OUR spelling of the
+        # name, which is what the child hears
+        _lines = {_name_key(k): (k, v) for k, v in raw.items() if not k.startswith("_") and v}
+        # "_aliases": GBIF's spelling -> our key, for slash names like
+        # "Great Blue/Cocoi Heron" and regional names like "Mew Gull"
+        for gbif_name, ours in (raw.get("_aliases") or {}).items():
+            if not gbif_name.startswith("_") and _name_key(ours) in _lines:
+                _lines[_name_key(gbif_name)] = _lines[_name_key(ours)]
+
+
+def _name_key(name: Optional[str]) -> str:
+    """Match GBIF's vernacular names to bird_lines.json keys loosely.
+
+    GBIF's spellings are inconsistent: "Sandhill crane", "Willie-wagtail",
+    "Canada Goose (canadensis Group)", "American herring gull, Smithsonian
+    Gull". Lowercase, drop hyphens and a trailing parenthetical, and keep
+    only the first comma-separated name. A slash ("California/Woodhouse's
+    Scrub-Jay") is left alone: it is two species and we narrate neither.
+    """
+    text = (name or "").split(",")[0]
+    text = re.sub(r"\s*\([^)]*\)\s*$", "", text)
+    return re.sub(r"[\s\-]+", " ", text).strip().lower()
 
 
 def reset_cache() -> None:
@@ -121,17 +144,16 @@ def pick_bird(country_code: Optional[str], region: Optional[str], on_date) -> Op
     month_keys = _birds["regions"][key].get("months", {}).get(str(on_date.month), [])
     candidates = []
     for species_key in month_keys:
-        sp = _birds["species"].get(str(species_key))
-        name = sp.get("name") if sp else None
-        if name and name in _lines:
-            candidates.append((str(species_key), sp))
+        sp = _birds["species"].get(str(species_key)) or {}
+        written = _lines.get(_name_key(sp.get("name")))
+        if written:
+            candidates.append((str(species_key), sp, written))
     if not candidates:
         return None
     _, week, _ = on_date.isocalendar()
-    species_key, sp = candidates[week % len(candidates)]
-    lines = _lines[sp["name"]]
+    species_key, sp, (spoken_name, lines) = candidates[week % len(candidates)]
     return {
-        "key": species_key, "name": sp["name"], "scientific": sp.get("scientific"),
+        "key": species_key, "name": spoken_name, "scientific": sp.get("scientific"),
         "line": lines[(week // len(candidates)) % len(lines)], "region": key,
     }
 
