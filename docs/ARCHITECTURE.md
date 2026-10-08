@@ -162,6 +162,7 @@ the intro feel alive is that *which* clip plays is decided per request.
 |---|---|---|---|
 | Intro | `/scanning` | One of five pre-rendered clips in the voice's S3 folder | `intro_picker.py`: listener's local weekday and hour, from the IP lookup's timezone |
 | Planes 1-5 | `/plane/N` | Generated per location: split TTS, cached fun facts, optional legendary fanfare, stitched with pydub | Aircraft selection, the Special Signal Events calendar, rarity tier + per-household cooldown |
+| Animal Friday bird | `/plane/5` on a local Friday | Generated once per bird text + voice into `animal-friday/` | `animal_friday.py`: listener's region and calendar month from GBIF/eBird data, rotated by ISO week |
 | Rescan interstitial | `/scanning-again` | One pre-rendered clip | Nothing varies |
 | Outro | `/overandout` | One pre-rendered clip | Nothing varies |
 
@@ -171,7 +172,7 @@ flowchart TB
         I1["Resolve location + cached timezone"] --> I2{"Geolocation fallback<br/>or timezone unknown?"}
         I2 -->|yes| I3["scanning"]
         I2 -->|no| I4{"Local weekday / hour"}
-        I4 -->|"Friday + ANIMAL_FRIDAY_ENABLED"| I5["scanning-friday"]
+        I4 -->|"Friday + a bird to serve"| I5["scanning-friday"]
         I4 -->|"Sat / Sun"| I6["scanning-weekend"]
         I4 -->|"05:00-11:00"| I7["scanning-morning"]
         I4 -->|"17:00-23:00"| I8["scanning-evening"]
@@ -183,7 +184,9 @@ flowchart TB
     subgraph Plane["/plane/N - dynamic"]
         P0["Resolve location"] --> P1{"Event window<br/>and N == 1?"}
         P1 -->|yes| P2["Serve event audio<br/>special-events/ prefix, once per event + voice"]
-        P1 -->|no| P3["Map track N to aircraft slot<br/>shifted down one during an event"]
+        P1 -->|no| PB{"Animal Friday bird<br/>and N == 5?"}
+        PB -->|yes| PB2["Serve bird audio<br/>animal-friday/ prefix, once per bird text + voice"]
+        PB -->|no| P3["Map track N to aircraft slot<br/>event takes 1, bird takes 5"]
         P3 --> P4{"In-memory<br/>recent_plane_audio?"}
         P4 -->|hit| P9
         P4 -->|miss| P5{"S3 cache/<br/>plane audio, 3 min?"}
@@ -216,7 +219,7 @@ time, the listener's IANA timezone, and whether geolocation fell back:
 
 | Listener local time | Clip |
 |---|---|
-| Friday, any hour | `scanning-friday` (Animal Friday, DOJP-52) - only while `ANIMAL_FRIDAY_ENABLED` is set, because the clip promises a bird on plane 3 |
+| Friday, any hour | `scanning-friday` (Animal Friday, DOJP-52) - only when `animal_friday_bird` returns a bird for this listener, because the clip promises one on track 5 |
 | Saturday / Sunday, any hour | `scanning-weekend` |
 | 05:00 to 11:00 | `scanning-morning` |
 | 17:00 to 23:00 | `scanning-evening` |
@@ -248,10 +251,15 @@ The free tier never varies its intros; `/free/scanning` streams from its own
    event owns track 1, served from the durable `special-events/` prefix and
    memoised in `recent_plane_audio`. Real aircraft shift down a slot; the
    fifth drops. If event TTS fails, track 1 degrades to a normal plane.
-2. **Two cache layers** before any generation: `recent_plane_audio` in
+2. **Animal Friday** (`animal_friday.py`, DOJP-52): on a Friday in the
+   listener's local day, with a bird to narrate for their region this month,
+   the bird owns track 5 and the fifth aircraft drops. Same override shape
+   as the event, so the two compose - event, three planes, bird. If bird TTS
+   fails, track 5 degrades to the fifth plane.
+3. **Two cache layers** before any generation: `recent_plane_audio` in
    process memory (so the several range requests one play issues cost one
    fetch), then `cache/` in S3 (3-minute TTL, equal to the flight-data TTL).
-3. **Single-flight generation** on a miss: concurrent misses for one key share
+4. **Single-flight generation** on a miss: concurrent misses for one key share
    one `produce()`. It fetches aircraft through the provider chain, resolves
    the plane's **rarity**, writes the text, runs TTS, stitches, then writes
    the memo, the S3 cache, and the free-pool body - in that order, so the
@@ -274,6 +282,40 @@ The selection step cooperates: a rare or legendary candidate that passed the
 quality gates replaces the farthest common pick, because a legendary in the
 sky that goes un-narrated is a wasted lottery win. The body text carries the
 rarity line, so free-tier replays keep the words but never the fanfare.
+
+### Animal Friday: the fifth track is a bird
+
+`animal_friday_bird` is a pure function of UTC time, the listener's timezone,
+the geolocation-fallback flag, and their country + region. It returns a bird
+or None, and None is the common case: the flag `ANIMAL_FRIDAY_ENABLED` is
+off, geolocation fell back, the timezone is unknown, it is not Friday where
+the listener is, the region has no table, or nothing in this month's list
+has written lines. The intro picker's Friday gate is this same function
+being non-None, so the Friday intro can never promise a bird that track 5
+will not deliver.
+
+Two data files back it. `birds.json` is generated by
+`scripts/build_birds.py` from the GBIF occurrence API, which carries
+Cornell's eBird Observation Dataset under CC BY 4.0 (eBird's own APIs are
+non-commercial only): for every region and calendar month, the ten
+most-recorded species, human observations 2015 onward. Regions are US
+states, Canadian provinces, UK home nations and Australian states, and whole
+countries elsewhere, keyed to what ipapi.co reports and matched on name or
+short code. `bird_lines.json` is hand-written: two kid lines per species,
+keyed by the species' English name with an `_aliases` map for GBIF's odder
+spellings ("Great Blue/Cocoi Heron"). A species with no lines is never
+narrated, so coverage grows by writing. The child hears our spelling of the
+name, never GBIF's.
+
+Selection is deterministic by ISO week: the week picks the species among
+the month's narratable candidates and, once the species cycle wraps, the
+line - so siblings hear the same bird and next Friday is different. The
+track text is one house-style template around the name and line. Audio is
+keyed by a hash of that text plus the voice under the durable
+`animal-friday/` prefix, generated once and shared by every listener in the
+region that week, and pre-generation warms it under the intro like the event
+track. The bird never enters the free pool, and the free tier never calls
+any of this.
 
 ### Outro and interstitials
 
@@ -652,6 +694,7 @@ persistence layer.
 | `free/intros/flight-intro-{1..6}.{ext}` | Generic free openings | static | `get_raw()` |
 | `special-events/{name}_{hash}_{provider}.{ext}` | Event audio (e.g. Santa), one per event + provider | none — content-hashed | `get_raw()` |
 | `rarity/legendary_{scope}` | Marker: this household was awarded a legendary | 3 days, judged by `Last-Modified` | `exists_and_fresh()` |
+| `animal-friday/{hash}_{provider}.{ext}` | Animal Friday track, one per bird text + voice | none — content-hashed | `get_raw()` |
 | `{voice}/scanning.mp3`, `scanning-{morning,evening,weekend,friday}.mp3`, `overandout.mp3`, … | Per-voice static clips | static | Public HTTPS GET |
 
 **The audio TTL must not exceed the flight-data TTL, and they are equal for that
@@ -763,6 +806,10 @@ graph LR
     scanning --> ff
     scanning --> text
     scanning --> picker["intro_picker.py"]
+    scanning --> bird["animal_friday.py"]
+    main --> bird
+    bird --> picker
+    bird --> s3
     main --> rarity["rarity.py"]
     rarity --> s3
     free --> s3
@@ -783,6 +830,7 @@ legibility; the table below is complete.
 | `main.py` | Routes, TTS dispatch, aircraft fetch + selection, analytics helpers, free tier handlers |
 | `scanning.py` | `/scanning` endpoint, intro variant choice, debounce, background pre-generation of all 5 planes |
 | `intro_picker.py` | Pure function from UTC time + listener timezone + fallback flag to one of the five pre-rendered intro clips (DOJP-61) |
+| `animal_friday.py` | Friday bird for a listener's region and month from `birds.json` + `bird_lines.json`, deterministic by ISO week; owns track 5; generate-once audio under `animal-friday/` (DOJP-52) |
 | `rarity.py` | Rarity served for a plane: tier from `aircraft.json`, legendary treatment rate-limited per household via an S3 marker (DOJP-32) |
 | `plane_audio.py` | The one shared split-TTS / stitch / cache generator both generation paths call |
 | `audio_response.py` | Range-aware responses for dynamic audio, the in-memory recent-audio caches, single-flight generation (DOJP-56) |
@@ -856,7 +904,7 @@ UAs are deliberately not treated as players.
 |---|---|---|
 | `scan:start` | `/scanning` or a `/free/*` entry point | `subscription`; Club adds `intro_variant` |
 | `scan:complete` | Aircraft fetch resolves | `nearby_aircraft`, `aircraft_provider`, `from_cache`; on live Airlabs fetches also `rejected_stale`, `rejected_route`, `rejected_implausible`, `accepted_no_route`, `oldest_signal_age_s`, `stale_threshold_s` |
-| `plane:request` | Any `/plane/N` or `/free/plane/N` | `plane_index`, `from_cache`, `free_pool_entry_id`, `free_pool_size` (free: pool-health gauge), `event_name` (event tracks) |
+| `plane:request` | Any `/plane/N` or `/free/plane/N` | `plane_index`, `from_cache`, `free_pool_entry_id`, `free_pool_size` (free: pool-health gauge), `event_name` (event tracks; `animal-friday` for the bird) |
 | `generate:audio` | TTS produces a plane's audio | `generation_time_ms`, `tts_provider`, `fun_fact_source`, `fun_fact_cache_hit`, `rarity_served`, origin/destination |
 | `error:location` | IP geolocation fails or falls back | `failure_type`, `fallback_location` |
 | `scanning-again`, `overandout` | Static clip streamed | Location, device |
@@ -900,7 +948,7 @@ Things that are true today and would surprise a reader of the code.
 *Written against the code on `main`, last revised 2026-10-08 after the static
 audio build pipeline (DOJP-35), aircraft rarity tiers with the legendary
 fanfare (DOJP-32), the narratable-type skip (DOJP-58), the Club intro picker
-(DOJP-61), and the cities expansion to 408 entries. Earlier revision
+(DOJP-61), Animal Friday (DOJP-52), and the cities expansion to 408 entries. Earlier revision
 2026-09-25 covered the Sep 26 review project (DOJP-42..47), the fallback-TTS
 removal (DOJP-43), the Special Signal Events calendar (DOJP-33), the client-IP
 identity fix (DOJP-44), and stereo dynamic tracks with real Range support
