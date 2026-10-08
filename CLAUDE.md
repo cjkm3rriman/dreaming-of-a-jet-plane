@@ -375,7 +375,7 @@ uploaded per voice folder as `{voice}/scanning-<variant>.{opus,mp3}`.
 
 | Listener local time | Clip |
 |---|---|
-| Friday, any hour | `scanning-friday` (Animal Friday; only when `ANIMAL_FRIDAY_ENABLED` is set) |
+| Friday, any hour | `scanning-friday` (Animal Friday; only when `ANIMAL_FRIDAY_ENABLED` is set **and** the listener's region has a bird to narrate this month) |
 | Saturday / Sunday, any hour | `scanning-weekend` |
 | 05:00 to 11:00 | `scanning-morning` |
 | 17:00 to 23:00 | `scanning-evening` |
@@ -386,6 +386,31 @@ not a longitude guess. A variant missing from a voice folder falls back to
 `scanning`. The free tier never varies its intros. Adding a variant means: a
 manifest entry, a render + audition + upload via the `build-audio` skill, a new
 rule in the picker, and a row in `tests/test_intro_picker.py`.
+
+## Animal Friday (DOJP-52)
+
+On Fridays (in the listener's local day) the fifth track is a local bird, not
+a plane: `app/animal_friday.py` picks a species the listener is genuinely
+likely to see in their region this month, the bird owns `/plane/5`, and the
+fifth aircraft is bumped (same mechanism as Special Signal Events on track 1;
+the two compose). Gated by `ANIMAL_FRIDAY_ENABLED` and by coverage; the intro
+picker's Friday gate is the same check, so the Friday intro never promises a
+bird that will not arrive. Free tier never gets it.
+
+- **`app/birds.json`** is generated, never hand-edited: `uv run python
+  scripts/build_birds.py` pulls the most-recorded species per region and
+  calendar month from GBIF (the eBird Observation Dataset, CC BY 4.0, refreshed
+  yearly). Regions are US states, Canadian provinces, UK home nations and
+  Australian states, plus whole countries elsewhere, keyed to what ipapi.co
+  reports. Rerun it when GBIF publishes a new eBird snapshot (around August).
+- **`app/bird_lines.json`** is hand-written, keyed by the species' English name
+  as GBIF spells it. A species with no entry is never narrated, so coverage
+  grows by writing lines. Style: start with the bird's name (plural is fine),
+  one or two sentences, kid-friendly, end with an exclamation mark - the same
+  voice as the city fun facts. Two or three lines per species; they rotate by
+  ISO week along with the species.
+- Attribution for the CC BY data is in the README and the website footer; keep
+  it if either is rewritten.
 
 
 

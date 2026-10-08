@@ -15,6 +15,7 @@ Check it out: https://share.yoto.co/s/27Y3g3KjqiWkIqdTWc27g2
 
 ### External APIs & Services
 - **Flightradar24 & Airlabs APIs** - Multi-provider live flight tracking with aircraft and route data
+- **GBIF / eBird Observation Dataset** - Local bird species by region and month for Animal Friday, from the [EOD - eBird Observation Dataset](https://www.gbif.org/dataset/4fa7b334-ce0d-4e88-aaae-2e0c138d049e) (Cornell Lab of Ornithology) via GBIF, CC BY 4.0
 - **ElevenLabs API** - Primary text-to-speech voice synthesis (Edward voice)
 - **ipapi.co** - IP geolocation service for converting IP addresses to coordinates
 - **Mixpanel** - Analytics
