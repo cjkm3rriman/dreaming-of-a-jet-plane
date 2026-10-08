@@ -365,27 +365,27 @@ See existing cities like Tokyo, Shanghai, or Nice for tone and style examples. E
 - `app/s3_cache.py` - S3 caching operations
 
 
-## TODO: Dynamic Intro for Premium Scanning Endpoint
+## Club Intro Variants (DOJP-61)
 
-**Problem**: The `/scanning` endpoint currently streams a static pre-recorded MP3 file (`scanning.mp3`). This misses an opportunity for personalization and variety.
+The Club `/scanning` warm-up streams one of five pre-rendered intros, chosen per
+request by `app/intro_picker.py` from the listener's local day and hour. Nothing
+is synthesized at request time; every variant is a manifest entry
+(`audio_build/static_audio.json`) rendered through the DOJP-35 pipeline and
+uploaded per voice folder as `{voice}/scanning-<variant>.{opus,mp3}`.
 
-**Solution**: Generate dynamic intro audio that can include:
-- Time-of-day greetings ("Good morning!", "Good evening!")
-- Location-aware content ("Let's see what's flying over London today!")
-- Seasonal or weather references
-- Variety in phrasing to keep the experience fresh
+| Listener local time | Clip |
+|---|---|
+| Friday, any hour | `scanning-friday` (Animal Friday; only when `ANIMAL_FRIDAY_ENABLED` is set) |
+| Saturday / Sunday, any hour | `scanning-weekend` |
+| 05:00 to 11:00 | `scanning-morning` |
+| 17:00 to 23:00 | `scanning-evening` |
+| otherwise, timezone unknown, or geolocation fell back to NYC | `scanning` |
 
-**Implementation Ideas**:
-1. Generate intro text dynamically based on user context (time, location, etc.)
-2. Use TTS to generate the intro audio
-3. Cache generated intros with a key based on the dynamic factors (e.g., `scanning_{city}_{time_of_day}_{provider}.mp3`)
-4. Fall back to static MP3 if TTS fails
+Local time uses the IANA timezone ipapi.co reports (cached with the IP lookup),
+not a longitude guess. A variant missing from a voice folder falls back to
+`scanning`. The free tier never varies its intros. Adding a variant means: a
+manifest entry, a render + audition + upload via the `build-audio` skill, a new
+rule in the picker, and a row in `tests/test_intro_picker.py`.
 
-**Considerations**:
-- Balance between variety and caching efficiency
-- TTS latency - intro needs to start playing quickly
-- Could pre-generate common combinations during off-peak hours
-
-**Files to modify**: `app/scanning.py`, potentially new `app/intro_text.py` for text generation
 
 

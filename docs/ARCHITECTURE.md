@@ -73,7 +73,7 @@ graph TB
 | Group | Paths | Behaviour |
 |---|---|---|
 | Static audio | `/scanning-again`, `/overandout` (+ `.mp3` aliases) | Proxy a pre-recorded clip from the voice's S3 folder |
-| Scan trigger | `/scanning` | Streams the voice's scanning clip **and** kicks off pre-generation in the background |
+| Scan trigger | `/scanning` | Streams the voice's scanning clip (one of five pre-rendered intros picked from the listener's local day/hour, `intro_picker.py`) **and** kicks off pre-generation in the background |
 | Content | `/plane/1` … `/plane/5` | Serve cached audio, or generate it on the spot |
 | Free tier | `/free/scan`, `/free/scanning`, `/free/scanning-again`, `/free/overandout`, `/free/plane/1-3` | Replay audio generated for a paying user, rate-limited |
 | Site | `/`, `/robots.txt`, `/sitemap.xml`, `/assets/*` | Marketing page (`website_home.py`) |
@@ -106,7 +106,7 @@ sequenceDiagram
     A->>A: Resolve location (IP → lat/lng)
     A->>A: Debounce check (30s per session key)
     A-)BG: spawn(pre_generate_flight_audio)
-    A->>S3: GET scanning.mp3
+    A->>S3: GET scanning[-variant].mp3
     A-->>Y: stream scanning audio
 
     Note over BG: runs while the intro plays
@@ -481,7 +481,7 @@ persistence layer.
 | `free_pool/{session}_plane{n}_body_{provider}.{ext}` | Free tier body audio | none | `get_raw()` |
 | `free/intros/flight-intro-{1..6}.{ext}` | Generic free openings | static | `get_raw()` |
 | `special-events/{name}_{hash}_{provider}.{ext}` | Event audio (e.g. Santa), one per event + provider | none — content-hashed | `get_raw()` |
-| `{voice}/scanning.mp3`, `overandout.mp3`, … | Per-voice static clips | static | Public HTTPS GET |
+| `{voice}/scanning.mp3`, `scanning-{morning,evening,weekend,friday}.mp3`, `overandout.mp3`, … | Per-voice static clips | static | Public HTTPS GET |
 
 **The audio TTL must not exceed the flight-data TTL, and they are equal for that
 reason.** `/plane/N` checks the audio cache before it consults flight data, so

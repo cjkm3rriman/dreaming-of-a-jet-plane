@@ -66,7 +66,8 @@ def _track_static_event(request: Request, event_name: str, user_lat, user_lng, u
 
 
 async def proxy_s3_audio(request: Request, audio_url: str, mime_type: str,
-                         on_success=None, error_style: str = "dict"):
+                         on_success=None, error_style: str = "dict",
+                         fallback_url: Optional[str] = None):
     """Proxy an S3-hosted clip through to the client with range support.
 
     Args:
@@ -76,6 +77,10 @@ async def proxy_s3_audio(request: Request, audio_url: str, mime_type: str,
             behavior of returning a plain dict (a 200 with a JSON body);
             "json" returns JSONResponse with real error status codes, as the
             free-tier endpoints always have
+        fallback_url: a second clip to serve when S3 answers anything but
+            200/206 for `audio_url` (a variant missing from a voice folder,
+            DOJP-61). One hop only: the fallback is fetched without a
+            fallback of its own, so a missing default still errors normally
     """
     try:
         request_headers = {}
@@ -134,6 +139,13 @@ async def proxy_s3_audio(request: Request, audio_url: str, mime_type: str,
                     headers=response_headers
                 )
 
+            if fallback_url:
+                logger.warning(
+                    f"S3 returned {response.status_code} for {audio_url}; serving fallback {fallback_url}"
+                )
+                return await proxy_s3_audio(request, fallback_url, mime_type,
+                                            on_success=on_success, error_style=error_style)
+
             if error_style == "json":
                 return JSONResponse(
                     {"error": f"Audio file not accessible. Status: {response.status_code}"},
@@ -156,12 +168,14 @@ async def proxy_s3_audio(request: Request, audio_url: str, mime_type: str,
 
 
 async def stream_voice_clip(request: Request, filename: str, event_name: Optional[str],
-                            lat: float = None, lng: float = None, tts_override=_UNSET):
+                            lat: float = None, lng: float = None, tts_override=_UNSET,
+                            fallback_filename: Optional[str] = None):
     """Stream a per-voice static clip (scanning.mp3, overandout.mp3, ...).
 
     With an event_name, geolocates the listener and fires the clip's
     analytics event on success; with None (scanning's debounced replays),
-    it is a pure proxy.
+    it is a pure proxy. `fallback_filename` names a sibling clip in the same
+    voice folder to serve if `filename` is missing there (DOJP-61).
     """
     # Deferred to avoid the circular import with main (same pattern the
     # original clone modules used)
@@ -171,6 +185,7 @@ async def stream_voice_clip(request: Request, filename: str, event_name: Optiona
         tts_override = get_tts_provider_override(request)
 
     audio_url = get_voice_specific_s3_url(filename, tts_override)
+    fallback_url = get_voice_specific_s3_url(fallback_filename, tts_override) if fallback_filename else None
     mime_type = get_static_audio_mime_type(tts_override)
 
     on_success = None
@@ -181,7 +196,8 @@ async def stream_voice_clip(request: Request, filename: str, event_name: Optiona
         def on_success():
             _track_static_event(request, event_name, user_lat, user_lng, user_city, location_source)
 
-    return await proxy_s3_audio(request, audio_url, mime_type, on_success=on_success)
+    return await proxy_s3_audio(request, audio_url, mime_type, on_success=on_success,
+                                fallback_url=fallback_url)
 
 
 async def static_audio_options():
