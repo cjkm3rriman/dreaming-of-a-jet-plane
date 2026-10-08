@@ -5,6 +5,7 @@ description of a real aircraft overhead.
 
 - [The shape of the system](#the-shape-of-the-system)
 - [A full card session](#a-full-card-session)
+- [Assembling a premium session](#assembling-a-premium-session)
 - [Where the aircraft come from](#where-the-aircraft-come-from)
 - [From aircraft to audio](#from-aircraft-to-audio)
 - [Provider resolution and fallback](#provider-resolution-and-fallback)
@@ -104,10 +105,11 @@ sequenceDiagram
 
     Y->>A: GET /scanning
     A->>A: Resolve location (IP → lat/lng)
+    A->>A: Pick intro variant (listener's local day + hour)
     A->>A: Debounce check (30s per session key)
     A-)BG: spawn(pre_generate_flight_audio)
-    A->>S3: GET scanning[-variant].mp3
-    A-->>Y: stream scanning audio
+    A->>S3: GET {voice}/scanning[-variant]
+    A-->>Y: stream intro audio
 
     Note over BG: runs while the intro plays
     BG->>P: fetch aircraft near lat/lng
@@ -147,6 +149,163 @@ Eve is the first entry), the event takes over `/plane/1` and the real planes
 shift down one track, with the fifth dropping. Event audio is
 location-independent, generated once per event + provider into the durable
 `special-events/` prefix, and never enters the free pool.
+
+---
+
+## Assembling a premium session
+
+A Club session is three kinds of track, and only the middle one is generated
+at request time. The intro and the outro are pre-recorded clips; what makes
+the intro feel alive is that *which* clip plays is decided per request.
+
+| Track | Endpoint | Audio comes from | Decided by |
+|---|---|---|---|
+| Intro | `/scanning` | One of five pre-rendered clips in the voice's S3 folder | `intro_picker.py`: listener's local weekday and hour, from the IP lookup's timezone |
+| Planes 1-5 | `/plane/N` | Generated per location: split TTS, cached fun facts, optional legendary fanfare, stitched with pydub | Aircraft selection, the Special Signal Events calendar, rarity tier + per-household cooldown |
+| Rescan interstitial | `/scanning-again` | One pre-rendered clip | Nothing varies |
+| Outro | `/overandout` | One pre-rendered clip | Nothing varies |
+
+```mermaid
+flowchart TB
+    subgraph Intro["/scanning - intro, static but chosen per request"]
+        I1["Resolve location + cached timezone"] --> I2{"Geolocation fallback<br/>or timezone unknown?"}
+        I2 -->|yes| I3["scanning"]
+        I2 -->|no| I4{"Local weekday / hour"}
+        I4 -->|"Friday + ANIMAL_FRIDAY_ENABLED"| I5["scanning-friday"]
+        I4 -->|"Sat / Sun"| I6["scanning-weekend"]
+        I4 -->|"05:00-11:00"| I7["scanning-morning"]
+        I4 -->|"17:00-23:00"| I8["scanning-evening"]
+        I4 -->|otherwise| I3
+        I3 & I5 & I6 & I7 & I8 --> I9["Proxy {voice}/clip from S3<br/>404 on a variant falls back to scanning"]
+        I1 -.->|"spawn, runs under the intro"| PG["pre_generate_flight_audio<br/>fetch + select + 5x generate"]
+    end
+
+    subgraph Plane["/plane/N - dynamic"]
+        P0["Resolve location"] --> P1{"Event window<br/>and N == 1?"}
+        P1 -->|yes| P2["Serve event audio<br/>special-events/ prefix, once per event + voice"]
+        P1 -->|no| P3["Map track N to aircraft slot<br/>shifted down one during an event"]
+        P3 --> P4{"In-memory<br/>recent_plane_audio?"}
+        P4 -->|hit| P9
+        P4 -->|miss| P5{"S3 cache/<br/>plane audio, 3 min?"}
+        P5 -->|hit| P9
+        P5 -->|miss| P6["produce, single-flight per cache key"]
+        P6 --> P6a["get_nearby_aircraft<br/>provider chain + select_diverse_aircraft"]
+        P6a --> P6b["effective_rarity<br/>tier from aircraft.json, legendary rate-limited<br/>per household via rarity/ marker"]
+        P6b --> P6c["generate_flight_text_for_aircraft<br/>opening · scanner · route · fun fact<br/>rarity line replaces the lead-in"]
+        P6c --> P6d["generate_plane_audio<br/>TTS opening + body fresh · fun fact from tts-cache/"]
+        P6d --> P6e{"legendary?"}
+        P6e -->|yes| P6f["stitch opening · fanfare · body · fact"]
+        P6e -->|no| P6g["stitch opening · body · fact"]
+        P6f & P6g --> P7["memo + S3 PUT, 3 min<br/>body+fact also to the free pool"]
+        P7 --> P9["Range-aware response<br/>206 / 200 / 416"]
+    end
+
+    subgraph Outro["/scanning-again · /overandout - static"]
+        O1["Proxy {voice}/clip from S3"] --> O2["fire analytics event"]
+    end
+
+    Intro --> Plane --> Outro
+```
+
+### Intro: five clips, one picker
+
+`stream_scanning` already geolocates the listener before it streams anything
+(that lookup is what seeds pre-generation), so choosing the clip costs
+nothing extra. `pick_scanning_variant` is a pure function of the current UTC
+time, the listener's IANA timezone, and whether geolocation fell back:
+
+| Listener local time | Clip |
+|---|---|
+| Friday, any hour | `scanning-friday` (Animal Friday, DOJP-52) - only while `ANIMAL_FRIDAY_ENABLED` is set, because the clip promises a bird on plane 3 |
+| Saturday / Sunday, any hour | `scanning-weekend` |
+| 05:00 to 11:00 | `scanning-morning` |
+| 17:00 to 23:00 | `scanning-evening` |
+| otherwise | `scanning` |
+| timezone unknown, or geolocation fell back to NYC | `scanning` - we know nothing about this listener, so no daypart and no bird |
+
+The timezone is the IANA name ipapi.co returns, cached alongside the
+coordinates in `_ip_cache` and read back by `get_timezone_for_request`. It is
+not derived from longitude: daylight saving moves the 11:00 and 17:00 edges by
+an hour for half the year, and 15:00 UTC is a morning scan in New York in
+December but not in July. Explicit `lat`/`lng` overrides carry no timezone
+and get the plain clip.
+
+Three properties keep the picker safe to extend. It is deterministic, so the
+30-second debounced replay streams the same clip and siblings scanning
+together hear the same intro. Every value it can return is pinned to a
+manifest entry by `tests/test_intro_picker.py`, so a variant can never be
+named without a clip behind it. And `proxy_s3_audio` takes a one-hop
+`fallback_url`: a variant missing from a voice folder serves `scanning`
+rather than a dead warm-up, while a missing default still errors normally.
+The free tier never varies its intros; `/free/scanning` streams from its own
+`free/` prefix.
+
+### Planes: event, slot, caches, then generate
+
+`handle_plane_endpoint` decides in this order, and the order is the design:
+
+1. **Special Signal Event** (`special_events.py`): inside an event window the
+   event owns track 1, served from the durable `special-events/` prefix and
+   memoised in `recent_plane_audio`. Real aircraft shift down a slot; the
+   fifth drops. If event TTS fails, track 1 degrades to a normal plane.
+2. **Two cache layers** before any generation: `recent_plane_audio` in
+   process memory (so the several range requests one play issues cost one
+   fetch), then `cache/` in S3 (3-minute TTL, equal to the flight-data TTL).
+3. **Single-flight generation** on a miss: concurrent misses for one key share
+   one `produce()`. It fetches aircraft through the provider chain, resolves
+   the plane's **rarity**, writes the text, runs TTS, stitches, then writes
+   the memo, the S3 cache, and the free-pool body - in that order, so the
+   range requests that follow are answered before the S3 write has landed.
+
+**Rarity** (DOJP-32) is the one step that changes both text and audio.
+`aircraft.json` tiers 13 types legendary (the A380, every 747 variant
+including the Dreamlifter, the Antonov An-124 and An-225, and both Airbus
+Belugas) and 14 rare (A340s, 757s, MD-80s, Fokkers, the Global 7500);
+everything else is common. A rare plane swaps its
+scanner lead-in for a "rare one on my radar" line. A legendary gets a
+LEGENDARY intro, the type's blurb, and a closer, and on the paid path the
+fanfare from `assets/sfx/fanfare-legendary.mp3` is stitched between the
+opening and the body. The legendary *treatment* is rate-limited per
+household: `effective_rarity` checks a marker at `rarity/legendary_{scope}`
+(scope is the hashed client IP, falling back to the location cell) and
+downgrades further legendaries inside the 3-day window to the rare treatment,
+so a child under the Heathrow approach does not hear LEGENDARY every morning.
+The selection step cooperates: a rare or legendary candidate that passed the
+quality gates replaces the farthest common pick, because a legendary in the
+sky that goes un-narrated is a wasted lottery win. The body text carries the
+rarity line, so free-tier replays keep the words but never the fanfare.
+
+### Outro and interstitials
+
+`/scanning-again` (rescan) and `/overandout` (session end) are the simplest
+tracks in the app: `stream_voice_clip` proxies `{voice}/scanning-again` or
+`{voice}/overandout` and fires the matching analytics event on success.
+Nothing about them varies today; a daypart-aware sign-off would reuse the
+intro picker's inputs.
+
+### Where the static clips come from (DOJP-35)
+
+Every pre-recorded clip - the five intros, the interstitial, the outro, and
+the free tier's intros and six `flight-intro-N` openings - is built from
+`audio_build/static_audio.json` by `scripts/build_static_audio.py`. The
+manifest is the source of truth for script, sound effects, gains and gaps;
+the S3 audio is a build artifact. The loop is edit the manifest, render,
+audition, then upload **the exact take that was auditioned** with
+`--upload-only`, because TTS reads differ on every render. In a Claude Code
+session the `build-audio` skill walks the same steps with the approval gates
+built in.
+
+Two rules keep statics and dynamic tracks interchangeable to the player. They
+master to the same `TARGET_DBFS` (-20) and export stereo through the same
+`export_audio_segment` as plane audio, so there is no loudness or channel
+jump between the intro and plane 1. And the narrator's name is bound to the
+voice folder (Hugo is Inworld `ronald`, Hamish is ElevenLabs `edward`;
+scripts say `{narrator}`), so a render can never say the wrong name. The
+scanner robot is one fixed ElevenLabs voice regardless of narrator, and its
+lines spell the brand `Yo-toe` so it is pronounced correctly. Static renders
+pin their own TTS models in code (`inworld-tts-2`, `eleven_v4`) independent
+of the Railway variables that steer dynamic audio; the renderer prints both
+at every run so drift is visible.
 
 ---
 
@@ -213,7 +372,9 @@ not proximity.
 
 ```mermaid
 flowchart TD
-    In["Candidate aircraft, sorted by distance"] --> Enrich["Attach destination distance from user"]
+    In["Candidate aircraft, sorted by distance"] --> Type{"Narratable type?<br/>helicopters, ZZZZ and<br/>missing codes skipped"}
+    Type -->|no| Skip["Dropped"]
+    Type -->|yes| Enrich["Attach destination distance from user"]
     Enrich --> Cat{"Categorise by operator"}
     Cat -->|cargo| Drop["Skipped entirely<br/>(temporary, see TODO in code)"]
     Cat -->|private| CP["cargo_private pool"]
@@ -232,12 +393,13 @@ flowchart TD
     SortP --> Insert{"Any private flights?"}
     CP --> Insert
     Insert -->|4+ passenger picks| Slot4["Insert private at position 4"]
-    Insert -->|exactly 1| Append["Append up to 4 private"]
+    Insert -->|"1-3 passenger picks"| Append["Fill the remaining slots with private"]
     Insert -->|none| Only["Use up to 5 private"]
     Insert -->|no private| Done
     Slot4 --> Done["Final list, max 5"]
     Append --> Done
     Only --> Done
+    Done --> Rar["Rarity promotion: a rare or legendary<br/>passenger that passed the gates<br/>replaces the farthest common pick"]
 ```
 
 Nearby destinations are pushed down the list deliberately: a flight from the next
@@ -247,6 +409,13 @@ no destination data at all sort last: they become "flying all the way to
 somewhere exciting" in the text and skip route validation entirely, so they are
 both the weakest content and the least-trusted data — used only when better
 flights run out.
+
+Two later rules bracket the diagram. Before categorisation, aircraft whose
+type cannot be narrated are dropped (DOJP-58): helicopters, ICAO's `ZZZZ`
+no-designator code, and a missing code, because the scanner line needs a
+name and a seat count. After the five are chosen, rarity promotion (DOJP-32)
+guarantees a rare or legendary passenger candidate makes the cut, replacing
+the farthest common pick - see [Planes](#planes-event-slot-caches-then-generate).
 
 ---
 
@@ -290,7 +459,7 @@ output for a Delta 757 from New York to Lisbon, 14.5 km from the listener:
 | # | Segment | Example | What varies | TTS |
 |---|---|---|---|---|
 | 1 | **Opening** | *"What Luck! We've detected a jet plane up in the sky, 9 miles from this Yoto!"* | 10 exclamations × 5 templates keyed to plane index; distance and units are computed | Always fresh — contains the listener's distance |
-| 2 | **Scanner** | *"Captain Martinez is piloting this humongous Boeing seven five seven carrying 200 passengers."* | 57 captain surnames × 6 adjectives; then **one** stat chosen from passengers / speed / altitude | Always fresh |
+| 2 | **Scanner** | *"Captain Martinez is piloting this humongous Boeing seven five seven carrying 200 passengers."* | 57 captain surnames × 6 adjectives; then **one** stat chosen from passengers / speed / altitude. A rare or legendary type swaps the lead-in for its rarity line (DOJP-32) | Always fresh |
 | 3 | **Flight details** | *"This flight D L four nine nine nine belongs to Delta Air Lines and is cloud hopping from New York City in New York all the way to Lisbon in Portugal landing in about 2 hours — that's like watching eight of your favorite tv episodes in a row."* | 6 movement verbs × 13 ETA buckets, each with 2 kid-scale comparisons | Always fresh |
 | 4 | **Fun fact** | *"Did you know?"* + *"Lisbon has tiles called azulejos that cover entire buildings…"* | Opener picked at random from 4; the fact itself **rotates on the clock** through the city's list (median 5, range 1–14) rather than being drawn at random | **Cached** by content hash — opener and fact body separately |
 
@@ -306,7 +475,7 @@ output for a Delta 757 from New York to Lisbon, 14.5 km from the listener:
 | Movement verbs | 6 | "sky skimming", "cloud hopping", … |
 | ETA comparisons | 26 | 13 duration buckets × 2 phrasings |
 | Fun fact openers | 4 | |
-| Fun facts | 392 of 397 cities | median 5 per city; selected by rotation, not at random |
+| Fun facts | 403 of 408 cities | median 5 per city, up to 19 for the most-visited destinations; selected by rotation, not at random |
 
 Multiplied out, one flight to one city yields roughly **7.4 million** distinct
 scripts. The point isn't the number — it's that a child scanning the same busy
@@ -338,8 +507,9 @@ its inputs — which is what makes a complaint about a specific fact debuggable.
 counter `86400/bucket + 1` steps, and that number must share no factor with a
 city's fact count or the city lands on the same fact at the same time *every day*.
 At five minutes it is 289 = 17², which is safe for every fact count in
-`cities.json`. At ten minutes it would be 145 = 5 × 29 — and 372 of the 397 cities
-have exactly five facts, so essentially the whole database would repeat daily.
+`cities.json` (the largest count is 19). At ten minutes it would be 145 = 5 × 29 — and
+374 of the 408 cities have exactly five facts, so essentially the whole database
+would repeat daily.
 The cycle length (`len × bucket`) matters too: a six-minute bucket gives five-fact
 cities a 30-minute cycle, which collides with every round half-hour rescan gap.
 `tests/test_fun_fact_rotation.py` guards both properties.
@@ -481,6 +651,7 @@ persistence layer.
 | `free_pool/{session}_plane{n}_body_{provider}.{ext}` | Free tier body audio | none | `get_raw()` |
 | `free/intros/flight-intro-{1..6}.{ext}` | Generic free openings | static | `get_raw()` |
 | `special-events/{name}_{hash}_{provider}.{ext}` | Event audio (e.g. Santa), one per event + provider | none — content-hashed | `get_raw()` |
+| `rarity/legendary_{scope}` | Marker: this household was awarded a legendary | 3 days, judged by `Last-Modified` | `exists_and_fresh()` |
 | `{voice}/scanning.mp3`, `scanning-{morning,evening,weekend,friday}.mp3`, `overandout.mp3`, … | Per-voice static clips | static | Public HTTPS GET |
 
 **The audio TTL must not exceed the flight-data TTL, and they are equal for that
@@ -545,7 +716,7 @@ fun-fact segment is upmixed on its way out, so nothing was regenerated.
 
 | Where | What | Lifetime |
 |---|---|---|
-| `location_utils._ip_cache` | IP → lat/lng/city | 24h (5 min for rate-limit fallbacks) |
+| `location_utils._ip_cache` | IP → lat/lng/city/region + IANA timezone | 24h (5 min for rate-limit fallbacks) |
 | `scanning._scanning_request_cache` | Session key → last scan time | 30s debounce window |
 | `free_pool._free_pool_index_cache` | Parsed index | 60s |
 | `free_pool._rate_limit_cache` | IP → request timestamps | 60s window |
@@ -591,6 +762,9 @@ graph LR
     scanning --> free
     scanning --> ff
     scanning --> text
+    scanning --> picker["intro_picker.py"]
+    main --> rarity["rarity.py"]
+    rarity --> s3
     free --> s3
     free --> tp
     text --> db
@@ -607,10 +781,12 @@ legibility; the table below is complete.
 | Module | Responsibility |
 |---|---|
 | `main.py` | Routes, TTS dispatch, aircraft fetch + selection, analytics helpers, free tier handlers |
-| `scanning.py` | `/scanning` endpoint, debounce, background pre-generation of all 5 planes |
+| `scanning.py` | `/scanning` endpoint, intro variant choice, debounce, background pre-generation of all 5 planes |
+| `intro_picker.py` | Pure function from UTC time + listener timezone + fallback flag to one of the five pre-rendered intro clips (DOJP-61) |
+| `rarity.py` | Rarity served for a plane: tier from `aircraft.json`, legendary treatment rate-limited per household via an S3 marker (DOJP-32) |
 | `plane_audio.py` | The one shared split-TTS / stitch / cache generator both generation paths call |
 | `audio_response.py` | Range-aware responses for dynamic audio, the in-memory recent-audio caches, single-flight generation (DOJP-56) |
-| `static_audio.py` | The one shared S3→client proxy for every pre-recorded clip (`intro.py`, `overandout.py`, `scanning_again.py` are thin wrappers over it) |
+| `static_audio.py` | The one shared S3→client proxy for every pre-recorded clip, with a one-hop fallback URL (`overandout.py`, `scanning_again.py` are thin wrappers over it) |
 | `background.py` | `spawn()` — tracked fire-and-forget tasks with exception logging |
 | `flight_text.py` | All user-facing text; unit localisation; TTS-friendly number spelling |
 | `special_events.py` | Special Signal Events calendar (DOJP-33): date-windowed events that take over track 1 and shift real planes down a slot; event audio cached once per event+provider under `special-events/` |
@@ -678,10 +854,10 @@ UAs are deliberately not treated as players.
 
 | Event | Fired when | Notable properties |
 |---|---|---|
-| `scan:start` | `/scanning` or a `/free/*` entry point | `subscription` |
+| `scan:start` | `/scanning` or a `/free/*` entry point | `subscription`; Club adds `intro_variant` |
 | `scan:complete` | Aircraft fetch resolves | `nearby_aircraft`, `aircraft_provider`, `from_cache`; on live Airlabs fetches also `rejected_stale`, `rejected_route`, `rejected_implausible`, `accepted_no_route`, `oldest_signal_age_s`, `stale_threshold_s` |
 | `plane:request` | Any `/plane/N` or `/free/plane/N` | `plane_index`, `from_cache`, `free_pool_entry_id`, `free_pool_size` (free: pool-health gauge), `event_name` (event tracks) |
-| `generate:audio` | TTS produces a plane's audio | `generation_time_ms`, `tts_provider`, `fun_fact_source`, `fun_fact_cache_hit`, origin/destination |
+| `generate:audio` | TTS produces a plane's audio | `generation_time_ms`, `tts_provider`, `fun_fact_source`, `fun_fact_cache_hit`, `rarity_served`, origin/destination |
 | `error:location` | IP geolocation fails or falls back | `failure_type`, `fallback_location` |
 | `scanning-again`, `overandout` | Static clip streamed | Location, device |
 
@@ -721,8 +897,11 @@ Things that are true today and would surprise a reader of the code.
 
 ---
 
-*Written against the code on `main`, last revised 2026-09-25 after the Sep 26
-review project (DOJP-42..47), the fallback-TTS removal (DOJP-43), the Special
-Signal Events calendar (DOJP-33), the client-IP identity fix (DOJP-44), and
-the new-player fix — stereo dynamic tracks with real Range support (DOJP-56).
-Diagrams are Mermaid and render natively on GitHub.*
+*Written against the code on `main`, last revised 2026-10-08 after the static
+audio build pipeline (DOJP-35), aircraft rarity tiers with the legendary
+fanfare (DOJP-32), the narratable-type skip (DOJP-58), the Club intro picker
+(DOJP-61), and the cities expansion to 408 entries. Earlier revision
+2026-09-25 covered the Sep 26 review project (DOJP-42..47), the fallback-TTS
+removal (DOJP-43), the Special Signal Events calendar (DOJP-33), the client-IP
+identity fix (DOJP-44), and stereo dynamic tracks with real Range support
+(DOJP-56). Diagrams are Mermaid and render natively on GitHub.*
