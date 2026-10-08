@@ -553,12 +553,14 @@ def track_plane_request(
         logger.error(f"Failed to track plane:request event: {e}", exc_info=True)
 
 
-def track_scan_start(request: Request, subscription: str = "yoto-club"):
+def track_scan_start(request: Request, subscription: str = "yoto-club", intro_variant: Optional[str] = None):
     """Track scan:start analytics event when user initiates a scan
 
     Args:
         request: FastAPI request object
         subscription: "yoto-club" for paid, "free" for free tier
+        intro_variant: which pre-rendered intro the Club /scanning picker chose
+            (DOJP-61); None for the free tier, whose intros do not vary
     """
     try:
         base, session_id, distinct_id = _analytics_context(request, include_coords=False)
@@ -567,6 +569,7 @@ def track_scan_start(request: Request, subscription: str = "yoto-club"):
             **base,
             "$insert_id": f"scan_start_{subscription}_{session_id}_{_analytics_dedupe_bucket()}",
             "subscription": subscription,
+            **({"intro_variant": intro_variant} if intro_variant else {}),
         }, distinct_id=distinct_id)
     except Exception as e:
         logger.error(f"Failed to track scan:start event: {e}", exc_info=True)

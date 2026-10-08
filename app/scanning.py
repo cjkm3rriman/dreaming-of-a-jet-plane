@@ -6,6 +6,7 @@ import asyncio
 import logging
 import hashlib
 import time
+from datetime import datetime, timezone
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 import httpx
@@ -14,7 +15,8 @@ from .audio_response import recent_plane_audio
 from .flight_text import generate_flight_text
 from .rarity import effective_rarity, cooldown_scope
 from .special_events import get_active_event, aircraft_slot_for_plane, ensure_event_audio
-from .location_utils import get_user_location, extract_client_ip, extract_user_agent
+from .location_utils import get_user_location, extract_client_ip, extract_user_agent, get_timezone_for_request
+from .intro_picker import SCANNING_DEFAULT, pick_scanning_variant, variant_filename
 from .background import spawn
 
 logger = logging.getLogger(__name__)
@@ -259,18 +261,30 @@ async def _generate_and_cache_plane_audio(
         return False
 
 
-async def _stream_scanning_mp3_only(request: Request, tts_override: str = None):
-    """Stream scanning audio with no analytics or pre-generation - the
-    debounced-duplicate path. Pure proxy via the shared streamer (DOJP-46)."""
+async def _stream_scanning_mp3_only(request: Request, tts_override: str = None,
+                                    variant: str = SCANNING_DEFAULT):
+    """Stream the chosen intro clip with no analytics or pre-generation - the
+    debounced-duplicate path. Pure proxy via the shared streamer (DOJP-46).
+
+    A variant missing from the voice folder falls back to the plain
+    `scanning` clip so the warm-up never 404s (DOJP-61)."""
     from .static_audio import stream_voice_clip
-    return await stream_voice_clip(request, "scanning.mp3", None, tts_override=tts_override)
+    fallback = variant_filename(SCANNING_DEFAULT) if variant != SCANNING_DEFAULT else None
+    return await stream_voice_clip(request, variant_filename(variant), None,
+                                   tts_override=tts_override, fallback_filename=fallback)
 
 
 async def stream_scanning(request: Request, lat: float = None, lng: float = None):
     """Stream scanning MP3 file from S3 and trigger audio pre-generation"""
 
     # Get user location using shared function
-    user_lat, user_lng, user_country_code, user_city, _, _, _ = await get_user_location(request, lat, lng)
+    user_lat, user_lng, user_country_code, user_city, _, _, is_fallback = await get_user_location(request, lat, lng)
+
+    # Which pre-rendered intro to stream (DOJP-61): deterministic from the
+    # listener's local day/hour, so the debounced replay below picks the same
+    tz_name = get_timezone_for_request(request, lat, lng)
+    variant = pick_scanning_variant(datetime.now(timezone.utc), tz_name, is_fallback)
+    logger.info(f"Scanning intro variant: {variant} (tz={tz_name}, fallback_location={is_fallback})")
 
     # Get TTS provider override from query parameters
     from .main import get_tts_provider_override
@@ -289,7 +303,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
         last_request_time = _scanning_request_cache[session_key]
         if current_time - last_request_time < SCANNING_DEBOUNCE_SECONDS:
             # Still stream the MP3, but skip analytics and background processing
-            return await _stream_scanning_mp3_only(request, tts_override)
+            return await _stream_scanning_mp3_only(request, tts_override, variant)
     
     # Update cache with current request time, and opportunistically drop
     # entries older than the debounce window - they can never match the check
@@ -301,7 +315,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
 
     # Track scan:start event using unified tracking function
     from .main import track_scan_start
-    track_scan_start(request, subscription="yoto-club")
+    track_scan_start(request, subscription="yoto-club", intro_variant=variant)
     
     # Start audio pre-generation in background (don't await)
     if user_lat != 0.0 or user_lng != 0.0:  # Only if we have a valid location
@@ -311,7 +325,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     
     # Continue with normal scanning audio streaming - same proxy as the
     # debounced path (this tail used to duplicate it verbatim, DOJP-46)
-    return await _stream_scanning_mp3_only(request, tts_override)
+    return await _stream_scanning_mp3_only(request, tts_override, variant)
 
 
 async def scanning_options():

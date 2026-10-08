@@ -9,13 +9,14 @@ from fastapi import Request
 import httpx
 from ua_parser import user_agent_parser
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 import hashlib
 import math
 
 logger = logging.getLogger(__name__)
 
-# IP location cache: {ip: (lat, lng, country_code, city, region, country_name, is_fallback, timestamp)}
+# IP location cache: {ip: (lat, lng, country_code, city, region, country_name, is_fallback, timezone, timestamp)}
+# timezone is the IANA name ipapi.co reports (e.g. "Europe/London"), or None on a fallback
 _ip_cache: Dict[str, Tuple[float, float, str, str, str, str, bool, float]] = {}
 IP_CACHE_DURATION = 24 * 60 * 60  # 24 hours in seconds
 
@@ -73,7 +74,7 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
         # The cache is in-process and written only below, always as 8-tuples;
         # the legacy 7/5/4-tuple branches that used to live here were
         # unreachable (DOJP-45)
-        lat, lng, country_code, city, region, country_name, is_fallback, timestamp = cached_data
+        lat, lng, country_code, city, region, country_name, is_fallback, _timezone, timestamp = cached_data
         if current_time - timestamp < IP_CACHE_DURATION:
             logger.debug(f"IP cache hit for {ip}")
             return lat, lng, country_code, city, region, country_name, is_fallback
@@ -112,7 +113,7 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
-                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, current_time)
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, None, current_time)
 
                     return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True
 
@@ -122,6 +123,7 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                 city = data.get("city", "")
                 region = data.get("region", "")
                 country_name = data.get("country_name", "")
+                timezone = data.get("timezone") or None  # IANA name, e.g. "America/New_York"
 
                 # NYC fallback for missing, null, or 0/0 coordinates. `null`
                 # in the JSON bypasses a `data.get(..., 0.0)` default, so an
@@ -137,12 +139,12 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
                     # Cache the fallback location (skip for localhost)
                     if not is_localhost:
-                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, current_time)
+                        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, None, current_time)
                     return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True
 
                 # Cache the result (skip for localhost)
                 if not is_localhost:
-                    _ip_cache[ip] = (lat, lng, country_code, city, region, country_name, False, current_time)
+                    _ip_cache[ip] = (lat, lng, country_code, city, region, country_name, False, timezone, current_time)
                     logger.info(f"Cached new location for IP {ip}: {country_code}, {city}, {region}")
                 else:
                     logger.debug(f"Skipping cache for localhost IP {ip}")
@@ -153,7 +155,7 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
                 # Cache the fallback location too (but for shorter duration, skip for localhost)
                 fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name = 40.7128, -74.0060, "US", "New York", "New York", "United States"
                 if not is_localhost:
-                    _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
+                    _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, None, current_time - IP_CACHE_DURATION + 300)  # Cache for 5 minutes only
 
                 # Track rate limit event
                 if request:
@@ -185,9 +187,37 @@ async def get_location_from_ip(ip: str, request: Request = None) -> tuple[float,
 
     # Cache the fallback location (skip for localhost)
     if not is_localhost:
-        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, time.time())
+        _ip_cache[ip] = (fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True, None, time.time())
 
     return fallback_lat, fallback_lng, fallback_country, fallback_city, fallback_region, fallback_country_name, True
+
+
+def get_timezone_for_ip(ip: str) -> Optional[str]:
+    """IANA timezone cached by the last IP lookup for `ip`, or None.
+
+    Reads the same `_ip_cache` that get_location_from_ip fills, so call it
+    after get_user_location has run for the request. Returns None for an IP
+    we never looked up, for localhost (never cached), and for geolocation
+    fallbacks (the timezone of a made-up location is meaningless). A stale
+    entry is still returned: an IP's timezone does not go stale the way its
+    coordinates might, and the picker only needs the local hour.
+    """
+    cached = _ip_cache.get(ip)
+    if not cached:
+        return None
+    return cached[7]
+
+
+def get_timezone_for_request(request: Request, lat: float = None, lng: float = None) -> Optional[str]:
+    """The listener's IANA timezone for a request, or None when unknown.
+
+    Explicit lat/lng params (a testing affordance) skip the IP lookup, so
+    there is no timezone to report for them; callers treat None as "serve
+    the location-independent default".
+    """
+    if lat is not None and lng is not None:
+        return None
+    return get_timezone_for_ip(extract_client_ip(request))
 
 
 def uses_metric_system(country_code: str) -> bool:
