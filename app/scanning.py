@@ -100,7 +100,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # track 1 (pre-warmed once into its shared per-provider key) and the
         # real planes shift down a slot
         event = get_active_event()
-        # Animal Friday (DOJP-52): the bird owns track 5, pre-warmed once
+        # Animal Friday (DOJP-52): the bird owns track 4, pre-warmed once
         # into its shared per-text key
         bird = animal_friday_bird(datetime.now(timezone.utc), tz_name, is_fallback, country_code, region)
 
@@ -299,7 +299,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     # listener's local day/hour, so the debounced replay below picks the same
     tz_name = get_timezone_for_request(request, lat, lng)
     now_utc = datetime.now(timezone.utc)
-    # The Friday intro promises a bird on track 5, so it plays only when
+    # The Friday intro promises a bird on track 4, so it plays only when
     # Animal Friday will actually deliver one for this listener (DOJP-52)
     friday_ok = animal_friday_bird(now_utc, tz_name, is_fallback, user_country_code, user_region) is not None
     variant = pick_scanning_variant(now_utc, tz_name, is_fallback, friday_enabled=friday_ok)

@@ -1,10 +1,12 @@
-"""Animal Friday (DOJP-52): on Fridays the fifth track is a local bird, not a plane.
+"""Animal Friday (DOJP-52): on Fridays the fourth track is a local bird, not a plane.
 
 The scanner "picks up a bonus flyer" - a species the listener is genuinely
-likely to see in their region this month - as track 5, bumping the fifth
-aircraft. It mirrors the Special Signal Events mechanism (which takes track
-1 and shifts planes down), so the two compose: on a Friday inside an event
-window the child hears the event, three planes, and the bird.
+likely to see in their region this month - as track 4, between the third
+and fourth planes, so the session ends on a plane and the fifth aircraft is
+the one that drops. It mirrors the Special Signal Events mechanism (which
+takes track 1 and shifts planes down), so the two compose: on a Friday
+inside an event window the child hears the event, two planes, the bird,
+and one more plane.
 
 Data:
   app/birds.json       - built by scripts/build_birds.py from GBIF (the eBird
@@ -48,6 +50,7 @@ logger = logging.getLogger(__name__)
 BIRDS_PATH = Path(__file__).parent / "birds.json"
 LINES_PATH = Path(__file__).parent / "bird_lines.json"
 EVENT_NAME = "animal-friday"
+BIRD_TRACK = 4  # the track the bird owns; the planes after it shift down one
 _FRIDAY = 4
 
 _birds: Optional[Dict[str, Any]] = None
@@ -161,7 +164,7 @@ def pick_bird(country_code: Optional[str], region: Optional[str], on_date) -> Op
 def animal_friday_bird(now_utc: datetime, tz_name: Optional[str], is_fallback: bool,
                        country_code: Optional[str], region: Optional[str],
                        enabled: Optional[bool] = None) -> Optional[Dict[str, Any]]:
-    """The bird to serve as track 5 right now, or None for an ordinary scan.
+    """The bird to serve as the bird track right now, or None for an ordinary scan.
 
     None whenever any gate fails: the flag is off, geolocation fell back, the
     timezone is unknown, it is not Friday where the listener is, or the
@@ -179,13 +182,14 @@ def animal_friday_bird(now_utc: datetime, tz_name: Optional[str], is_fallback: b
 
 
 def bird_track_text(bird: Dict[str, Any]) -> str:
-    """The whole track 5 narration, house style. Plain name only - the
-    scientific name is for the data file, not for a five-year-old."""
+    """The whole bird-track narration, house style. Plain name only - the
+    scientific name is for the data file, not for a five-year-old. No "old
+    chum": the intro and outro already lean on it."""
     return (
         "But wait... hold everything! My scanner has just picked up a bonus flyer, "
         "much lower and much smaller than any jet plane. "
         f"Good heavens, it is a {bird['name']}! {bird['line']} "
-        "No jet engines on this one, old chum, just a pair of very flappy wings. "
+        "No jet engines on this one, co-pilot, just a pair of very flappy wings. "
         "Happy Animal Friday!"
     )
 

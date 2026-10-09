@@ -150,14 +150,16 @@ def test_flag_is_read_from_environment(birds, monkeypatch):
 # --- track 5 slot ---------------------------------------------------------------
 
 @pytest.mark.unit
-def test_bird_owns_track_five_and_bumps_the_fifth_plane():
-    assert [aircraft_slot_for_plane(n, False, True) for n in range(1, 6)] == [0, 1, 2, 3, None]
+def test_bird_owns_track_four_and_the_fifth_plane_drops():
+    """Three planes, the bird, then one more plane - the session still ends
+    on a jet, and it is the fifth aircraft that misses out"""
+    assert [aircraft_slot_for_plane(n, False, True) for n in range(1, 6)] == [0, 1, 2, None, 3]
 
 
 @pytest.mark.unit
 def test_bird_and_event_compose():
-    """Event on track 1, bird on track 5, three planes between them"""
-    assert [aircraft_slot_for_plane(n, True, True) for n in range(1, 6)] == [None, 0, 1, 2, None]
+    """Event on track 1, bird on track 4, planes on 2, 3 and 5"""
+    assert [aircraft_slot_for_plane(n, True, True) for n in range(1, 6)] == [None, 0, 1, None, 2]
     # and nothing changes for the existing cases
     assert [aircraft_slot_for_plane(n, False, False) for n in range(1, 6)] == [0, 1, 2, 3, 4]
     assert [aircraft_slot_for_plane(n, True, False) for n in range(1, 6)] == [None, 0, 1, 2, 3]
@@ -174,6 +176,8 @@ def test_track_text_is_house_style(birds):
     assert "European Robins have an orange chest!" in text
     assert text.endswith("Happy Animal Friday!")
     assert "Erithacus" not in text  # no Latin for a five-year-old
+    assert "old chum" not in text   # the intro and outro already use it
+    assert "co-pilot" in text
 
 
 @pytest.mark.unit
@@ -242,7 +246,7 @@ async def test_failed_bird_generation_caches_nothing(birds, monkeypatch):
 
 # --- the endpoint and the intro gate ----------------------------------------------
 
-def _request(ip="203.0.113.70", path="/plane/5"):
+def _request(ip="203.0.113.70", path="/plane/4"):
     return Request({"type": "http", "method": "GET", "path": path,
                     "query_string": b"", "headers": [], "client": (ip, 1)})
 
@@ -254,7 +258,7 @@ class _Frozen(datetime):
 
 
 @pytest.mark.unit
-async def test_plane_five_serves_the_bird_on_friday(birds, monkeypatch):
+async def test_plane_four_serves_the_bird_on_friday(birds, monkeypatch):
     from app import main
 
     async def fake_location(request, lat=None, lng=None, country=None):
@@ -278,7 +282,7 @@ async def test_plane_five_serves_the_bird_on_friday(birds, monkeypatch):
     tracked = {}
     monkeypatch.setattr(main, "track_plane_request", lambda *a, **kw: tracked.update(kw))
 
-    response = await main.handle_plane_endpoint(_request(), 5)
+    response = await main.handle_plane_endpoint(_request(), 4)
     assert response.status_code == 200
     assert served["bird"] == "European Robin"
     assert tracked["event_name"] == "animal-friday"

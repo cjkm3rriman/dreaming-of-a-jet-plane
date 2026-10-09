@@ -389,11 +389,12 @@ rule in the picker, and a row in `tests/test_intro_picker.py`.
 
 ## Animal Friday (DOJP-52)
 
-On Fridays (in the listener's local day) the fifth track is a local bird, not
+On Fridays (in the listener's local day) the fourth track is a local bird, not
 a plane: `app/animal_friday.py` picks a species the listener is genuinely
-likely to see in their region this month, the bird owns `/plane/5`, and the
-fifth aircraft is bumped (same mechanism as Special Signal Events on track 1;
-the two compose). Gated by `ANIMAL_FRIDAY_ENABLED` and by coverage; the intro
+likely to see in their region this month, the bird owns `/plane/4`, the fourth
+aircraft moves to `/plane/5`, and the fifth aircraft is bumped (same mechanism
+as Special Signal Events on track 1; the two compose). The session still ends
+on a jet. Gated by `ANIMAL_FRIDAY_ENABLED` and by coverage; the intro
 picker's Friday gate is the same check, so the Friday intro never promises a
 bird that will not arrive. Free tier never gets it.
 
