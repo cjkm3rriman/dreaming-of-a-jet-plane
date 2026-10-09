@@ -957,6 +957,11 @@ async def get_nearby_aircraft(
         provider_errors.append(provider_error or f"{display_name} returned no aircraft")
 
     final_error = "; ".join(error for error in provider_errors if error) or "No aircraft providers available"
+    # This is the outcome worth paging on: every provider in the chain failed
+    # or came back empty, so the child hears no planes. A single provider
+    # failing with a fallback left to try is logged as a warning by the
+    # provider itself.
+    logger.error(f"All aircraft providers failed for lat={lat:.2f}, lng={lng:.2f}: {final_error}")
 
     if request:
         fallback_provider = provider_sequence[-1] if provider_sequence else "unknown"
