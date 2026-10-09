@@ -369,9 +369,10 @@ def test_special_event_takes_track_one_and_shifts_planes(env, monkeypatch):
     assert plane_response.status_code == 200
     _assert_narration(_decode(plane_response.content), "/plane/2 (shifted)")
 
-    # free pool: only shifted real planes, never the event
+    # free pool: the shifted real planes, renumbered from 1 so free
+    # listeners never hit a gap at plane 1 - and never the event
     index = json.loads(env.objects["free_pool/index.json"])
     planes = index["entries"][-1]["planes"]
-    assert sorted(p["index"] for p in planes) == [2, 3], \
-        "free pool must hold the two shifted tracks and never the event"
+    assert sorted(p["index"] for p in planes) == [1, 2, 3], \
+        "free pool must hold the shifted real planes, renumbered, never the event"
     assert all(p["destination_city"] for p in planes)

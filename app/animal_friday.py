@@ -1,12 +1,12 @@
-"""Animal Friday (DOJP-52): on Fridays the fourth track is a local bird, not a plane.
+"""Animal Friday (DOJP-52): on Fridays the second track is a local bird, not a plane.
 
 The scanner "picks up a bonus flyer" - a species the listener is genuinely
-likely to see in their region this month - as track 4, between the third
-and fourth planes, so the session ends on a plane and the fifth aircraft is
-the one that drops. It mirrors the Special Signal Events mechanism (which
-takes track 1 and shifts planes down), so the two compose: on a Friday
-inside an event window the child hears the event, two planes, the bird,
-and one more plane.
+likely to see in their region this month - as track 2, right after the
+first plane, with the remaining planes shifting down so the fifth aircraft
+is the one that drops. It mirrors the Special Signal Events mechanism
+(which takes track 1 and shifts planes down), so the two compose: on a
+Friday inside an event window the child hears the event, the bird, and
+three planes.
 
 Data:
   app/birds.json       - built by scripts/build_birds.py from GBIF (the eBird
@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 BIRDS_PATH = Path(__file__).parent / "birds.json"
 LINES_PATH = Path(__file__).parent / "bird_lines.json"
 EVENT_NAME = "animal-friday"
-BIRD_TRACK = 4  # the track the bird owns; the planes after it shift down one
+BIRD_TRACK = 2  # the track the bird owns; the planes after it shift down one
 _FRIDAY = 4
 
 _birds: Optional[Dict[str, Any]] = None

@@ -150,16 +150,47 @@ def test_flag_is_read_from_environment(birds, monkeypatch):
 # --- track 5 slot ---------------------------------------------------------------
 
 @pytest.mark.unit
-def test_bird_owns_track_four_and_the_fifth_plane_drops():
-    """Three planes, the bird, then one more plane - the session still ends
-    on a jet, and it is the fifth aircraft that misses out"""
-    assert [aircraft_slot_for_plane(n, False, True) for n in range(1, 6)] == [0, 1, 2, None, 3]
+def test_bird_owns_track_two_and_the_fifth_plane_drops():
+    """First plane, the bird, then three more planes - the fifth aircraft
+    is the one that misses out"""
+    assert [aircraft_slot_for_plane(n, False, True) for n in range(1, 6)] == [0, None, 1, 2, 3]
 
 
 @pytest.mark.unit
 def test_bird_and_event_compose():
-    """Event on track 1, bird on track 4, planes on 2, 3 and 5"""
-    assert [aircraft_slot_for_plane(n, True, True) for n in range(1, 6)] == [None, 0, 1, None, 2]
+    """Event on track 1, bird on track 2, planes on 3, 4 and 5"""
+    assert [aircraft_slot_for_plane(n, True, True) for n in range(1, 6)] == [None, None, 0, 1, 2]
+
+
+@pytest.mark.unit
+async def test_free_pool_skips_the_bird_track_and_renumbers(monkeypatch):
+    """On a Friday the free pool must not try to copy track 2 (the bird has
+    no body cache) and free plane 2 must be the Club's track-3 plane"""
+    import app.free_pool as fp
+    reads, writes, captured = [], [], {}
+
+    async def fake_get_raw(key):
+        reads.append(key)
+        return b"body"
+
+    async def fake_set(key, data, content_type="audio"):
+        writes.append(key)
+        return True
+
+    async def fake_update_index(session_id, planes_data, tts_provider):
+        captured["planes"] = planes_data
+        return True
+
+    monkeypatch.setattr(fp.s3_cache, "get_raw", fake_get_raw)
+    monkeypatch.setattr(fp.s3_cache, "set", fake_set)
+    monkeypatch.setattr(fp, "update_free_pool_index", fake_update_index)
+    aircraft = [{"origin_city": o, "destination_city": d, "airline_name": "X"} for o, d in
+                [("A", "Oslo"), ("B", "Lima"), ("C", "Cork"), ("D", "Rome")]]
+    assert await fp.populate_free_pool(aircraft, "h", "inworld", bird_active=True)
+    assert [p["destination_city"] for p in captured["planes"]] == ["Oslo", "Lima", "Cork"]
+    assert [p["index"] for p in captured["planes"]] == [1, 2, 3]
+    assert [k.split("_plane")[1][0] for k in reads] == ["1", "3", "4"]
+    assert [k.split("_plane")[1][0] for k in writes] == ["1", "2", "3"]
     # and nothing changes for the existing cases
     assert [aircraft_slot_for_plane(n, False, False) for n in range(1, 6)] == [0, 1, 2, 3, 4]
     assert [aircraft_slot_for_plane(n, True, False) for n in range(1, 6)] == [None, 0, 1, 2, 3]
@@ -246,7 +277,7 @@ async def test_failed_bird_generation_caches_nothing(birds, monkeypatch):
 
 # --- the endpoint and the intro gate ----------------------------------------------
 
-def _request(ip="203.0.113.70", path="/plane/4"):
+def _request(ip="203.0.113.70", path="/plane/2"):
     return Request({"type": "http", "method": "GET", "path": path,
                     "query_string": b"", "headers": [], "client": (ip, 1)})
 
@@ -258,7 +289,7 @@ class _Frozen(datetime):
 
 
 @pytest.mark.unit
-async def test_plane_four_serves_the_bird_on_friday(birds, monkeypatch):
+async def test_plane_two_serves_the_bird_on_friday(birds, monkeypatch):
     from app import main
 
     async def fake_location(request, lat=None, lng=None, country=None):
@@ -282,7 +313,7 @@ async def test_plane_four_serves_the_bird_on_friday(birds, monkeypatch):
     tracked = {}
     monkeypatch.setattr(main, "track_plane_request", lambda *a, **kw: tracked.update(kw))
 
-    response = await main.handle_plane_endpoint(_request(), 4)
+    response = await main.handle_plane_endpoint(_request(), 2)
     assert response.status_code == 200
     assert served["bird"] == "European Robin"
     assert tracked["event_name"] == "animal-friday"

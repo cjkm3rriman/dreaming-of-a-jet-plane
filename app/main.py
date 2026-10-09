@@ -1064,7 +1064,7 @@ async def handle_plane_endpoint(
         event = None
 
     # Animal Friday (DOJP-52): on a Friday where the listener is, with a
-    # bird to narrate for their region this month, the bird owns track 4
+    # bird to narrate for their region this month, the bird owns track 2
     bird = animal_friday_bird(datetime.now(timezone.utc), get_timezone_for_request(request, lat, lng),
                               is_fallback_location, user_country_code, user_region)
     if bird and plane_index == BIRD_TRACK:
@@ -1082,7 +1082,7 @@ async def handle_plane_endpoint(
                 from_cache=result["from_cache"], event_name=ANIMAL_FRIDAY,
             )
             return plane_audio_response(request, result["audio"], result["mime_type"])
-        # Bird TTS failed - serve the fourth plane as on any other day
+        # Bird TTS failed - serve the second plane as on any other day
         logger.error(f"Animal Friday audio unavailable ({bird['name']}), serving normal plane {BIRD_TRACK}")
         bird = None
 

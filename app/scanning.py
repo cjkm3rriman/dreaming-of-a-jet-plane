@@ -100,7 +100,7 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         # track 1 (pre-warmed once into its shared per-provider key) and the
         # real planes shift down a slot
         event = get_active_event()
-        # Animal Friday (DOJP-52): the bird owns track 4, pre-warmed once
+        # Animal Friday (DOJP-52): the bird owns track 2, pre-warmed once
         # into its shared per-text key
         bird = animal_friday_bird(datetime.now(timezone.utc), tz_name, is_fallback, country_code, region)
 
@@ -185,14 +185,16 @@ async def pre_generate_flight_audio(lat: float, lng: float, request: Request = N
         else:
             logger.info("Pre-generation skipped: all planes already cached")
 
-        # After all planes complete, populate free pool. Only three free plane
-        # endpoints exist, so populate_free_pool consumes at most three.
+        # After all planes complete, populate free pool. It walks the Club
+        # tracks in order, skips the event / bird tracks (no body cache),
+        # and takes the first three plane bodies it finds.
         if aircraft and len(aircraft) >= 2:
             await populate_free_pool(
-                slot_offset=1 if event else 0,
-                aircraft_list=aircraft[:3],
+                aircraft_list=aircraft,
                 location_hash=location_hash,
                 tts_provider=effective_provider,
+                event_active=event is not None,
+                bird_active=bird is not None,
             )
 
     except Exception as e:
@@ -299,7 +301,7 @@ async def stream_scanning(request: Request, lat: float = None, lng: float = None
     # listener's local day/hour, so the debounced replay below picks the same
     tz_name = get_timezone_for_request(request, lat, lng)
     now_utc = datetime.now(timezone.utc)
-    # The Friday intro promises a bird on track 4, so it plays only when
+    # The Friday intro promises a bird on track 2, so it plays only when
     # Animal Friday will actually deliver one for this listener (DOJP-52)
     friday_ok = animal_friday_bird(now_utc, tz_name, is_fallback, user_country_code, user_region) is not None
     variant = pick_scanning_variant(now_utc, tz_name, is_fallback, friday_enabled=friday_ok)

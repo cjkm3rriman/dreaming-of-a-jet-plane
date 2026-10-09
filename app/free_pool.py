@@ -179,35 +179,41 @@ async def populate_free_pool(
     aircraft_list: List[Dict[str, Any]],
     location_hash: str,
     tts_provider: str,
-    slot_offset: int = 0,
+    event_active: bool = False,
+    bird_active: bool = False,
 ) -> bool:
     """Copy body audio to free pool for reuse with pre-recorded intros
 
-    Called after pre-generation completes. Populates planes 1, 2, and 3.
-    Free tier endpoints use pre-recorded intro audio files, so we only need
-    to copy the body audio to the free pool.
+    Called after pre-generation completes. Walks the Club tracks in order,
+    skips the tracks that carry no plane body (a Special Signal Event on
+    track 1, the Animal Friday bird on its track - both Club-only), and
+    numbers the first three plane bodies it finds 1, 2, 3 for the free
+    tier. So free plane 1 is always the first real plane of the scan, and
+    the index metadata always describes the aircraft whose audio it holds
+    (DOJP-33, DOJP-52). Free tier endpoints use pre-recorded intro audio
+    files, so only the body audio is copied.
 
     Args:
-        aircraft_list: List of aircraft data (all 3 planes)
+        aircraft_list: the scan's selected aircraft, in Club slot order
         location_hash: Hash for the paid user's location (for body cache keys)
         tts_provider: TTS provider being used
+        event_active / bird_active: which Club tracks are overrides
 
     Returns:
         True if successful, False otherwise
     """
+    from .special_events import aircraft_slot_for_plane
+
     try:
         session_id = str(uuid.uuid4())[:8]
         planes_data = []
+        free_index = 0
 
-        # Process all 3 planes for free tier
-        for plane_index in [1, 2, 3]:
-            # slot_offset=1 during a Special Signal Event (DOJP-33): track 1
-            # is the event (Club-only, no body cache, skipped here) and the
-            # shifted tracks' metadata must come from the shifted aircraft,
-            # or the index would label plane 2's audio with plane 2's flight
-            # while the audio describes aircraft 1
-            aircraft_index = plane_index - 1 - slot_offset
-            if aircraft_index < 0 or aircraft_index >= len(aircraft_list):
+        for club_track in range(1, 6):
+            if free_index == 3:
+                break  # only three free plane endpoints exist
+            aircraft_index = aircraft_slot_for_plane(club_track, event_active, bird_active)
+            if aircraft_index is None or aircraft_index >= len(aircraft_list):
                 continue
 
             aircraft = aircraft_list[aircraft_index]
@@ -219,9 +225,10 @@ async def populate_free_pool(
                 logger.info(f"Free pool: skipping legendary {aircraft.get('aircraft_icao')} (Club-only)")
                 continue
 
-            # Get body audio key from paid cache
+            # Body audio is cached under the CLUB track number; the free
+            # pool renumbers from 1
             file_ext, _ = get_audio_format(tts_provider)
-            body_cache_key = f"cache/{location_hash}_plane{plane_index}_body_{tts_provider}.{file_ext}"
+            body_cache_key = f"cache/{location_hash}_plane{club_track}_body_{tts_provider}.{file_ext}"
 
             # Verify body audio exists
             body_audio = await s3_cache.get_raw(body_cache_key)
@@ -229,13 +236,14 @@ async def populate_free_pool(
                 logger.warning(f"Body audio not found for free pool: {body_cache_key}")
                 continue
 
+            free_index += 1
             # Copy body to free pool (for easier management)
-            free_body_key = f"free_pool/{session_id}_plane{plane_index}_body_{tts_provider}.{file_ext}"
+            free_body_key = f"free_pool/{session_id}_plane{free_index}_body_{tts_provider}.{file_ext}"
             await s3_cache.set(free_body_key, body_audio)
 
             # Build plane data for index (no generic_opening_cache_key - free endpoints use pre-recorded intros)
             plane_data = {
-                "index": plane_index,
+                "index": free_index,
                 "origin_city": aircraft.get("origin_city", "Unknown"),
                 "destination_city": aircraft.get("destination_city", "Unknown"),
                 "airline_name": aircraft.get("airline_name", "Unknown"),

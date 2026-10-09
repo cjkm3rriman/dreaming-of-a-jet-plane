@@ -150,10 +150,11 @@ async def test_failed_event_generation_caches_nothing(monkeypatch):
 
 
 @pytest.mark.unit
-async def test_populate_free_pool_slot_offset_aligns_metadata(monkeypatch):
-    """During an event, plane 2's body cache holds aircraft 0's audio - the
-    index metadata must come from aircraft 0 too, and track 1 (the event)
-    must contribute nothing to the free pool"""
+async def test_populate_free_pool_event_renumbers_from_the_first_real_plane(monkeypatch):
+    """During an event, Club track 2's body cache holds aircraft 0's audio.
+    The free pool reads it from the track-2 key but serves it as free plane
+    1, with aircraft 0's metadata - the event track contributes nothing and
+    free listeners never see a gap at plane 1"""
     import app.free_pool as fp
 
     reads, writes = [], []
@@ -181,19 +182,17 @@ async def test_populate_free_pool_slot_offset_aligns_metadata(monkeypatch):
         {"origin_city": "Lima", "destination_city": "Cusco", "airline_name": "LATAM"},
         {"origin_city": "Cork", "destination_city": "Paris", "airline_name": "Aer Lingus"},
     ]
-    ok = await fp.populate_free_pool(aircraft_list, "abc123", "inworld", slot_offset=1)
+    ok = await fp.populate_free_pool(aircraft_list, "abc123", "inworld", event_active=True)
     assert ok
 
     planes = captured["planes"]
-    by_index = {p["index"]: p for p in planes}
-    assert 1 not in by_index, "the event track must not enter the free pool"
-    # plane 2 carries aircraft 0's flight, plane 3 carries aircraft 1's
-    assert by_index[2]["destination_city"] == "Tromso"
-    assert by_index[3]["destination_city"] == "Cusco"
-    # and the body reads came from the plane-numbered cache keys
-    assert any("plane2_body" in k for k in reads)
-    assert any("plane3_body" in k for k in reads)
+    assert [p["index"] for p in planes] == [1, 2, 3]
+    assert [p["destination_city"] for p in planes] == ["Tromso", "Cusco", "Paris"]
+    # bodies were read from the CLUB track keys (2, 3, 4) - never track 1,
+    # the event - and written under the free numbering (1, 2, 3)
     assert not any("plane1_body" in k for k in reads)
+    assert [k.split("_plane")[1][0] for k in reads] == ["2", "3", "4"]
+    assert [k.split("_plane")[1][0] for k in writes] == ["1", "2", "3"]
 
 
 @pytest.mark.unit
