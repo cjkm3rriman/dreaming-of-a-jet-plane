@@ -84,15 +84,15 @@ def aircraft_slot_for_plane(plane_index: int, event_active: bool, bird_active: b
 
     Without an event, track N serves aircraft N-1. During an event the event
     owns track 1, so track N serves aircraft N-2 and the fifth aircraft
-    drops. On Animal Friday (DOJP-52) the bird owns track 4 and the planes
+    drops. On Animal Friday (DOJP-52) the bird owns track 2 and the planes
     after it shift down one, so again the fifth aircraft drops (the fourth
     too, if an event is also running). Returns None for the event track and
     the bird track themselves.
 
-        plain:          1->0 2->1 3->2 4->3 5->4
-        event:          1->ev 2->0 3->1 4->2 5->3
-        bird:           1->0 2->1 3->2 4->bird 5->3
-        event + bird:   1->ev 2->0 3->1 4->bird 5->2
+        plain:          1->0  2->1    3->2 4->3 5->4
+        event:          1->ev 2->0    3->1 4->2 5->3
+        bird:           1->0  2->bird 3->1 4->2 5->3
+        event + bird:   1->ev 2->bird 3->0 4->1 5->2
     """
     if bird_active and plane_index == BIRD_TRACK:
         return None

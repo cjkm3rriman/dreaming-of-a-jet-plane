@@ -400,5 +400,7 @@ async def test_free_pool_skips_legendary_planes(monkeypatch):
     ]
     assert await fp.populate_free_pool(aircraft_list, "abc", "inworld")
     indexes = sorted(p["index"] for p in captured["planes"])
-    assert indexes == [2, 3], f"legendary must not enter the free pool: {indexes}"
+    # the two sharable bodies are renumbered 1 and 2: no gap at free plane 1
+    assert indexes == [1, 2], f"legendary must not enter the free pool: {indexes}"
+    assert [p["airline_name"] for p in captured["planes"]] == [aircraft_list[1]["airline_name"], aircraft_list[2]["airline_name"]]
     assert not any("plane1_body" in k for k in reads)
