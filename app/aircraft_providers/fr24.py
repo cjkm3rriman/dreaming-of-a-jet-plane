@@ -96,8 +96,10 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
         response = await client.get(url, headers=headers, params=params)
 
         if response.status_code != 200:
+            # One provider down is a warning; main.py logs the error once the
+            # whole provider chain has failed
             error_msg = f"FlightRadar24 API returned HTTP {response.status_code}"
-            logger.error(f"{error_msg}: Body={response.text[:500]}")
+            logger.warning(f"{error_msg}: Body={response.text[:500]}")
             return [], error_msg, {}
 
         data = response.json()
@@ -163,8 +165,8 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
         return aircraft_list, ("" if aircraft_list else "No passenger aircraft found within radius"), {}
 
     except httpx.TimeoutException:
-        logger.error("FlightRadar24 API Timeout: Request timed out after 10 seconds")
+        logger.warning("FlightRadar24 API Timeout: Request timed out after 10 seconds")
         return [], "FlightRadar24 API request timed out", {}
     except httpx.RequestError as exc:
-        logger.error(f"FlightRadar24 API Connection Error: {exc}")
+        logger.warning(f"FlightRadar24 API Connection Error: {exc}")
         return [], f"FlightRadar24 network connection error: {exc}", {}

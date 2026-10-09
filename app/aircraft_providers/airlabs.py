@@ -225,28 +225,38 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
 
     url = f"{AIRLABS_BASE_URL}/flights"
 
-    # Retry logic: retry on timeouts and connection errors with backoff
+    # Retry logic: one retry with backoff on timeouts, connection errors, and
+    # 5xx responses. A bare nginx 500 from Airlabs's edge (Sentry
+    # DREAMING-OF-A-JETPLANE-23) is exactly the transient a second attempt
+    # clears, and it is cheaper than burning the fallback provider.
     max_attempts = 2
 
     for attempt in range(max_attempts):
         try:
             client = await _get_client()
             response = await client.get(url, params=params)
-            break  # Success, exit retry loop
         except (httpx.TimeoutException, httpx.RequestError) as e:
             error_type = "timeout" if isinstance(e, httpx.TimeoutException) else "connection error"
             if attempt < max_attempts - 1:
                 backoff = RETRY_BACKOFF * (2 ** attempt)  # 1s, 2s
                 logger.warning(f"Airlabs API {error_type} (attempt {attempt + 1}/{max_attempts}), retrying in {backoff}s...")
                 await asyncio.sleep(backoff)
-            else:
-                logger.error(f"Airlabs API {error_type} after {max_attempts} attempts: {e}")
-                return [], f"Airlabs API {error_type} after {max_attempts} attempts", {}
+                continue
+            # One provider down is a warning: the chain in main.py decides
+            # whether it is an error (it is, once every provider has failed)
+            logger.warning(f"Airlabs API {error_type} after {max_attempts} attempts: {e}")
+            return [], f"Airlabs API {error_type} after {max_attempts} attempts", {}
+        if response.status_code >= 500 and attempt < max_attempts - 1:
+            backoff = RETRY_BACKOFF * (2 ** attempt)
+            logger.warning(f"Airlabs API returned HTTP {response.status_code} (attempt {attempt + 1}/{max_attempts}), retrying in {backoff}s...")
+            await asyncio.sleep(backoff)
+            continue
+        break
 
     try:
         if response.status_code != 200:
             error_msg = f"Airlabs API returned HTTP {response.status_code}"
-            logger.error(f"{error_msg}: Body={response.text[:500]}")
+            logger.warning(f"{error_msg}: Body={response.text[:500]}")
             return [], error_msg, {}
 
         data = response.json()
