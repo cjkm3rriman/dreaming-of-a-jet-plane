@@ -61,7 +61,7 @@ from .flight_text import (
     generate_flight_text_for_aircraft,
 )
 from .special_events import EVENTS, get_active_event, aircraft_slot_for_plane, ensure_event_audio
-from .animal_friday import animal_friday_bird, ensure_bird_audio, EVENT_NAME as ANIMAL_FRIDAY
+from .animal_friday import animal_friday_bird, ensure_bird_audio, BIRD_TRACK, EVENT_NAME as ANIMAL_FRIDAY
 from .location_utils import get_timezone_for_request
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
@@ -1059,10 +1059,10 @@ async def handle_plane_endpoint(
         event = None
 
     # Animal Friday (DOJP-52): on a Friday where the listener is, with a
-    # bird to narrate for their region this month, the bird owns track 5
+    # bird to narrate for their region this month, the bird owns track 4
     bird = animal_friday_bird(datetime.now(timezone.utc), get_timezone_for_request(request, lat, lng),
                               is_fallback_location, user_country_code, user_region)
-    if bird and plane_index == 5:
+    if bird and plane_index == BIRD_TRACK:
         bird_memo_key = f"{ANIMAL_FRIDAY}/{bird['key']}/{bird['line'][:24]}/{effective_provider}"
         bird_audio = recent_plane_audio.get(bird_memo_key)
         if bird_audio:
@@ -1077,8 +1077,8 @@ async def handle_plane_endpoint(
                 from_cache=result["from_cache"], event_name=ANIMAL_FRIDAY,
             )
             return plane_audio_response(request, result["audio"], result["mime_type"])
-        # Bird TTS failed - serve the fifth plane as on any other day
-        logger.error(f"Animal Friday audio unavailable ({bird['name']}), serving normal plane 5")
+        # Bird TTS failed - serve the fourth plane as on any other day
+        logger.error(f"Animal Friday audio unavailable ({bird['name']}), serving normal plane {BIRD_TRACK}")
         bird = None
 
     # Zero-based aircraft index for this track (shifted during an event / bird)
