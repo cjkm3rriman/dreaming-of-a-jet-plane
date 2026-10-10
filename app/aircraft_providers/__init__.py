@@ -6,11 +6,13 @@ from .fr24 import (
     fetch_aircraft as fetch_fr24_aircraft,
     is_configured as fr24_is_configured,
     DISPLAY_NAME as FR24_DISPLAY_NAME,
+    EMPTY_SKY as FR24_EMPTY_SKY,
 )
 from .airlabs import (
     fetch_aircraft as fetch_airlabs_aircraft,
     is_configured as airlabs_is_configured,
     DISPLAY_NAME as AIRLABS_DISPLAY_NAME,
+    EMPTY_SKY as AIRLABS_EMPTY_SKY,
 )
 
 ProviderResult = Tuple[List[Dict[str, Any]], str]
@@ -18,7 +20,10 @@ ProviderFetcher = Callable[[float, float, float, int], Awaitable[ProviderResult]
 ProviderConfigCheck = Callable[[], Tuple[bool, Optional[str]]]
 
 
-# Alias, not a runtime class: a provider definition is just a dict
+# Alias, not a runtime class: a provider definition is just a dict.
+# "empty_sky" is the error string the fetcher returns when it answered
+# cleanly and simply found nothing; main uses it to tell a quiet sky
+# (warning) from a broken provider (error).
 ProviderDefinition = Dict[str, Any]
 
 
@@ -27,11 +32,13 @@ AIRCRAFT_PROVIDERS: Dict[str, ProviderDefinition] = {
         "display_name": FR24_DISPLAY_NAME,
         "fetch": fetch_fr24_aircraft,
         "is_configured": fr24_is_configured,
+        "empty_sky": FR24_EMPTY_SKY,
     },
     "airlabs": {
         "display_name": AIRLABS_DISPLAY_NAME,
         "fetch": fetch_airlabs_aircraft,
         "is_configured": airlabs_is_configured,
+        "empty_sky": AIRLABS_EMPTY_SKY,
     },
 }
 

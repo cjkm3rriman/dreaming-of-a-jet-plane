@@ -136,3 +136,46 @@ async def test_fallback_serving_is_not_an_error(configured, monkeypatch, caplog)
     assert fr.called
     airlabs_errors = [r for r in caplog.records if r.levelno >= logging.ERROR and "airlabs" in r.name]
     assert airlabs_errors == []
+
+
+@pytest.mark.unit
+async def test_empty_sky_from_every_provider_is_a_warning(configured, monkeypatch, caplog):
+    """DREAMING-OF-A-JETPLANE-24: a rural listener, both providers answer 200
+    with nothing in range. Nothing broke, so nobody gets paged"""
+    monkeypatch.setattr(main, "LIVE_AIRCRAFT_PROVIDER", "airlabs")
+    monkeypatch.setattr(main, "LIVE_AIRCRAFT_PROVIDER_FALLBACKS", ["fr24"])
+
+    with respx.mock:
+        respx.get(url__startswith="https://airlabs.co").mock(return_value=httpx.Response(200, json={"response": []}))
+        respx.get(url__startswith="https://fr24api.flightradar24.com").mock(
+            return_value=httpx.Response(200, json={"data": []})
+        )
+        with caplog.at_level(logging.WARNING):
+            aircraft, error = await main.get_nearby_aircraft(LAT, LNG, limit=5)
+
+    assert aircraft == []
+    assert airlabs.EMPTY_SKY in error and fr24.EMPTY_SKY in error
+    assert not [r for r in caplog.records if r.levelno >= logging.ERROR]
+    warnings = [r for r in caplog.records if r.levelno == logging.WARNING and r.name == "app.main"]
+    assert len(warnings) == 1 and "Empty sky from every aircraft provider" in warnings[0].message
+
+
+@pytest.mark.unit
+async def test_one_broken_provider_plus_an_empty_fallback_is_still_an_error(configured, monkeypatch, caplog):
+    """Airlabs 500s and FR24 finds nothing: the child hears no planes and a
+    provider broke on the way, so this one still pages"""
+    monkeypatch.setattr(main, "LIVE_AIRCRAFT_PROVIDER", "airlabs")
+    monkeypatch.setattr(main, "LIVE_AIRCRAFT_PROVIDER_FALLBACKS", ["fr24"])
+
+    with respx.mock:
+        respx.get(url__startswith="https://airlabs.co").mock(return_value=httpx.Response(500, text=NGINX_500))
+        respx.get(url__startswith="https://fr24api.flightradar24.com").mock(
+            return_value=httpx.Response(200, json={"data": []})
+        )
+        with caplog.at_level(logging.WARNING):
+            aircraft, error = await main.get_nearby_aircraft(LAT, LNG, limit=5)
+
+    assert aircraft == []
+    errors = [r for r in caplog.records if r.levelno >= logging.ERROR]
+    assert len(errors) == 1 and errors[0].name == "app.main"
+    assert "All aircraft providers failed" in errors[0].message
