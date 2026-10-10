@@ -71,6 +71,8 @@ REPUBLIC_AIRWAYS_FLIGHT_RANGES = {
 }
 
 DISPLAY_NAME = "Airlabs"
+# The provider answered and the sky was empty: not a failure
+EMPTY_SKY = "No aircraft reported by Airlabs"
 
 logger = logging.getLogger(__name__)
 
@@ -482,7 +484,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
                     break
 
         logger.info(f"Airlabs returned {len(aircraft_list)} aircraft candidates")
-        return aircraft_list, ("" if aircraft_list else "No aircraft reported by Airlabs"), stats
+        return aircraft_list, ("" if aircraft_list else EMPTY_SKY), stats
 
     except Exception as e:
         logger.error(f"Airlabs API processing error: {e}")

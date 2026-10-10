@@ -865,6 +865,9 @@ async def get_nearby_aircraft(
         return [], "No aircraft providers configured"
 
     provider_errors: List[str] = []
+    # True once any provider misbehaved (unregistered, unconfigured, raised,
+    # or returned an error other than its clean empty-sky message)
+    provider_failed = False
     provider_fetch_limit = max(limit + 2, 5)
 
     for provider_name in provider_sequence:
@@ -872,6 +875,7 @@ async def get_nearby_aircraft(
         if not provider_def:
             logger.warning(f"Requested aircraft provider '{provider_name}' is not registered")
             provider_errors.append(f"Provider '{provider_name}' is not registered")
+            provider_failed = True
             continue
 
         display_name = provider_def.get("display_name", provider_name)
@@ -880,6 +884,7 @@ async def get_nearby_aircraft(
         if not is_configured:
             logger.warning(f"{display_name} is not configured: {config_error}")
             provider_errors.append(config_error or f"{display_name} is not configured")
+            provider_failed = True
             continue
 
         cache_key = s3_cache.generate_cache_key(
@@ -919,6 +924,7 @@ async def get_nearby_aircraft(
         except Exception as exc:
             logger.error(f"{display_name} provider raised exception: {exc}", exc_info=True)
             provider_errors.append(f"{display_name} exception: {exc}")
+            provider_failed = True
             continue
 
         if aircraft_list:
@@ -955,13 +961,20 @@ async def get_nearby_aircraft(
         spawn(s3_cache.set(cache_key, cache_data, content_type="json"), "cache flight json (empty)")
         logger.info(f"{display_name} returned no aircraft; trying next provider if available")
         provider_errors.append(provider_error or f"{display_name} returned no aircraft")
+        if provider_error and provider_error != provider_def.get("empty_sky"):
+            provider_failed = True
 
     final_error = "; ".join(error for error in provider_errors if error) or "No aircraft providers available"
-    # This is the outcome worth paging on: every provider in the chain failed
-    # or came back empty, so the child hears no planes. A single provider
-    # failing with a fallback left to try is logged as a warning by the
-    # provider itself.
-    logger.error(f"All aircraft providers failed for lat={lat:.2f}, lng={lng:.2f}: {final_error}")
+    # Every provider in the chain came back empty, so the child hears no
+    # planes. That is worth paging on when something broke along the way.
+    # When every provider answered cleanly and the sky was simply empty
+    # (rural listeners: DREAMING-OF-A-JETPLANE-24) it is a warning, not an
+    # outage. A single provider failing with a fallback left to try is
+    # logged as a warning by the provider itself.
+    if provider_failed:
+        logger.error(f"All aircraft providers failed for lat={lat:.2f}, lng={lng:.2f}: {final_error}")
+    else:
+        logger.warning(f"Empty sky from every aircraft provider for lat={lat:.2f}, lng={lng:.2f}: {final_error}")
 
     if request:
         fallback_provider = provider_sequence[-1] if provider_sequence else "unknown"

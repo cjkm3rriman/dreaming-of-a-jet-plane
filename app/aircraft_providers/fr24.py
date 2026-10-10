@@ -13,6 +13,8 @@ from ..airport_database import get_city_country
 from ..location_utils import calculate_distance
 
 DISPLAY_NAME = "FlightRadar24"
+# The provider answered and the sky was empty: not a failure
+EMPTY_SKY = "No passenger aircraft found within radius"
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +164,7 @@ async def fetch_aircraft(lat: float, lng: float, radius_km: float, limit: int) -
             aircraft_list.append(aircraft_info)
 
         logger.info(f"FlightRadar24 returned {len(aircraft_list)} aircraft candidates")
-        return aircraft_list, ("" if aircraft_list else "No passenger aircraft found within radius"), {}
+        return aircraft_list, ("" if aircraft_list else EMPTY_SKY), {}
 
     except httpx.TimeoutException:
         logger.warning("FlightRadar24 API Timeout: Request timed out after 10 seconds")
