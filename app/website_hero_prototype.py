@@ -42,7 +42,7 @@ HERO_HTML = """<!DOCTYPE html>
     --yoto-bottom: 12vh;
     /* the cutout includes the green button on its right, so the body sits
        left of the image centre; this nudges it back to the page centre */
-    --yoto-shift: calc(var(--yoto) * 0.06);
+    --yoto-shift: calc(var(--yoto) * 0.04);
     --orange: #FE6601;
     --ink: #1F1A2E;
     --t-sun: 3200ms;
@@ -174,7 +174,13 @@ body {
     z-index: 20;
     pointer-events: none;
 }
-.wordmark { width: min(60vw, 260px); height: auto; display: block; margin: 0 auto; }
+/* a soft dark halo so the wordmark lifts off the clouds; gone by sunset */
+.wordmark {
+    width: min(60vw, 260px); height: auto; display: block; margin: 0 auto;
+    filter: drop-shadow(0 0 14px rgba(10, 20, 50, .55)) drop-shadow(0 0 4px rgba(10, 20, 50, .35));
+    transition: filter var(--t-sun) var(--ease-sun);
+}
+.is-sunset .wordmark { filter: drop-shadow(0 0 14px rgba(10, 20, 50, 0)) drop-shadow(0 0 4px rgba(10, 20, 50, 0)); }
 
 /* ---------- the yoto mini ---------- */
 /* The product render, with the screen and the green button measured as
