@@ -1,9 +1,10 @@
 """Prototype landing-page hero: a CSS-animated Yoto Mini instead of the video.
 
 Served at /prototype/hero and deliberately kept out of robots/sitemap. The
-concept: a Yoto Mini on a blue sky, the Dreaming of a Jet Plane card drops
-into the slot, the sky turns to sunset, and Hamish starts scanning. Nothing
-here is wired into the real landing page yet.
+concept: a Yoto Mini (the yellow adventure-jacket one) on a blue sky. Press
+its green side button and the sky turns to sunset while Hamish starts
+scanning. There is no card: this is a digital app, so the player itself is
+the call to action. Nothing here is wired into the real landing page yet.
 """
 
 from fastapi import FastAPI
@@ -32,7 +33,7 @@ HERO_HTML = """<!DOCTYPE html>
 }
 
 :root {
-    --yoto: clamp(170px, 31vmin, 300px);
+    --yoto: clamp(190px, 36vmin, 340px);
     --cream: #F7F2E8;
     --cream-2: #E6DDCB;
     --cream-3: #D4C9B4;
@@ -59,7 +60,6 @@ body {
     height: 100dvh;
     min-height: 540px;
     overflow: hidden;
-    cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
@@ -257,14 +257,14 @@ body {
 .yoto {
     position: absolute;
     left: 50%;
-    bottom: 12vh;
+    bottom: 16vh;
     width: var(--yoto);
     height: var(--yoto);
     transform: translateX(-50%);
     transform-origin: 50% 100%;
     z-index: 10;
 }
-.is-dropping .yoto { animation: settle .55s ease-out .66s; }
+.is-pressed .yoto { animation: settle .5s ease-out; }
 @keyframes settle {
     0%   { transform: translateX(-50%) scale(1, 1); }
     30%  { transform: translateX(-50%) scale(1.03, .955); }
@@ -282,14 +282,6 @@ body {
         inset -8px -12px 26px rgba(150, 80, 0, .20),
         inset 8px 10px 22px rgba(255, 240, 190, .35);
     z-index: 3;
-}
-/* where the card goes in */
-.slit {
-    position: absolute;
-    left: 15%; width: 70%;
-    top: 0; height: 1.6%;
-    background: rgba(110, 60, 0, .35);
-    border-radius: 0 0 4px 4px;
 }
 
 /* two big ribbed orange buttons */
@@ -432,67 +424,39 @@ body {
 @keyframes bars { from { height: 18%; } to { height: 100%; } }
 .hero:not(.is-playing) .eq i { animation-play-state: paused; }
 
-/* side furniture: green button on the right, lanyard tab on the left */
+/* the green side button is the play control */
 .side-btn {
     position: absolute;
-    right: -4.5%; top: 62%;
-    width: 11%; height: 17%;
+    right: -5%; top: 61%;
+    width: 12%; height: 18%;
+    border: 0; padding: 0;
     border-radius: 50%;
     background: radial-gradient(circle at 40% 35%, #4DBB72, #2E9A57 60%, #237A44);
-    box-shadow: 0 3px 6px rgba(0,0,0,.25);
+    box-shadow: 0 3px 6px rgba(0,0,0,.25), 0 0 0 0 rgba(77, 187, 114, 0);
+    cursor: pointer;
     z-index: 2;
+    transform-origin: 0% 50%;
+    transition: transform .12s ease-out, box-shadow .3s;
+    -webkit-appearance: none;
+    appearance: none;
 }
-.tab {
-    position: absolute;
-    left: -5.5%; top: 30%;
-    width: 12%; height: 15%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #FFC94E, #EEA92A 65%, #D4921C);
-    box-shadow: 0 3px 6px rgba(0,0,0,.22);
-    z-index: 2;
+.side-btn:hover { transform: scaleX(1.12); }
+.side-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.side-btn.pressed { animation: press .32s ease-out; }
+@keyframes press {
+    0%   { transform: scaleX(1); }
+    35%  { transform: scaleX(.55); }
+    100% { transform: scaleX(1); }
 }
-.lanyard {
-    position: absolute;
-    left: -58%; top: 32%;
-    width: 62%; height: 72%;
-    z-index: 2;
-    overflow: visible;
-}
-.lanyard path { fill: none; stroke-linecap: round; }
-.lanyard .base { stroke: #F2B531; stroke-width: 3.8; }
-.lanyard .twist { stroke: #E2402F; stroke-width: 3.0; stroke-dasharray: 3.5 3.5; }
-
-/* the card: 54mm wide against a 76mm player, standing tall out of the top */
-.card {
-    position: absolute;
-    left: 50%;
-    top: -58%;
-    width: 68%;
-    aspect-ratio: 54 / 86;
-    border-radius: 5% / 3.2%;
-    background:
-        url('/assets/img/prototype/dojp-card.jpg') center top / 100% auto no-repeat,
-        linear-gradient(#F9B64B, #E65A2B 40%, #7A2E58);
-    box-shadow: 0 6px 18px rgba(20, 10, 40, .35), inset 0 0 0 1.5px rgba(255,255,255,.35);
-    z-index: 1;
-    transform: translate(-50%, -13%) rotate(-6deg);
-    animation: bob 2.6s ease-in-out infinite;
-    will-change: transform;
-}
-@keyframes bob {
-    50% { transform: translate(-50%, -17%) rotate(-4deg); }
-}
-.is-dropping .card { animation: drop 1.15s forwards; }
-@keyframes drop {
-    0%   { transform: translate(-50%, -120vh) rotate(-14deg); animation-timing-function: cubic-bezier(.5, 0, .9, .45); }
-    58%  { transform: translate(-50%, 3%) rotate(0deg); animation-timing-function: ease-out; }
-    76%  { transform: translate(-50%, -6%) rotate(0deg); animation-timing-function: ease-in; }
-    100% { transform: translate(-50%, 0) rotate(0deg); }
+/* a soft pulse until it has been pressed once */
+.hero:not(.is-sunset) .side-btn { animation: beckon 1.8s ease-in-out infinite; }
+@keyframes beckon {
+    50% { box-shadow: 0 3px 6px rgba(0,0,0,.25), 0 0 0 10px rgba(77, 187, 114, .28); }
 }
 
 @media (max-width: 640px) {
-    :root { --yoto: clamp(150px, 48vw, 230px); }
-    .yoto { bottom: 14vh; }
+    :root { --yoto: clamp(170px, 56vw, 260px); }
+    .yoto { bottom: 15vh; }
     .copy { top: 5%; }
     .cloud { transform: scale(.8); }
     .sun { width: 16vmin; height: 16vmin; left: 72%; top: 24%; }
@@ -500,8 +464,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .card, .is-dropping .card, .cloud, .is-dropping .yoto, .is-sunset .plane, .hint, .stars { animation: none !important; }
-    .card { transform: translate(-50%, 0) rotate(0); }
+    .cloud, .is-pressed .yoto, .is-sunset .plane, .hint, .stars, .side-btn, .pixel-plane { animation: none !important; }
     .sun, .sky-sunset, .ground, .tagline, .cloud { transition-duration: 1ms; }
 }
 </style>
@@ -525,15 +488,8 @@ body {
     </div>
 
     <div class="yoto" id="yoto">
-        <div class="card" id="card" aria-hidden="true"></div>
-        <svg class="lanyard" viewBox="0 0 100 100" aria-hidden="true">
-            <path class="base"  d="M96 6 C 70 10, 40 8, 30 30 S 10 75, 28 92 S 70 98, 90 94"/>
-            <path class="twist" d="M96 6 C 70 10, 40 8, 30 30 S 10 75, 28 92 S 70 98, 90 94"/>
-        </svg>
-        <div class="tab"></div>
-        <div class="side-btn"></div>
+        <button class="side-btn" id="play" type="button" aria-label="Play"></button>
         <div class="yoto-body">
-            <div class="slit"></div>
             <div class="btn l"></div>
             <div class="btn r"></div>
             <div class="grille"></div>
@@ -545,18 +501,16 @@ body {
         </div>
     </div>
 
-    <div class="hint" id="hint">Tap to drop the card</div>
+    <div class="hint" id="hint">Press the green button</div>
     <audio id="narration" preload="auto" src="__CLIP__"></audio>
 </section>
 
 <script>
 (function () {
     const hero = document.getElementById('hero');
-    const card = document.getElementById('card');
+    const btn = document.getElementById('play');
     const hint = document.getElementById('hint');
     const audio = document.getElementById('narration');
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let state = 'idle'; // idle -> dropping -> sunset -> done
 
     function showHint(text, replay) {
         hint.textContent = text;
@@ -565,70 +519,37 @@ body {
     }
     function hideHint() { hint.classList.remove('show', 'replay'); }
 
-    function begin() {
-        if (state !== 'idle') return;
-        state = 'dropping';
-        hideHint();
-        if (reduced) { landed(); return; }
-        hero.classList.add('is-dropping');
+    function press() {
+        btn.classList.remove('pressed');
+        hero.classList.remove('is-pressed');
+        void btn.offsetWidth;
+        btn.classList.add('pressed');
+        hero.classList.add('is-pressed');
     }
 
-    function landed() {
-        state = 'sunset';
-        hero.classList.add('is-dropping', 'is-sunset');
-        audio.currentTime = 0;
-        audio.play()
-            .then(() => hero.classList.add('is-playing'))
-            .catch(() => showHint('Tap for sound'));
-    }
-
-    card.addEventListener('animationend', (e) => {
-        if (e.animationName === 'drop' && state === 'dropping') landed();
+    btn.addEventListener('click', () => {
+        press();
+        if (audio.paused) {
+            // First press: the sky turns to sunset while Hamish warms up
+            hero.classList.add('is-sunset');
+            if (audio.ended) audio.currentTime = 0;
+            hideHint();
+            audio.play().catch(() => showHint('Press again for sound'));
+        } else {
+            audio.pause();
+            showHint('Press the green button to resume');
+        }
     });
 
     audio.addEventListener('play', () => hero.classList.add('is-playing'));
     audio.addEventListener('pause', () => hero.classList.remove('is-playing'));
     audio.addEventListener('ended', () => {
-        state = 'done';
         hero.classList.remove('is-playing');
         showHint('Play it again', true);
     });
+    hint.addEventListener('click', () => { if (hint.classList.contains('replay')) btn.click(); });
 
-    function reset() {
-        audio.pause();
-        hero.className = 'hero';
-        state = 'idle';
-        hideHint();
-        // force a reflow so the drop animation can replay from the top
-        void card.offsetWidth;
-        begin();
-    }
-
-    hero.addEventListener('click', () => {
-        if (state === 'idle') return begin();
-        if (state === 'sunset' && audio.paused) {
-            audio.play().then(hideHint).catch(() => {});
-            return;
-        }
-        if (state === 'done') reset();
-    });
-    hero.addEventListener('keydown', (e) => {
-        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); hero.click(); }
-    });
-    hero.tabIndex = 0;
-
-    // Autoplay probe: if the browser lets us play with sound, run the whole
-    // sequence unprompted; otherwise wait for a tap, like the video did.
-    const probe = audio.play();
-    if (probe && probe.then) {
-        probe.then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-            setTimeout(begin, 900);
-        }).catch(() => showHint('Tap to drop the card'));
-    } else {
-        showHint('Tap to drop the card');
-    }
+    showHint('Press the green button');
 })();
 </script>
 </body>
