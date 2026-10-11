@@ -161,27 +161,6 @@ body {
 }
 .wordmark { width: min(60vw, 300px); height: auto; }
 
-.hint {
-    position: absolute;
-    left: 50%; bottom: 3%;
-    transform: translateX(-50%);
-    z-index: 20;
-    padding: .6rem 1.1rem;
-    border-radius: 100px;
-    background: rgba(255,255,255,.85);
-    color: var(--ink);
-    font-weight: 800;
-    font-size: .95rem;
-    letter-spacing: .02em;
-    box-shadow: 0 6px 20px rgba(20, 40, 80, .18);
-    animation: pulse 1.8s ease-in-out infinite;
-    opacity: 0;
-    transition: opacity .4s;
-    pointer-events: none;
-}
-.hint.show { opacity: 1; }
-@keyframes pulse { 50% { transform: translateX(-50%) scale(1.05); } }
-
 /* ---------- the yoto mini ---------- */
 /* The product render, with the screen and the green button measured as
    percentages of the cutout so the overlays land exactly on the photo. */
@@ -355,7 +334,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .is-pressed .yoto, .is-sunset .plane, .hint, .stars, .side-btn, .side-btn::after, .pixel-plane { animation: none !important; }
+    .is-pressed .yoto, .is-sunset .plane, .stars, .side-btn, .side-btn::after, .pixel-plane { animation: none !important; }
     .sky, .sky-sunset { transition-duration: 1ms; }
 }
 </style>
@@ -380,7 +359,6 @@ body {
         <button class="side-btn" id="play" type="button" aria-label="Play"></button>
     </div>
 
-    <div class="hint" id="hint">Press the green button</div>
     <audio id="narration" preload="auto" src="__CLIP__"></audio>
 </section>
 
@@ -388,14 +366,7 @@ body {
 (function () {
     const hero = document.getElementById('hero');
     const btn = document.getElementById('play');
-    const hint = document.getElementById('hint');
     const audio = document.getElementById('narration');
-
-    function showHint(text) {
-        hint.textContent = text;
-        hint.classList.add('show');
-    }
-    function hideHint() { hint.classList.remove('show'); }
 
     function press() {
         btn.classList.remove('pressed');
@@ -411,11 +382,9 @@ body {
             // First press: the sky turns to sunset while Hamish warms up
             hero.classList.add('is-sunset');
             if (audio.ended) audio.currentTime = 0;
-            hideHint();
-            audio.play().catch(() => showHint('Press again for sound'));
+            audio.play().catch(() => {});
         } else {
             audio.pause();
-            showHint('Press the green button to resume');
         }
     });
 
@@ -423,7 +392,6 @@ body {
     audio.addEventListener('pause', () => hero.classList.remove('is-playing'));
     audio.addEventListener('ended', () => hero.classList.remove('is-playing'));
 
-    showHint('Press the green button');
 })();
 </script>
 </body>
