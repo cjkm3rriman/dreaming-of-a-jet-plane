@@ -180,7 +180,6 @@ body {
     pointer-events: none;
 }
 .hint.show { opacity: 1; }
-.hint.replay { pointer-events: auto; animation: none; cursor: pointer; }
 @keyframes pulse { 50% { transform: translateX(-50%) scale(1.05); } }
 
 /* ---------- the yoto mini ---------- */
@@ -392,12 +391,11 @@ body {
     const hint = document.getElementById('hint');
     const audio = document.getElementById('narration');
 
-    function showHint(text, replay) {
+    function showHint(text) {
         hint.textContent = text;
-        hint.classList.toggle('replay', !!replay);
         hint.classList.add('show');
     }
-    function hideHint() { hint.classList.remove('show', 'replay'); }
+    function hideHint() { hint.classList.remove('show'); }
 
     function press() {
         btn.classList.remove('pressed');
@@ -423,11 +421,7 @@ body {
 
     audio.addEventListener('play', () => hero.classList.add('is-playing'));
     audio.addEventListener('pause', () => hero.classList.remove('is-playing'));
-    audio.addEventListener('ended', () => {
-        hero.classList.remove('is-playing');
-        showHint('Play it again', true);
-    });
-    hint.addEventListener('click', () => { if (hint.classList.contains('replay')) btn.click(); });
+    audio.addEventListener('ended', () => hero.classList.remove('is-playing'));
 
     showHint('Press the green button');
 })();
