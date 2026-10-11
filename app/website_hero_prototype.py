@@ -39,6 +39,7 @@ HERO_HTML = """<!DOCTYPE html>
 
 :root {
     --yoto: clamp(200px, 38vmin, 360px);
+    --yoto-bottom: 12vh;
     --orange: #FE6601;
     --ink: #1F1A2E;
     --t-sun: 3200ms;
@@ -78,7 +79,7 @@ body {
    against the clouds; it lifts as the sunset comes in */
 .sky-shade {
     position: absolute; inset: 0;
-    background: linear-gradient(rgba(10, 20, 50, .55) 0%, rgba(10, 20, 50, .28) 28%, rgba(10, 20, 50, 0) 55%);
+    background: linear-gradient(rgba(10, 20, 50, .36) 0%, rgba(10, 20, 50, .18) 28%, rgba(10, 20, 50, 0) 55%);
     transition: opacity var(--t-sun) var(--ease-sun);
 }
 .is-sunset .sky-shade { opacity: 0; }
@@ -161,14 +162,16 @@ body {
 /* ---------- copy ---------- */
 .copy {
     position: absolute;
-    left: 50%; top: 6%;
+    left: 50%;
+    /* just above the player: its bottom edge plus its height plus a gap */
+    bottom: calc(var(--yoto-bottom) + var(--yoto) * 746 / 793 + 3vh);
     transform: translateX(-50%);
     width: min(92vw, 640px);
     text-align: center;
     z-index: 20;
     pointer-events: none;
 }
-.wordmark { width: min(60vw, 300px); height: auto; }
+.wordmark { width: min(60vw, 260px); height: auto; display: block; margin: 0 auto; }
 
 /* ---------- the yoto mini ---------- */
 /* The product render, with the screen and the green button measured as
@@ -176,7 +179,7 @@ body {
 .yoto {
     position: absolute;
     left: 50%;
-    bottom: 12vh;
+    bottom: var(--yoto-bottom);
     width: var(--yoto);
     aspect-ratio: 793 / 746;
     transform: translateX(-50%);
@@ -338,8 +341,7 @@ body {
 }
 
 @media (max-width: 640px) {
-    :root { --yoto: clamp(180px, 56vw, 260px); }
-    .yoto { bottom: 14vh; }
+    :root { --yoto: clamp(180px, 56vw, 260px); --yoto-bottom: 14vh; }
 }
 
 @media (prefers-reduced-motion: reduce) {
