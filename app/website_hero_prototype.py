@@ -74,6 +74,15 @@ body {
 }
 /* at sunset the clouds warm, soften and fall back a little */
 .is-sunset .sky { filter: sepia(.95) saturate(2.2) hue-rotate(-28deg) brightness(.62) contrast(1.05) blur(4px); }
+/* by day, a dark wash from the top to the middle so the wordmark reads
+   against the clouds; it lifts as the sunset comes in */
+.sky-shade {
+    position: absolute; inset: 0;
+    background: linear-gradient(rgba(10, 20, 50, .55) 0%, rgba(10, 20, 50, .28) 28%, rgba(10, 20, 50, 0) 55%);
+    transition: opacity var(--t-sun) var(--ease-sun);
+}
+.is-sunset .sky-shade { opacity: 0; }
+
 .sky-sunset {
     position: absolute; inset: 0;
     background: linear-gradient(#2A1848 0%, #4E2466 24%, #8E3A5F 44%, #C9542F 66%, #D9702E 84%, #DD7A32 100%);
@@ -342,6 +351,7 @@ body {
 <body>
 <section class="hero" id="hero" aria-label="Dreaming of a Jet Plane on a Yoto Mini">
     <div class="sky"></div>
+    <div class="sky-shade"></div>
     <div class="sky-sunset"></div>
     <div class="stars"></div>
     <div class="plane" aria-hidden="true"><div class="trail"></div><div class="body"></div><div class="wing"></div></div>
