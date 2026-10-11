@@ -177,7 +177,7 @@ body {
 /* a soft dark halo so the wordmark lifts off the clouds; gone by sunset */
 .wordmark {
     width: min(60vw, 260px); height: auto; display: block; margin: 0 auto;
-    filter: drop-shadow(0 0 14px rgba(10, 20, 50, .55)) drop-shadow(0 0 4px rgba(10, 20, 50, .35));
+    filter: drop-shadow(0 0 14px rgba(10, 20, 50, .3)) drop-shadow(0 0 4px rgba(10, 20, 50, .18));
     transition: filter var(--t-sun) var(--ease-sun);
 }
 .is-sunset .wordmark { filter: drop-shadow(0 0 14px rgba(10, 20, 50, 0)) drop-shadow(0 0 4px rgba(10, 20, 50, 0)); }
