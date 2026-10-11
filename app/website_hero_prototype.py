@@ -65,11 +65,11 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* day sky: a photo (placeholder stock preview; needs licensing before it
-   ships). At sunset the same photo is warmed so the clouds stay. */
+/* day sky: a cumulus photo. At sunset the same photo is warmed so the
+   clouds stay. */
 .sky {
     position: absolute; inset: 0;
-    background: #3F8FE0 url('/assets/img/prototype/sky.jpg') center bottom / cover no-repeat;
+    background: #3F8FE0 url('/assets/img/prototype/sky.jpg') center / cover no-repeat;
     transition: filter var(--t-sun) var(--ease-sun);
 }
 .is-sunset .sky { filter: sepia(.95) saturate(2.4) hue-rotate(-28deg) brightness(.72) contrast(1.1); }
