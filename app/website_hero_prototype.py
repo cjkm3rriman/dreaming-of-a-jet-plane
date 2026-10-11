@@ -32,7 +32,7 @@ HERO_HTML = """<!DOCTYPE html>
 }
 
 :root {
-    --yoto: clamp(190px, 38vmin, 360px);
+    --yoto: clamp(170px, 31vmin, 300px);
     --cream: #F7F2E8;
     --cream-2: #E6DDCB;
     --cream-3: #D4C9B4;
@@ -257,7 +257,7 @@ body {
 .yoto {
     position: absolute;
     left: 50%;
-    bottom: 17vh;
+    bottom: 12vh;
     width: var(--yoto);
     height: var(--yoto);
     transform: translateX(-50%);
@@ -272,114 +272,146 @@ body {
     100% { transform: translateX(-50%) scale(1, 1); }
 }
 
-/* top face: knobs and the slot */
-.yoto-top {
-    position: absolute;
-    left: 3%; right: 3%;
-    top: -8%;
-    height: 15%;
-    background: linear-gradient(var(--cream-2), var(--cream-3));
-    border-radius: 14% 14% 6% 6% / 60% 60% 30% 30%;
-    z-index: 1;
-}
-.knob {
-    position: absolute;
-    top: -40%;
-    width: 16%; height: 78%;
-    background: linear-gradient(#FF8A3D, var(--orange) 55%, #D85200);
-    border-radius: 45% / 50%;
-    box-shadow: 0 3px 0 #B84400, inset 0 2px 0 rgba(255,255,255,.4);
-}
-.knob.l { left: 9%; }
-.knob.r { right: 9%; }
-.slot {
-    position: absolute;
-    left: 34%; width: 32%;
-    top: 30%; height: 16%;
-    background: #241C2E;
-    border-radius: 3px;
-    box-shadow: inset 0 2px 2px rgba(0,0,0,.6);
-}
-
-/* the front */
+/* the front: a squircle of matte yellow silicone */
 .yoto-body {
     position: absolute; inset: 0;
-    background: linear-gradient(170deg, #FBF7F0, var(--cream) 60%, #EFE8DA);
-    border-radius: 17%;
+    background: radial-gradient(120% 120% at 25% 15%, #FFCB55 0%, #F7B63A 45%, #E9A223 100%);
+    border-radius: 27%;
     box-shadow:
-        0 22px 40px rgba(20, 10, 40, .28),
-        inset 0 -10px 0 rgba(0,0,0,.05),
-        inset 0 2px 0 rgba(255,255,255,.8);
+        0 22px 40px rgba(60, 30, 10, .30),
+        inset -8px -12px 26px rgba(150, 80, 0, .20),
+        inset 8px 10px 22px rgba(255, 240, 190, .35);
     z-index: 3;
 }
+/* where the card goes in */
+.slit {
+    position: absolute;
+    left: 15%; width: 70%;
+    top: 0; height: 1.6%;
+    background: rgba(110, 60, 0, .35);
+    border-radius: 0 0 4px 4px;
+}
+
+/* two big ribbed orange buttons */
+.btn {
+    position: absolute;
+    top: 13%;
+    width: 31%; height: 31%;
+    border-radius: 50%;
+    background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 9%, rgba(255,255,255,.12) 9% 11%, rgba(120,30,10,.10) 11% 13%, rgba(255,255,255,0) 13% 18%),
+        radial-gradient(circle at 40% 32%, #FF8A5C 0%, #F2643D 45%, #DE4F2E 100%);
+    box-shadow:
+        0 0 0 3px rgba(150, 85, 0, .22),
+        0 3px 0 rgba(150, 50, 20, .35),
+        inset 0 -6px 10px rgba(150, 40, 10, .35),
+        inset 0 5px 8px rgba(255, 190, 160, .55);
+}
+.btn.l { left: 16%; }
+.btn.r { right: 16%; }
+
+/* speaker holes, bottom-left, in a rounded diamond */
+.grille {
+    position: absolute;
+    left: 13%; bottom: 13%;
+    width: 30%; height: 30%;
+    background-image:
+        radial-gradient(circle, #4A3115 2.2px, transparent 2.9px),
+        radial-gradient(circle, #4A3115 2.2px, transparent 2.9px);
+    background-size: 14% 14%;
+    background-position: 0 0, 7% 7%;
+    -webkit-mask: radial-gradient(circle, #000 58%, transparent 60%);
+            mask: radial-gradient(circle, #000 58%, transparent 60%);
+}
+
+/* the screen, bottom-right, with its cream bezel */
 .screen {
     position: absolute;
-    left: 10%; top: 11%;
-    width: 36%; height: 36%;
-    background: #110E14;
-    border-radius: 12%;
-    box-shadow: inset 0 0 0 3px #2A2330, inset 0 0 14px rgba(0,0,0,.9);
+    right: 13%; bottom: 13%;
+    width: 29%; height: 29%;
+    background: #141120;
+    border-radius: 18%;
+    box-shadow:
+        0 0 0 3px #F3E8D2,
+        0 0 0 4.5px rgba(120, 70, 0, .25),
+        inset 0 0 12px rgba(0,0,0,.9);
     overflow: hidden;
 }
 .screen .face {
-    position: absolute; inset: 8%;
-    width: 84%; height: 84%;
+    position: absolute; inset: 10%;
+    width: 80%; height: 80%;
     object-fit: contain;
     opacity: .9;
     transition: opacity .4s;
 }
 .is-sunset .screen .face { opacity: 0; }
 
-/* pixel plane drawn with box-shadow, one unit per pixel on a 12x8 grid */
+/* a glowing top-down pixel plane, one unit per pixel on an 11x9 grid */
 .pixel-plane {
-    --u: calc(var(--yoto) * 0.026);
+    --u: calc(var(--yoto) * 0.021);
     position: absolute;
-    left: 8%; top: 20%;
+    left: 12%; top: 10%;
     width: var(--u); height: var(--u);
-    background: transparent;
     opacity: 0;
     transition: opacity .3s;
+    filter: drop-shadow(0 0 3px rgba(150, 190, 255, .8));
 }
 .pixel-plane::before {
     content: "";
     position: absolute;
     width: 100%; height: 100%;
-    background: var(--orange);
-    /* 11x7 side profile, nose to the right */
+    background: transparent;
     box-shadow:
-        calc(var(--u) * 1) calc(var(--u) * 0) var(--orange),
-        calc(var(--u) * 1) calc(var(--u) * 1) var(--orange),
-        calc(var(--u) * 2) calc(var(--u) * 1) var(--orange),
-        calc(var(--u) * 1) calc(var(--u) * 2) var(--orange),
-        calc(var(--u) * 2) calc(var(--u) * 2) var(--orange),
-        calc(var(--u) * 3) calc(var(--u) * 2) var(--orange),
-        calc(var(--u) * 7) calc(var(--u) * 2) var(--orange),
-        calc(var(--u) * 8) calc(var(--u) * 2) var(--orange),
-        calc(var(--u) * 0) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 1) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 2) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 3) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 4) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 5) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 6) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 7) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 8) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 9) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 10) calc(var(--u) * 3) var(--orange),
-        calc(var(--u) * 4) calc(var(--u) * 4) var(--orange),
-        calc(var(--u) * 5) calc(var(--u) * 4) var(--orange),
-        calc(var(--u) * 6) calc(var(--u) * 4) var(--orange),
-        calc(var(--u) * 3) calc(var(--u) * 5) var(--orange),
-        calc(var(--u) * 4) calc(var(--u) * 5) var(--orange),
-        calc(var(--u) * 2) calc(var(--u) * 6) var(--orange)
+        calc(var(--u) * 5) calc(var(--u) * 0) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 1) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 2) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 3) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 5) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 6) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 7) #F4F6FF,
+        calc(var(--u) * 4) calc(var(--u) * 2) #F4F6FF,
+        calc(var(--u) * 6) calc(var(--u) * 2) #F4F6FF,
+        calc(var(--u) * 4) calc(var(--u) * 3) #F4F6FF,
+        calc(var(--u) * 6) calc(var(--u) * 3) #F4F6FF,
+        calc(var(--u) * 4) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 6) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 4) calc(var(--u) * 5) #F4F6FF,
+        calc(var(--u) * 6) calc(var(--u) * 5) #F4F6FF,
+        calc(var(--u) * 4) calc(var(--u) * 6) #F4F6FF,
+        calc(var(--u) * 6) calc(var(--u) * 6) #F4F6FF,
+        calc(var(--u) * 1) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 2) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 3) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 4) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 6) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 7) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 8) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 9) calc(var(--u) * 4) #F4F6FF,
+        calc(var(--u) * 2) calc(var(--u) * 5) #8FB4FF,
+        calc(var(--u) * 3) calc(var(--u) * 5) #8FB4FF,
+        calc(var(--u) * 4) calc(var(--u) * 5) #8FB4FF,
+        calc(var(--u) * 5) calc(var(--u) * 5) #8FB4FF,
+        calc(var(--u) * 6) calc(var(--u) * 5) #8FB4FF,
+        calc(var(--u) * 7) calc(var(--u) * 5) #8FB4FF,
+        calc(var(--u) * 8) calc(var(--u) * 5) #8FB4FF,
+        calc(var(--u) * 0) calc(var(--u) * 4) #FF5F5F,
+        calc(var(--u) * 10) calc(var(--u) * 4) #4CD964,
+        calc(var(--u) * 3) calc(var(--u) * 8) #F4F6FF,
+        calc(var(--u) * 4) calc(var(--u) * 8) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 8) #F4F6FF,
+        calc(var(--u) * 6) calc(var(--u) * 8) #F4F6FF,
+        calc(var(--u) * 7) calc(var(--u) * 8) #F4F6FF,
+        calc(var(--u) * 5) calc(var(--u) * 1) #8FB4FF;
 }
 .is-sunset .pixel-plane { opacity: 1; animation: hover-px 1.4s steps(2) infinite; }
-@keyframes hover-px { 50% { transform: translateY(-7%); } }
+@keyframes hover-px { 50% { transform: translateY(-5%); } }
 
 .eq {
     position: absolute;
-    left: 14%; right: 14%; bottom: 10%;
-    height: 22%;
+    left: 14%; right: 14%; bottom: 8%;
+    height: 18%;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
@@ -390,7 +422,7 @@ body {
 .eq i {
     width: 11%;
     height: 30%;
-    background: #FFC46B;
+    background: #9CC4FF;
     border-radius: 1px;
     animation: bars .8s ease-in-out infinite alternate;
 }
@@ -398,36 +430,57 @@ body {
 .eq i:nth-child(4) { animation-delay: -.1s; } .eq i:nth-child(5) { animation-delay: -.35s; }
 .eq i:nth-child(6) { animation-delay: -.6s; }
 @keyframes bars { from { height: 18%; } to { height: 100%; } }
-.is-playing .eq i { animation-play-state: running; }
 .hero:not(.is-playing) .eq i { animation-play-state: paused; }
 
-.grille {
+/* side furniture: green button on the right, lanyard tab on the left */
+.side-btn {
     position: absolute;
-    background-image: radial-gradient(circle, rgba(40, 25, 20, .26) 1.3px, transparent 1.9px);
-    background-size: 6.5% 6.5%;
+    right: -4.5%; top: 62%;
+    width: 11%; height: 17%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #4DBB72, #2E9A57 60%, #237A44);
+    box-shadow: 0 3px 6px rgba(0,0,0,.25);
+    z-index: 2;
 }
-.grille.right  { left: 54%; right: 10%; top: 12%; height: 35%; }
-.grille.bottom { left: 10%; right: 10%; top: 56%; bottom: 11%; }
+.tab {
+    position: absolute;
+    left: -5.5%; top: 30%;
+    width: 12%; height: 15%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #FFC94E, #EEA92A 65%, #D4921C);
+    box-shadow: 0 3px 6px rgba(0,0,0,.22);
+    z-index: 2;
+}
+.lanyard {
+    position: absolute;
+    left: -58%; top: 32%;
+    width: 62%; height: 72%;
+    z-index: 2;
+    overflow: visible;
+}
+.lanyard path { fill: none; stroke-linecap: round; }
+.lanyard .base { stroke: #F2B531; stroke-width: 3.8; }
+.lanyard .twist { stroke: #E2402F; stroke-width: 3.0; stroke-dasharray: 3.5 3.5; }
 
-/* the card */
+/* the card: 54mm wide against a 76mm player, standing tall out of the top */
 .card {
     position: absolute;
     left: 50%;
-    top: -18%;
-    width: 24%;
+    top: -58%;
+    width: 68%;
     aspect-ratio: 54 / 86;
-    border-radius: 6% / 4%;
+    border-radius: 5% / 3.2%;
     background:
         url('/assets/img/prototype/dojp-card.jpg') center top / 100% auto no-repeat,
         linear-gradient(#F9B64B, #E65A2B 40%, #7A2E58);
     box-shadow: 0 6px 18px rgba(20, 10, 40, .35), inset 0 0 0 1.5px rgba(255,255,255,.35);
-    z-index: 2;
-    transform: translate(-50%, -40%) rotate(-7deg);
+    z-index: 1;
+    transform: translate(-50%, -13%) rotate(-6deg);
     animation: bob 2.6s ease-in-out infinite;
     will-change: transform;
 }
 @keyframes bob {
-    50% { transform: translate(-50%, -48%) rotate(-5deg); }
+    50% { transform: translate(-50%, -17%) rotate(-4deg); }
 }
 .is-dropping .card { animation: drop 1.15s forwards; }
 @keyframes drop {
@@ -438,8 +491,8 @@ body {
 }
 
 @media (max-width: 640px) {
-    :root { --yoto: clamp(170px, 56vw, 260px); }
-    .yoto { bottom: 16vh; }
+    :root { --yoto: clamp(150px, 48vw, 230px); }
+    .yoto { bottom: 14vh; }
     .copy { top: 5%; }
     .cloud { transform: scale(.8); }
     .sun { width: 16vmin; height: 16vmin; left: 72%; top: 24%; }
@@ -473,19 +526,22 @@ body {
 
     <div class="yoto" id="yoto">
         <div class="card" id="card" aria-hidden="true"></div>
-        <div class="yoto-top">
-            <div class="knob l"></div>
-            <div class="slot"></div>
-            <div class="knob r"></div>
-        </div>
+        <svg class="lanyard" viewBox="0 0 100 100" aria-hidden="true">
+            <path class="base"  d="M96 6 C 70 10, 40 8, 30 30 S 10 75, 28 92 S 70 98, 90 94"/>
+            <path class="twist" d="M96 6 C 70 10, 40 8, 30 30 S 10 75, 28 92 S 70 98, 90 94"/>
+        </svg>
+        <div class="tab"></div>
+        <div class="side-btn"></div>
         <div class="yoto-body">
+            <div class="slit"></div>
+            <div class="btn l"></div>
+            <div class="btn r"></div>
+            <div class="grille"></div>
             <div class="screen">
                 <img class="face" src="/assets/img/yoto.png" alt="">
                 <div class="pixel-plane"></div>
                 <div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i></div>
             </div>
-            <div class="grille right"></div>
-            <div class="grille bottom"></div>
         </div>
     </div>
 
