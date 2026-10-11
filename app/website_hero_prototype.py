@@ -41,7 +41,6 @@ HERO_HTML = """<!DOCTYPE html>
     --yoto: clamp(200px, 38vmin, 360px);
     --orange: #FE6601;
     --ink: #1F1A2E;
-    --cloud: #FFFFFF;
     --t-sun: 3200ms;
     --ease-sun: cubic-bezier(.45, .05, .25, 1);
 }
@@ -66,18 +65,21 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* day sky: one flat blue */
+/* day sky: a photo (placeholder stock preview; needs licensing before it
+   ships). At sunset the same photo is warmed so the clouds stay. */
 .sky {
     position: absolute; inset: 0;
-    background: #5EC3F2;
+    background: #3F8FE0 url('/assets/img/prototype/sky.jpg') center bottom / cover no-repeat;
+    transition: filter var(--t-sun) var(--ease-sun);
 }
+.is-sunset .sky { filter: sepia(.95) saturate(2.4) hue-rotate(-28deg) brightness(.72) contrast(1.1); }
 .sky-sunset {
     position: absolute; inset: 0;
     background: linear-gradient(#2A1848 0%, #4E2466 24%, #8E3A5F 44%, #D9582F 66%, #F59A2E 84%, #FFD36B 100%);
     opacity: 0;
     transition: opacity var(--t-sun) var(--ease-sun);
 }
-.is-sunset .sky-sunset { opacity: 1; }
+.is-sunset .sky-sunset { opacity: .62; }
 
 .stars {
     position: absolute; inset: 0 0 40% 0;
@@ -113,35 +115,6 @@ body {
     transition: opacity var(--t-sun) var(--ease-sun);
 }
 .is-sunset .sun { opacity: 1; }
-
-/* clouds: pill plus two bumps, drifting */
-.cloud {
-    position: absolute;
-    width: 18vmin; height: 5.5vmin;
-    background: var(--cloud);
-    border-radius: 100px;
-    opacity: 0;
-    animation: drift linear infinite;
-    transition: background var(--t-sun) var(--ease-sun), opacity var(--t-sun) var(--ease-sun);
-}
-.is-sunset .cloud { opacity: .95; }
-.cloud::before, .cloud::after {
-    content: "";
-    position: absolute;
-    background: inherit;
-    border-radius: 50%;
-}
-.cloud::before { width: 7vmin; height: 7vmin; left: 18%; top: -58%; }
-.cloud::after  { width: 9vmin; height: 9vmin; left: 44%; top: -92%; }
-.cloud.c1 { top: 16%; animation-duration: 95s; animation-delay: -30s; }
-.cloud.c2 { top: 31%; animation-duration: 120s; animation-delay: -80s; transform: scale(.7); }
-.cloud.c3 { top: 44%; animation-duration: 140s; animation-delay: -10s; transform: scale(.85); }
-.cloud.c4 { top: 8%;  animation-duration: 110s; animation-delay: -60s; transform: scale(.55); }
-@keyframes drift {
-    from { left: -25vw; }
-    to   { left: 105vw; }
-}
-.is-sunset { --cloud: #FFB38C; }
 
 /* a plane crossing the sunset sky */
 .plane {
@@ -189,21 +162,6 @@ body {
     100% { opacity: 0; transform: translate(150vw, -9vh); }
 }
 
-.ground {
-    position: absolute;
-    left: -30vw; right: -30vw;
-    bottom: -26vh;
-    height: 42vh;
-    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-    background: #74C476;
-    box-shadow: 0 -8px 0 #9ADB8D;
-    transition: background var(--t-sun) var(--ease-sun), box-shadow var(--t-sun) var(--ease-sun);
-}
-.is-sunset .ground {
-    background: #2E1E3E;
-    box-shadow: 0 -10px 0 #F6A443, 0 -12px 60px 10px rgba(255, 160, 60, .55);
-}
-
 /* ---------- copy ---------- */
 .copy {
     position: absolute;
@@ -244,7 +202,7 @@ body {
 .yoto {
     position: absolute;
     left: 50%;
-    bottom: 13vh;
+    bottom: 12vh;
     width: var(--yoto);
     aspect-ratio: 793 / 746;
     transform: translateX(-50%);
@@ -408,14 +366,13 @@ body {
 @media (max-width: 640px) {
     :root { --yoto: clamp(180px, 56vw, 260px); }
     .yoto { bottom: 14vh; }
-    .cloud { transform: scale(.8); }
     .is-sunset .sun { left: 4%; top: 62%; }
     .sun { transform: scale(1.5); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .cloud, .is-pressed .yoto, .is-sunset .plane, .hint, .stars, .side-btn, .side-btn::after, .pixel-plane { animation: none !important; }
-    .sun, .sky-sunset, .ground, .tagline, .cloud { transition-duration: 1ms; }
+    .is-pressed .yoto, .is-sunset .plane, .hint, .stars, .side-btn, .side-btn::after, .pixel-plane { animation: none !important; }
+    .sun, .sky, .sky-sunset { transition-duration: 1ms; }
 }
 </style>
 </head>
@@ -425,12 +382,7 @@ body {
     <div class="sky-sunset"></div>
     <div class="stars"></div>
     <div class="sun"></div>
-    <div class="cloud c1"></div>
-    <div class="cloud c2"></div>
-    <div class="cloud c3"></div>
-    <div class="cloud c4"></div>
     <div class="plane" aria-hidden="true"><div class="trail"></div><div class="body"></div><div class="wing"></div></div>
-    <div class="ground"></div>
 
     <div class="copy">
         <img class="wordmark" src="/assets/img/wordmark.png" alt="Dreaming of a Jet Plane">
