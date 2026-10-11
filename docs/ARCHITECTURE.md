@@ -78,6 +78,7 @@ graph TB
 | Content | `/plane/1` … `/plane/5` | Serve cached audio, or generate it on the spot |
 | Free tier | `/free/scan`, `/free/scanning`, `/free/scanning-again`, `/free/overandout`, `/free/plane/1-3` | Replay audio generated for a paying user, rate-limited |
 | Site | `/`, `/robots.txt`, `/sitemap.xml`, `/assets/*` | Marketing page (`website_home.py`) |
+| Prototype | `/prototype/hero` | CSS-animated hero concept, noindex (`website_hero_prototype.py`) |
 | Debug | `/test/live-aircraft`, `/test-gemini-tts` | Provider inspection pages |
 | Ops | `/health` | Dependency-free liveness probe; Railway holds the old deployment until the new one passes it (zero-downtime cutover) |
 
