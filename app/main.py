@@ -66,6 +66,7 @@ from .location_utils import get_timezone_for_request
 from .location_utils import get_user_location, extract_client_ip, extract_user_agent, parse_user_agent
 from .analytics import analytics
 from .website_home import register_website_home_routes
+from .website_hero_prototype import register_hero_prototype_routes
 from .debug_gemini_tts import register_test_gemini_tts_routes
 from .debug_live_aircraft import register_test_live_aircraft_routes
 from .aircraft_providers import get_provider_definition, get_provider_names
@@ -119,6 +120,7 @@ app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 # Register website home routes
 register_website_home_routes(app)
+register_hero_prototype_routes(app)  # /prototype/hero, CSS hero concept
 
 # Register test Gemini TTS routes
 register_test_gemini_tts_routes(app)
