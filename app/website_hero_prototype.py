@@ -68,7 +68,7 @@ body {
 /* day sky: a cumulus photo. At sunset the same photo is warmed so the
    clouds stay. */
 .sky {
-    position: absolute; inset: -12px;
+    position: absolute; inset: -24px;
     background: #3F8FE0 url('/assets/img/prototype/sky.jpg?v=2') center / cover no-repeat;
     transition: filter var(--t-sun) var(--ease-sun);
 }
@@ -76,7 +76,7 @@ body {
 .is-sunset .sky { filter: sepia(.95) saturate(2.2) hue-rotate(-28deg) brightness(.62) contrast(1.05) blur(4px); }
 .sky-sunset {
     position: absolute; inset: 0;
-    background: linear-gradient(#2A1848 0%, #4E2466 24%, #8E3A5F 44%, #D9582F 66%, #F59A2E 84%, #FFD36B 100%);
+    background: linear-gradient(#2A1848 0%, #4E2466 24%, #8E3A5F 44%, #C9542F 66%, #D9702E 84%, #DD7A32 100%);
     opacity: 0;
     transition: opacity var(--t-sun) var(--ease-sun);
 }
