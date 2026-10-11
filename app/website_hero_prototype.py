@@ -40,6 +40,9 @@ HERO_HTML = """<!DOCTYPE html>
 :root {
     --yoto: clamp(200px, 38vmin, 360px);
     --yoto-bottom: 12vh;
+    /* the cutout includes the green button on its right, so the body sits
+       left of the image centre; this nudges it back to the page centre */
+    --yoto-shift: calc(var(--yoto) * 0.06);
     --orange: #FE6601;
     --ink: #1F1A2E;
     --t-sun: 3200ms;
@@ -182,16 +185,16 @@ body {
     bottom: var(--yoto-bottom);
     width: var(--yoto);
     aspect-ratio: 793 / 746;
-    transform: translateX(-50%);
+    transform: translateX(calc(-50% + var(--yoto-shift)));
     transform-origin: 50% 100%;
     z-index: 10;
 }
 .is-pressed .yoto { animation: settle .5s ease-out; }
 @keyframes settle {
-    0%   { transform: translateX(-50%) scale(1, 1); }
-    30%  { transform: translateX(-50%) scale(1.02, .97); }
-    65%  { transform: translateX(-50%) scale(.995, 1.01); }
-    100% { transform: translateX(-50%) scale(1, 1); }
+    0%   { transform: translateX(calc(-50% + var(--yoto-shift))) scale(1, 1); }
+    30%  { transform: translateX(calc(-50% + var(--yoto-shift))) scale(1.02, .97); }
+    65%  { transform: translateX(calc(-50% + var(--yoto-shift))) scale(.995, 1.01); }
+    100% { transform: translateX(calc(-50% + var(--yoto-shift))) scale(1, 1); }
 }
 .shell {
     position: absolute; inset: 0;
