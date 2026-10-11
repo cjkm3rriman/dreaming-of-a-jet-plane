@@ -38,7 +38,7 @@ HERO_HTML = """<!DOCTYPE html>
 }
 
 :root {
-    --yoto: clamp(220px, 46vmin, 440px);
+    --yoto: clamp(200px, 38vmin, 360px);
     --orange: #FE6601;
     --ink: #1F1A2E;
     --cloud: #FFFFFF;
@@ -66,12 +66,10 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* day sky: flat blue with halftone clouds, drawn once by an SVG filter */
+/* day sky: one flat blue */
 .sky {
     position: absolute; inset: 0;
-    width: 100%; height: 100%;
     background: #5EC3F2;
-    display: block;
 }
 .sky-sunset {
     position: absolute; inset: 0;
@@ -408,7 +406,7 @@ body {
 }
 
 @media (max-width: 640px) {
-    :root { --yoto: clamp(200px, 64vw, 300px); }
+    :root { --yoto: clamp(180px, 56vw, 260px); }
     .yoto { bottom: 14vh; }
     .cloud { transform: scale(.8); }
     .is-sunset .sun { left: 4%; top: 62%; }
@@ -423,30 +421,7 @@ body {
 </head>
 <body>
 <section class="hero" id="hero" aria-label="Dreaming of a Jet Plane on a Yoto Mini">
-    <svg class="sky" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <defs>
-            <!-- Halftone clouds: fractal noise shaped into patches, added to a tiled
-                 cone per cell, then thresholded, so each dot's size follows the
-                 cloud density under it. -->
-            <filter id="halftone" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-                <feTurbulence type="fractalNoise" baseFrequency="0.0032 0.0046" numOctaves="5" seed="23" result="noise"/>
-                <feColorMatrix in="noise" type="matrix"
-                    values="5.2 0 0 0 -2.75  5.2 0 0 0 -2.75  5.2 0 0 0 -2.75  0 0 0 0 1" result="density"/>
-                <feImage width="12" height="12" result="cone"
-                    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='1' stop-color='%23000'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='12' height='12' fill='url(%23g)'/%3E%3C/svg%3E"/>
-                <feTile in="cone" result="cones"/>
-                <feComposite in="density" in2="cones" operator="arithmetic" k1="0" k2="1" k3="1" k4="-1" result="sum"/>
-                <feComponentTransfer in="sum" result="dots">
-                    <feFuncR type="linear" slope="40" intercept="0"/>
-                    <feFuncG type="linear" slope="40" intercept="0"/>
-                    <feFuncB type="linear" slope="40" intercept="0"/>
-                </feComponentTransfer>
-                <feColorMatrix in="dots" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1 0 0 0 0"/>
-            </filter>
-        </defs>
-        <rect width="1600" height="900" fill="#5EC3F2"/>
-        <rect width="1600" height="900" fill="#fff" filter="url(#halftone)"/>
-    </svg>
+    <div class="sky"></div>
     <div class="sky-sunset"></div>
     <div class="stars"></div>
     <div class="sun"></div>
