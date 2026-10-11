@@ -164,7 +164,7 @@ body {
     position: absolute;
     left: 50%;
     /* just above the player: its bottom edge plus its height plus a gap */
-    bottom: calc(var(--yoto-bottom) + var(--yoto) * 746 / 793 + 3vh);
+    bottom: calc(var(--yoto-bottom) + var(--yoto) * 746 / 793 + 8vh);
     transform: translateX(-50%);
     width: min(92vw, 640px);
     text-align: center;
