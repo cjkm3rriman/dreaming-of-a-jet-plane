@@ -1,10 +1,15 @@
 """Prototype landing-page hero: a CSS-animated Yoto Mini instead of the video.
 
 Served at /prototype/hero and deliberately kept out of robots/sitemap. The
-concept: a Yoto Mini (the yellow adventure-jacket one) on a blue sky. Press
-its green side button and the sky turns to sunset while Hamish starts
-scanning. There is no card: this is a digital app, so the player itself is
-the call to action. Nothing here is wired into the real landing page yet.
+concept: a Yoto Mini on a blue sky. Press its green side button and the sky
+turns to sunset while Hamish starts scanning. No card: this is a digital
+app, so the player itself is the call to action.
+
+The player is Yoto's own product render, cut out of its flat background
+(assets/img/prototype/yoto-mini.webp). Only two things sit on top of it:
+a live screen drawn in CSS over the real screen's rectangle, and the green
+button as its own layer so it can be pressed. Nothing here is wired into
+the real landing page yet.
 """
 
 from fastapi import FastAPI
@@ -33,10 +38,7 @@ HERO_HTML = """<!DOCTYPE html>
 }
 
 :root {
-    --yoto: clamp(190px, 36vmin, 340px);
-    --cream: #F7F2E8;
-    --cream-2: #E6DDCB;
-    --cream-3: #D4C9B4;
+    --yoto: clamp(220px, 46vmin, 440px);
     --orange: #FE6601;
     --ink: #1F1A2E;
     --cloud: #FFFFFF;
@@ -233,7 +235,7 @@ body {
 
 .hint {
     position: absolute;
-    left: 50%; bottom: 7%;
+    left: 50%; bottom: 3%;
     transform: translateX(-50%);
     z-index: 20;
     padding: .6rem 1.1rem;
@@ -254,12 +256,14 @@ body {
 @keyframes pulse { 50% { transform: translateX(-50%) scale(1.05); } }
 
 /* ---------- the yoto mini ---------- */
+/* The product render, with the screen and the green button measured as
+   percentages of the cutout so the overlays land exactly on the photo. */
 .yoto {
     position: absolute;
     left: 50%;
-    bottom: 16vh;
+    bottom: 13vh;
     width: var(--yoto);
-    height: var(--yoto);
+    aspect-ratio: 793 / 746;
     transform: translateX(-50%);
     transform-origin: 50% 100%;
     z-index: 10;
@@ -267,82 +271,40 @@ body {
 .is-pressed .yoto { animation: settle .5s ease-out; }
 @keyframes settle {
     0%   { transform: translateX(-50%) scale(1, 1); }
-    30%  { transform: translateX(-50%) scale(1.03, .955); }
-    65%  { transform: translateX(-50%) scale(.99, 1.015); }
+    30%  { transform: translateX(-50%) scale(1.02, .97); }
+    65%  { transform: translateX(-50%) scale(.995, 1.01); }
     100% { transform: translateX(-50%) scale(1, 1); }
 }
-
-/* the front: a squircle of matte yellow silicone */
-.yoto-body {
+.shell {
     position: absolute; inset: 0;
-    background: radial-gradient(120% 120% at 25% 15%, #FFCB55 0%, #F7B63A 45%, #E9A223 100%);
-    border-radius: 27%;
-    box-shadow:
-        0 22px 40px rgba(60, 30, 10, .30),
-        inset -8px -12px 26px rgba(150, 80, 0, .20),
-        inset 8px 10px 22px rgba(255, 240, 190, .35);
-    z-index: 3;
+    width: 100%; height: 100%;
+    display: block;
+    filter: drop-shadow(0 26px 28px rgba(20, 10, 40, .32));
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
-/* two big ribbed orange buttons */
-.btn {
-    position: absolute;
-    top: 13%;
-    width: 31%; height: 31%;
-    border-radius: 50%;
-    background:
-        repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 9%, rgba(255,255,255,.12) 9% 11%, rgba(120,30,10,.10) 11% 13%, rgba(255,255,255,0) 13% 18%),
-        radial-gradient(circle at 40% 32%, #FF8A5C 0%, #F2643D 45%, #DE4F2E 100%);
-    box-shadow:
-        0 0 0 3px rgba(150, 85, 0, .22),
-        0 3px 0 rgba(150, 50, 20, .35),
-        inset 0 -6px 10px rgba(150, 40, 10, .35),
-        inset 0 5px 8px rgba(255, 190, 160, .55);
-}
-.btn.l { left: 16%; }
-.btn.r { right: 16%; }
-
-/* speaker holes, bottom-left, in a rounded diamond */
-.grille {
-    position: absolute;
-    left: 13%; bottom: 13%;
-    width: 30%; height: 30%;
-    background-image:
-        radial-gradient(circle, #4A3115 2.2px, transparent 2.9px),
-        radial-gradient(circle, #4A3115 2.2px, transparent 2.9px);
-    background-size: 14% 14%;
-    background-position: 0 0, 7% 7%;
-    -webkit-mask: radial-gradient(circle, #000 58%, transparent 60%);
-            mask: radial-gradient(circle, #000 58%, transparent 60%);
-}
-
-/* the screen, bottom-right, with its cream bezel */
+/* The live screen sits over the photo's screen. Idle, it is invisible and the
+   render's own sun-and-clouds clock shows through; it fades in on press. */
 .screen {
     position: absolute;
-    right: 13%; bottom: 13%;
-    width: 29%; height: 29%;
-    background: #141120;
-    border-radius: 18%;
-    box-shadow:
-        0 0 0 3px #F3E8D2,
-        0 0 0 4.5px rgba(120, 70, 0, .25),
-        inset 0 0 12px rgba(0,0,0,.9);
+    left: 51.7%; top: 55.0%;
+    width: 29.3%; height: 31.0%;
+    background: #0C0A0F;
+    border-radius: 22%;
+    box-shadow: inset 0 0 10px rgba(0,0,0,.9);
     overflow: hidden;
+    opacity: 0;
+    transition: opacity .5s ease-out;
 }
-.screen .face {
-    position: absolute; inset: 10%;
-    width: 80%; height: 80%;
-    object-fit: contain;
-    opacity: .9;
-    transition: opacity .4s;
-}
-.is-sunset .screen .face { opacity: 0; }
+.is-sunset .screen { opacity: 1; }
 
 /* a glowing top-down pixel plane, one unit per pixel on an 11x9 grid */
 .pixel-plane {
-    --u: calc(var(--yoto) * 0.021);
+    --u: calc(var(--yoto) * 0.0215);
     position: absolute;
-    left: 12%; top: 10%;
+    left: 12%; top: 11%;
     width: var(--u); height: var(--u);
     opacity: 0;
     transition: opacity .3s;
@@ -424,39 +386,45 @@ body {
 @keyframes bars { from { height: 18%; } to { height: 100%; } }
 .hero:not(.is-playing) .eq i { animation-play-state: paused; }
 
-/* the green side button is the play control */
+/* the green side button, as its own layer, is the play control */
 .side-btn {
     position: absolute;
-    right: -5%; top: 61%;
-    width: 12%; height: 18%;
+    left: 87.5%; top: 54.8%;
+    width: 12.2%; height: 30.4%;
     border: 0; padding: 0;
-    border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #4DBB72, #2E9A57 60%, #237A44);
-    box-shadow: 0 3px 6px rgba(0,0,0,.25), 0 0 0 0 rgba(77, 187, 114, 0);
+    background: url('/assets/img/prototype/yoto-mini-button.webp') center / contain no-repeat;
     cursor: pointer;
     z-index: 2;
-    transform-origin: 0% 50%;
-    transition: transform .12s ease-out, box-shadow .3s;
+    transform-origin: 20% 50%;
+    transition: transform .12s ease-out, filter .12s;
     -webkit-appearance: none;
     appearance: none;
+    -webkit-tap-highlight-color: transparent;
 }
-.side-btn:hover { transform: scaleX(1.12); }
-.side-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-.side-btn.pressed { animation: press .32s ease-out; }
+.side-btn:hover { transform: scale(1.04); filter: brightness(1.06); }
+.side-btn:focus-visible { outline: 3px solid #fff; outline-offset: 4px; border-radius: 50%; }
+.side-btn.pressed { animation: press .3s ease-out; }
 @keyframes press {
-    0%   { transform: scaleX(1); }
-    35%  { transform: scaleX(.55); }
-    100% { transform: scaleX(1); }
+    0%   { transform: scale(1); filter: brightness(1); }
+    35%  { transform: scale(.88, .94); filter: brightness(.85); }
+    100% { transform: scale(1); filter: brightness(1); }
 }
 /* a soft pulse until it has been pressed once */
-.hero:not(.is-sunset) .side-btn { animation: beckon 1.8s ease-in-out infinite; }
+.side-btn::after {
+    content: "";
+    position: absolute; inset: 6% 8%;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(77, 187, 114, 0);
+    pointer-events: none;
+}
+.hero:not(.is-sunset) .side-btn::after { animation: beckon 1.8s ease-in-out infinite; }
 @keyframes beckon {
-    50% { box-shadow: 0 3px 6px rgba(0,0,0,.25), 0 0 0 10px rgba(77, 187, 114, .28); }
+    50% { box-shadow: 0 0 0 12px rgba(77, 187, 114, .3); }
 }
 
 @media (max-width: 640px) {
-    :root { --yoto: clamp(170px, 56vw, 260px); }
-    .yoto { bottom: 15vh; }
+    :root { --yoto: clamp(200px, 64vw, 300px); }
+    .yoto { bottom: 14vh; }
     .copy { top: 5%; }
     .cloud { transform: scale(.8); }
     .sun { width: 16vmin; height: 16vmin; left: 72%; top: 24%; }
@@ -464,7 +432,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .cloud, .is-pressed .yoto, .is-sunset .plane, .hint, .stars, .side-btn, .pixel-plane { animation: none !important; }
+    .cloud, .is-pressed .yoto, .is-sunset .plane, .hint, .stars, .side-btn, .side-btn::after, .pixel-plane { animation: none !important; }
     .sun, .sky-sunset, .ground, .tagline, .cloud { transition-duration: 1ms; }
 }
 </style>
@@ -488,17 +456,12 @@ body {
     </div>
 
     <div class="yoto" id="yoto">
-        <button class="side-btn" id="play" type="button" aria-label="Play"></button>
-        <div class="yoto-body">
-            <div class="btn l"></div>
-            <div class="btn r"></div>
-            <div class="grille"></div>
-            <div class="screen">
-                <img class="face" src="/assets/img/yoto.png" alt="">
-                <div class="pixel-plane"></div>
-                <div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            </div>
+        <img class="shell" src="/assets/img/prototype/yoto-mini.webp" alt="A Yoto Mini player" draggable="false">
+        <div class="screen">
+            <div class="pixel-plane"></div>
+            <div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i></div>
         </div>
+        <button class="side-btn" id="play" type="button" aria-label="Play"></button>
     </div>
 
     <div class="hint" id="hint">Press the green button</div>

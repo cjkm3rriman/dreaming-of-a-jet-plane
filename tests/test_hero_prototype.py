@@ -28,8 +28,13 @@ def test_hero_prototype_serves_and_is_noindex(client):
 
 @pytest.mark.unit
 def test_hero_prototype_assets_exist(client):
-    """The wordmark and smiley it references are real files under /assets"""
-    for path in ("/assets/img/wordmark.png", "/assets/img/yoto.png"):
+    """The player cutout, its button, the wordmark and the smiley are real files under /assets"""
+    for path in (
+        "/assets/img/prototype/yoto-mini.webp",
+        "/assets/img/prototype/yoto-mini-button.webp",
+        "/assets/img/wordmark.png",
+        "/assets/img/yoto.png",
+    ):
         assert client.get(path).status_code == 200, path
 
 
