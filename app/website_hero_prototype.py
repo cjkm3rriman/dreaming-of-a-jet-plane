@@ -50,7 +50,7 @@ HERO_HTML = """<!DOCTYPE html>
 html, body { height: 100%; }
 body {
     font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #4FB3F6;
+    background: #5EC3F2;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
 }
@@ -66,9 +66,12 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
+/* day sky: flat blue with halftone clouds, drawn once by an SVG filter */
 .sky {
     position: absolute; inset: 0;
-    background: linear-gradient(#3FA9F5 0%, #86CFFF 52%, #D9F0FF 100%);
+    width: 100%; height: 100%;
+    background: #5EC3F2;
+    display: block;
 }
 .sky-sunset {
     position: absolute; inset: 0;
@@ -99,26 +102,19 @@ body {
 .is-sunset .stars { animation: twinkle 3.2s ease-in-out infinite alternate; animation-delay: 2.5s; }
 @keyframes twinkle { from { opacity: .55; } to { opacity: 1; } }
 
+/* the sun: no sun by day; at sunset it glows on the horizon */
 .sun {
     position: absolute;
     width: 13vmin; height: 13vmin;
-    left: 76%; top: 12%;
-    border-radius: 50%;
-    background: #FFF6C2;
-    box-shadow: 0 0 50px 18px rgba(255, 246, 194, .55);
-    transition:
-        top var(--t-sun) var(--ease-sun),
-        left var(--t-sun) var(--ease-sun),
-        transform var(--t-sun) var(--ease-sun),
-        background var(--t-sun) var(--ease-sun),
-        box-shadow var(--t-sun) var(--ease-sun);
-}
-.is-sunset .sun {
     left: 14%; top: 64%;
-    transform: scale(2.1);
+    border-radius: 50%;
     background: #FFB03A;
     box-shadow: 0 0 70px 30px rgba(255, 150, 50, .55);
+    transform: scale(2.1);
+    opacity: 0;
+    transition: opacity var(--t-sun) var(--ease-sun);
 }
+.is-sunset .sun { opacity: 1; }
 
 /* clouds: pill plus two bumps, drifting */
 .cloud {
@@ -126,10 +122,11 @@ body {
     width: 18vmin; height: 5.5vmin;
     background: var(--cloud);
     border-radius: 100px;
-    opacity: .95;
+    opacity: 0;
     animation: drift linear infinite;
-    transition: background var(--t-sun) var(--ease-sun);
+    transition: background var(--t-sun) var(--ease-sun), opacity var(--t-sun) var(--ease-sun);
 }
+.is-sunset .cloud { opacity: .95; }
 .cloud::before, .cloud::after {
     content: "";
     position: absolute;
@@ -219,19 +216,7 @@ body {
     z-index: 20;
     pointer-events: none;
 }
-.wordmark { width: min(78vw, 420px); height: auto; filter: drop-shadow(0 4px 0 rgba(255,255,255,.55)); }
-.tagline {
-    margin: .6rem auto 0;
-    max-width: 520px;
-    color: var(--orange);
-    font-family: 'Dream Wish Sans', 'Nunito', sans-serif;
-    font-size: clamp(1rem, 2.4vmin, 1.4rem);
-    line-height: 1.45;
-    text-transform: uppercase;
-    transition: color var(--t-sun) var(--ease-sun);
-}
-.is-sunset .tagline { color: #FFF1D6; }
-.is-sunset .wordmark { filter: drop-shadow(0 4px 0 rgba(60, 20, 70, .55)); }
+.wordmark { width: min(60vw, 300px); height: auto; }
 
 .hint {
     position: absolute;
@@ -425,10 +410,9 @@ body {
 @media (max-width: 640px) {
     :root { --yoto: clamp(200px, 64vw, 300px); }
     .yoto { bottom: 14vh; }
-    .copy { top: 5%; }
     .cloud { transform: scale(.8); }
-    .sun { width: 16vmin; height: 16vmin; left: 72%; top: 24%; }
-    .is-sunset .sun { left: 4%; top: 62%; transform: scale(1.5); }
+    .is-sunset .sun { left: 4%; top: 62%; }
+    .sun { transform: scale(1.5); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -439,7 +423,30 @@ body {
 </head>
 <body>
 <section class="hero" id="hero" aria-label="Dreaming of a Jet Plane on a Yoto Mini">
-    <div class="sky"></div>
+    <svg class="sky" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+            <!-- Halftone clouds: fractal noise shaped into patches, added to a tiled
+                 cone per cell, then thresholded, so each dot's size follows the
+                 cloud density under it. -->
+            <filter id="halftone" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.0032 0.0046" numOctaves="5" seed="23" result="noise"/>
+                <feColorMatrix in="noise" type="matrix"
+                    values="5.2 0 0 0 -2.75  5.2 0 0 0 -2.75  5.2 0 0 0 -2.75  0 0 0 0 1" result="density"/>
+                <feImage width="12" height="12" result="cone"
+                    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='1' stop-color='%23000'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='12' height='12' fill='url(%23g)'/%3E%3C/svg%3E"/>
+                <feTile in="cone" result="cones"/>
+                <feComposite in="density" in2="cones" operator="arithmetic" k1="0" k2="1" k3="1" k4="-1" result="sum"/>
+                <feComponentTransfer in="sum" result="dots">
+                    <feFuncR type="linear" slope="40" intercept="0"/>
+                    <feFuncG type="linear" slope="40" intercept="0"/>
+                    <feFuncB type="linear" slope="40" intercept="0"/>
+                </feComponentTransfer>
+                <feColorMatrix in="dots" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1 0 0 0 0"/>
+            </filter>
+        </defs>
+        <rect width="1600" height="900" fill="#5EC3F2"/>
+        <rect width="1600" height="900" fill="#fff" filter="url(#halftone)"/>
+    </svg>
     <div class="sky-sunset"></div>
     <div class="stars"></div>
     <div class="sun"></div>
@@ -452,7 +459,6 @@ body {
 
     <div class="copy">
         <img class="wordmark" src="/assets/img/wordmark.png" alt="Dreaming of a Jet Plane">
-        <p class="tagline">Magically turn your Yoto into a Jet Plane Scanner that finds planes in the skies around you.</p>
     </div>
 
     <div class="yoto" id="yoto">
