@@ -68,18 +68,19 @@ body {
 /* day sky: a cumulus photo. At sunset the same photo is warmed so the
    clouds stay. */
 .sky {
-    position: absolute; inset: 0;
+    position: absolute; inset: -12px;
     background: #3F8FE0 url('/assets/img/prototype/sky.jpg?v=2') center / cover no-repeat;
     transition: filter var(--t-sun) var(--ease-sun);
 }
-.is-sunset .sky { filter: sepia(.95) saturate(2.4) hue-rotate(-28deg) brightness(.72) contrast(1.1); }
+/* at sunset the clouds warm, soften and fall back a little */
+.is-sunset .sky { filter: sepia(.95) saturate(2.2) hue-rotate(-28deg) brightness(.62) contrast(1.05) blur(4px); }
 .sky-sunset {
     position: absolute; inset: 0;
     background: linear-gradient(#2A1848 0%, #4E2466 24%, #8E3A5F 44%, #D9582F 66%, #F59A2E 84%, #FFD36B 100%);
     opacity: 0;
     transition: opacity var(--t-sun) var(--ease-sun);
 }
-.is-sunset .sky-sunset { opacity: .62; }
+.is-sunset .sky-sunset { opacity: .72; }
 
 .stars {
     position: absolute; inset: 0 0 40% 0;
@@ -101,20 +102,6 @@ body {
 .is-sunset .stars { opacity: .9; }
 .is-sunset .stars { animation: twinkle 3.2s ease-in-out infinite alternate; animation-delay: 2.5s; }
 @keyframes twinkle { from { opacity: .55; } to { opacity: 1; } }
-
-/* the sun: no sun by day; at sunset it glows on the horizon */
-.sun {
-    position: absolute;
-    width: 13vmin; height: 13vmin;
-    left: 14%; top: 64%;
-    border-radius: 50%;
-    background: #FFB03A;
-    box-shadow: 0 0 70px 30px rgba(255, 150, 50, .55);
-    transform: scale(2.1);
-    opacity: 0;
-    transition: opacity var(--t-sun) var(--ease-sun);
-}
-.is-sunset .sun { opacity: 1; }
 
 /* a plane crossing the sunset sky */
 .plane {
@@ -366,13 +353,11 @@ body {
 @media (max-width: 640px) {
     :root { --yoto: clamp(180px, 56vw, 260px); }
     .yoto { bottom: 14vh; }
-    .is-sunset .sun { left: 4%; top: 62%; }
-    .sun { transform: scale(1.5); }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .is-pressed .yoto, .is-sunset .plane, .hint, .stars, .side-btn, .side-btn::after, .pixel-plane { animation: none !important; }
-    .sun, .sky, .sky-sunset { transition-duration: 1ms; }
+    .sky, .sky-sunset { transition-duration: 1ms; }
 }
 </style>
 </head>
@@ -381,7 +366,6 @@ body {
     <div class="sky"></div>
     <div class="sky-sunset"></div>
     <div class="stars"></div>
-    <div class="sun"></div>
     <div class="plane" aria-hidden="true"><div class="trail"></div><div class="body"></div><div class="wing"></div></div>
 
     <div class="copy">
