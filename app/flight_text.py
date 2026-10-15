@@ -431,7 +431,7 @@ def generate_flight_text_for_aircraft(
     
     # Generate random captain name (last names only)
     pilot_names = [
-        "Al-Saud", "Anderson", "Boo Boo Butt", "Brooks", "Brown",
+        "Al-Saud", "Amol", "Anderson", "Boo Boo Butt", "Brooks", "Brown",
         "Campbell", "Chen", "Cooper", "Ezra", "Garcia", "Gonzalez",
         "Hassan", "Havencroft", "Jackson", "Jensen", "Johnson",
         "Jørgensen", "Khoury", "Kouyaté", "Kovács", "Li", "Lindberg",
